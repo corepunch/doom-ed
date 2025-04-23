@@ -65,10 +65,13 @@ typedef struct {
 } player_t;
 
 // Global variables
-GLuint prog;
+GLuint prog, vao;
 SDL_Window* window = NULL;
 SDL_GLContext ctx;
 bool running = true;
+bool mode = false;
+
+void init_floor_shader(void);
 
 // Initialize SDL and create window/renderer
 bool init_sdl(void) {
@@ -92,7 +95,7 @@ bool init_sdl(void) {
   
   ctx = SDL_GL_CreateContext(window);
   
-  GLuint vao, vbo, ebo, tex;
+  GLuint vbo, ebo, tex;
   glGenVertexArrays(1, &vao);
   glBindVertexArray(vao);
   
@@ -114,8 +117,8 @@ bool init_sdl(void) {
   glLinkProgram(prog);
   glUseProgram(prog);
   
-  glEnable(GL_CULL_FACE);
-  glCullFace(GL_BACK);
+//  glEnable(GL_CULL_FACE);
+//  glCullFace(GL_BACK);
   
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -131,6 +134,8 @@ bool init_sdl(void) {
   glBindTexture(GL_TEXTURE_2D, tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pix);
   glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
+  
+  init_floor_shader();
     
   return true;
 }
@@ -162,39 +167,11 @@ void init_player(map_data_t const *map, player_t *player) {
 
 GLuint get_texture(const char* name);
 
-//void draw_map(map_data_t const *map, player_t const *player) {
-//  // Draw linedefs
-//  for (int i = 0; i < map->num_linedefs; i++) {
-//    maplinedef_t const *linedef = &map->linedefs[i];
-//    mapvertex_t const *v1 = &map->vertices[linedef->start];
-//    mapvertex_t const *v2 = &map->vertices[linedef->end];
-//    
-//    if (linedef->sidenum[0] < map->num_sidedefs) {
-//      mapsidedef_t const *sidedef = &map->sidedefs[linedef->sidenum[0]];
-//      mapsector_t const *sector = &map->sectors[sidedef->sector];
-//      
-//      mat4 rect = {
-//        { v1->x, v1->y, sector->floorheight, 1.0f }, // a (bottom left)
-//        { v2->x, v2->y, sector->floorheight, 1.0f }, // b (bottom right)
-//        { v2->x, v2->y, sector->ceilingheight, 1.0f }, // c (top right)
-//        { v1->x, v1->y, sector->ceilingheight, 1.0f }, // d (top left)
-//      };
-//      
-//      GLuint tex = get_texture(sidedef->midtexture);
-//      if (tex != -1) {
-//        glBindTexture(GL_TEXTURE_2D, get_texture(sidedef->midtexture));
-//        glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-//        
-//        glUniformMatrix4fv(glGetUniformLocation(prog, "rect"), 1, GL_FALSE, (const float*)rect);
-//        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-//      }
-//    }
-//  }
-//}
-
-
 // Draw the map from player perspective
-void draw_map(map_data_t const *map, player_t const *player) {
+void draw_map(map_data_t const *map, mat4 mvp) {
+  glUseProgram(prog);
+  glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glBindVertexArray(vao);
   // Draw linedefs
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t const *linedef = &map->linedefs[i];
@@ -405,7 +382,13 @@ void handle_input(player_t *player) {
     player->angle += ROTATION_SPEED;
     if (player->angle >= 360) player->angle -= 360;
   }
+  if (keystates[SDL_SCANCODE_LSHIFT]) {
+    mode = !mode;
+  }
 }
+
+void draw_floors(map_data_t const *map, mat4 mvp);
+
 // Main function
 int run(map_data_t const *map) {
   player_t player;
@@ -428,14 +411,16 @@ int run(map_data_t const *map) {
     SDL_Event e;
     while (SDL_PollEvent(&e)) if (e.type == SDL_QUIT) return 0;
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    
+    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
+
     // Combine view and projection into MVP
     mat4 mvp;
     get_view_matrix(map, &player, mvp);
-    glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
 
+    draw_floors(map, mvp);
+    
     // Draw the map
-    draw_map(map, &player);
+    draw_map(map, mvp);
 
     SDL_GL_SwapWindow(window);
     
