@@ -1,200 +1,157 @@
 #include "map.h"
 #include <math.h>
 
-// Helper function to check if a point is inside a triangle
-int is_point_in_triangle(float px, float py,
-                         float ax, float ay,
-                         float bx, float by,
-                         float cx, float cy) {
-  float area = 0.5f * (-by * cx + ay * (-bx + cx) + ax * (by - cy) + bx * cy);
-  // Check for division by zero
-  if (fabs(area) < 0.00001f) return 0;
-  
-  float s = 1.0f / (2.0f * area) * (ay * cx - ax * cy + (cy - ay) * px + (ax - cx) * py);
-  float t = 1.0f / (2.0f * area) * (ax * by - ay * bx + (ay - by) * px + (bx - ax) * py);
-  return (s > 0 && t > 0 && 1 - s - t > 0) ? 1 : 0;
+// Maximum expected number of vertices in a sector
+#define MAX_VERTICES 256
+#define EPSILON 1e-6  // Small value for floating point comparisons
+
+// Returns 2x the signed area of the triangle
+static float signed_area(float ax, float ay, float bx, float by, float cx, float cy) {
+  return (bx - ax) * (cy - ay) - (by - ay) * (cx - ax);
 }
 
-typedef struct {
-  float x, y;
-  int original_index;
-  int is_ear;
-} working_vertex_t;
+// Check if point p is inside the triangle abc
+static int point_in_triangle(float px, float py,
+                             float ax, float ay,
+                             float bx, float by,
+                             float cx, float cy) {
+  float area_abc = signed_area(ax, ay, bx, by, cx, cy);
+  float area_pab = signed_area(px, py, ax, ay, bx, by);
+  float area_pbc = signed_area(px, py, bx, by, cx, cy);
+  float area_pca = signed_area(px, py, cx, cy, ax, ay);
+  
+  // All should be same sign (all positive or all negative)
+  if (area_abc < 0) {
+    return area_pab <= EPSILON && area_pbc <= EPSILON && area_pca <= EPSILON;
+  } else {
+    return area_pab >= -EPSILON && area_pbc >= -EPSILON && area_pca >= -EPSILON;
+  }
+}
 
-// Helper function to check if a vertex forms an ear
-void update_ear_status(int idx, working_vertex_t *verts, int count) {
-  int prev = (idx - 1 + count) % count;
-  int next = (idx + 1) % count;
+// Check if vertex at index i is an ear
+static int is_ear(mapvertex_t *vertices, int *indices, int count, int i) {
+  int prev = (i > 0) ? i - 1 : count - 1;
+  int next = (i < count - 1) ? i + 1 : 0;
   
-  // Skip vertices that have been removed
-  if (verts[idx].original_index == -1) {
-    verts[idx].is_ear = 0;
-    return;
-  }
+  float ax = vertices[indices[prev]].x;
+  float ay = vertices[indices[prev]].y;
+  float bx = vertices[indices[i]].x;
+  float by = vertices[indices[i]].y;
+  float cx = vertices[indices[next]].x;
+  float cy = vertices[indices[next]].y;
   
-  // Check if this vertex forms a convex corner
-  float ax = verts[prev].x - verts[idx].x;
-  float ay = verts[prev].y - verts[idx].y;
-  float bx = verts[next].x - verts[idx].x;
-  float by = verts[next].y - verts[idx].y;
+  // If the ear is not convex, it's not an ear
+  if (signed_area(ax, ay, bx, by, cx, cy) <= EPSILON) return 0;
   
-  // Cross product to determine if convex
-  float cross = ax * by - ay * bx;
-  
-  // If concave, it can't be an ear
-  if (cross < 0) {
-    verts[idx].is_ear = 0;
-    return;
-  }
-  
-  // Check if any other vertex is inside this potential ear
-  int is_ear = 1;
+  // Check if any other vertex is inside this triangle
   for (int j = 0; j < count; j++) {
-    // Skip adjacent vertices and removed vertices
-    if (j == prev || j == idx || j == next || verts[j].original_index == -1) continue;
+    if (j == prev || j == i || j == next) continue;
     
-    if (is_point_in_triangle(verts[j].x, verts[j].y,
-                             verts[prev].x, verts[prev].y,
-                             verts[idx].x, verts[idx].y,
-                             verts[next].x, verts[next].y)) {
-      is_ear = 0;
-      break;
+    float px = vertices[indices[j]].x;
+    float py = vertices[indices[j]].y;
+    
+    if (point_in_triangle(px, py, ax, ay, bx, by, cx, cy)) {
+      return 0;
     }
   }
   
-  verts[idx].is_ear = is_ear;
+  return 1;
 }
 
-void triangulate_sector(mapvertex_t *vertices, int num_vertices, float *out_vertices, int *out_count) {
-  // Implementation of ear clipping algorithm for triangulation
-  // Output will be suitable for GL_TRIANGLES rendering
-  
-  if (num_vertices < 3) {
-    *out_count = 0;
-    return;
+// Modified function signature as requested
+int triangulate_sector(mapvertex_t *vertices, int vertex_count, float *out_vertices) {
+  if (vertex_count < 3) {
+    return 0;  // Return 0 to indicate no triangles created
   }
   
-  // We'll need a working copy of the vertices
-  working_vertex_t *working = (working_vertex_t*)malloc(num_vertices * sizeof(working_vertex_t));
-  if (!working) {
-    *out_count = 0;
-    return; // Memory allocation failed
+  // Use dynamic allocation instead of static buffers to handle any size
+  int *indices = malloc(vertex_count * sizeof(int));
+  if (!indices) return 0;  // Memory allocation failed
+  
+  int *triangle_indices = malloc(vertex_count * 3 * sizeof(int));
+  if (!triangle_indices) {
+    free(indices);
+    return 0;  // Memory allocation failed
   }
   
-  // Copy vertices to working array
-  for (int i = 0; i < num_vertices; i++) {
-    working[i].x = vertices[i].x;
-    working[i].y = vertices[i].y;
-    working[i].original_index = i;
-    working[i].is_ear = 0; // Will be determined later
+  int triangle_index_count = 0;
+  
+  // Initialize indices array
+  for (int i = 0; i < vertex_count; i++) {
+    indices[i] = i;
   }
   
-  // Initialize ear status for all vertices
-  for (int i = 0; i < num_vertices; i++) {
-    update_ear_status(i, working, num_vertices);
-  }
+  int remaining = vertex_count;
   
-  int remaining = num_vertices;
-  int vertex_count = 0;
-  
-  // Process until we have only a triangle left
-  while (remaining > 3) {
-    // Find the next ear
-    int ear_idx = -1;
-    for (int i = 0; i < num_vertices; i++) {
-      if (working[i].original_index != -1 && working[i].is_ear) {
-        ear_idx = i;
-        break;
+  // Main ear cutting loop
+  int safety_counter = 0;  // Prevent infinite loops
+  while (remaining > 3 && safety_counter < vertex_count * 2) {
+    safety_counter++;
+    
+    // Find the best ear (maximize triangle area for better triangulation)
+    int ear_index = -1;
+    float best_area = -1.0f;
+    
+    for (int i = 0; i < remaining; i++) {
+      if (is_ear(vertices, indices, remaining, i)) {
+        int prev_idx = (i > 0) ? i - 1 : remaining - 1;
+        int next_idx = (i < remaining - 1) ? i + 1 : 0;
+        
+        float area = fabs(signed_area(
+                                      vertices[indices[prev_idx]].x, vertices[indices[prev_idx]].y,
+                                      vertices[indices[i]].x, vertices[indices[i]].y,
+                                      vertices[indices[next_idx]].x, vertices[indices[next_idx]].y
+                                      ));
+        
+        if (ear_index == -1 || area > best_area) {
+          ear_index = i;
+          best_area = area;
+        }
       }
     }
     
-    if (ear_idx == -1) {
-      // No ears found, which shouldn't happen in a simple polygon
-      // Fall back to a simple triangulation
-      break;
+    // If no ear is found, use first vertex as fallback
+    if (ear_index == -1) {
+      ear_index = 0;
     }
     
-    // Get the previous and next vertices
-    int prev = ear_idx;
-    do {
-      prev = (prev - 1 + num_vertices) % num_vertices;
-    } while (working[prev].original_index == -1);
+    // Get indices of the triangle
+    int prev_index = (ear_index > 0) ? ear_index - 1 : remaining - 1;
+    int next_index = (ear_index < remaining - 1) ? ear_index + 1 : 0;
     
-    int next = ear_idx;
-    do {
-      next = (next + 1) % num_vertices;
-    } while (working[next].original_index == -1);
-    
-    // Add vertices for the triangle
-    // First vertex
-    out_vertices[vertex_count++] = vertices[working[prev].original_index].x;
-    out_vertices[vertex_count++] = vertices[working[prev].original_index].y;
-    out_vertices[vertex_count++] = 0.0f;  // Z
-    out_vertices[vertex_count++] = 0.0f;  // U
-    out_vertices[vertex_count++] = 0.0f;  // V
-    
-    // Second vertex
-    out_vertices[vertex_count++] = vertices[working[ear_idx].original_index].x;
-    out_vertices[vertex_count++] = vertices[working[ear_idx].original_index].y;
-    out_vertices[vertex_count++] = 0.0f;  // Z
-    out_vertices[vertex_count++] = 1.0f;  // U
-    out_vertices[vertex_count++] = 0.0f;  // V
-    
-    // Third vertex
-    out_vertices[vertex_count++] = vertices[working[next].original_index].x;
-    out_vertices[vertex_count++] = vertices[working[next].original_index].y;
-    out_vertices[vertex_count++] = 0.0f;  // Z
-    out_vertices[vertex_count++] = 0.5f;  // U
-    out_vertices[vertex_count++] = 1.0f;  // V
+    // Add the triangle
+    triangle_indices[triangle_index_count++] = indices[prev_index];
+    triangle_indices[triangle_index_count++] = indices[ear_index];
+    triangle_indices[triangle_index_count++] = indices[next_index];
     
     // Remove the ear from the polygon
-    working[ear_idx].original_index = -1;
+    for (int i = ear_index; i < remaining - 1; i++) {
+      indices[i] = indices[i + 1];
+    }
     remaining--;
-    
-    // Update ear status for adjacent vertices
-    if (remaining > 3) {
-      update_ear_status(prev, working, num_vertices);
-      update_ear_status(next, working, num_vertices);
-    }
   }
   
-  // Add the last triangle if we still have one
+  // Add the final triangle
   if (remaining == 3) {
-    int indices[3] = {-1, -1, -1};
-    int count = 0;
-    
-    for (int i = 0; i < num_vertices && count < 3; i++) {
-      if (working[i].original_index != -1) {
-        indices[count++] = working[i].original_index;
-      }
-    }
-    
-    if (count == 3) {
-      // First vertex
-      out_vertices[vertex_count++] = vertices[indices[0]].x;
-      out_vertices[vertex_count++] = vertices[indices[0]].y;
-      out_vertices[vertex_count++] = 0.0f;  // Z
-      out_vertices[vertex_count++] = 0.0f;  // U
-      out_vertices[vertex_count++] = 0.0f;  // V
-      
-      // Second vertex
-      out_vertices[vertex_count++] = vertices[indices[1]].x;
-      out_vertices[vertex_count++] = vertices[indices[1]].y;
-      out_vertices[vertex_count++] = 0.0f;  // Z
-      out_vertices[vertex_count++] = 1.0f;  // U
-      out_vertices[vertex_count++] = 0.0f;  // V
-      
-      // Third vertex
-      out_vertices[vertex_count++] = vertices[indices[2]].x;
-      out_vertices[vertex_count++] = vertices[indices[2]].y;
-      out_vertices[vertex_count++] = 0.0f;  // Z
-      out_vertices[vertex_count++] = 0.5f;  // U
-      out_vertices[vertex_count++] = 1.0f;  // V
-    }
+    triangle_indices[triangle_index_count++] = indices[0];
+    triangle_indices[triangle_index_count++] = indices[1];
+    triangle_indices[triangle_index_count++] = indices[2];
   }
   
-  // Clean up
-  free(working);
+  // Convert triangle indices to output vertices
+  int out_vertex_count = 0;
+  for (int i = 0; i < triangle_index_count; i++) {
+    int idx = triangle_indices[i];
+    out_vertices[out_vertex_count++] = vertices[idx].x;
+    out_vertices[out_vertex_count++] = vertices[idx].y;
+    out_vertices[out_vertex_count++] = 0;
+    out_vertices[out_vertex_count++] = 0;
+    out_vertices[out_vertex_count++] = 0;
+  }
   
-  *out_count = vertex_count;
+  // Free allocated memory
+  free(indices);
+  free(triangle_indices);
+  
+  return out_vertex_count;  // Return the number of vertices in the triangulation
 }

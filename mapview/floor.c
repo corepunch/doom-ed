@@ -71,7 +71,7 @@ bool point_in_polygon(float x, float y, vec2s *vertices, int num_vertices) {
 }
 
 // Improved triangulation function for DOOM sectors
-void triangulate_sector(mapvertex_t *vertices, int num_vertices, float *out_vertices, int *out_count);
+int triangulate_sector(mapvertex_t *vertices, int num_vertices, float *out_vertices);
 
 // Function to calculate texture coordinates based on sector dimensions
 void calculate_texture_coords(float *vertices, int vertex_count, float sector_width, float sector_height) {
@@ -204,9 +204,7 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     // Triangulate the sector
     // Allocate memory for vertices (position + texcoord) * 3 vertices per triangle * num_triangles
     float vertices[5 * (MAX_VERTICES+1)];
-    int vertex_count = 0;
-    
-    triangulate_sector(sector_vertices, num_vertices, vertices, &vertex_count);
+    int vertex_count = triangulate_sector(sector_vertices, num_vertices, vertices);
     
     // Set appropriate texture coordinates
     float sector_width = TEX_SIZE; // Default texture size
