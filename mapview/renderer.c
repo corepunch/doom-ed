@@ -64,6 +64,7 @@ typedef struct {
   float x;
   float y;
   float angle;  // in degrees, 0 is east, 90 is north
+  float pitch;
   float height;
 } player_t;
 
@@ -302,6 +303,12 @@ void draw_map(map_data_t const *map, mat4 mvp) {
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
+/**
+ * Generate the view matrix incorporating player position, angle, and pitch
+ * @param map Pointer to the map data
+ * @param player Pointer to the player object
+ * @param out Output matrix (view-projection combined)
+ */
 void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   mapsector_t const *sector = find_player_sector(map, player->x, player->y);
   
@@ -312,19 +319,43 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   }
   
   // Convert angle to radians for direction calculation
-  float angle_rad = player->angle * M_PI / 180.0f + 0.001f;
+  float angle_rad = player->angle * M_PI / 180.0f;
+  float pitch_rad = player->pitch * M_PI / 180.0f;
   
-  // Calculate where the player is looking
-  float look_x = player->x + cos(angle_rad) * 10.0f;
-  float look_y = player->y - sin(angle_rad) * 10.0f; // Y is flipped in DOOM
+  // Calculate looking direction vector
+  float look_dir_x = -cos(angle_rad);
+  float look_dir_y = sin(angle_rad);
+  float look_dir_z = sin(pitch_rad);
   
+  // Scale the horizontal component of the look direction by the cosine of the pitch
+  // This prevents the player from moving faster when looking up or down
+  float cos_pitch = cos(pitch_rad);
+  look_dir_x *= cos_pitch;
+  look_dir_y *= cos_pitch;
+  
+  // Calculate look-at point
+  float look_x = player->x + look_dir_x * 10.0f;
+  float look_y = player->y + look_dir_y * 10.0f;
+  float look_z = z + look_dir_z * 10.0f;
+  
+  // Create projection matrix
   mat4 proj;
-  glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 10, 2000.0f, proj);
+  glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 1.0f, 2000.0f, proj);
   
+  // Create view matrix
   mat4 view;
   vec3 eye = {player->x, player->y, z};
-  vec3 center = {look_x, look_y, z}; // Look straight ahead, not at origin
-  vec3 up = {0.0f, 0.0f, 1.0f};      // Z is up in Doom
+  vec3 center = {look_x, look_y, look_z}; // Look vector now includes pitch
+  vec3 up = {0.0f, 0.0f, 1.0f};           // Z is up in Doom
+  
+  // Add a small offset to prevent precision issues with axis-aligned views
+  if (fabs(player->pitch) > 89.5f) {
+    // Adjust up vector when looking almost straight up or down
+    up[0] = -sin(angle_rad);
+    up[1] = -cos(angle_rad);
+    up[2] = 0.0f;
+  }
+  
   glm_lookat(eye, center, up, view);
   
   // Combine view and projection into MVP
@@ -334,60 +365,114 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
 /**
  * Process input and update player position with proper angle handling
  */
+/**
+ * Handle player input including mouse movement for camera control
+ * @param player Pointer to the player object
+ */
 void handle_input(player_t *player) {
   SDL_Event event;
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
   
+  // Variables for mouse movement
+  int mouse_x_rel = 0;
+  int mouse_y_rel = 0;
+  
+  // Center position for relative mouse mode
+  int window_width, window_height;
+  SDL_GetWindowSize(window, &window_width, &window_height); // Assuming 'window' is accessible
+  
+  // Process SDL events
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
       running = false;
     }
+    else if (event.type == SDL_MOUSEMOTION) {
+      // Get relative mouse movement
+      mouse_x_rel = event.motion.xrel;
+      mouse_y_rel = event.motion.yrel;
+    }
+    else if (event.type == SDL_KEYDOWN) {
+      if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
+        // Toggle mouse capture with Escape key
+        if (SDL_GetRelativeMouseMode()) {
+          SDL_SetRelativeMouseMode(SDL_FALSE);
+        } else {
+          SDL_SetRelativeMouseMode(SDL_TRUE);
+        }
+      }
+    }
+  }
+  
+  // Apply mouse rotation if relative mode is enabled
+  if (SDL_GetRelativeMouseMode()) {
+    // Horizontal mouse movement controls yaw (left/right rotation)
+    float sensitivity_x = 0.15f; // Adjust sensitivity as needed
+    player->angle += mouse_x_rel * sensitivity_x;
+    
+    // Keep angle within 0-360 range
+    if (player->angle < 0) player->angle += 360;
+    if (player->angle >= 360) player->angle -= 360;
+    
+    // Vertical mouse movement controls pitch (up/down looking)
+    float sensitivity_y = 0.25f; // Adjust sensitivity as needed
+    player->pitch -= mouse_y_rel * sensitivity_y;
+    
+    // Clamp pitch to prevent flipping over
+    if (player->pitch > 89.0f) player->pitch = 89.0f;
+    if (player->pitch < -89.0f) player->pitch = -89.0f;
   }
   
   // Convert player angle to radians for movement calculations
   float angle_rad = player->angle * M_PI / 180.0;
   
   // Calculate forward/backward direction vector
-  float forward_x = cos(angle_rad) * MOVEMENT_SPEED;
-  float forward_y = -sin(angle_rad) * MOVEMENT_SPEED; // Y is flipped in DOOM
+  float forward_x = -cos(angle_rad) * MOVEMENT_SPEED;
+  float forward_y = sin(angle_rad) * MOVEMENT_SPEED; // Y is flipped in DOOM
   
   // Calculate strafe direction vector (perpendicular to forward)
-  float strafe_x = -sin(angle_rad) * MOVEMENT_SPEED;
-  float strafe_y = -cos(angle_rad) * MOVEMENT_SPEED;
+  float strafe_x = sin(angle_rad) * MOVEMENT_SPEED;
+  float strafe_y = cos(angle_rad) * MOVEMENT_SPEED;
   
-  // Handle movement keys
-  if (keystates[SDL_SCANCODE_UP]) {
+  // Handle keyboard movement
+  if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
     // Move forward
     player->x += forward_x;
     player->y += forward_y;
   }
-  if (keystates[SDL_SCANCODE_DOWN]) {
+  if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
     // Move backward
     player->x -= forward_x;
     player->y -= forward_y;
   }
   if (keystates[SDL_SCANCODE_D]) {
-    // Strafe left
+    // Strafe right
     player->x += strafe_x;
     player->y += strafe_y;
   }
   if (keystates[SDL_SCANCODE_A]) {
-    // Strafe right
+    // Strafe left
     player->x -= strafe_x;
     player->y -= strafe_y;
   }
   
-  // Handle rotation keys
-  if (keystates[SDL_SCANCODE_LEFT]) {
-    player->angle -= ROTATION_SPEED;
-    if (player->angle < 0) player->angle += 360;
+  // Additional vertical movement if needed (flying up/down)
+  if (keystates[SDL_SCANCODE_E]) {
+//    player->z += MOVEMENT_SPEED; // Move up
   }
-  if (keystates[SDL_SCANCODE_RIGHT]) {
-    player->angle += ROTATION_SPEED;
-    if (player->angle >= 360) player->angle -= 360;
+  if (keystates[SDL_SCANCODE_Q]) {
+//    player->z -= MOVEMENT_SPEED; // Move down
   }
+  
+  // Toggle mode with Shift
   if (keystates[SDL_SCANCODE_LSHIFT]) {
-    mode = !mode;
+    static Uint32 last_toggle = 0;
+    Uint32 current_time = SDL_GetTicks();
+    
+    // Add debounce to prevent multiple toggles
+    if (current_time - last_toggle > 250) {
+      mode = !mode;
+      last_toggle = current_time;
+    }
   }
 }
 

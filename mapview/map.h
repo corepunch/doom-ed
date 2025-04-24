@@ -27,7 +27,7 @@ if ((map)->name) free((map)->name); \
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-#define BRIGHTNESS 0.9f
+#define BRIGHTNESS 1.1f
 #define EYE_HEIGHT 41 // Typical eye height in Doom is 41 units above floor
 
 // Type definitions to better represent the WAD format
