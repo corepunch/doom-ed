@@ -24,8 +24,10 @@ const char* vs_src = "#version 150 core\n"
 "in vec2 bary; in vec2 uv;\nout vec2 tex;\n"
 "uniform mat4 mvp;\n"
 "uniform mat4 rect;\n"
+"uniform vec2 texScale;\n"
+"uniform vec2 texOffset;\n"
 "void main() {\n"
-"  tex = uv;\n"
+"  tex = uv*texScale+texOffset;\n"
 "  vec4 a = rect[0];\n"
 "  vec4 b = rect[1];\n"
 "  vec4 c = rect[2];\n"
@@ -166,13 +168,20 @@ void init_player(map_data_t const *map, player_t *player) {
   }
 }
 
-GLuint get_texture(const char* name);
+mapside_texture_t *get_texture(const char* name);
+
+float get_wall_direction_shading(vec2s v1, vec2s v2) {
+  vec2s dir = glms_vec2_normalize(glms_vec2_sub(v2, v1));
+  float shading = fabsf(dir.x); // Y contributes more as it becomes vertical
+  return shading; // 0 = horizontal, 1 = vertical
+}
 
 // Helper function to draw a textured quad
 void draw_textured_quad(const mapvertex_t *v1, const mapvertex_t *v2,
-                        float bottom, float top, GLuint texture,
+                        float bottom, float top, mapside_texture_t *texture,
                         float u_offset, float v_offset, float light, bool flip) {
-  if (texture == -1) return;
+  if (!texture)
+    return;
   
   mat4 rect;
   
@@ -190,10 +199,18 @@ void draw_textured_quad(const mapvertex_t *v1, const mapvertex_t *v2,
     rect[3][0] = v2->x; rect[3][1] = v2->y; rect[3][2] = top;    rect[3][3] = 1.0f; // d (top left)
   }
   
-  glBindTexture(GL_TEXTURE_2D, texture);
+  glBindTexture(GL_TEXTURE_2D, texture->texture);
   glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
   
+  vec2s a= {v1->x,v1->y}, b = {v2->x,v2->y};
+  
+  float shade = get_wall_direction_shading(a, b) * 0.4 + 0.6;
+  float dist = glms_vec2_distance(a, b);
+  
+  light *= shade;
+  
   // Apply texture offsets
+  glUniform2f(glGetUniformLocation(prog, "texScale"), dist/texture->width, fabs(top-bottom)/texture->height);
   glUniform2f(glGetUniformLocation(prog, "texOffset"), u_offset, v_offset);
   
   glUniform3f(glGetUniformLocation(prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS);
@@ -215,23 +232,21 @@ void draw_sidedef(const mapvertex_t *v1, const mapvertex_t *v2,
     
     // Draw upper texture (if ceiling heights differ)
     if (sector->ceilingheight > other_sector->ceilingheight) {
-      GLuint tex = get_texture(sidedef->toptexture);
       draw_textured_quad(v1, v2,
                          other_sector->ceilingheight, sector->ceilingheight,
-                         tex, u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
+                         get_texture(sidedef->toptexture), u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
     }
     
     // Draw lower texture (if floor heights differ)
     if (sector->floorheight < other_sector->floorheight) {
-      GLuint tex = get_texture(sidedef->bottomtexture);
       draw_textured_quad(v1, v2,
                          sector->floorheight, other_sector->floorheight,
-                         tex, u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
+                         get_texture(sidedef->bottomtexture), u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
     }
     
     // Draw middle texture (if specified) - important for door frames, windows, etc.
-    GLuint mid_tex = get_texture(sidedef->midtexture);
-    if (mid_tex != -1) {
+    mapside_texture_t *mid_tex = get_texture(sidedef->midtexture);
+    if (mid_tex) {
       float bottom = MAX(sector->floorheight, other_sector->floorheight);
       float top = MIN(sector->ceilingheight, other_sector->ceilingheight);
       draw_textured_quad(v1, v2, bottom, top, mid_tex, u_offset, v_offset,
@@ -239,10 +254,9 @@ void draw_sidedef(const mapvertex_t *v1, const mapvertex_t *v2,
     }
   } else {
     // This is a one-sided wall, just draw the middle texture
-    GLuint tex = get_texture(sidedef->midtexture);
     draw_textured_quad(v1, v2,
                        sector->floorheight, sector->ceilingheight,
-                       tex, u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
+                       get_texture(sidedef->midtexture), u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
   }
 }
 

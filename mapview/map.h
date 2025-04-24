@@ -27,7 +27,7 @@ if ((map)->name) free((map)->name); \
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-#define BRIGHTNESS 0.7f
+#define BRIGHTNESS 0.9f
 #define EYE_HEIGHT 41 // Typical eye height in Doom is 41 units above floor
 
 // Type definitions to better represent the WAD format
@@ -94,6 +94,15 @@ typedef struct {
   int16_t special;           // Special behavior
   int16_t tag;               // Tag number
 } mapsector_t;
+
+
+// Struct to represent a texture with OpenGL
+typedef struct {
+  texname_t name;
+  uint32_t texture;
+  uint16_t width;
+  uint16_t height;
+} mapside_texture_t;
 
 // Map data structure using the collection macro
 typedef struct {

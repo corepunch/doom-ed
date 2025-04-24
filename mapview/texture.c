@@ -63,12 +63,6 @@ typedef struct {
   filelump_t *lump;           // Pointer to the lump containing this directory
 } texture_directory_t;
 
-// Struct to represent a texture with OpenGL
-typedef struct {
-  texname_t name;
-  GLuint texture;
-} mapside_texture_t;
-
 // Struct to represent a flat texture with OpenGL
 typedef struct {
   texname_t name;
@@ -316,9 +310,12 @@ mappatchnames_t* load_pnames(FILE* wad_file, filelump_t* lump) {
 }
 
 // Try to load texture from texture directories
-static GLuint load_texture_from_directories(FILE* wad_file, filelump_t* directory, int num_lumps,
-                                            texname_t tex_name, texture_directory_t* tex_dirs,
-                                            mappatchnames_t* pnames, const palette_entry_t* palette) {
+static mapside_texture_t*
+load_texture_from_directories(FILE* wad_file, filelump_t* directory, int num_lumps,
+                              texname_t tex_name, texture_directory_t* tex_dirs,
+                              mappatchnames_t* pnames, const palette_entry_t* palette)
+{
+  static mapside_texture_t tmp;
   maptexture_t* tex_def = NULL;
   texname_t uppercase = {0};
 
@@ -334,12 +331,15 @@ static GLuint load_texture_from_directories(FILE* wad_file, filelump_t* director
   
   // If texture definition found, create OpenGL texture
   if (tex_def) {
-    GLuint tex = create_texture_from_definition(wad_file, directory, num_lumps, tex_def, pnames, palette);
+    tmp.texture = create_texture_from_definition(wad_file, directory, num_lumps, tex_def, pnames, palette);
+    tmp.width = tex_def->width;
+    tmp.height = tex_def->height;
+    strncpy(tmp.name, tex_name, sizeof(texname_t));
     free(tex_def);
-    return tex;
+    return &tmp;
   }
   
-  return 0;
+  return NULL;
 }
 
 // Try to load texture
@@ -358,14 +358,12 @@ static void maybe_load_texture(FILE* wad_file, filelump_t* directory, int num_lu
   }
   
   // Try to load from texture directories
-  GLuint tex = load_texture_from_directories(wad_file, directory, num_lumps, tex_name,
-                                             tex_dirs, pnames, palette);
+  mapside_texture_t *tex =
+  load_texture_from_directories(wad_file, directory, num_lumps, tex_name,
+                                tex_dirs, pnames, palette);
   
   if (tex) {
-    mapside_texture_t* new_tex = &cache->textures[cache->num_textures];
-    strncpy(new_tex->name, tex_name, 8);
-    new_tex->texture = tex;
-    cache->num_textures++;
+    cache->textures[cache->num_textures++] = *tex;
   }
 }
 
@@ -463,18 +461,18 @@ void free_texture_cache(texture_cache_t* cache) {
 }
 
 // Get texture from cache by name
-GLuint get_texture_from_cache(texture_cache_t* cache, const char* name) {
+mapside_texture_t *get_texture_from_cache(texture_cache_t* cache, const char* name) {
   for (int i = 0; i < cache->num_textures; i++) {
     if (strncmp(cache->textures[i].name, name, 8) == 0) {
-      return cache->textures[i].texture;
+      return &cache->textures[i];
     }
   }
   
-  return -1;
+  return NULL;
 }
 
 // Convenience function to get texture
-GLuint get_texture(const char* name) {
+mapside_texture_t *get_texture(const char* name) {
   return get_texture_from_cache(&g_cache, name);
 }
 

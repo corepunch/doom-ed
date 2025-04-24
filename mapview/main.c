@@ -146,7 +146,7 @@ int main(int argc, char* argv[]) {
   fread(directory, sizeof(filelump_t), header.numlumps, file);
   
   // Load E1M1 map
-  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP01");
+  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP02");
   
   // Print map info
   if (e1m1.num_vertices > 0) {

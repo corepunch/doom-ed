@@ -173,7 +173,6 @@ uint32_t get_sector_vertices(map_data_t const *map,
       }
     }
     if (!found) {
-      assert(false);
       return 0;
     }
   }
@@ -237,6 +236,7 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     
     // Use flat color based on sector light level
     float light = map->sectors[i].lightlevel / 255.0f;
+    
     glUniform3f(glGetUniformLocation(floor_prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS);
 
     // Bind floor texture
