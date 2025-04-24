@@ -85,6 +85,13 @@ map_data_t load_map(FILE* file, filelump_t* directory, int num_lumps, const char
     int sectors_idx = map_index + 8;
     map.num_sectors = directory[sectors_idx].size / sizeof(mapsector_t);
     map.sectors = (mapsector_t*)read_lump_data(file, directory[sectors_idx].filepos, directory[sectors_idx].size);
+    
+    map.walls.sections = malloc(sizeof(mapsidedef_sections_t) * map.num_sidedefs);
+    memset(map.walls.sections, 0, sizeof(mapsidedef_sections_t) * map.num_sidedefs);
+    for (uint32_t i = 0; i < map.num_sidedefs; i++) {
+      map.walls.sections[i].def = &map.sidedefs[i];
+      map.walls.sections[i].sector = &map.sectors[map.sidedefs[i].sector];
+    }
   }
   
   return map;
@@ -160,6 +167,7 @@ int main(int argc, char* argv[]) {
     allocate_mapside_textures(&e1m1, file, directory, header.numlumps);
     allocate_flat_textures(&e1m1, file, directory, header.numlumps);
     init_sprites(file, directory, header.numlumps);
+    build_wall_vertex_buffer(&e1m1);
     run(&e1m1);
   } else {
     printf("\nFailed to load E1M1 map\n");

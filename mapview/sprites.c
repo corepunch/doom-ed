@@ -374,7 +374,7 @@ sprite_t* find_sprite(const char* name) {
 int find_lump_from_file(FILE* wad_file, const char* name) {
   // Get file size
   fseek(wad_file, 0, SEEK_END);
-  long file_size = ftell(wad_file);
+//  long file_size = ftell(wad_file);
   fseek(wad_file, 0, SEEK_SET);
   
   // Read WAD header
