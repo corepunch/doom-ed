@@ -40,7 +40,10 @@ const char* fs_src = "#version 150 core\n"
 "in vec2 tex;\nout vec4 outColor;\n"
 "uniform vec3 color;\n"
 "uniform sampler2D tex0;\n"
-"void main() { outColor = texture(tex0, tex) * vec4(color + smoothstep(1.0,0.5,gl_FragCoord.z), 1.0); }";
+"void main() {\n"
+"  outColor = texture(tex0, tex);\n"
+"  outColor *= vec4(color + smoothstep(1.0,0.5,gl_FragCoord.z), 1.0) * outColor.w;\n"
+"}";
 
 float verts[] = {
   // bary.x bary.y    uv.x uv.y
