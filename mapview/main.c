@@ -1,4 +1,5 @@
 #include "map.h"
+#include "sprites.h"
 
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
   int inside = 0;
@@ -158,6 +159,7 @@ int main(int argc, char* argv[]) {
     }
     allocate_mapside_textures(&e1m1, file, directory, header.numlumps);
     allocate_flat_textures(&e1m1, file, directory, header.numlumps);
+    init_sprites(file, directory, header.numlumps);
     run(&e1m1);
   } else {
     printf("\nFailed to load E1M1 map\n");

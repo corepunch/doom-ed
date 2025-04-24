@@ -5,6 +5,7 @@
 #include <math.h>
 
 #include "map.h"
+#include "sprites.h"
 
 // Constants for rendering
 #define SCREEN_WIDTH 800
@@ -322,7 +323,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   }
   
   // Convert angle to radians for direction calculation
-  float angle_rad = player->angle * M_PI / 180.0f;
+  float angle_rad = player->angle * M_PI / 180.0f + 0.001f;
   float pitch_rad = player->pitch * M_PI / 180.0f;
   
   // Calculate looking direction vector
@@ -483,7 +484,7 @@ void draw_floors(map_data_t const *map, mat4 mvp);
 
 // Main function
 int run(map_data_t const *map) {
-  player_t player;
+  player_t player = {0};
   
   // Initialize player position based on map data
   init_player(map, &player);
@@ -513,9 +514,12 @@ int run(map_data_t const *map) {
     
     // Draw the map
     draw_map(map, mvp);
+    
+    draw_weapon();
+
+    draw_crosshair();
 
     SDL_GL_SwapWindow(window);
-    
     
     // Cap frame rate
     SDL_Delay(16);  // ~60 FPS
