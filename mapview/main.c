@@ -157,6 +157,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
     allocate_mapside_textures(&e1m1, file, directory, header.numlumps);
+    allocate_flat_textures(&e1m1, file, directory, header.numlumps);
     run(&e1m1);
   } else {
     printf("\nFailed to load E1M1 map\n");

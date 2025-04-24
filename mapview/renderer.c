@@ -36,15 +36,16 @@ const char* vs_src = "#version 150 core\n"
 
 const char* fs_src = "#version 150 core\n"
 "in vec2 tex;\nout vec4 outColor;\n"
+"uniform vec3 color;\n"
 "uniform sampler2D tex0;\n"
-"void main() { outColor = texture(tex0, tex); }";
+"void main() { outColor = texture(tex0, tex) * vec4(color + smoothstep(1.0,0.5,gl_FragCoord.z), 1.0); }";
 
 float verts[] = {
   // bary.x bary.y    uv.x uv.y
-  0.0f, 0.0f,        0.0f, 0.0f, // bottom left
-  1.0f, 0.0f,        1.0f, 0.0f, // bottom right
-  1.0f, 1.0f,        1.0f, 1.0f, // top right
-  0.0f, 1.0f,        0.0f, 1.0f, // top left
+  0.0f, 0.0f,        0.0f, 1.0f, // bottom left
+  1.0f, 0.0f,        1.0f, 1.0f, // bottom right
+  1.0f, 1.0f,        1.0f, 0.0f, // top right
+  0.0f, 1.0f,        0.0f, 0.0f, // top left
 };
 
 unsigned int idx[] = { 0, 1, 2, 2, 3, 0 };
@@ -116,9 +117,9 @@ bool init_sdl(void) {
   glBindAttribLocation(prog, 1, "uv");
   glLinkProgram(prog);
   glUseProgram(prog);
-  
+
 //  glEnable(GL_CULL_FACE);
-//  glCullFace(GL_BACK);
+  glCullFace(GL_BACK);
   
   glEnable(GL_DEPTH_TEST);
   glDepthMask(GL_TRUE);
@@ -134,7 +135,7 @@ bool init_sdl(void) {
   glBindTexture(GL_TEXTURE_2D, tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pix);
   glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-  
+    
   init_floor_shader();
     
   return true;
@@ -167,155 +168,144 @@ void init_player(map_data_t const *map, player_t *player) {
 
 GLuint get_texture(const char* name);
 
+// Helper function to draw a textured quad
+void draw_textured_quad(const mapvertex_t *v1, const mapvertex_t *v2,
+                        float bottom, float top, GLuint texture,
+                        float u_offset, float v_offset, float light, bool flip) {
+  if (texture == -1) return;
+  
+  mat4 rect;
+  
+  if (!flip) {
+    // Normal orientation (front side)
+    rect[0][0] = v1->x; rect[0][1] = v1->y; rect[0][2] = bottom; rect[0][3] = 1.0f; // a (bottom left)
+    rect[1][0] = v2->x; rect[1][1] = v2->y; rect[1][2] = bottom; rect[1][3] = 1.0f; // b (bottom right)
+    rect[2][0] = v2->x; rect[2][1] = v2->y; rect[2][2] = top;    rect[2][3] = 1.0f; // c (top right)
+    rect[3][0] = v1->x; rect[3][1] = v1->y; rect[3][2] = top;    rect[3][3] = 1.0f; // d (top left)
+  } else {
+    // Flipped orientation (back side)
+    rect[0][0] = v2->x; rect[0][1] = v2->y; rect[0][2] = bottom; rect[0][3] = 1.0f; // a (bottom left)
+    rect[1][0] = v1->x; rect[1][1] = v1->y; rect[1][2] = bottom; rect[1][3] = 1.0f; // b (bottom right)
+    rect[2][0] = v1->x; rect[2][1] = v1->y; rect[2][2] = top;    rect[2][3] = 1.0f; // c (top right)
+    rect[3][0] = v2->x; rect[3][1] = v2->y; rect[3][2] = top;    rect[3][3] = 1.0f; // d (top left)
+  }
+  
+  glBindTexture(GL_TEXTURE_2D, texture);
+  glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
+  
+  // Apply texture offsets
+  glUniform2f(glGetUniformLocation(prog, "texOffset"), u_offset, v_offset);
+  
+  glUniform3f(glGetUniformLocation(prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS);
+  
+  glUniformMatrix4fv(glGetUniformLocation(prog, "rect"), 1, GL_FALSE, (const float*)rect);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+}
+
+// Helper function to draw a sidedef
+void draw_sidedef(const mapvertex_t *v1, const mapvertex_t *v2,
+                  const mapsidedef_t *sidedef, const mapsector_t *sector,
+                  const mapsector_t *other_sector, bool is_back_side) {
+  float tex_scale = 64.0f; // Convert to normalized coordinates
+  float u_offset = sidedef->textureoffset / tex_scale;
+  float v_offset = sidedef->rowoffset / tex_scale;
+  
+  if (other_sector) {
+    // This is a two-sided wall
+    
+    // Draw upper texture (if ceiling heights differ)
+    if (sector->ceilingheight > other_sector->ceilingheight) {
+      GLuint tex = get_texture(sidedef->toptexture);
+      draw_textured_quad(v1, v2,
+                         other_sector->ceilingheight, sector->ceilingheight,
+                         tex, u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
+    }
+    
+    // Draw lower texture (if floor heights differ)
+    if (sector->floorheight < other_sector->floorheight) {
+      GLuint tex = get_texture(sidedef->bottomtexture);
+      draw_textured_quad(v1, v2,
+                         sector->floorheight, other_sector->floorheight,
+                         tex, u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
+    }
+    
+    // Draw middle texture (if specified) - important for door frames, windows, etc.
+    GLuint mid_tex = get_texture(sidedef->midtexture);
+    if (mid_tex != -1) {
+      float bottom = MAX(sector->floorheight, other_sector->floorheight);
+      float top = MIN(sector->ceilingheight, other_sector->ceilingheight);
+      draw_textured_quad(v1, v2, bottom, top, mid_tex, u_offset, v_offset,
+                         sector->lightlevel/255.0f, is_back_side);
+    }
+  } else {
+    // This is a one-sided wall, just draw the middle texture
+    GLuint tex = get_texture(sidedef->midtexture);
+    draw_textured_quad(v1, v2,
+                       sector->floorheight, sector->ceilingheight,
+                       tex, u_offset, v_offset, sector->lightlevel/255.0f, is_back_side);
+  }
+}
+
 // Draw the map from player perspective
 void draw_map(map_data_t const *map, mat4 mvp) {
   glUseProgram(prog);
   glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
   glBindVertexArray(vao);
+  
   // Draw linedefs
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t const *linedef = &map->linedefs[i];
     mapvertex_t const *v1 = &map->vertices[linedef->start];
     mapvertex_t const *v2 = &map->vertices[linedef->end];
     
-    // Process front side (sidenum[0])
-    if (linedef->sidenum[0] < map->num_sidedefs) {
-      mapsidedef_t const *sidedef = &map->sidedefs[linedef->sidenum[0]];
-      mapsector_t const *sector = &map->sectors[sidedef->sector];
-      
-      // Check if there's a back side to this linedef
-      mapsector_t *back_sector = NULL;
-      if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
-        back_sector = &map->sectors[map->sidedefs[linedef->sidenum[1]].sector];
-      }
-      
-      // Render different parts of the wall based on sectors
-      if (back_sector) {
-        // This is a two-sided linedef
-        
-        // Draw upper texture (if ceiling heights differ)
-        if (sector->ceilingheight > back_sector->ceilingheight) {
-          GLuint tex = get_texture(sidedef->toptexture);
-          if (tex != -1) {
-            mat4 rect = {
-              { v1->x, v1->y, back_sector->ceilingheight, 1.0f }, // a (bottom left)
-              { v2->x, v2->y, back_sector->ceilingheight, 1.0f }, // b (bottom right)
-              { v2->x, v2->y, sector->ceilingheight, 1.0f },      // c (top right)
-              { v1->x, v1->y, sector->ceilingheight, 1.0f },      // d (top left)
-            };
-            
-            glBindTexture(GL_TEXTURE_2D, tex);
-            glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-            
-            // Apply texture offsets
-            float u_offset = sidedef->textureoffset / 64.0f; // Convert to normalized coordinates
-            float v_offset = sidedef->rowoffset / 64.0f;     // Adjust based on your texture scaling
-            glUniform2f(glGetUniformLocation(prog, "texOffset"), u_offset, v_offset);
-            
-            glUniformMatrix4fv(glGetUniformLocation(prog, "rect"), 1, GL_FALSE, (const float*)rect);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-          }
-        }
-        
-        // Draw lower texture (if floor heights differ)
-        if (sector->floorheight < back_sector->floorheight) {
-          GLuint tex = get_texture(sidedef->bottomtexture);
-          if (tex != -1) {
-            mat4 rect = {
-              { v1->x, v1->y, sector->floorheight, 1.0f },         // a (bottom left)
-              { v2->x, v2->y, sector->floorheight, 1.0f },         // b (bottom right)
-              { v2->x, v2->y, back_sector->floorheight, 1.0f },    // c (top right)
-              { v1->x, v1->y, back_sector->floorheight, 1.0f },    // d (top left)
-            };
-            
-            glBindTexture(GL_TEXTURE_2D, tex);
-            glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-            
-            // Apply texture offsets
-            float u_offset = sidedef->textureoffset / 64.0f;
-            float v_offset = sidedef->rowoffset / 64.0f;
-            glUniform2f(glGetUniformLocation(prog, "texOffset"), u_offset, v_offset);
-            
-            glUniformMatrix4fv(glGetUniformLocation(prog, "rect"), 1, GL_FALSE, (const float*)rect);
-            glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-          }
-        }
-        
-        // Draw middle texture (if specified)
-        GLuint mid_tex = get_texture(sidedef->midtexture);
-        if (mid_tex != -1) {
-          // For middle textures on two-sided lines, they act as "windows" or railings
-          mat4 rect = {
-            { v1->x, v1->y, MAX(sector->floorheight, back_sector->floorheight), 1.0f },  // a (bottom left)
-            { v2->x, v2->y, MAX(sector->floorheight, back_sector->floorheight), 1.0f },  // b (bottom right)
-            { v2->x, v2->y, MIN(sector->ceilingheight, back_sector->ceilingheight), 1.0f }, // c (top right)
-            { v1->x, v1->y, MIN(sector->ceilingheight, back_sector->ceilingheight), 1.0f }, // d (top left)
-          };
-          
-          glBindTexture(GL_TEXTURE_2D, mid_tex);
-          glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-          
-          // Apply texture offsets
-          float u_offset = sidedef->textureoffset / 64.0f;
-          float v_offset = sidedef->rowoffset / 64.0f;
-          glUniform2f(glGetUniformLocation(prog, "texOffset"), u_offset, v_offset);
-          
-          glUniformMatrix4fv(glGetUniformLocation(prog, "rect"), 1, GL_FALSE, (const float*)rect);
-          glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-      } else {
-        // This is a one-sided linedef, only draw middle texture
-        GLuint tex = get_texture(sidedef->midtexture);
-        if (tex != -1) {
-          mat4 rect = {
-            { v1->x, v1->y, sector->floorheight, 1.0f },     // a (bottom left)
-            { v2->x, v2->y, sector->floorheight, 1.0f },     // b (bottom right)
-            { v2->x, v2->y, sector->ceilingheight, 1.0f },   // c (top right)
-            { v1->x, v1->y, sector->ceilingheight, 1.0f },   // d (top left)
-          };
-          
-          glBindTexture(GL_TEXTURE_2D, tex);
-          glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-          
-          // Apply texture offsets
-          float u_offset = sidedef->textureoffset / 64.0f;
-          float v_offset = sidedef->rowoffset / 64.0f;
-          glUniform2f(glGetUniformLocation(prog, "texOffset"), u_offset, v_offset);
-          
-          glUniformMatrix4fv(glGetUniformLocation(prog, "rect"), 1, GL_FALSE, (const float*)rect);
-          glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-        }
-      }
+    // Check if front sidedef exists
+    if (linedef->sidenum[0] >= map->num_sidedefs) {
+      continue; // Skip if invalid front sidedef
+    }
+    
+    mapsidedef_t const *front_sidedef = &map->sidedefs[linedef->sidenum[0]];
+    mapsector_t const *front_sector = &map->sectors[front_sidedef->sector];
+    
+    // Check if there's a back side to this linedef
+    mapsidedef_t const *back_sidedef = NULL;
+    mapsector_t const *back_sector = NULL;
+    
+    if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
+      back_sidedef = &map->sidedefs[linedef->sidenum[1]];
+      back_sector = &map->sectors[back_sidedef->sector];
+    }
+    
+    // Draw front side
+    draw_sidedef(v1, v2, front_sidedef, front_sector, back_sector, false);
+    
+    // Draw back side if it exists
+    if (back_sidedef) {
+      draw_sidedef(v2, v1, back_sidedef, back_sector, front_sector, true);
     }
   }
+  
+  // Reset texture binding
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-// Helper macros for min/max if not already defined
-#ifndef MIN
-#define MIN(a, b) ((a) < (b) ? (a) : (b))
-#endif
-
-#ifndef MAX
-#define MAX(a, b) ((a) > (b) ? (a) : (b))
-#endif
 void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   mapsector_t const *sector = find_player_sector(map, player->x, player->y);
   
   float z = 0;
   
   if (sector) {
-    z = sector->floorheight + 41; // Typical eye height in Doom is 41 units above floor
+    z = sector->floorheight + EYE_HEIGHT;
   }
   
   // Convert angle to radians for direction calculation
-  float angle_rad = player->angle * M_PI / 180.0f;
+  float angle_rad = player->angle * M_PI / 180.0f + 0.001f;
   
   // Calculate where the player is looking
   float look_x = player->x + cos(angle_rad) * 10.0f;
   float look_y = player->y - sin(angle_rad) * 10.0f; // Y is flipped in DOOM
   
   mat4 proj;
-  glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 0.1f, 2000.0f, proj);
+  glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 10, 2000.0f, proj);
   
   mat4 view;
   vec3 eye = {player->x, player->y, z};

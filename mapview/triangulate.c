@@ -2,7 +2,7 @@
 #include <math.h>
 
 // Maximum expected number of vertices in a sector
-#define MAX_VERTICES 256
+#define MAX_VERTICES 1024
 #define EPSILON 1e-6  // Small value for floating point comparisons
 
 // Returns 2x the signed area of the triangle
@@ -62,6 +62,21 @@ static int is_ear(mapvertex_t *vertices, int *indices, int count, int i) {
 int triangulate_sector(mapvertex_t *vertices, int vertex_count, float *out_vertices) {
   if (vertex_count < 3) {
     return 0;  // Return 0 to indicate no triangles created
+  }
+  
+  // Compute polygon signed area to determine winding
+  float polygon_area = 0.0f;
+  for (int i = 0; i < vertex_count; ++i) {
+    int j = (i + 1) % vertex_count;
+    polygon_area += (vertices[i].x * vertices[j].y) - (vertices[j].x * vertices[i].y);
+  }
+  if (polygon_area < 0) {
+    // Reverse winding to make it counter-clockwise
+    for (int i = 0; i < vertex_count / 2; ++i) {
+      mapvertex_t temp = vertices[i];
+      vertices[i] = vertices[vertex_count - 1 - i];
+      vertices[vertex_count - 1 - i] = temp;
+    }
   }
   
   // Use dynamic allocation instead of static buffers to handle any size

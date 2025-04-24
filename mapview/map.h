@@ -27,6 +27,9 @@ if ((map)->name) free((map)->name); \
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
+#define BRIGHTNESS 0.7f
+#define EYE_HEIGHT 41 // Typical eye height in Doom is 41 units above floor
+
 // Type definitions to better represent the WAD format
 typedef char wadid_t[4];     // "IWAD" or "PWAD"
 typedef char lumpname_t[8];  // Lump name, null-terminated
@@ -106,7 +109,8 @@ int run(map_data_t const *map);
 int find_lump(filelump_t* directory, int num_lumps, const char* name);
 int allocate_mapside_textures(map_data_t* map, FILE* wad_file,
                               filelump_t* directory, int num_lumps);
-
+int allocate_flat_textures(map_data_t* map, FILE* wad_file,
+                           filelump_t* directory, int num_lumps);
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 bool init_sdl(void);
 

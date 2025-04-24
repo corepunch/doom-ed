@@ -28,7 +28,7 @@ const char* floor_fs_src = "#version 150 core\n"
 "uniform bool use_texture;\n"
 "void main(void) {\n"
 "  if (use_texture) {\n"
-"    outColor = texture(tex0, tex);\n"
+"    outColor = texture(tex0, tex) * vec4(color + smoothstep(1.0,0.5,gl_FragCoord.z), 1.0);\n"
 "  } else {\n"
 "    outColor = vec4(color, 1.0);\n"
 "  }\n"
@@ -38,7 +38,7 @@ const char* floor_fs_src = "#version 150 core\n"
 #define TEX_SIZE 64.0f
 
 GLuint compile(GLenum type, const char* src);
-GLuint get_texture(const char* name);
+GLuint get_flat_texture(const char* name);
 
 // Add this to your init_sdl function
 void init_floor_shader(void) {
@@ -113,18 +113,14 @@ belongs_to_sector(uint32_t i,
                   const maplinedef_t *linedef,
                   const map_data_t *map)
 {
-  if (linedef->sidenum[0] != 0xFFFF &&
-      map->sidedefs[linedef->sidenum[0]].sector == i)
-  {
-    return true;
+  bool value = false;
+  if (linedef->sidenum[0] != 0xFFFF && map->sidedefs[linedef->sidenum[0]].sector == i) {
+    value = !value;
   }
-  
-  if (linedef->sidenum[1] != 0xFFFF &&
-      map->sidedefs[linedef->sidenum[1]].sector == i)
-  {
-    return true;
+  if (linedef->sidenum[1] != 0xFFFF && map->sidedefs[linedef->sidenum[1]].sector == i) {
+    value = !value;
   }
-  return false;
+  return value;
 }
 
 uint32_t find_first_linedef(map_data_t const *map, uint32_t i) {
@@ -184,6 +180,8 @@ uint32_t get_sector_vertices(map_data_t const *map,
   return num_vertices;
 }
 
+//#define DEBUG_LINES
+
 // Main function to draw floors and ceilings
 void draw_floors(map_data_t const *map, mat4 mvp) {
   glUseProgram(floor_prog);
@@ -203,9 +201,19 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     
     // Triangulate the sector
     // Allocate memory for vertices (position + texcoord) * 3 vertices per triangle * num_triangles
-    float vertices[5 * (MAX_VERTICES+1)];
+    float vertices[5 * (MAX_VERTICES+1)]={0};
+#ifndef DEBUG_LINES
     int vertex_count = triangulate_sector(sector_vertices, num_vertices, vertices);
-    
+#else
+    int vertex_count = 0;
+    for(int i = 0; i<num_vertices;i++) {
+      vertices[vertex_count++] = sector_vertices[i].x;
+      vertices[vertex_count++] = sector_vertices[i].y;
+      vertices[vertex_count++] = 0;
+      vertices[vertex_count++] = 0;
+      vertices[vertex_count++] = 0;
+    }
+#endif
     // Set appropriate texture coordinates
     float sector_width = TEX_SIZE; // Default texture size
     float sector_height = TEX_SIZE;
@@ -227,45 +235,45 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     
+    // Use flat color based on sector light level
+    float light = map->sectors[i].lightlevel / 255.0f;
+    glUniform3f(glGetUniformLocation(floor_prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS);
+
     // Bind floor texture
-    GLuint floor_tex = get_texture(map->sectors[i].floorpic);
+    GLuint floor_tex = get_flat_texture(map->sectors[i].floorpic);
     if (floor_tex != -1) {
       glBindTexture(GL_TEXTURE_2D, floor_tex);
       glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 1);
     } else {
-      // Use flat color based on sector light level
-      float light = map->sectors[i].lightlevel / 255.0f;
-      glUniform3f(glGetUniformLocation(floor_prog, "color"), light * 0.7f, light * 0.7f, light * 0.7f);
       glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 0);
     }
     
     // Draw triangles
+#ifndef DEBUG_LINES
     glDrawArrays(GL_TRIANGLES, 0, vertex_count/5);
-//    glDrawArrays(GL_LINE_STRIP, 0, vertex_count/5);
+#else
+    glDrawArrays(GL_LINE_STRIP, 0, vertex_count/5);
+#endif
     
-//
-//    // Draw ceiling (use same triangulation but different height)
-//    // Set z height to ceiling height
-//    for (int j = 0; j < vertex_count; j += 5) {
-//      vertices[j + 2] = sector->ceilingheight;
-//    }
-//    
-//    // Update vertex buffer
-//    glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(float), vertices, GL_DYNAMIC_DRAW);
-//    
-//    // Bind ceiling texture
-//    GLuint ceiling_tex = get_texture(sector->ceilingpic);
-//    if (ceiling_tex != -1) {
-//      glBindTexture(GL_TEXTURE_2D, ceiling_tex);
-//      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 1);
-//    } else {
-//      // Use flat color based on sector light level
-//      float light = sector->lightlevel / 255.0f;
-//      glUniform3f(glGetUniformLocation(floor_prog, "color"), light * 0.5f, light * 0.5f, light * 0.6f);
-//      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 0);
-//    }
-//    
-//    // Draw triangles
-//    glDrawArrays(GL_TRIANGLES, 0, vertex_count / 5);
+    // Draw ceiling (use same triangulation but different height)
+    // Set z height to ceiling height
+    for (int j = 0; j < vertex_count; j += 5) {
+      vertices[j + 2] = map->sectors[i].ceilingheight;
+    }
+    
+    // Update vertex buffer
+    glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(float), vertices, GL_DYNAMIC_DRAW);
+    
+    // Bind ceiling texture
+    GLuint ceiling_tex = get_flat_texture(map->sectors[i].ceilingpic);
+    if (ceiling_tex != -1) {
+      glBindTexture(GL_TEXTURE_2D, ceiling_tex);
+      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 1);
+    } else {
+      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 0);
+    }
+    
+    // Draw triangles
+    glDrawArrays(GL_TRIANGLES, 0, vertex_count / 5);
   }
 }
