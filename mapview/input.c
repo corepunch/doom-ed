@@ -10,7 +10,7 @@ extern bool mode;
  * Handle player input including mouse movement for camera control
  * @param player Pointer to the player object
  */
-void handle_input(player_t *player) {
+void handle_input(map_data_t *map, player_t *player) {
   SDL_Event event;
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
   
@@ -31,6 +31,14 @@ void handle_input(player_t *player) {
       // Get relative mouse movement
       mouse_x_rel = event.motion.xrel;
       mouse_y_rel = event.motion.yrel;
+    }
+    else if (event.type == SDL_MOUSEWHEEL) {
+      extern int pixel;
+      if (pixel > 0x10000) {
+        map->sectors[pixel/0x10000-1].floorheight -= event.wheel.y;
+      }
+      build_wall_vertex_buffer(map);
+      build_floor_vertex_buffer(map);
     }
     else if (event.type == SDL_KEYDOWN) {
       if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {

@@ -11,20 +11,23 @@ const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
 "in vec2 uv;\n"
 "out vec2 tex;\n"
+"out vec4 vpos;\n"
 "uniform vec2 tex0_size;\n"
 "uniform mat4 mvp;\n"
 "void main() {\n"
 "  tex = uv / tex0_size;\n"
-"  gl_Position = mvp * vec4(pos, 1.0);\n"
+"  vpos = mvp * vec4(pos, 1.0);\n"
+"  gl_Position = vpos;\n"
 "}";
 
 const char* fs_src = "#version 150 core\n"
-"in vec2 tex;\nout vec4 outColor;\n"
-"uniform vec3 color;\n"
+"in vec2 tex;\n"
+"in vec4 vpos;\n"
+"out vec4 outColor;\n"
+"uniform vec4 color;\n"
 "uniform sampler2D tex0;\n"
 "void main() {\n"
-"  outColor = texture(tex0, tex);\n"
-"  outColor *= vec4(color + smoothstep(1.0,0.5,gl_FragCoord.z), 1.0) * outColor.w;\n"
+"  outColor = texture(tex0, tex) * color;\n"
 "}";
 
 GLuint compile(GLenum type, const char* src) {
@@ -85,7 +88,7 @@ bool init_sdl(void) {
   glDepthMask(GL_TRUE);
   
   // 1x1 white texture
-  unsigned char pix[] = { 255, 0, 0, 255 };
+  unsigned char pix[] = { 255, 255, 255, 255 };
   glGenTextures(1, &error_tex);
   glBindTexture(GL_TEXTURE_2D, error_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pix);
@@ -182,6 +185,8 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
 void draw_floors(map_data_t const *map, mat4 mvp);
 void draw_walls(map_data_t const *map, mat4 mvp);
 
+int pixel = 0;
+
 // Main function
 int run(map_data_t const *map) {
   player_t player = {0};
@@ -191,7 +196,8 @@ int run(map_data_t const *map) {
   
   // Main game loop
   Uint32 last_time = SDL_GetTicks();
-  
+  mat4 mvp;
+
   while (running) {
     // Calculate delta time for smooth movement
     Uint32 current_time = SDL_GetTicks();
@@ -199,21 +205,33 @@ int run(map_data_t const *map) {
     last_time = current_time;
     
     // Handle input
-    handle_input(&player);
-    
+    handle_input((map_data_t *)map, &player);
+
+    get_view_matrix(map, &player, mvp);
+
     SDL_Event e;
     while (SDL_PollEvent(&e)) if (e.type == SDL_QUIT) return 0;
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
     glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
+    glUseProgram(prog);
+    glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
 
-    // Combine view and projection into MVP
-    mat4 mvp;
-    get_view_matrix(map, &player, mvp);
+    void draw_wall_ids(map_data_t const *map, mat4 mvp);
+    void draw_floor_ids(map_data_t const *map, mat4 mvp);
+
+    draw_floor_ids(map, mvp);
+    draw_wall_ids(map, mvp);
+
+    int fb_width, fb_height;
+    SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
+    glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     draw_floors(map, mvp);
-    
+
     draw_walls(map, mvp);
-    
+
     draw_weapon();
 
     draw_crosshair();

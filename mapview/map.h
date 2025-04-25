@@ -185,6 +185,8 @@ mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
 void build_floor_vertex_buffer(map_data_t *map);
-void handle_input(player_t *player);
+void handle_input(map_data_t *map, player_t *player);
+void draw_textured_surface(wall_section_t const *surface, float light, int mode);
+void draw_textured_surface_id(wall_section_t const *surface, int id, int mode);
 
 #endif

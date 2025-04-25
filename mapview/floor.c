@@ -117,45 +117,6 @@ uint32_t get_sector_vertices(map_data_t const *map,
   return num_vertices;
 }
 
-//#define DEBUG_LINES
-
-// Main function to draw floors and ceilings
-void draw_floors(map_data_t const *map, mat4 mvp) {
-  glUseProgram(prog);
-  glBindVertexArray(map->floors.vao);
-  
-  // Set MVP matrix uniform
-  glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  
-  // Process each sector
-  for (int i = 0; i < map->num_sectors; i++) {
-    // Use flat color based on sector light level
-    float light = map->sectors[i].lightlevel / 255.0f;
-    
-    glUniform3f(glGetUniformLocation(prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS);
-
-    if (map->floors.sectors[i].floor.texture) {
-      glBindTexture(GL_TEXTURE_2D, map->floors.sectors[i].floor.texture->texture );
-      glUniform2f(glGetUniformLocation(prog, "tex0_size"),
-                  map->floors.sectors[i].floor.texture->width,
-                  map->floors.sectors[i].floor.texture->height);
-      glDrawArrays(GL_TRIANGLES,
-                   map->floors.sectors[i].floor.vertex_start,
-                   map->floors.sectors[i].floor.vertex_count);
-    }
-
-    if (map->floors.sectors[i].ceiling.texture) {
-      glBindTexture(GL_TEXTURE_2D, map->floors.sectors[i].ceiling.texture->texture );
-      glUniform2f(glGetUniformLocation(prog, "tex0_size"),
-                  map->floors.sectors[i].ceiling.texture->width,
-                  map->floors.sectors[i].ceiling.texture->height);
-      glDrawArrays(GL_TRIANGLES,
-                   map->floors.sectors[i].ceiling.vertex_start,
-                   map->floors.sectors[i].ceiling.vertex_count);
-    }
-  }
-}
-
 void build_floor_vertex_buffer(map_data_t *map) {
   map->floors.num_vertices = 0;
   // Create VAO for walls if not already created
@@ -214,4 +175,38 @@ void build_floor_vertex_buffer(map_data_t *map) {
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
   glEnableVertexAttribArray(1);
+}
+
+// Main function to draw floors and ceilings
+void draw_floors(map_data_t const *map, mat4 mvp) {
+  glBindVertexArray(map->floors.vao);
+  
+  // Set MVP matrix uniform
+  glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  
+  // Process each sector
+  for (int i = 0; i < map->num_sectors; i++) {
+    // Use flat color based on sector light level
+    float light = map->sectors[i].lightlevel / 255.0f;
+    
+    extern int pixel;
+    if (pixel == (i+1) * 0x10000) {
+      light += 0.25;
+    }
+
+    draw_textured_surface(&map->floors.sectors[i].floor, light, GL_TRIANGLES);
+    draw_textured_surface(&map->floors.sectors[i].ceiling, light, GL_TRIANGLES);
+  }
+}
+
+void draw_floor_ids(map_data_t const *map, mat4 mvp) {
+  glBindVertexArray(map->floors.vao);
+
+  for (int i = 0; i < map->num_sectors; i++) {
+    draw_textured_surface_id(&map->floors.sectors[i].floor, (i+1) * 0x10000, GL_TRIANGLES);
+    draw_textured_surface_id(&map->floors.sectors[i].ceiling, (i+1) * 0x10000, GL_TRIANGLES);
+  }
+  
+  // Reset texture binding
+  glBindTexture(GL_TEXTURE_2D, 0);
 }
