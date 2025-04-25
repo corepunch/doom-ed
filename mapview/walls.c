@@ -30,8 +30,8 @@ void build_wall_vertex_buffer(map_data_t *map) {
 
     mapvertex_t const *v1 = &map->vertices[linedef->start];
     mapvertex_t const *v2 = &map->vertices[linedef->end];
-    mapsidedef_sections_t *front = &map->walls.sections[linedef->sidenum[0]];
-    mapsidedef_sections_t *back = NULL;
+    mapsidedef2_t *front = &map->walls.sections[linedef->sidenum[0]];
+    mapsidedef2_t *back = NULL;
 
     float const dist = sqrtf((v1->x-v2->x) * (v1->x-v2->x) + (v1->y-v2->y) * (v1->y-v2->y));
 
@@ -139,9 +139,9 @@ void build_wall_vertex_buffer(map_data_t *map) {
   glBufferData(GL_ARRAY_BUFFER, map->walls.num_vertices * sizeof(wall_vertex_t), map->walls.vertices, GL_STATIC_DRAW);
   
   // Set up vertex attributes
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(wall_vertex_t), (void*)0); // Position
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)0); // Position
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(float))); // UV
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
   glEnableVertexAttribArray(1);
   
   printf("Built wall vertex buffer with %d vertices\n", map->walls.num_vertices);
@@ -154,7 +154,7 @@ float get_wall_direction_shading(vec2s v1, vec2s v2) {
 }
 
 // Helper function to draw a textured quad from the wall vertex buffer
-void draw_textured_quad(uint32_t vertex_start, mapside_texture_t *texture, float light) {
+void draw_textured_quad(uint32_t vertex_start, mapside_texture_t const *texture, float light) {
   if (!texture)
     return;
   
@@ -168,7 +168,7 @@ void draw_textured_quad(uint32_t vertex_start, mapside_texture_t *texture, float
 }
 
 // Helper function to draw a sidedef
-void draw_sidedef(const mapsidedef_sections_t *sidedef,
+void draw_sidedef(const mapsidedef2_t *sidedef,
                   const mapsector_t *sector,
                   vec2s a, vec2s b)
 {
@@ -216,7 +216,7 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
       continue; // Skip if invalid front sidedef
     }
     
-    mapsidedef_sections_t const *front = &map->walls.sections[linedef->sidenum[0]];
+    mapsidedef2_t const *front = &map->walls.sections[linedef->sidenum[0]];
     mapvertex_t const *v1 = &map->vertices[linedef->start];
     mapvertex_t const *v2 = &map->vertices[linedef->end];
     vec2s a = {v1->x,v1->y}, b = {v2->x,v2->y};
@@ -226,7 +226,7 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
     
     // Draw back side if it exists
     if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
-      mapsidedef_sections_t const *back = &map->walls.sections[linedef->sidenum[1]];
+      mapsidedef2_t const *back = &map->walls.sections[linedef->sidenum[1]];
       draw_sidedef(back, back->sector, a, b);
     }
   }

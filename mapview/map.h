@@ -56,8 +56,8 @@ typedef struct {
 
 // Vertex structure for our buffer (xyzuv)
 typedef struct {
-  float x, y, z;  // Position
-  float u, v;     // Texture coordinates
+  int16_t x, y, z;  // Position
+  int16_t u, v;     // Texture coordinates
 } wall_vertex_t;
 
 // Struct to represent a texture with OpenGL
@@ -71,7 +71,8 @@ typedef struct {
 // Helper struct for tracking wall sections
 typedef struct {
   uint32_t vertex_start;  // Starting index in the vertex buffer
-  mapside_texture_t *texture;  // Texture to use
+  uint32_t vertex_count;  // Count of vertices
+  mapside_texture_t const *texture;  // Texture to use
 } wall_section_t;
 
 // WAD header structure
@@ -141,7 +142,13 @@ typedef struct {
   wall_section_t upper_section;
   wall_section_t lower_section;
   wall_section_t mid_section;
-} mapsidedef_sections_t;
+} mapsidedef2_t;
+
+typedef struct {
+  mapsector_t *sector;
+  wall_section_t floor;
+  wall_section_t ceiling;
+} mapsector2_t;
 
 // Map data structure using the collection macro
 typedef struct {
@@ -152,11 +159,18 @@ typedef struct {
   DEFINE_COLLECTION(mapsector_t, sectors);
   
   struct {
-    mapsidedef_sections_t *sections;
+    mapsidedef2_t *sections;
     wall_vertex_t vertices[MAX_WALL_VERTICES];
     uint32_t num_vertices;
     uint32_t vao, vbo;
   } walls;
+  
+  struct {
+    mapsector2_t *sectors;
+    wall_vertex_t vertices[MAX_WALL_VERTICES];
+    uint32_t num_vertices;
+    uint32_t vao, vbo;
+  } floors;
 } map_data_t;
 
 bool init_sdl(void);
@@ -170,6 +184,7 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file,
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
+void build_floor_vertex_buffer(map_data_t *map);
 void handle_input(player_t *player);
 
 #endif

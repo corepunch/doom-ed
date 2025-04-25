@@ -59,7 +59,7 @@ static int is_ear(mapvertex_t *vertices, int *indices, int count, int i) {
 }
 
 // Modified function signature as requested
-int triangulate_sector(mapvertex_t *vertices, int vertex_count, float *out_vertices) {
+int triangulate_sector(mapvertex_t *vertices, int vertex_count, wall_vertex_t *out_vertices) {
   if (vertex_count < 3) {
     return 0;  // Return 0 to indicate no triangles created
   }
@@ -157,11 +157,8 @@ int triangulate_sector(mapvertex_t *vertices, int vertex_count, float *out_verti
   int out_vertex_count = 0;
   for (int i = 0; i < triangle_index_count; i++) {
     int idx = triangle_indices[i];
-    out_vertices[out_vertex_count++] = vertices[idx].x;
-    out_vertices[out_vertex_count++] = vertices[idx].y;
-    out_vertices[out_vertex_count++] = 0;
-    out_vertices[out_vertex_count++] = 0;
-    out_vertices[out_vertex_count++] = 0;
+    wall_vertex_t wall_vertex = {vertices[idx].x, vertices[idx].y, 0, 0, 0};
+    out_vertices[out_vertex_count++] = wall_vertex;
   }
   
   // Free allocated memory
