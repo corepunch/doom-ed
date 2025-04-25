@@ -31,10 +31,28 @@ if ((map)->name) free((map)->name); \
 #define EYE_HEIGHT 41 // Typical eye height in Doom is 41 units above floor
 #define MAX_WALL_VERTICES 50000  // Adjust based on map complexity
 
+// Constants for rendering
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define FOV 90.0
+#define NEAR_Z 0.1
+#define FAR_Z 1000.0
+#define MOVEMENT_SPEED 10.0
+#define ROTATION_SPEED 3.0
+
 // Type definitions to better represent the WAD format
 typedef char wadid_t[4];     // "IWAD" or "PWAD"
 typedef char lumpname_t[8];  // Lump name, null-terminated
 typedef char texname_t[8];   // Texture name, null-terminated
+
+// Player state
+typedef struct {
+  float x;
+  float y;
+  float angle;  // in degrees, 0 is east, 90 is north
+  float pitch;
+  float height;
+} player_t;
 
 // Vertex structure for our buffer (xyzuv)
 typedef struct {
@@ -152,5 +170,6 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file,
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
+void handle_input(player_t *player);
 
 #endif

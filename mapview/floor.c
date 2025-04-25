@@ -4,53 +4,17 @@
 #include "map.h"
 
 // Global variables to add
-GLuint floor_prog;
+extern GLuint prog;
 GLuint floor_vao, floor_vbo;
-GLuint floor_texture;
-
-// Floor/ceiling vertex shader
-const char* floor_vs_src = "#version 150 core\n"
-"in vec3 position;\n"
-"in vec2 texcoord;\n"
-"out vec2 tex;\n"
-"uniform mat4 mvp;\n"
-"void main(void) {\n"
-"  tex = texcoord;\n"
-"  gl_Position = mvp * vec4(position, 1.0);\n"
-"}";
-
-// Floor/ceiling fragment shader
-const char* floor_fs_src = "#version 150 core\n"
-"in vec2 tex;\n"
-"out vec4 outColor;\n"
-"uniform sampler2D tex0;\n"
-"uniform vec3 color;\n"
-"uniform bool use_texture;\n"
-"void main(void) {\n"
-"  if (use_texture) {\n"
-"    outColor = texture(tex0, tex) * vec4(color + smoothstep(1.0,0.5,gl_FragCoord.z), 1.0);\n"
-"  } else {\n"
-"    outColor = vec4(color, 1.0);\n"
-"  }\n"
-"}";
 
 #define MAX_VERTICES 1024
 #define TEX_SIZE 64.0f
 
 GLuint compile(GLenum type, const char* src);
-GLuint get_flat_texture(const char* name);
+mapside_texture_t const *get_flat_texture(const char* name);
 
 // Add this to your init_sdl function
 void init_floor_shader(void) {
-  // Create shader program for floors/ceilings
-  GLuint floor_vs = compile(GL_VERTEX_SHADER, floor_vs_src);
-  GLuint floor_fs = compile(GL_FRAGMENT_SHADER, floor_fs_src);
-  floor_prog = glCreateProgram();
-  glAttachShader(floor_prog, floor_vs);
-  glAttachShader(floor_prog, floor_fs);
-  glBindAttribLocation(floor_prog, 0, "position");
-  glBindAttribLocation(floor_prog, 1, "texcoord");
-  glLinkProgram(floor_prog);
   
   // Create VAO for floor geometry
   glGenVertexArrays(1, &floor_vao);
@@ -74,7 +38,7 @@ bool point_in_polygon(float x, float y, vec2s *vertices, int num_vertices) {
 int triangulate_sector(mapvertex_t *vertices, int num_vertices, float *out_vertices);
 
 // Function to calculate texture coordinates based on sector dimensions
-void calculate_texture_coords(float *vertices, int vertex_count, float sector_width, float sector_height) {
+void calculate_texture_coords(float *vertices, int vertex_count) {
   // Find bounds of the sector
   float min_x = FLT_MAX, min_y = FLT_MAX;
   float max_x = -FLT_MAX, max_y = -FLT_MAX;
@@ -89,13 +53,6 @@ void calculate_texture_coords(float *vertices, int vertex_count, float sector_wi
     max_y = MAX(max_y, y);
   }
   
-  // Calculate scaling factors for texture coordinates
-  float width = max_x - min_x;
-  float height = max_y - min_y;
-  
-  float scale_x = width / sector_width;
-  float scale_y = height / sector_height;
-  
   // Update texture coordinates
   for (int i = 0; i < vertex_count; i += 5) {
     // Position coordinates
@@ -103,8 +60,8 @@ void calculate_texture_coords(float *vertices, int vertex_count, float sector_wi
     float y = vertices[i + 1];
     
     // Texture coordinates (normalized 0-1)
-    vertices[i + 3] = (x - min_x) / width * scale_x;
-    vertices[i + 4] = (y - min_y) / height * scale_y;
+    vertices[i + 3] = (x - min_x);
+    vertices[i + 4] = (y - min_y);
   }
 }
 
@@ -183,11 +140,11 @@ uint32_t get_sector_vertices(map_data_t const *map,
 
 // Main function to draw floors and ceilings
 void draw_floors(map_data_t const *map, mat4 mvp) {
-  glUseProgram(floor_prog);
+  glUseProgram(prog);
   glBindVertexArray(floor_vao);
   
   // Set MVP matrix uniform
-  glUniformMatrix4fv(glGetUniformLocation(floor_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
   
   // Process each sector
   for (int i = 0; i < map->num_sectors; i++) {
@@ -214,9 +171,7 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     }
 #endif
     // Set appropriate texture coordinates
-    float sector_width = TEX_SIZE; // Default texture size
-    float sector_height = TEX_SIZE;
-    calculate_texture_coords(vertices, vertex_count, sector_width, sector_height);
+    calculate_texture_coords(vertices, vertex_count);
     
     // Draw floor
     // Set z height to floor height
@@ -237,17 +192,19 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     // Use flat color based on sector light level
     float light = map->sectors[i].lightlevel / 255.0f;
     
-    glUniform3f(glGetUniformLocation(floor_prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS);
+    glUniform3f(glGetUniformLocation(prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS);
 
     // Bind floor texture
-    GLuint floor_tex = get_flat_texture(map->sectors[i].floorpic);
-    if (floor_tex != -1) {
-      glBindTexture(GL_TEXTURE_2D, floor_tex);
-      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 1);
+    mapside_texture_t const *floor_tex = get_flat_texture(map->sectors[i].floorpic);
+    if (floor_tex) {
+      glBindTexture(GL_TEXTURE_2D, floor_tex->texture );
+      glUniform2f(glGetUniformLocation(prog, "tex0_size"),
+                  floor_tex->width,
+                  floor_tex->height);
     } else {
-      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 0);
+      glBindTexture(GL_TEXTURE_2D, 1);
     }
-    
+
     // Draw triangles
 #ifndef DEBUG_LINES
     glDrawArrays(GL_TRIANGLES, 0, vertex_count/5);
@@ -265,14 +222,16 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     glBufferData(GL_ARRAY_BUFFER, vertex_count * sizeof(float), vertices, GL_DYNAMIC_DRAW);
     
     // Bind ceiling texture
-    GLuint ceiling_tex = get_flat_texture(map->sectors[i].ceilingpic);
-    if (ceiling_tex != -1) {
-      glBindTexture(GL_TEXTURE_2D, ceiling_tex);
-      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 1);
+    mapside_texture_t const *ceiling_tex = get_flat_texture(map->sectors[i].ceilingpic);
+    if (ceiling_tex) {
+      glBindTexture(GL_TEXTURE_2D, ceiling_tex->texture );
+      glUniform2f(glGetUniformLocation(prog, "tex0_size"),
+                  ceiling_tex->width,
+                  ceiling_tex->height);
     } else {
-      glUniform1i(glGetUniformLocation(floor_prog, "use_texture"), 0);
+      glBindTexture(GL_TEXTURE_2D, 1);
     }
-    
+
     // Draw triangles
     glDrawArrays(GL_TRIANGLES, 0, vertex_count / 5);
   }
