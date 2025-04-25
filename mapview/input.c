@@ -35,7 +35,12 @@ void handle_input(map_data_t *map, player_t *player) {
     else if (event.type == SDL_MOUSEWHEEL) {
       extern int pixel;
       if (pixel > 0x10000) {
-        map->sectors[pixel/0x10000-1].floorheight -= event.wheel.y;
+        uint16_t p = pixel >> 16;
+        if (p > 10000) {
+          map->sectors[p-10000].ceilingheight -= event.wheel.y;
+        } else {
+          map->sectors[p-1].floorheight -= event.wheel.y;
+        }
       }
       build_wall_vertex_buffer(map);
       build_floor_vertex_buffer(map);

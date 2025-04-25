@@ -218,6 +218,7 @@ int run(map_data_t const *map) {
 
     void draw_wall_ids(map_data_t const *map, mat4 mvp);
     void draw_floor_ids(map_data_t const *map, mat4 mvp);
+    void draw_minimap(map_data_t const *map, player_t const *player);
 
     draw_floor_ids(map, mvp);
     draw_wall_ids(map, mvp);
@@ -235,6 +236,8 @@ int run(map_data_t const *map) {
     draw_weapon();
 
     draw_crosshair();
+    
+    draw_minimap(map, &player);
 
     SDL_GL_SwapWindow(window);
     

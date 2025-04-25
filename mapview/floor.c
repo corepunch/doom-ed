@@ -190,12 +190,8 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     float light = map->sectors[i].lightlevel / 255.0f;
     
     extern int pixel;
-    if (pixel == (i+1) * 0x10000) {
-      light += 0.25;
-    }
-
-    draw_textured_surface(&map->floors.sectors[i].floor, light, GL_TRIANGLES);
-    draw_textured_surface(&map->floors.sectors[i].ceiling, light, GL_TRIANGLES);
+    draw_textured_surface(&map->floors.sectors[i].floor, pixel == (i+1) * 0x10000 ? light + 0.25 : light, GL_TRIANGLES);
+    draw_textured_surface(&map->floors.sectors[i].ceiling, pixel == (i+10000) * 0x10000 ? light + 0.25 : light, GL_TRIANGLES);
   }
 }
 
@@ -204,7 +200,7 @@ void draw_floor_ids(map_data_t const *map, mat4 mvp) {
 
   for (int i = 0; i < map->num_sectors; i++) {
     draw_textured_surface_id(&map->floors.sectors[i].floor, (i+1) * 0x10000, GL_TRIANGLES);
-    draw_textured_surface_id(&map->floors.sectors[i].ceiling, (i+1) * 0x10000, GL_TRIANGLES);
+    draw_textured_surface_id(&map->floors.sectors[i].ceiling, ((i+10000) * 0x10000), GL_TRIANGLES);
   }
   
   // Reset texture binding

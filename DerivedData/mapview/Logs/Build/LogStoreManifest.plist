@@ -636,6 +636,48 @@
 			<key>uniqueIdentifier</key>
 			<string>04861A0B-E720-47BD-BC76-CB0B5C7A5C11</string>
 		</dict>
+		<key>04D3EE8E-C75B-4B8D-B04D-0FB6C86F2776</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>04D3EE8E-C75B-4B8D-B04D-0FB6C86F2776.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270687.36496496</real>
+			<key>timeStoppedRecording</key>
+			<real>767270687.93424106</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>04D3EE8E-C75B-4B8D-B04D-0FB6C86F2776</string>
+		</dict>
 		<key>0543A0DB-5ED0-48E0-B784-5016255431D3</key>
 		<dict>
 			<key>className</key>
@@ -2484,6 +2526,48 @@
 			<key>uniqueIdentifier</key>
 			<string>160A8F4E-2081-4549-8E5B-76E9B8B06811</string>
 		</dict>
+		<key>162072EC-DFC2-4E49-98DC-4A2989C15C4E</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>162072EC-DFC2-4E49-98DC-4A2989C15C4E.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269006.84959495</real>
+			<key>timeStoppedRecording</key>
+			<real>767269007.68964899</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>162072EC-DFC2-4E49-98DC-4A2989C15C4E</string>
+		</dict>
 		<key>162D222C-96F6-4DD1-A946-5F3B1F2A6200</key>
 		<dict>
 			<key>className</key>
@@ -3870,6 +3954,48 @@
 			<key>uniqueIdentifier</key>
 			<string>224E7C46-B702-4984-8D2C-F9F0E0905C36</string>
 		</dict>
+		<key>224EE837-7563-4215-8874-BA3FC9BD523E</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>224EE837-7563-4215-8874-BA3FC9BD523E.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269300.03185594</real>
+			<key>timeStoppedRecording</key>
+			<real>767269300.81336296</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>224EE837-7563-4215-8874-BA3FC9BD523E</string>
+		</dict>
 		<key>2261C48C-9201-47CA-A756-A34FE62587E0</key>
 		<dict>
 			<key>className</key>
@@ -4331,6 +4457,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>24601AD0-3D2B-4635-9434-A95E621D70F6</string>
+		</dict>
+		<key>24984047-5B07-454E-99FD-7E6664E46583</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>24984047-5B07-454E-99FD-7E6664E46583.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269056.34333003</real>
+			<key>timeStoppedRecording</key>
+			<real>767269056.93427098</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>24984047-5B07-454E-99FD-7E6664E46583</string>
 		</dict>
 		<key>24B36F78-F12C-4C35-95C0-F797B54378D9</key>
 		<dict>
@@ -5003,6 +5171,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>28EFB0DA-2256-4EB8-A732-67F8FF9466D9</string>
+		</dict>
+		<key>2964CA2B-0BFE-44FF-8EE5-F2AADD0DD872</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>2964CA2B-0BFE-44FF-8EE5-F2AADD0DD872.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269023.62362194</real>
+			<key>timeStoppedRecording</key>
+			<real>767269024.39969301</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>2964CA2B-0BFE-44FF-8EE5-F2AADD0DD872</string>
 		</dict>
 		<key>2A26636D-0444-4258-89A1-156F13C65688</key>
 		<dict>
@@ -6306,6 +6516,48 @@
 			<key>uniqueIdentifier</key>
 			<string>33CD3768-11C1-4231-91CF-9B0B90B1D94B</string>
 		</dict>
+		<key>33F39959-B693-458A-AD50-251B11748688</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>33F39959-B693-458A-AD50-251B11748688.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271490.28191805</real>
+			<key>timeStoppedRecording</key>
+			<real>767271490.37188303</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>33F39959-B693-458A-AD50-251B11748688</string>
+		</dict>
 		<key>3494A3FC-D63B-495A-851B-CFDD86CFB1DE</key>
 		<dict>
 			<key>className</key>
@@ -7020,6 +7272,48 @@
 			<key>uniqueIdentifier</key>
 			<string>3BD02779-974E-4467-BEE4-04894450E14B</string>
 		</dict>
+		<key>3BD82624-80BD-469E-B1FD-A0135BDBEB86</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>3BD82624-80BD-469E-B1FD-A0135BDBEB86.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271624.33088195</real>
+			<key>timeStoppedRecording</key>
+			<real>767271624.88656998</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>3BD82624-80BD-469E-B1FD-A0135BDBEB86</string>
+		</dict>
 		<key>3BDD0BE2-B1CF-4494-AADB-61F5B7B8D3E0</key>
 		<dict>
 			<key>className</key>
@@ -7229,6 +7523,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>3D5BDE2D-2CB8-4C22-AD59-F7E7D94FE150</string>
+		</dict>
+		<key>3D5F02D0-9B3E-4DCD-BD7B-15DA804B3068</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>3D5F02D0-9B3E-4DCD-BD7B-15DA804B3068.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270619.34574604</real>
+			<key>timeStoppedRecording</key>
+			<real>767270620.13156998</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>3D5F02D0-9B3E-4DCD-BD7B-15DA804B3068</string>
 		</dict>
 		<key>3DA91ADC-E231-48B9-AEFC-7EACDC4F5491</key>
 		<dict>
@@ -7734,6 +8070,48 @@
 			<key>uniqueIdentifier</key>
 			<string>4171E370-6B7B-46AF-B039-B1BBDCAB9F77</string>
 		</dict>
+		<key>41B2ECDE-35BF-4E57-AA53-42E2F2A46A2B</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>41B2ECDE-35BF-4E57-AA53-42E2F2A46A2B.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271987.440413</real>
+			<key>timeStoppedRecording</key>
+			<real>767271987.68652701</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>41B2ECDE-35BF-4E57-AA53-42E2F2A46A2B</string>
+		</dict>
 		<key>421F254B-96B3-4964-9E68-31A38F089372</key>
 		<dict>
 			<key>className</key>
@@ -7859,6 +8237,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>435D3C71-60CB-4DB2-91F3-0FC9ADDD06FB</string>
+		</dict>
+		<key>4397E950-0959-4C45-AB95-1836061AA244</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>4397E950-0959-4C45-AB95-1836061AA244.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767268918.44175196</real>
+			<key>timeStoppedRecording</key>
+			<real>767268918.99196196</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>4397E950-0959-4C45-AB95-1836061AA244</string>
 		</dict>
 		<key>43E36CA3-0D2B-4D64-91F5-96B0FFAF9D9A</key>
 		<dict>
@@ -9456,6 +9876,48 @@
 			<key>uniqueIdentifier</key>
 			<string>50559538-ED12-42A7-AED0-5C02C1933774</string>
 		</dict>
+		<key>5062E2A0-1C5F-429C-9444-4EEF89D3F28C</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>5062E2A0-1C5F-429C-9444-4EEF89D3F28C.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270840.23156595</real>
+			<key>timeStoppedRecording</key>
+			<real>767270840.79198003</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>5062E2A0-1C5F-429C-9444-4EEF89D3F28C</string>
+		</dict>
 		<key>507F3F89-8E60-44FF-894A-96C7278FD9AC</key>
 		<dict>
 			<key>className</key>
@@ -9665,6 +10127,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>52FE2D41-CDD3-4488-9030-D4F3891A7415</string>
+		</dict>
+		<key>532869D6-D3A5-4704-AAAF-3FE533C57BE0</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>532869D6-D3A5-4704-AAAF-3FE533C57BE0.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269325.42886305</real>
+			<key>timeStoppedRecording</key>
+			<real>767269325.99865496</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>532869D6-D3A5-4704-AAAF-3FE533C57BE0</string>
 		</dict>
 		<key>53369F46-5F6F-4630-97C5-A15C70121D93</key>
 		<dict>
@@ -10926,6 +11430,48 @@
 			<key>uniqueIdentifier</key>
 			<string>5B20A6EE-BB8F-404D-AE08-A36BFCD67906</string>
 		</dict>
+		<key>5B2C5CBE-ECB5-4BF7-B401-6B932B60BA9A</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>5B2C5CBE-ECB5-4BF7-B401-6B932B60BA9A.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269327.46006095</real>
+			<key>timeStoppedRecording</key>
+			<real>767269327.54172301</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>5B2C5CBE-ECB5-4BF7-B401-6B932B60BA9A</string>
+		</dict>
 		<key>5B47AA1F-F773-4008-8F02-8C0B91EFBC49</key>
 		<dict>
 			<key>className</key>
@@ -11135,6 +11681,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>5C281DA2-90AB-4751-9763-7FE587703C61</string>
+		</dict>
+		<key>5C8B969F-5D7C-496A-8F57-B864AC600EF6</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>5C8B969F-5D7C-496A-8F57-B864AC600EF6.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767272122.73757994</real>
+			<key>timeStoppedRecording</key>
+			<real>767272123.41723299</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>5C8B969F-5D7C-496A-8F57-B864AC600EF6</string>
 		</dict>
 		<key>5CB77856-C193-4778-BF75-727839AB078C</key>
 		<dict>
@@ -11514,6 +12102,48 @@
 			<key>uniqueIdentifier</key>
 			<string>61F929CD-9611-442B-A49D-8942E8870F0F</string>
 		</dict>
+		<key>62722D17-4BE9-4468-80C2-DD1B7157BC2B</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>62722D17-4BE9-4468-80C2-DD1B7157BC2B.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271488.40692794</real>
+			<key>timeStoppedRecording</key>
+			<real>767271489.17562997</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>62722D17-4BE9-4468-80C2-DD1B7157BC2B</string>
+		</dict>
 		<key>629012F0-13F8-4F6B-849F-1620BD95F0DD</key>
 		<dict>
 			<key>className</key>
@@ -11723,6 +12353,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>632E4885-600F-4F7C-AB86-6C1AED6EA32F</string>
+		</dict>
+		<key>63345DAF-189A-4F73-841A-133D846F22D0</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>63345DAF-189A-4F73-841A-133D846F22D0.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270631.29175794</real>
+			<key>timeStoppedRecording</key>
+			<real>767270631.88818395</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>63345DAF-189A-4F73-841A-133D846F22D0</string>
 		</dict>
 		<key>63BD4213-15FC-4792-A5DB-C2F604A402F3</key>
 		<dict>
@@ -13110,6 +13782,48 @@
 			<key>uniqueIdentifier</key>
 			<string>6FBFFF02-4564-4B8F-9E02-F18F0A7389A7</string>
 		</dict>
+		<key>703B1682-EEC3-4FE0-8A47-300CB296B6F6</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>703B1682-EEC3-4FE0-8A47-300CB296B6F6.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269566.97125304</real>
+			<key>timeStoppedRecording</key>
+			<real>767269567.25531304</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>703B1682-EEC3-4FE0-8A47-300CB296B6F6</string>
+		</dict>
 		<key>706EFF25-952D-4261-82E6-18EA604A24D2</key>
 		<dict>
 			<key>className</key>
@@ -13403,6 +14117,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>726410C6-D220-4F24-B517-2AFB131C30D4</string>
+		</dict>
+		<key>73FF2E76-83FF-4E25-B07C-09CB0E4F34AF</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>73FF2E76-83FF-4E25-B07C-09CB0E4F34AF.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270594.69807696</real>
+			<key>timeStoppedRecording</key>
+			<real>767270595.58213902</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>73FF2E76-83FF-4E25-B07C-09CB0E4F34AF</string>
 		</dict>
 		<key>74D1F2F9-E50C-4ADB-ADE0-A9224ED0B758</key>
 		<dict>
@@ -13865,6 +14621,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>78A07E92-F640-4E69-B77D-7FB796471E6F</string>
+		</dict>
+		<key>78D03007-EB1A-4B47-80E9-694EBC1666B2</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>78D03007-EB1A-4B47-80E9-694EBC1666B2.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269648.02229297</real>
+			<key>timeStoppedRecording</key>
+			<real>767269648.25702095</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>78D03007-EB1A-4B47-80E9-694EBC1666B2</string>
 		</dict>
 		<key>799620B9-1B6D-4D10-9D63-9611B118F16C</key>
 		<dict>
@@ -14453,6 +15251,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>7ED09839-0FF9-4D82-BCC1-4F2BC6175E97</string>
+		</dict>
+		<key>7EEC80A7-1C02-4044-A99F-EB7D90F44B4E</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>7EEC80A7-1C02-4044-A99F-EB7D90F44B4E.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271818.79534602</real>
+			<key>timeStoppedRecording</key>
+			<real>767271819.60554695</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>7EEC80A7-1C02-4044-A99F-EB7D90F44B4E</string>
 		</dict>
 		<key>7EF0572A-9483-499E-92AC-524830A9C3E0</key>
 		<dict>
@@ -15083,6 +15923,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>83A40B06-9610-4D17-BF3E-F1ACE763EAC3</string>
+		</dict>
+		<key>83F5A4C6-DD88-430A-81C7-F79E87B51E1F</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>83F5A4C6-DD88-430A-81C7-F79E87B51E1F.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767268891.066221</real>
+			<key>timeStoppedRecording</key>
+			<real>767268891.79797196</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>83F5A4C6-DD88-430A-81C7-F79E87B51E1F</string>
 		</dict>
 		<key>84223071-BF3C-47D7-B037-3C8BB170C54E</key>
 		<dict>
@@ -17436,6 +18318,48 @@
 			<key>uniqueIdentifier</key>
 			<string>98C25C79-29E4-4CB6-AC00-A92465DE5117</string>
 		</dict>
+		<key>98FACB0D-97C5-41D8-9DB2-59A6B54B886B</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>98FACB0D-97C5-41D8-9DB2-59A6B54B886B.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271952.13259804</real>
+			<key>timeStoppedRecording</key>
+			<real>767271952.84307396</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>98FACB0D-97C5-41D8-9DB2-59A6B54B886B</string>
+		</dict>
 		<key>99B2F843-1CA4-45FD-9F36-C72F626AEBBF</key>
 		<dict>
 			<key>className</key>
@@ -17603,6 +18527,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>9A844134-DE92-41C1-A440-653B1CD87546</string>
+		</dict>
+		<key>9AF500F9-45CE-4672-B7EF-BE62A70AAA3E</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>9AF500F9-45CE-4672-B7EF-BE62A70AAA3E.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271903.84822905</real>
+			<key>timeStoppedRecording</key>
+			<real>767271904.43398905</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>9AF500F9-45CE-4672-B7EF-BE62A70AAA3E</string>
 		</dict>
 		<key>9BCCFCDD-72C5-4920-AB8D-C788949202B3</key>
 		<dict>
@@ -17814,6 +18780,48 @@
 			<key>uniqueIdentifier</key>
 			<string>9C77E60F-3F3D-42A8-B633-BB87605F2595</string>
 		</dict>
+		<key>9C86B724-B343-4B7A-AF96-61C0291E5B5E</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>9C86B724-B343-4B7A-AF96-61C0291E5B5E.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767268872.94453096</real>
+			<key>timeStoppedRecording</key>
+			<real>767268873.770666</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>9C86B724-B343-4B7A-AF96-61C0291E5B5E</string>
+		</dict>
 		<key>9CC7B3A0-90BA-4AEC-AFCB-DA8A1EA7EC32</key>
 		<dict>
 			<key>className</key>
@@ -17897,6 +18905,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>9D645598-049F-49BA-9506-F0FBA8D9CDFB</string>
+		</dict>
+		<key>9E104F65-0A36-4C61-AD10-7510AFC52004</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>9E104F65-0A36-4C61-AD10-7510AFC52004.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>3</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271087.86682904</real>
+			<key>timeStoppedRecording</key>
+			<real>767271088.35953295</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>9E104F65-0A36-4C61-AD10-7510AFC52004</string>
 		</dict>
 		<key>9E6C88A3-DFAD-486E-8E1E-FFD866E7FCF7</key>
 		<dict>
@@ -18150,6 +19200,48 @@
 			<key>uniqueIdentifier</key>
 			<string>A028CCE4-6C62-4AF8-A862-7B70FE76A8C7</string>
 		</dict>
+		<key>A070EF68-6E6B-4421-959C-CC0407F6E92F</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>A070EF68-6E6B-4421-959C-CC0407F6E92F.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271736.73792005</real>
+			<key>timeStoppedRecording</key>
+			<real>767271737.08558095</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>A070EF68-6E6B-4421-959C-CC0407F6E92F</string>
+		</dict>
 		<key>A0B93690-9D22-467B-9B93-97D8DB12B0AC</key>
 		<dict>
 			<key>className</key>
@@ -18402,6 +19494,90 @@
 			<key>uniqueIdentifier</key>
 			<string>A1BDF307-46D9-4C30-A3EE-12613351F984</string>
 		</dict>
+		<key>A1C1C132-8842-4434-A810-E43E11545D95</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>A1C1C132-8842-4434-A810-E43E11545D95.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>3</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271505.06872904</real>
+			<key>timeStoppedRecording</key>
+			<real>767271505.64875197</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>A1C1C132-8842-4434-A810-E43E11545D95</string>
+		</dict>
+		<key>A1CCF942-2A52-4A05-9266-7D45EA969B1F</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>A1CCF942-2A52-4A05-9266-7D45EA969B1F.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>E</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>1</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269607.97500098</real>
+			<key>timeStoppedRecording</key>
+			<real>767269608.32619095</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>A1CCF942-2A52-4A05-9266-7D45EA969B1F</string>
+		</dict>
 		<key>A1CEE011-49DF-4993-913A-86D10C3FA3BF</key>
 		<dict>
 			<key>className</key>
@@ -18569,6 +19745,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>A2EF90F7-CB4B-48FA-BDD8-D14B706F00F2</string>
+		</dict>
+		<key>A3F06F60-A0BA-42FD-B73A-26B0ABA6F956</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>A3F06F60-A0BA-42FD-B73A-26B0ABA6F956.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271681.610672</real>
+			<key>timeStoppedRecording</key>
+			<real>767271682.19199705</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>A3F06F60-A0BA-42FD-B73A-26B0ABA6F956</string>
 		</dict>
 		<key>A4BCA2AF-CF27-4736-8E11-59B905B0CB17</key>
 		<dict>
@@ -18779,6 +19997,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>A517AE23-04F9-417C-B2AA-60BF2E09EE1C</string>
+		</dict>
+		<key>A5262900-C051-4938-AC9B-824D5BD1B92F</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>A5262900-C051-4938-AC9B-824D5BD1B92F.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767268083.54097998</real>
+			<key>timeStoppedRecording</key>
+			<real>767268084.62417996</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>A5262900-C051-4938-AC9B-824D5BD1B92F</string>
 		</dict>
 		<key>A5A7E539-C8C5-4164-98AB-2A883AF6A654</key>
 		<dict>
@@ -19704,6 +20964,48 @@
 			<key>uniqueIdentifier</key>
 			<string>AD11CFC9-AE98-4518-9F12-734D32B9ADA4</string>
 		</dict>
+		<key>AD67F4CD-EC75-4287-9F81-B792F75ED3DD</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>AD67F4CD-EC75-4287-9F81-B792F75ED3DD.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271188.50733697</real>
+			<key>timeStoppedRecording</key>
+			<real>767271189.05157304</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>AD67F4CD-EC75-4287-9F81-B792F75ED3DD</string>
+		</dict>
 		<key>AD6E2CFA-04F1-4DCA-BC9C-EB3C2D397054</key>
 		<dict>
 			<key>className</key>
@@ -20040,6 +21342,48 @@
 			<key>uniqueIdentifier</key>
 			<string>AF5533F9-3BFB-48C5-B14D-B1EA7836DD49</string>
 		</dict>
+		<key>AF8A6BCD-1B84-4A10-B00A-E1CD6EEAF412</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>AF8A6BCD-1B84-4A10-B00A-E1CD6EEAF412.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271954.68818402</real>
+			<key>timeStoppedRecording</key>
+			<real>767271954.97921598</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>AF8A6BCD-1B84-4A10-B00A-E1CD6EEAF412</string>
+		</dict>
 		<key>B079270C-EE9A-4A78-AB68-86429013A3CB</key>
 		<dict>
 			<key>className</key>
@@ -20124,6 +21468,48 @@
 			<key>uniqueIdentifier</key>
 			<string>B07DD86D-9BBB-467C-8C1E-DAB651906F92</string>
 		</dict>
+		<key>B08C321B-B646-4E7B-8E3B-242D5A2A1607</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>B08C321B-B646-4E7B-8E3B-242D5A2A1607.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269095.667665</real>
+			<key>timeStoppedRecording</key>
+			<real>767269096.25658</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>B08C321B-B646-4E7B-8E3B-242D5A2A1607</string>
+		</dict>
 		<key>B147EE1B-B498-4EE2-8611-0ACB3167B386</key>
 		<dict>
 			<key>className</key>
@@ -20165,6 +21551,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>B147EE1B-B498-4EE2-8611-0ACB3167B386</string>
+		</dict>
+		<key>B170857A-EB2E-4EE5-9588-57D0142F62E9</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>B170857A-EB2E-4EE5-9588-57D0142F62E9.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271605.86917305</real>
+			<key>timeStoppedRecording</key>
+			<real>767271606.591838</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>B170857A-EB2E-4EE5-9588-57D0142F62E9</string>
 		</dict>
 		<key>B20133FC-2D46-46B8-8A8E-0B264105BAAA</key>
 		<dict>
@@ -20796,6 +22224,48 @@
 			<key>uniqueIdentifier</key>
 			<string>B647F09E-BAEB-468C-BAD8-C45C0F1498F7</string>
 		</dict>
+		<key>B698A71C-ACA3-480A-81D6-76DF0BB2BC52</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>B698A71C-ACA3-480A-81D6-76DF0BB2BC52.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269600.487342</real>
+			<key>timeStoppedRecording</key>
+			<real>767269601.16036105</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>B698A71C-ACA3-480A-81D6-76DF0BB2BC52</string>
+		</dict>
 		<key>B6B3BF77-8D69-4C0B-A915-A9D6A0DD2524</key>
 		<dict>
 			<key>className</key>
@@ -21174,6 +22644,48 @@
 			<key>uniqueIdentifier</key>
 			<string>B879411A-07DA-4B0D-A26F-679CF8DDF350</string>
 		</dict>
+		<key>B8A1F2D4-1A56-487A-9F26-1DF90261A97C</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>B8A1F2D4-1A56-487A-9F26-1DF90261A97C.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767268101.98991203</real>
+			<key>timeStoppedRecording</key>
+			<real>767268102.56241703</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>B8A1F2D4-1A56-487A-9F26-1DF90261A97C</string>
+		</dict>
 		<key>B8F87EE5-10B4-4046-95BA-72CB319E9B45</key>
 		<dict>
 			<key>className</key>
@@ -21215,6 +22727,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>B8F87EE5-10B4-4046-95BA-72CB319E9B45</string>
+		</dict>
+		<key>B9410AC0-0C06-467B-A1B4-5D739077BDC0</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>B9410AC0-0C06-467B-A1B4-5D739077BDC0.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270743.81193399</real>
+			<key>timeStoppedRecording</key>
+			<real>767270744.51505303</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>B9410AC0-0C06-467B-A1B4-5D739077BDC0</string>
 		</dict>
 		<key>BA418A17-3A9C-404B-B481-A9CF1C298AD5</key>
 		<dict>
@@ -21803,6 +23357,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>BD672A16-6713-4283-9863-836E3E4B9C7D</string>
+		</dict>
+		<key>BDFAA6A3-6157-427B-9E1F-C4ADD32055F9</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>BDFAA6A3-6157-427B-9E1F-C4ADD32055F9.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269566.43577802</real>
+			<key>timeStoppedRecording</key>
+			<real>767269566.96440697</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>BDFAA6A3-6157-427B-9E1F-C4ADD32055F9</string>
 		</dict>
 		<key>BE28457E-8E17-445A-BF95-A3E219508197</key>
 		<dict>
@@ -23274,6 +24870,48 @@
 			<key>uniqueIdentifier</key>
 			<string>CAFDE39A-4465-415B-B199-7FB70B7AAF2C</string>
 		</dict>
+		<key>CB40E0D3-5487-4096-91A7-3AB0F55681DA</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>CB40E0D3-5487-4096-91A7-3AB0F55681DA.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>E</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>1</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271410.52945995</real>
+			<key>timeStoppedRecording</key>
+			<real>767271411.28159106</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>CB40E0D3-5487-4096-91A7-3AB0F55681DA</string>
+		</dict>
 		<key>CB46846D-A6BC-435D-ACF5-798BF6AB93E7</key>
 		<dict>
 			<key>className</key>
@@ -23399,6 +25037,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>CB61D712-9792-404C-853D-AE7E187AA90C</string>
+		</dict>
+		<key>CBE98C71-F181-4864-A65D-399E1F8F1A75</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>CBE98C71-F181-4864-A65D-399E1F8F1A75.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271554.54351199</real>
+			<key>timeStoppedRecording</key>
+			<real>767271555.277022</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>CBE98C71-F181-4864-A65D-399E1F8F1A75</string>
 		</dict>
 		<key>CC23D748-9CC3-4E36-BC22-78C25D65A696</key>
 		<dict>
@@ -23651,6 +25331,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>CE2ABCB1-7101-4F89-BE15-A2C50F7B4BDD</string>
+		</dict>
+		<key>CE3C92B7-51E5-4D4B-95FD-B4E6F8F61C96</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>CE3C92B7-51E5-4D4B-95FD-B4E6F8F61C96.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767272204.07915998</real>
+			<key>timeStoppedRecording</key>
+			<real>767272204.67316401</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>CE3C92B7-51E5-4D4B-95FD-B4E6F8F61C96</string>
 		</dict>
 		<key>CF02686D-BB33-4594-A847-327EE339819A</key>
 		<dict>
@@ -23988,6 +25710,48 @@
 			<key>uniqueIdentifier</key>
 			<string>CFDFB69B-62D9-401D-896A-7586B2CF07D3</string>
 		</dict>
+		<key>D01820B4-3C27-46C1-BB3F-6BFFB498B7A9</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>D01820B4-3C27-46C1-BB3F-6BFFB498B7A9.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271975.37613595</real>
+			<key>timeStoppedRecording</key>
+			<real>767271975.50521398</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>D01820B4-3C27-46C1-BB3F-6BFFB498B7A9</string>
+		</dict>
 		<key>D03FFE52-F3F5-4497-BE7D-56936188CF03</key>
 		<dict>
 			<key>className</key>
@@ -24071,6 +25835,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>D08A0FF5-CFB5-48A6-9632-3FF60BFD5974</string>
+		</dict>
+		<key>D096EB31-9804-41C6-9C90-1B4D340B67A5</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>D096EB31-9804-41C6-9C90-1B4D340B67A5.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271578.05789602</real>
+			<key>timeStoppedRecording</key>
+			<real>767271578.77853799</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>D096EB31-9804-41C6-9C90-1B4D340B67A5</string>
 		</dict>
 		<key>D0B61FEC-8124-4CC7-8A94-080F7724F500</key>
 		<dict>
@@ -25080,6 +26886,48 @@
 			<key>uniqueIdentifier</key>
 			<string>D74EC7DE-F4CD-47FF-A8B5-65326D0CD485</string>
 		</dict>
+		<key>D7997D5E-EB4A-4950-AA98-564B2297036C</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>D7997D5E-EB4A-4950-AA98-564B2297036C.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271200.05179203</real>
+			<key>timeStoppedRecording</key>
+			<real>767271200.60826099</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>D7997D5E-EB4A-4950-AA98-564B2297036C</string>
+		</dict>
 		<key>D7B46EE7-E40C-4646-A262-10EF8E86FD44</key>
 		<dict>
 			<key>className</key>
@@ -25542,6 +27390,48 @@
 			<key>uniqueIdentifier</key>
 			<string>DCC6E682-5E83-4D62-A620-BE271B0BC33D</string>
 		</dict>
+		<key>DCE345E1-00E9-435E-919D-A4E03C7A41B2</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>DCE345E1-00E9-435E-919D-A4E03C7A41B2.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>1</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271035.19433904</real>
+			<key>timeStoppedRecording</key>
+			<real>767271035.98501897</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>DCE345E1-00E9-435E-919D-A4E03C7A41B2</string>
+		</dict>
 		<key>DCF62D59-E001-45AF-9667-8DCE901DE50F</key>
 		<dict>
 			<key>className</key>
@@ -25583,6 +27473,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>DCF62D59-E001-45AF-9667-8DCE901DE50F</string>
+		</dict>
+		<key>DE0A0CCF-5EDF-496E-A097-26B72078DB51</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>DE0A0CCF-5EDF-496E-A097-26B72078DB51.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>W</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>1</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271097.43621099</real>
+			<key>timeStoppedRecording</key>
+			<real>767271097.94365299</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>DE0A0CCF-5EDF-496E-A097-26B72078DB51</string>
 		</dict>
 		<key>DE12F865-DE74-46F7-BAE6-A493A6309351</key>
 		<dict>
@@ -25919,6 +27851,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>E16EB070-B2A7-409B-A6DF-10DDFFC4FC29</string>
+		</dict>
+		<key>E1765370-6173-4803-91C2-11E31BE8E9E5</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>E1765370-6173-4803-91C2-11E31BE8E9E5.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270820.85992301</real>
+			<key>timeStoppedRecording</key>
+			<real>767270821.60853302</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>E1765370-6173-4803-91C2-11E31BE8E9E5</string>
 		</dict>
 		<key>E20F0373-4EF0-4C06-9085-523EBC714A1B</key>
 		<dict>
@@ -27180,6 +29154,48 @@
 			<key>uniqueIdentifier</key>
 			<string>EE4C7438-BF6D-41E7-8949-33E97C8A4642</string>
 		</dict>
+		<key>EEEE7CF1-7D6C-4DDD-B851-2904520ACC0E</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>EEEE7CF1-7D6C-4DDD-B851-2904520ACC0E.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767269609.91852903</real>
+			<key>timeStoppedRecording</key>
+			<real>767269610.35150397</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>EEEE7CF1-7D6C-4DDD-B851-2904520ACC0E</string>
+		</dict>
 		<key>EF414F05-775A-4CD7-A086-9157E4E757CF</key>
 		<dict>
 			<key>className</key>
@@ -27515,6 +29531,90 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>F23D9FF0-503D-4DF9-917C-1D70997D685F</string>
+		</dict>
+		<key>F2769138-5DE5-4110-B919-2CFB6F57E767</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>F2769138-5DE5-4110-B919-2CFB6F57E767.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767271584.85325694</real>
+			<key>timeStoppedRecording</key>
+			<real>767271585.25313997</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>F2769138-5DE5-4110-B919-2CFB6F57E767</string>
+		</dict>
+		<key>F2E67D07-0043-4768-B468-DE8C1834D32D</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>F2E67D07-0043-4768-B468-DE8C1834D32D.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767272268.63711202</real>
+			<key>timeStoppedRecording</key>
+			<real>767272269.29666305</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>F2E67D07-0043-4768-B468-DE8C1834D32D</string>
 		</dict>
 		<key>F317E15E-C1F4-437E-85D4-E5FAC0BC4A5D</key>
 		<dict>
@@ -29069,6 +31169,48 @@
 			<string>Build mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>FE5B2D71-DA2C-4D31-9C17-F2E2B06D6F3E</string>
+		</dict>
+		<key>FEA3A76D-35CF-4163-8811-31E74DC517BE</key>
+		<dict>
+			<key>className</key>
+			<string>IDEActivityLogSection</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>Xcode.IDEActivityLogDomainType.BuildLog</string>
+			<key>fileName</key>
+			<string>FEA3A76D-35CF-4163-8811-31E74DC517BE.xcactivitylog</string>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Build mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767270729.40471995</real>
+			<key>timeStoppedRecording</key>
+			<real>767270730.00851703</real>
+			<key>title</key>
+			<string>Build mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>FEA3A76D-35CF-4163-8811-31E74DC517BE</string>
 		</dict>
 		<key>FF22B87E-BDA7-4B51-B21C-8774429A998D</key>
 		<dict>

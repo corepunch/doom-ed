@@ -150,7 +150,7 @@ void build_wall_vertex_buffer(map_data_t *map) {
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
   glEnableVertexAttribArray(1);
   
-  printf("Built wall vertex buffer with %d vertices\n", map->walls.num_vertices);
+//  printf("Built wall vertex buffer with %d vertices\n", map->walls.num_vertices);
 }
 
 // Helper function to draw a textured quad from the wall vertex buffer
@@ -247,4 +247,46 @@ void draw_wall_ids(map_data_t const *map, mat4 mvp) {
   
   // Reset texture binding
   glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+#define MINIMAP_SCALE 2
+
+#define ROTATE_MAP
+
+void draw_minimap(map_data_t const *map, player_t const *player) {
+  mat4 proj, view, mvp;
+  
+  float w = SCREEN_WIDTH*MINIMAP_SCALE;
+  float h = SCREEN_HEIGHT*MINIMAP_SCALE;
+  
+  glm_ortho(w, -w, h, -h, -1000, 1000, proj);
+  
+  // Set up view matrix to center on player
+#ifndef ROTATE_MAP
+  glm_translate_make(view, (vec3){ -player->x, -player->y, 0.0f });
+#else
+  mat4 trans, rot;
+  // Set up the translation matrix to center on the player
+  glm_translate_make(trans, (vec3){ -player->x, -player->y, 0.0f });
+  
+  // Step 2: Rotate the world so player's angle is at the top
+  float angle_rad = glm_rad(player->angle+90); // rotate counter-clockwise to make player face up
+  glm_rotate_make(rot, angle_rad, (vec3){0.0f, 0.0f, 1.0f});
+  
+  // Step 3: Combine rotation and translation
+  glm_mat4_mul(rot, trans, view); // view = rot * trans
+#endif
+  // Step 4: Combine with projection
+  glm_mat4_mul(proj, view, mvp);  // mvp = proj * view
+  
+  glUseProgram(prog);
+  glBindTexture(GL_TEXTURE_2D, 1);
+  glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glUniform4f(glGetUniformLocation(prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+
+  // Bind the wall VAO
+  glBindVertexArray(map->walls.vao);
+
+  // Draw 4 vertices starting at vertex_start
+  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
 }

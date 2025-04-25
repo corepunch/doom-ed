@@ -159,7 +159,16 @@ int main(int argc, char* argv[]) {
   fseek(file, header.infotableofs, SEEK_SET);
   fread(directory, sizeof(filelump_t), header.numlumps, file);
   
+//  MAP29  The Living End  ~1300 linedefs, ~1900 sidedefs, ~1100 vertices
+//  MAP15  Industrial Zone  Also very large, very open with many secrets
+//  MAP14  The Inmost Dens  Highly detailed architecture
+  
+//  E2M5 – The Crater: vertical layers, lava pit puzzle, lots of atmosphere.
+//  E3M1 – The Storehouse: crazy use of crushers, secrets, and teleport traps.
+//  E4M4 – The Halls of Fear: shows how moody lighting and vertical loops can go a long way.
+  
   // Load E1M1 map
+//  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP15");
   map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP01");
   
   // Print map info
