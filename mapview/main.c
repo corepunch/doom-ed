@@ -1,33 +1,6 @@
 #include "map.h"
 #include "sprites.h"
 
-bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
-  int inside = 0;
-  for (int i = 0; i < map->num_linedefs; i++) {
-    maplinedef_t* line = &map->linedefs[i];
-    for (int s = 0; s < 2; s++) {
-      int sidenum = line->sidenum[s];
-      if (sidenum == 0xFFFF) continue;
-      if (map->sidedefs[sidenum].sector != sector_index) continue;
-      
-      mapvertex_t* v1 = &map->vertices[line->start];
-      mapvertex_t* v2 = &map->vertices[line->end];
-      
-      if (((v1->y > y) != (v2->y > y)) &&
-          (x < (v2->x - v1->x) * (y - v1->y) / (v2->y - v1->y) + v1->x))
-        inside = !inside;
-    }
-  }
-  return inside;
-}
-
-mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
-  for (int i = 0; i < map->num_sectors; i++)
-    if (point_in_sector(map, x, y, i))
-      return &map->sectors[i];
-  return NULL; // not found
-}
-
 // Function to read data from a file at a specific offset
 void* read_lump_data(FILE* file, int offset, int size) {
   void* data = malloc(size);
@@ -168,12 +141,12 @@ int main(int argc, char* argv[]) {
 //  E4M4 – The Halls of Fear: shows how moody lighting and vertical loops can go a long way.
   
   // Load E1M1 map
-//  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP15");
-  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP01");
+//  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP01");
+  map_data_t e1m1 = load_map(file, directory, header.numlumps, "E2M5");
   
   // Print map info
   if (e1m1.num_vertices > 0) {
-    printf("\nSuccessfully loaded E1M1\n");
+    printf("\nSuccessfully loaded map\n");
     print_map_info(&e1m1);
     // Initialize SDL
     if (!init_sdl()) {
@@ -186,7 +159,7 @@ int main(int argc, char* argv[]) {
     build_floor_vertex_buffer(&e1m1);
     run(&e1m1);
   } else {
-    printf("\nFailed to load E1M1 map\n");
+    printf("\nFailed to load map\n");
   }
   
   // Cleanup

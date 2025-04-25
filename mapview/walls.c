@@ -7,9 +7,34 @@
 
 #define init_wall_vertex(X, Y, Z, U, V) \
 map->walls.vertices[map->walls.num_vertices++] = \
-(wall_vertex_t) {X,Y,Z,U*dist+u_offset,V*height+v_offset}
+(wall_vertex_t) {X,Y,Z,U*dist+u_offset,V*height+v_offset,n[0],n[1],n[2]}
 
-extern GLuint prog;
+extern GLuint world_prog;
+extern GLuint ui_prog;
+
+float compute_normal_packed(float dx, float dy, int8_t out[3]) {
+  // 2. Normal vector (perpendicular, e.g., CCW)
+  float nx = -dy;
+  float ny = dx;
+  
+  // 3. Normalize
+  float length = sqrtf(nx * nx + ny * ny);
+  if (length == 0.0f) {
+    out[0] = out[1] = out[2] = 0; // degenerate case
+    return 0;
+  }
+  
+  nx /= length;
+  ny /= length;
+  
+  // 4. Pack into signed 8-bit normalized (–127 to +127)
+  out[0] = (int8_t)(nx * 127.0f);
+  out[1] = (int8_t)(ny * 127.0f);
+  out[2] = 0; // unused z channel (or could be a flag)
+  
+  // Optional: Clamp to [-127, 127] if paranoid
+  return length;
+}
 
 void build_wall_vertex_buffer(map_data_t *map) {
   map->walls.num_vertices = 0;
@@ -32,8 +57,10 @@ void build_wall_vertex_buffer(map_data_t *map) {
     mapvertex_t const *v2 = &map->vertices[linedef->end];
     mapsidedef2_t *front = &map->walls.sections[linedef->sidenum[0]];
     mapsidedef2_t *back = NULL;
-    
-    float const dist = sqrtf((v1->x-v2->x) * (v1->x-v2->x) + (v1->y-v2->y) * (v1->y-v2->y));
+    int8_t n[3];
+    float dx = v2->x - v1->x;
+    float dy = v2->y - v1->y;
+    float dist = compute_normal_packed(-dx, -dy, n);
     
     // Check if there's a back side to this linedef
     if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
@@ -149,7 +176,9 @@ void build_wall_vertex_buffer(map_data_t *map) {
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
   glEnableVertexAttribArray(1);
-  
+  glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, sizeof(wall_vertex_t), (void*)(5 * sizeof(int16_t))); // Normal
+  glEnableVertexAttribArray(2);
+
 //  printf("Built wall vertex buffer with %d vertices\n", map->walls.num_vertices);
 }
 
@@ -159,9 +188,9 @@ void draw_textured_surface(wall_section_t const *surface, float light, int mode)
     return;
   
   glBindTexture(GL_TEXTURE_2D, surface->texture->texture);
-  glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-  glUniform2f(glGetUniformLocation(prog, "tex0_size"), surface->texture->width, surface->texture->height);
-  glUniform4f(glGetUniformLocation(prog, "color"), light * BRIGHTNESS, light * BRIGHTNESS, light * BRIGHTNESS, 1);
+  glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
+  glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), surface->texture->width, surface->texture->height);
+  glUniform1f(glGetUniformLocation(world_prog, "light"), light);
   
   // Draw 4 vertices starting at vertex_start
   glDrawArrays(mode, surface->vertex_start, surface->vertex_count);
@@ -214,11 +243,11 @@ void draw_textured_surface_id(wall_section_t const *surface, int id, int mode) {
     return;
   
   glBindTexture(GL_TEXTURE_2D, 1);
-  glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
-  glUniform2f(glGetUniformLocation(prog, "tex0_size"), 1, 1);
+  glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
+  glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), 1, 1);
   
   uint8_t *c = (uint8_t *)&id;
-  glUniform4f(glGetUniformLocation(prog, "color"), c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
+  glUniform4f(glGetUniformLocation(world_prog, "color"), c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
   
   // Draw 4 vertices starting at vertex_start
   glDrawArrays(mode, surface->vertex_start, surface->vertex_count);
@@ -279,14 +308,14 @@ void draw_minimap(map_data_t const *map, player_t const *player) {
   // Step 4: Combine with projection
   glm_mat4_mul(proj, view, mvp);  // mvp = proj * view
   
-  glUseProgram(prog);
+  glUseProgram(ui_prog);
   glBindTexture(GL_TEXTURE_2D, 1);
-  glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  glUniform4f(glGetUniformLocation(prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 0.15f);
 
-  // Bind the wall VAO
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
   glBindVertexArray(map->walls.vao);
-
-  // Draw 4 vertices starting at vertex_start
   glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
+  glDisable(GL_BLEND);
 }

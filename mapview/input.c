@@ -6,8 +6,36 @@ extern SDL_Window* window;
 extern bool running;
 extern bool mode;
 
+bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
+  int inside = 0;
+  for (int i = 0; i < map->num_linedefs; i++) {
+    maplinedef_t* line = &map->linedefs[i];
+    for (int s = 0; s < 2; s++) {
+      int sidenum = line->sidenum[s];
+      if (sidenum == 0xFFFF) continue;
+      if (map->sidedefs[sidenum].sector != sector_index) continue;
+      
+      mapvertex_t* v1 = &map->vertices[line->start];
+      mapvertex_t* v2 = &map->vertices[line->end];
+      
+      if (((v1->y > y) != (v2->y > y)) &&
+          (x < (v2->x - v1->x) * (y - v1->y) / (v2->y - v1->y) + v1->x))
+        inside = !inside;
+    }
+  }
+  return inside;
+}
+
+mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
+  for (int i = 0; i < map->num_sectors; i++)
+    if (point_in_sector(map, x, y, i))
+      return &map->sectors[i];
+  return NULL; // not found
+}
+
 /**
  * Handle player input including mouse movement for camera control
+ * @param map Pointer to the map data
  * @param player Pointer to the player object
  */
 void handle_input(map_data_t *map, player_t *player) {
@@ -79,34 +107,39 @@ void handle_input(map_data_t *map, player_t *player) {
   // Convert player angle to radians for movement calculations
   float angle_rad = player->angle * M_PI / 180.0;
   
+  // Calculate movement vectors
+  float forward_x = 0.0f;
+  float forward_y = 0.0f;
+  float strafe_x = 0.0f;
+  float strafe_y = 0.0f;
+  
   // Calculate forward/backward direction vector
-  float forward_x = -cos(angle_rad) * MOVEMENT_SPEED;
-  float forward_y = sin(angle_rad) * MOVEMENT_SPEED; // Y is flipped in DOOM
-  
-  // Calculate strafe direction vector (perpendicular to forward)
-  float strafe_x = sin(angle_rad) * MOVEMENT_SPEED;
-  float strafe_y = cos(angle_rad) * MOVEMENT_SPEED;
-  
-  // Handle keyboard movement
   if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
-    // Move forward
-    player->x += forward_x;
-    player->y += forward_y;
+    forward_x -= cos(angle_rad) * MOVEMENT_SPEED; // Negative because DOOM's coordinate system
+    forward_y += sin(angle_rad) * MOVEMENT_SPEED;
   }
   if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
-    // Move backward
-    player->x -= forward_x;
-    player->y -= forward_y;
+    forward_x += cos(angle_rad) * MOVEMENT_SPEED;
+    forward_y -= sin(angle_rad) * MOVEMENT_SPEED;
   }
+  
+  // Calculate strafe direction vector (perpendicular to forward)
   if (keystates[SDL_SCANCODE_D]) {
-    // Strafe right
-    player->x += strafe_x;
-    player->y += strafe_y;
+    strafe_x += sin(angle_rad) * MOVEMENT_SPEED;
+    strafe_y += cos(angle_rad) * MOVEMENT_SPEED;
   }
   if (keystates[SDL_SCANCODE_A]) {
-    // Strafe left
-    player->x -= strafe_x;
-    player->y -= strafe_y;
+    strafe_x -= sin(angle_rad) * MOVEMENT_SPEED;
+    strafe_y -= cos(angle_rad) * MOVEMENT_SPEED;
+  }
+  
+  // Combine movement vectors
+  float move_x = forward_x + strafe_x;
+  float move_y = forward_y + strafe_y;
+  
+  // If there's any movement, apply it with collision detection and sliding
+  if (move_x != 0.0f || move_y != 0.0f) {
+    update_player_position_with_sliding(map, player, move_x, move_y);
   }
   
   // Additional vertical movement if needed (flying up/down)
@@ -119,14 +152,6 @@ void handle_input(map_data_t *map, player_t *player) {
   
   // Toggle mode with Shift
   if (keystates[SDL_SCANCODE_LSHIFT]) {
-    static Uint32 last_toggle = 0;
-    Uint32 current_time = SDL_GetTicks();
-    
-    // Add debounce to prevent multiple toggles
-    if (current_time - last_toggle > 250) {
-      mode = !mode;
-      last_toggle = current_time;
-    }
+    mode = true;
   }
 }
-

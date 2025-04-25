@@ -53,11 +53,11 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
-            argument = "/Users/igor/Downloads/Doom2HoE/doom2.wad"
+            argument = "/Users/igor/Downloads/HERETIC/heretic.wad"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument
-            argument = "/Users/igor/Downloads/HERETIC/heretic.wad"
+            argument = "/Users/igor/Downloads/Doom2HoE/doom2.wad"
             isEnabled = "YES">
          </CommandLineArgument>
          <CommandLineArgument

@@ -7,22 +7,67 @@
 #include "map.h"
 #include "sprites.h"
 
+//const char* vs_src = "#version 150 core\n"
+//"in vec3 pos;\n"
+//"in vec2 uv;\n"
+//"in vec3 norm;\n"
+//"out vec2 tex;\n"
+//"out vec4 vpos;\n"
+//"out vec3 normal;\n"
+//"uniform vec2 tex0_size;\n"
+//"uniform mat4 mvp;\n"
+//"void main() {\n"
+//"  tex = uv / tex0_size;\n"
+//"  normal = norm;\n"
+//"  gl_Position = mvp * vec4(pos, 1.0);\n"
+//"}";
+//
+//const char* fs_src = "#version 150 core\n"
+//"in vec2 tex;\n"
+//"in vec3 normal;\n"
+//"out vec4 outColor;\n"
+//"uniform vec4 color;\n"
+//"uniform sampler2D tex0;\n"
+//"void main() {\n"
+//"  float light = dot(vec3(0.3,0.75,0.75),abs(normal));\n"
+//"  outColor = texture(tex0, tex) * color * light;\n"
+//"}";
+
 const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
 "in vec2 uv;\n"
+"in vec3 norm;\n"
 "out vec2 tex;\n"
-"out vec4 vpos;\n"
+"out vec3 normal;\n"
+"out vec3 fragPos;\n"
 "uniform vec2 tex0_size;\n"
 "uniform mat4 mvp;\n"
 "void main() {\n"
 "  tex = uv / tex0_size;\n"
-"  vpos = mvp * vec4(pos, 1.0);\n"
-"  gl_Position = vpos;\n"
+"  normal = norm;\n"
+"  fragPos = pos;\n"
+"  gl_Position = mvp * vec4(pos, 1.0);\n"
 "}";
 
 const char* fs_src = "#version 150 core\n"
 "in vec2 tex;\n"
-"in vec4 vpos;\n"
+"in vec3 normal;\n"
+"in vec3 fragPos;\n"
+"out vec4 outColor;\n"
+"uniform float light;\n"
+"uniform vec3 viewPos;\n"
+"uniform sampler2D tex0;\n"
+"uniform mat4 mvp;\n"
+"void main() {\n"
+"  // Extract view position from inverse MVP matrix\n"
+"  vec3 viewDir = normalize(viewPos - fragPos);\n"
+"  float fading = smoothstep(500,0,distance(viewPos, fragPos));\n"
+"  float facingFactor = abs(dot(normalize(normal), viewDir));\n"
+"  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * mix(fading*light,1.0,light*light);\n"
+"}";
+
+const char* fs_unlit_src = "#version 150 core\n"
+"in vec2 tex;\n"
 "out vec4 outColor;\n"
 "uniform vec4 color;\n"
 "uniform sampler2D tex0;\n"
@@ -38,7 +83,7 @@ GLuint compile(GLenum type, const char* src) {
 }
 
 // Global variables
-GLuint prog;
+GLuint world_prog, ui_prog;
 GLuint error_tex;
 
 SDL_Window* window = NULL;
@@ -69,17 +114,37 @@ bool init_sdl(void) {
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
   
   ctx = SDL_GL_CreateContext(window);
-    
-  GLuint vs = compile(GL_VERTEX_SHADER, vs_src);
-  GLuint fs = compile(GL_FRAGMENT_SHADER, fs_src);
-  prog = glCreateProgram();
-  glAttachShader(prog, vs);
-  glAttachShader(prog, fs);
-  glBindAttribLocation(prog, 0, "pos");
-  glBindAttribLocation(prog, 1, "uv");
-  glLinkProgram(prog);
-  glUseProgram(prog);
-  glUniform1i(glGetUniformLocation(prog, "tex0"), 0);
+  
+  GLuint vs, fs;
+
+  vs = compile(GL_VERTEX_SHADER, vs_src);
+  fs = compile(GL_FRAGMENT_SHADER, fs_src);
+  world_prog = glCreateProgram();
+  glAttachShader(world_prog, vs);
+  glAttachShader(world_prog, fs);
+  glBindAttribLocation(world_prog, 0, "pos");
+  glBindAttribLocation(world_prog, 1, "uv");
+  glBindAttribLocation(world_prog, 2, "norm");
+  glLinkProgram(world_prog);
+  glUseProgram(world_prog);
+  glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
+  glDeleteShader(vs);
+  glDeleteShader(fs);
+
+  
+  vs = compile(GL_VERTEX_SHADER, vs_src);
+  fs = compile(GL_FRAGMENT_SHADER, fs_unlit_src);
+  ui_prog = glCreateProgram();
+  glAttachShader(ui_prog, vs);
+  glAttachShader(ui_prog, fs);
+  glBindAttribLocation(ui_prog, 0, "pos");
+  glBindAttribLocation(ui_prog, 1, "uv");
+  glBindAttribLocation(ui_prog, 2, "norm");
+  glLinkProgram(ui_prog);
+  glUseProgram(ui_prog);
+  glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
+  glDeleteShader(vs);
+  glDeleteShader(fs);
 
 //  glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
@@ -130,14 +195,6 @@ void init_player(map_data_t const *map, player_t *player) {
  * @param out Output matrix (view-projection combined)
  */
 void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
-  mapsector_t const *sector = find_player_sector(map, player->x, player->y);
-  
-  float z = 0;
-  
-  if (sector) {
-    z = sector->floorheight + EYE_HEIGHT;
-  }
-  
   // Convert angle to radians for direction calculation
   float angle_rad = player->angle * M_PI / 180.0f + 0.001f;
   float pitch_rad = player->pitch * M_PI / 180.0f;
@@ -156,7 +213,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   // Calculate look-at point
   float look_x = player->x + look_dir_x * 10.0f;
   float look_y = player->y + look_dir_y * 10.0f;
-  float look_z = z + look_dir_z * 10.0f;
+  float look_z = player->z + look_dir_z * 10.0f;
   
   // Create projection matrix
   mat4 proj;
@@ -164,7 +221,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   
   // Create view matrix
   mat4 view;
-  vec3 eye = {player->x, player->y, z};
+  vec3 eye = {player->x, player->y, player->z};
   vec3 center = {look_x, look_y, look_z}; // Look vector now includes pitch
   vec3 up = {0.0f, 0.0f, 1.0f};           // Z is up in Doom
   
@@ -187,6 +244,13 @@ void draw_walls(map_data_t const *map, mat4 mvp);
 
 int pixel = 0;
 
+void update_player_height(map_data_t const *map, player_t *player) {
+  mapsector_t const *sector = find_player_sector(map, player->x, player->y);
+  if (sector) {
+    player->z = sector->floorheight + EYE_HEIGHT;
+  }
+}
+
 // Main function
 int run(map_data_t const *map) {
   player_t player = {0};
@@ -199,22 +263,35 @@ int run(map_data_t const *map) {
   mat4 mvp;
 
   while (running) {
+    mode = false;
     // Calculate delta time for smooth movement
     Uint32 current_time = SDL_GetTicks();
 //    float delta_time = (current_time - last_time) / 1000.0f;
     last_time = current_time;
+
+    mapsector_t const *sector = find_player_sector(map, player.x, player.y);
+    
+    float z = 0;
+    
+    if (sector) {
+      z = sector->floorheight + EYE_HEIGHT;
+    }
     
     // Handle input
     handle_input((map_data_t *)map, &player);
 
+    update_player_height(map, &player);
+    
     get_view_matrix(map, &player, mvp);
 
     SDL_Event e;
     while (SDL_PollEvent(&e)) if (e.type == SDL_QUIT) return 0;
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
-    glUseProgram(prog);
-    glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+//    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glUseProgram(world_prog);
+    glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+    glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
 
     void draw_wall_ids(map_data_t const *map, mat4 mvp);
     void draw_floor_ids(map_data_t const *map, mat4 mvp);
@@ -225,7 +302,7 @@ int run(map_data_t const *map) {
 
     int fb_width, fb_height;
     SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
-    glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+//    glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
 
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
@@ -237,7 +314,9 @@ int run(map_data_t const *map) {
 
     draw_crosshair();
     
-    draw_minimap(map, &player);
+    if (mode) {
+      draw_minimap(map, &player);
+    }
 
     SDL_GL_SwapWindow(window);
     

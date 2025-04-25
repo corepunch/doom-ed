@@ -27,7 +27,6 @@ if ((map)->name) free((map)->name); \
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-#define BRIGHTNESS 1.1f
 #define EYE_HEIGHT 41 // Typical eye height in Doom is 41 units above floor
 #define MAX_WALL_VERTICES 50000  // Adjust based on map complexity
 
@@ -47,8 +46,7 @@ typedef char texname_t[8];   // Texture name, null-terminated
 
 // Player state
 typedef struct {
-  float x;
-  float y;
+  float x, y, z;
   float angle;  // in degrees, 0 is east, 90 is north
   float pitch;
   float height;
@@ -56,8 +54,9 @@ typedef struct {
 
 // Vertex structure for our buffer (xyzuv)
 typedef struct {
-  int16_t x, y, z;  // Position
-  int16_t u, v;     // Texture coordinates
+  int16_t x, y, z;    // Position
+  int16_t u, v;       // Texture coordinates
+  int8_t nx, ny, nz;  // Normal
 } wall_vertex_t;
 
 // Struct to represent a texture with OpenGL
@@ -188,5 +187,8 @@ void build_floor_vertex_buffer(map_data_t *map);
 void handle_input(map_data_t *map, player_t *player);
 void draw_textured_surface(wall_section_t const *surface, float light, int mode);
 void draw_textured_surface_id(wall_section_t const *surface, int id, int mode);
+
+void update_player_position_with_sliding(map_data_t const *map, player_t *player,
+                                         float move_x, float move_y);
 
 #endif

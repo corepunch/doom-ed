@@ -4,7 +4,7 @@
 #include "map.h"
 
 // Global variables to add
-extern GLuint prog;
+extern GLuint world_prog;
 
 #define MAX_EDGES 0x10000
 #define MAX_VERTICES 1024
@@ -41,6 +41,7 @@ void calculate_texture_coords(wall_vertex_t *vertices, int vertex_count) {
     // Texture coordinates (normalized 0-1)
     vertices[i].u = (vertices[i].x - min_x);
     vertices[i].v = (vertices[i].y - min_y);
+    vertices[i].nz = -127;
   }
 }
 
@@ -175,6 +176,8 @@ void build_floor_vertex_buffer(map_data_t *map) {
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
   glEnableVertexAttribArray(1);
+  glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, sizeof(wall_vertex_t), (void*)(5 * sizeof(int16_t))); // Normal
+  glEnableVertexAttribArray(2);
 }
 
 // Main function to draw floors and ceilings
@@ -182,7 +185,7 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
   glBindVertexArray(map->floors.vao);
   
   // Set MVP matrix uniform
-  glUniformMatrix4fv(glGetUniformLocation(prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
   
   // Process each sector
   for (int i = 0; i < map->num_sectors; i++) {
