@@ -717,3 +717,29 @@ mapside_texture_t const *
 get_flat_texture(const char* name) {
   return get_flat_texture_from_cache(&g_flat_cache, name);
 }
+
+char const* get_texture_name(int i) {
+  return g_cache.textures[i%g_cache.num_textures].name;
+}
+
+void draw_palette(map_data_t const *map, float x, float y, int w) {
+  extern int pixel;
+  extern uint32_t selected_texture;
+  int i = 0;
+  for (; i < g_cache.num_textures; i++) {
+    int x = (i%w+0.5)*(PALETTE_WIDTH + 1);
+    int y = (i/w+0.5)*(PALETTE_WIDTH + 1);
+    if (selected_texture%g_cache.num_textures == i)
+//    if (pixel < map->num_sidedefs && (!strncmp(map->sidedefs[pixel].bottomtexture, g_cache.textures[i].name, sizeof(texname_t)) ||
+//                                      !strncmp(map->sidedefs[pixel].midtexture, g_cache.textures[i].name, sizeof(texname_t)) ||
+//                                      !strncmp(map->sidedefs[pixel].toptexture, g_cache.textures[i].name, sizeof(texname_t))))
+    {
+      draw_rect(1, x, y, PALETTE_WIDTH + 2, PALETTE_WIDTH + 2);
+    }
+    draw_rect(g_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
+  }
+  
+//  for (int j = 0; j < g_flat_cache.num_textures; i++, j++) {
+//    draw_rect(&g_flat_cache.textures[i], (i%w+0.5)*PALETTE_WIDTH, (i/w+0.5)*PALETTE_WIDTH, 0.3);
+//  }
+}

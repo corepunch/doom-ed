@@ -1,10 +1,13 @@
 #include <SDL2/SDL.h>
+#include <limits.h>
 
 #include "map.h"
 
 extern SDL_Window* window;
 extern bool running;
 extern bool mode;
+
+uint32_t selected_texture = 0;
 
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
   int inside = 0;
@@ -26,11 +29,83 @@ bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
   return inside;
 }
 
+//mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
+//  for (int i = 0; i < map->num_sectors; i++)
+//    if (point_in_sector(map, x, y, i))
+//      return &map->sectors[i];
+//  return NULL; // not found
+//}
+
 mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
-  for (int i = 0; i < map->num_sectors; i++)
-    if (point_in_sector(map, x, y, i))
-      return &map->sectors[i];
-  return NULL; // not found
+  mapsector_t const *highest_sector = NULL;
+  int highest_floor = INT_MIN;
+  
+  // Check center point and four points at player radius distance
+  int check_points[5][2] = {
+    {x, y},               // Center
+    {x - P_RADIUS, y},    // Left
+    {x + P_RADIUS, y},    // Right
+    {x, y - P_RADIUS},    // Up
+    {x, y + P_RADIUS}     // Down
+  };
+  
+  // Check each sample point
+  for (int p = 0; p < 5; p++) {
+    int px = check_points[p][0];
+    int py = check_points[p][1];
+    
+    for (int i = 0; i < map->num_sectors; i++) {
+      if (point_in_sector(map, px, py, i)) {
+        // If this is a higher sector than what we've found so far, remember it
+        if (!highest_sector || map->sectors[i].floorheight > highest_floor) {
+          highest_sector = &map->sectors[i];
+          highest_floor = map->sectors[i].floorheight;
+        }
+      }
+    }
+  }
+  
+  return highest_sector; // Returns NULL if no sector was found
+}
+
+void handle_scroll(SDL_Event event, map_data_t *map) {
+  extern int pixel;
+  static int buffer = 0;
+  buffer += event.wheel.y;
+  
+  // Reset buffer if scroll direction changed
+  if ((buffer ^ event.wheel.y) < 0) {
+    buffer = event.wheel.y;
+  }
+  
+  uint16_t p = pixel >> 16;
+
+  int move;
+  
+  // Correct rounding for both positive and negative
+  if (buffer >= 0) {
+    move = (buffer & ~7); // positive side: floor down
+  } else {
+    move = -((-buffer) & ~7); // negative side: floor up
+  }
+  
+  if (move != 0) {
+    buffer -= move;
+    
+    switch (p&PIXEL_MASK) {
+      case PIXEL_FLOOR:
+        map->sectors[p&~PIXEL_MASK].floorheight -= move;
+        break;
+      case PIXEL_CEILING:
+        map->sectors[p&~PIXEL_MASK].ceilingheight -= move;
+        break;
+      default:
+        break;
+    }
+    
+    build_wall_vertex_buffer(map);
+    build_floor_vertex_buffer(map);
+  }
 }
 
 /**
@@ -61,26 +136,45 @@ void handle_input(map_data_t *map, player_t *player) {
       mouse_y_rel = event.motion.yrel;
     }
     else if (event.type == SDL_MOUSEWHEEL) {
+      handle_scroll(event, map);
+    }
+    else if (event.type == SDL_MOUSEBUTTONUP) {
       extern int pixel;
-      if (pixel > 0x10000) {
-        uint16_t p = pixel >> 16;
-        if (p > 10000) {
-          map->sectors[p-10000].ceilingheight -= event.wheel.y;
-        } else {
-          map->sectors[p-1].floorheight -= event.wheel.y;
+      if ((pixel&~PIXEL_MASK) < map->num_sidedefs) {
+        switch (pixel&PIXEL_MASK) {
+          case PIXEL_MID:
+            memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture,
+                   get_texture_name(selected_texture),
+                   sizeof(texname_t));
+            break;
+          case PIXEL_BOTTOM:
+            memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture,
+                   get_texture_name(selected_texture),
+                   sizeof(texname_t));
+            break;
+          case PIXEL_TOP:
+            memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture,
+                   get_texture_name(selected_texture),
+                   sizeof(texname_t));
+            break;
         }
+        build_wall_vertex_buffer(map);
+        build_floor_vertex_buffer(map);
       }
-      build_wall_vertex_buffer(map);
-      build_floor_vertex_buffer(map);
     }
     else if (event.type == SDL_KEYDOWN) {
-      if (event.key.keysym.scancode == SDL_SCANCODE_ESCAPE) {
-        // Toggle mouse capture with Escape key
-        if (SDL_GetRelativeMouseMode()) {
-          SDL_SetRelativeMouseMode(SDL_FALSE);
-        } else {
-          SDL_SetRelativeMouseMode(SDL_TRUE);
-        }
+      switch (event.key.keysym.scancode) {
+        case SDL_SCANCODE_ESCAPE:
+          SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
+          break;
+        case SDL_SCANCODE_Z:
+          selected_texture--;
+          break;
+        case SDL_SCANCODE_X:
+          selected_texture++;
+          break;
+        default:
+          break;
       }
     }
   }
@@ -139,7 +233,9 @@ void handle_input(map_data_t *map, player_t *player) {
   
   // If there's any movement, apply it with collision detection and sliding
   if (move_x != 0.0f || move_y != 0.0f) {
-    update_player_position_with_sliding(map, player, move_x, move_y);
+//    update_player_position_with_sliding(map, player, move_x, move_y);
+    player->x += move_x;
+    player->y += move_y;
   }
   
   // Additional vertical movement if needed (flying up/down)

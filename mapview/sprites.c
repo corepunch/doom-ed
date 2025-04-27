@@ -637,3 +637,38 @@ void cleanup_sprites(void) {
   // Reset sprite count
   sys->num_sprites = 0;
 }
+
+
+// Draw a sprite at the specified screen position
+void draw_rect(int tex, float x, float y, float w, float h) {
+  sprite_system_t* sys = &g_sprite_system;
+  
+  // Enable blending for transparency
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  // Disable depth testing for UI elements
+  glDisable(GL_DEPTH_TEST);
+  
+  // Use sprite shader program
+  glUseProgram(sys->program);
+  
+  // Set uniforms
+  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
+  glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
+  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);//tex->width, tex->height);
+  glUniform1f(glGetUniformLocation(sys->program, "alpha"), 1);
+  
+  // Bind sprite texture
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, tex);
+  glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
+  
+  // Bind VAO and draw
+  glBindVertexArray(sys->vao);
+  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  
+  // Reset state
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_BLEND);
+}

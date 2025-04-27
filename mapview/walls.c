@@ -184,12 +184,14 @@ void build_wall_vertex_buffer(map_data_t *map) {
 
 // Helper function to draw a textured quad from the wall vertex buffer
 void draw_textured_surface(wall_section_t const *surface, float light, int mode) {
-  if (!surface->texture)
-    return;
-  
-  glBindTexture(GL_TEXTURE_2D, surface->texture->texture);
+  if (surface->texture) {
+    glBindTexture(GL_TEXTURE_2D, surface->texture->texture);
+    glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), surface->texture->width, surface->texture->height);
+  } else {
+    glBindTexture(GL_TEXTURE_2D, 1);
+    glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), 1, 1);
+  }
   glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
-  glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), surface->texture->width, surface->texture->height);
   glUniform1f(glGetUniformLocation(world_prog, "light"), light);
   
   // Draw 4 vertices starting at vertex_start
@@ -215,14 +217,23 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
     
     
     extern int pixel;
-    if (pixel == i) {
-      light += 0.25;
-    }
 
     // Draw front side
-    draw_textured_surface(&front->upper_section, light, GL_TRIANGLE_FAN);
-    draw_textured_surface(&front->lower_section, light, GL_TRIANGLE_FAN);
-    draw_textured_surface(&front->mid_section, light, GL_TRIANGLE_FAN);
+    if (CHECK_PIXEL(pixel, TOP, linedef->sidenum[0])) {
+      draw_textured_surface(&front->upper_section, light + 0.25, GL_TRIANGLE_FAN);
+    } else {
+      draw_textured_surface(&front->upper_section, light, GL_TRIANGLE_FAN);
+    }
+    if (CHECK_PIXEL(pixel, BOTTOM, linedef->sidenum[0])) {
+      draw_textured_surface(&front->lower_section, light + 0.25, GL_TRIANGLE_FAN);
+    } else {
+      draw_textured_surface(&front->lower_section, light, GL_TRIANGLE_FAN);
+    }
+    if (CHECK_PIXEL(pixel, MID, linedef->sidenum[0])) {
+      draw_textured_surface(&front->mid_section, light + 0.25, GL_TRIANGLE_FAN);
+    } else {
+      draw_textured_surface(&front->mid_section, light, GL_TRIANGLE_FAN);
+    }
 
     // Draw back side if it exists
     if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
@@ -242,19 +253,18 @@ void draw_textured_surface_id(wall_section_t const *surface, int id, int mode) {
   if (!surface->texture)
     return;
   
-  glBindTexture(GL_TEXTURE_2D, 1);
-  glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
-  glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), 1, 1);
-  
   uint8_t *c = (uint8_t *)&id;
-  glUniform4f(glGetUniformLocation(world_prog, "color"), c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
+
+  glBindTexture(GL_TEXTURE_2D, 1);
+  glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
+  glUniform2f(glGetUniformLocation(ui_prog, "tex0_size"), 1, 1);
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
   
   // Draw 4 vertices starting at vertex_start
   glDrawArrays(mode, surface->vertex_start, surface->vertex_count);
 }
 
 void draw_wall_ids(map_data_t const *map, mat4 mvp) {
-  // Bind the wall VAO
   glBindVertexArray(map->walls.vao);
   
   // Draw linedefs
@@ -269,9 +279,9 @@ void draw_wall_ids(map_data_t const *map, mat4 mvp) {
     mapsidedef2_t const *front = &map->walls.sections[linedef->sidenum[0]];
     
     // Draw front side
-    draw_textured_surface_id(&front->upper_section, i, GL_TRIANGLE_FAN);
-    draw_textured_surface_id(&front->lower_section, i, GL_TRIANGLE_FAN);
-    draw_textured_surface_id(&front->mid_section, i, GL_TRIANGLE_FAN);
+    draw_textured_surface_id(&front->upper_section, linedef->sidenum[0]|PIXEL_TOP, GL_TRIANGLE_FAN);
+    draw_textured_surface_id(&front->lower_section, linedef->sidenum[0]|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
+    draw_textured_surface_id(&front->mid_section, linedef->sidenum[0]|PIXEL_MID, GL_TRIANGLE_FAN);
   }
   
   // Reset texture binding

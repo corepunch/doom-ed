@@ -141,8 +141,7 @@ int main(int argc, char* argv[]) {
 //  E4M4 – The Halls of Fear: shows how moody lighting and vertical loops can go a long way.
   
   // Load E1M1 map
-//  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP01");
-  map_data_t e1m1 = load_map(file, directory, header.numlumps, "E2M5");
+  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP01");
   
   // Print map info
   if (e1m1.num_vertices > 0) {

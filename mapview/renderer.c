@@ -61,9 +61,10 @@ const char* fs_src = "#version 150 core\n"
 "void main() {\n"
 "  // Extract view position from inverse MVP matrix\n"
 "  vec3 viewDir = normalize(viewPos - fragPos);\n"
-"  float fading = smoothstep(500,0,distance(viewPos, fragPos));\n"
+"  float distance = smoothstep(500,0,distance(viewPos, fragPos));\n"
 "  float facingFactor = abs(dot(normalize(normal), viewDir));\n"
-"  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * mix(fading*light,1.0,light*light);\n"
+"  float fading = mix(distance * light, 1.0, light * light);\n"
+"  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * fading * 1.5;\n"
 "}";
 
 const char* fs_unlit_src = "#version 150 core\n"
@@ -289,22 +290,30 @@ int run(map_data_t const *map) {
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glUseProgram(world_prog);
-    glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-    glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
 
     void draw_wall_ids(map_data_t const *map, mat4 mvp);
     void draw_floor_ids(map_data_t const *map, mat4 mvp);
     void draw_minimap(map_data_t const *map, player_t const *player);
 
+    glUseProgram(ui_prog);
+    glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+
     draw_floor_ids(map, mvp);
     draw_wall_ids(map, mvp);
 
     int fb_width, fb_height;
+    int window_width, window_height;
+
     SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
-//    glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+    SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
+
+    glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
 
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    
+    glUseProgram(world_prog);
+    glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+    glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
 
     draw_floors(map, mvp);
 
@@ -313,6 +322,8 @@ int run(map_data_t const *map) {
     draw_weapon();
 
     draw_crosshair();
+    
+    draw_palette(map, 0, 0, window_width/PALETTE_WIDTH);
     
     if (mode) {
       draw_minimap(map, &player);
