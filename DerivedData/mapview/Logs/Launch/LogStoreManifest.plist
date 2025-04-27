@@ -21966,6 +21966,67 @@
 			<key>uniqueIdentifier</key>
 			<string>7DA5E45B-A131-4453-81DD-81A1C11F7049</string>
 		</dict>
+		<key>7E01A1F8-C865-4BFD-90C9-0B8812CA04D8</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>1CBD11F3-7418-41FD-BA85-49ECF7BE71E2</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.IDE.LaunchSchemeAction</string>
+			<key>fileName</key>
+			<string>Run-mapview-2025.04.27_15-08-05-+0200.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasConsoleLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Run mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767452085.49677598</real>
+			<key>timeStoppedRecording</key>
+			<real>0.0</real>
+			<key>title</key>
+			<string>Run mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>7E01A1F8-C865-4BFD-90C9-0B8812CA04D8</string>
+		</dict>
 		<key>7E84D31A-0155-47E3-8535-8B89B8DE3892</key>
 		<dict>
 			<key>auxiliaryLogUniqueIdentifier</key>
@@ -45450,6 +45511,67 @@
 			<string>Run mapview</string>
 			<key>uniqueIdentifier</key>
 			<string>FD5FA329-E312-45BE-B5E2-21C35A504AAF</string>
+		</dict>
+		<key>FD89E38A-5415-4ECC-A64F-D75558D6703A</key>
+		<dict>
+			<key>auxiliaryLogUniqueIdentifier</key>
+			<string>D844E23B-2449-48A8-92FE-8FA504741527</string>
+			<key>auxiliaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>className</key>
+			<string>IDESchemeActionsInvocationRecord</string>
+			<key>documentTypeString</key>
+			<string>&lt;nil&gt;</string>
+			<key>domainType</key>
+			<string>com.apple.dt.IDE.LaunchSchemeAction</string>
+			<key>fileName</key>
+			<string>Run-mapview-2025.04.27_15-07-09-+0200.xcresult</string>
+			<key>hasAuxiliaryLog</key>
+			<true/>
+			<key>hasConsoleLog</key>
+			<true/>
+			<key>hasPrimaryLog</key>
+			<true/>
+			<key>primaryObservable</key>
+			<dict>
+				<key>highLevelStatus</key>
+				<string>S</string>
+				<key>totalNumberOfAnalyzerIssues</key>
+				<integer>0</integer>
+				<key>totalNumberOfErrors</key>
+				<integer>0</integer>
+				<key>totalNumberOfTestFailures</key>
+				<integer>0</integer>
+				<key>totalNumberOfWarnings</key>
+				<integer>0</integer>
+			</dict>
+			<key>schemeIdentifier-containerName</key>
+			<string>mapview project</string>
+			<key>schemeIdentifier-schemeName</key>
+			<string>mapview</string>
+			<key>schemeIdentifier-sharedScheme</key>
+			<integer>1</integer>
+			<key>signature</key>
+			<string>Run mapview</string>
+			<key>timeStartedRecording</key>
+			<real>767452029.98110199</real>
+			<key>timeStoppedRecording</key>
+			<real>0.0</real>
+			<key>title</key>
+			<string>Run mapview</string>
+			<key>uniqueIdentifier</key>
+			<string>FD89E38A-5415-4ECC-A64F-D75558D6703A</string>
 		</dict>
 		<key>FED53225-3F9E-4164-A434-E0BBB231CD58</key>
 		<dict>

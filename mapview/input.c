@@ -218,11 +218,11 @@ void handle_input(map_data_t *map, player_t *player) {
   }
   
   // Calculate strafe direction vector (perpendicular to forward)
-  if (keystates[SDL_SCANCODE_D]) {
+  if (keystates[SDL_SCANCODE_D] || keystates[SDL_SCANCODE_RIGHT]) {
     strafe_x += sin(angle_rad) * MOVEMENT_SPEED;
     strafe_y += cos(angle_rad) * MOVEMENT_SPEED;
   }
-  if (keystates[SDL_SCANCODE_A]) {
+  if (keystates[SDL_SCANCODE_A] || keystates[SDL_SCANCODE_LEFT]) {
     strafe_x -= sin(angle_rad) * MOVEMENT_SPEED;
     strafe_y -= cos(angle_rad) * MOVEMENT_SPEED;
   }
