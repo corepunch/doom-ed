@@ -78,8 +78,6 @@ void handle_scroll(SDL_Event event, map_data_t *map) {
     buffer = event.wheel.y;
   }
   
-  uint16_t p = pixel >> 16;
-
   int move;
   
   // Correct rounding for both positive and negative
@@ -92,12 +90,17 @@ void handle_scroll(SDL_Event event, map_data_t *map) {
   if (move != 0) {
     buffer -= move;
     
-    switch (p&PIXEL_MASK) {
+    switch (pixel&PIXEL_MASK) {
       case PIXEL_FLOOR:
-        map->sectors[p&~PIXEL_MASK].floorheight -= move;
+        map->sectors[pixel&~PIXEL_MASK].floorheight -= move;
         break;
       case PIXEL_CEILING:
-        map->sectors[p&~PIXEL_MASK].ceilingheight -= move;
+        map->sectors[pixel&~PIXEL_MASK].ceilingheight -= move;
+        break;
+      case PIXEL_MID:
+      case PIXEL_TOP:
+      case PIXEL_BOTTOM:
+        map->sidedefs[pixel&~PIXEL_MASK].rowoffset -= move;
         break;
       default:
         break;

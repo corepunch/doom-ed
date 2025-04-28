@@ -1,5 +1,7 @@
 #include "map.h"
 #include "sprites.h"
+#include "console.h"
+
 
 // Function to read data from a file at a specific offset
 void* read_lump_data(FILE* file, int offset, int size) {
@@ -151,6 +153,8 @@ int main(int argc, char* argv[]) {
     if (!init_sdl()) {
       return 1;
     }
+    init_console();
+    load_console_font(file, directory, header.numlumps);
     allocate_mapside_textures(&e1m1, file, directory, header.numlumps);
     allocate_flat_textures(&e1m1, file, directory, header.numlumps);
     init_sprites(file, directory, header.numlumps);

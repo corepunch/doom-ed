@@ -250,8 +250,8 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
 
 // Helper function to draw a textured quad from the wall vertex buffer
 void draw_textured_surface_id(wall_section_t const *surface, int id, int mode) {
-  if (!surface->texture)
-    return;
+//  if (!surface->texture)
+//    return;
   
   uint8_t *c = (uint8_t *)&id;
 
@@ -292,8 +292,8 @@ void draw_wall_ids(map_data_t const *map, mat4 mvp) {
 
 #define ROTATE_MAP
 
-void draw_minimap(map_data_t const *map, player_t const *player) {
-  mat4 proj, view, mvp;
+void minimap_matrix(player_t const *player, mat4 mvp) {
+  mat4 proj, view;
   
   float w = SCREEN_WIDTH*MINIMAP_SCALE;
   float h = SCREEN_HEIGHT*MINIMAP_SCALE;
@@ -317,6 +317,12 @@ void draw_minimap(map_data_t const *map, player_t const *player) {
 #endif
   // Step 4: Combine with projection
   glm_mat4_mul(proj, view, mvp);  // mvp = proj * view
+}
+
+void draw_minimap(map_data_t const *map, player_t const *player) {
+  mat4 mvp;
+  
+  minimap_matrix(player, mvp);
   
   glUseProgram(ui_prog);
   glBindTexture(GL_TEXTURE_2D, 1);

@@ -6,6 +6,7 @@
 
 #include "map.h"
 #include "sprites.h"
+#include "console.h"
 
 //const char* vs_src = "#version 150 core\n"
 //"in vec3 pos;\n"
@@ -252,6 +253,8 @@ void update_player_height(map_data_t const *map, player_t *player) {
   }
 }
 
+void minimap_matrix(player_t const *player, mat4 mvp);
+
 // Main function
 int run(map_data_t const *map) {
   player_t player = {0};
@@ -284,7 +287,17 @@ int run(map_data_t const *map) {
     update_player_height(map, &player);
     
     get_view_matrix(map, &player, mvp);
-
+    
+    mat4 mvp2;
+    minimap_matrix(&player, mvp2);
+    
+//    for (int i = 0; i < 16; i++) {
+//      
+//      float k =MAX(0,sin(current_time / 2000.f));
+//      
+//      ((float*)mvp)[i] = ((float*)mvp)[i] * k + ((float*)mvp2)[i] * (1-k);
+//    }
+//
     SDL_Event e;
     while (SDL_PollEvent(&e)) if (e.type == SDL_QUIT) return 0;
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -328,6 +341,8 @@ int run(map_data_t const *map) {
     if (mode) {
       draw_minimap(map, &player);
     }
+    
+    draw_console();
 
     SDL_GL_SwapWindow(window);
     
