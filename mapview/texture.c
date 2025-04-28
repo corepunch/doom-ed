@@ -684,14 +684,10 @@ void draw_palette(map_data_t const *map, float x, float y, int w) {
   extern int pixel;
   extern uint32_t selected_texture;
   int i = 0;
-  for (; i < g_cache.num_textures; i++) {
-    int x = (i%w+0.5)*(PALETTE_WIDTH + 1);
-    int y = (i/w+0.5)*(PALETTE_WIDTH + 1);
-    if (selected_texture%g_cache.num_textures == i)
-//    if (pixel < map->num_sidedefs && (!strncmp(map->sidedefs[pixel].bottomtexture, g_cache.textures[i].name, sizeof(texname_t)) ||
-//                                      !strncmp(map->sidedefs[pixel].midtexture, g_cache.textures[i].name, sizeof(texname_t)) ||
-//                                      !strncmp(map->sidedefs[pixel].toptexture, g_cache.textures[i].name, sizeof(texname_t))))
-    {
+  for (; i < MIN(g_cache.num_textures, w); i++) {
+    int x = (i/w+0.5)*(PALETTE_WIDTH + 1);
+    int y = (i%w+0.5)*(PALETTE_WIDTH + 1);
+    if (selected_texture%g_cache.num_textures == i) {
       draw_rect(1, x, y, PALETTE_WIDTH + 2, PALETTE_WIDTH + 2);
     }
     draw_rect(g_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);

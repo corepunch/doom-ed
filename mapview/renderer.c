@@ -312,6 +312,7 @@ int run(map_data_t const *map) {
     glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
 
     draw_floor_ids(map, mvp);
+    
     draw_wall_ids(map, mvp);
 
     int fb_width, fb_height;
@@ -322,21 +323,21 @@ int run(map_data_t const *map) {
 
     glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
 
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-    
-    glUseProgram(world_prog);
-    glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-    glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
-
-    draw_floors(map, mvp);
-
-    draw_walls(map, mvp);
-
+    if (!mode) {
+      glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+      glUseProgram(world_prog);
+      glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+      glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
+      
+      draw_floors(map, mvp);
+      
+      draw_walls(map, mvp);
+    }
     draw_weapon();
 
     draw_crosshair();
     
-    draw_palette(map, 0, 0, window_width/PALETTE_WIDTH);
+    draw_palette(map, 0, 0, window_height/PALETTE_WIDTH);
     
     if (mode) {
       draw_minimap(map, &player);

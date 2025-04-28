@@ -272,16 +272,20 @@ void draw_wall_ids(map_data_t const *map, mat4 mvp) {
     maplinedef_t const *linedef = &map->linedefs[i];
     
     // Check if front sidedef exists
-    if (linedef->sidenum[0] >= map->num_sidedefs) {
-      continue; // Skip if invalid front sidedef
+    if (linedef->sidenum[0] != 0xFFFF && linedef->sidenum[0] < map->num_sidedefs) {
+      mapsidedef2_t const *front = &map->walls.sections[linedef->sidenum[0]];
+      draw_textured_surface_id(&front->upper_section, linedef->sidenum[0]|PIXEL_TOP, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&front->lower_section, linedef->sidenum[0]|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&front->mid_section, linedef->sidenum[0]|PIXEL_MID, GL_TRIANGLE_FAN);
     }
-    
-    mapsidedef2_t const *front = &map->walls.sections[linedef->sidenum[0]];
-    
-    // Draw front side
-    draw_textured_surface_id(&front->upper_section, linedef->sidenum[0]|PIXEL_TOP, GL_TRIANGLE_FAN);
-    draw_textured_surface_id(&front->lower_section, linedef->sidenum[0]|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
-    draw_textured_surface_id(&front->mid_section, linedef->sidenum[0]|PIXEL_MID, GL_TRIANGLE_FAN);
+
+    // Draw back side if it exists
+    if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
+      mapsidedef2_t const *back = &map->walls.sections[linedef->sidenum[1]];
+      draw_textured_surface_id(&back->upper_section, linedef->sidenum[1]|PIXEL_TOP, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&back->lower_section, linedef->sidenum[1]|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&back->mid_section, linedef->sidenum[1]|PIXEL_MID, GL_TRIANGLE_FAN);
+    }
   }
   
   // Reset texture binding
