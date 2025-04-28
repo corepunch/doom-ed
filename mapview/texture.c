@@ -7,13 +7,6 @@
 #define MAX_TEXTURES 256
 #define MAX_TEXDIR 8
 
-// Palette structure
-typedef struct {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-} palette_entry_t;
-
 // PNAMES lump structure
 typedef struct {
   int32_t nummappatches;      // Number of patches
@@ -369,15 +362,13 @@ int allocate_mapside_textures(map_data_t* map, FILE* wad_file, filelump_t* direc
   texture_cache_t* cache = &g_cache;
   
   // Find lumps
-  int palette_index = find_lump(directory, num_lumps, "PLAYPAL");
   int pnames_index = find_lump(directory, num_lumps, "PNAMES");
   
-  if (palette_index < 0 || pnames_index < 0) {
-    printf("Error: Required lumps not found (PLAYPAL, PNAMES)\n");
+  if (pnames_index < 0) {
+    printf("Error: Required PNAMES not found\n");
     return 0;
   }
   
-  filelump_t* palette_lump = &directory[palette_index];
   filelump_t* pnames_lump  = &directory[pnames_index];
   
   // Array of texture directories
@@ -401,24 +392,11 @@ int allocate_mapside_textures(map_data_t* map, FILE* wad_file, filelump_t* direc
     printf("Error: No texture directories found (TEXTURE1, TEXTURE2)\n");
     return 0;
   }
-  
-  // Load palette
-  fseek(wad_file, palette_lump->filepos, SEEK_SET);
-  palette_entry_t* palette = malloc(256 * sizeof(palette_entry_t));
-  if (!palette) {
-    printf("Error: Failed to allocate memory for palette\n");
-    for (int i = 0; i < dir_count; i++) {
-      free(tex_dirs[i].offsets);
-    }
-    return 0;
-  }
-  fread(palette, sizeof(palette_entry_t), 256, wad_file);
-  
+    
   // Load PNAMES
   mappatchnames_t* pnames = load_pnames(wad_file, pnames_lump);
   if (!pnames) {
     printf("Error: Failed to load PNAMES lump\n");
-    free(palette);
     for (int i = 0; i < dir_count; i++) {
       free(tex_dirs[i].offsets);
     }
@@ -429,13 +407,12 @@ int allocate_mapside_textures(map_data_t* map, FILE* wad_file, filelump_t* direc
   for (int i = 0; i < map->num_sidedefs; i++) {
     mapsidedef_t* side = &map->sidedefs[i];
     
-    maybe_load_texture(wad_file, directory, num_lumps, cache, side->toptexture, tex_dirs, pnames, palette);
-    maybe_load_texture(wad_file, directory, num_lumps, cache, side->midtexture, tex_dirs, pnames, palette);
-    maybe_load_texture(wad_file, directory, num_lumps, cache, side->bottomtexture, tex_dirs, pnames, palette);
+    maybe_load_texture(wad_file, directory, num_lumps, cache, side->toptexture, tex_dirs, pnames, map->palette);
+    maybe_load_texture(wad_file, directory, num_lumps, cache, side->midtexture, tex_dirs, pnames, map->palette);
+    maybe_load_texture(wad_file, directory, num_lumps, cache, side->bottomtexture, tex_dirs, pnames, map->palette);
   }
   
   // Clean up
-  free(palette);
   free(pnames);
   for (int i = 0; i < dir_count; i++) {
     free(tex_dirs[i].offsets);
@@ -552,23 +529,6 @@ bool is_marker(const char* name) {
 int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* directory, int num_lumps) {
   flat_cache_t* cache = &g_flat_cache;
   
-  // Find palette lump
-  int palette_index = find_lump(directory, num_lumps, "PLAYPAL");
-  if (palette_index < 0) {
-    printf("Error: Required lump not found (PLAYPAL)\n");
-    return 0;
-  }
-  
-  // Load palette
-  filelump_t* palette_lump = &directory[palette_index];
-  fseek(wad_file, palette_lump->filepos, SEEK_SET);
-  palette_entry_t* palette = malloc(256 * sizeof(palette_entry_t));
-  if (!palette) {
-    printf("Error: Failed to allocate memory for palette\n");
-    return 0;
-  }
-  fread(palette, sizeof(palette_entry_t), 256, wad_file);
-  
   // Find F_START and F_END markers
   int f_start = -1, f_end = -1;
   int ff_start = -1, ff_end = -1;
@@ -582,7 +542,6 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
   
   if (f_start < 0 || f_end < 0 || f_start >= f_end) {
     printf("Error: Could not find flat markers (F_START/F_END)\n");
-    free(palette);
     return 0;
   }
   
@@ -605,7 +564,7 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
     if (already_cached) continue;
     
     // Load the flat texture
-    mapside_texture_t *tex = load_flat_texture(wad_file, &directory[i], palette, directory[i].name);
+    mapside_texture_t *tex = load_flat_texture(wad_file, &directory[i], map->palette, directory[i].name);
     if (tex) {
       cache->textures[cache->num_textures++] = *tex;
     }
@@ -631,7 +590,7 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
       if (already_cached) continue;
       
       // Load the flat texture
-      mapside_texture_t *tex = load_flat_texture(wad_file, &directory[i], palette, directory[i].name);
+      mapside_texture_t *tex = load_flat_texture(wad_file, &directory[i], map->palette, directory[i].name);
       if (tex) {
         cache->textures[cache->num_textures++] = *tex;
       }
@@ -655,7 +614,7 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
     if (!floor_loaded) {
       int flat_index = find_lump(directory, num_lumps, sector->floorpic);
       if (flat_index >= 0) {
-        mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], palette, sector->floorpic);
+        mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], map->palette, sector->floorpic);
         if (tex && cache->num_textures < MAX_TEXTURES) {
           cache->textures[cache->num_textures++] = *tex;
         }
@@ -675,7 +634,7 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
     if (!ceiling_loaded) {
       int flat_index = find_lump(directory, num_lumps, sector->ceilingpic);
       if (flat_index >= 0) {
-        mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], palette, sector->ceilingpic);
+        mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], map->palette, sector->ceilingpic);
         if (tex && cache->num_textures < MAX_TEXTURES) {
           cache->textures[cache->num_textures++] = *tex;
         }
@@ -683,7 +642,6 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
     }
   }
   
-  free(palette);
   return cache->num_textures;
 }
 

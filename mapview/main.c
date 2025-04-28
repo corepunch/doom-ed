@@ -34,6 +34,16 @@ map_data_t load_map(FILE* file, filelump_t* directory, int num_lumps, const char
     return map;
   }
   
+  int palette_index = find_lump(directory, num_lumps, "PLAYPAL");
+  if (palette_index < 0) {
+    printf("Error: Required lump not found (PLAYPAL)\n");
+    return map;
+  }
+  filelump_t* palette_lump = &directory[palette_index];
+  // Load palette
+  fseek(file, palette_lump->filepos, SEEK_SET);
+  fread(map.palette, sizeof(palette_entry_t), 256, file);
+  
   // Map lumps follow a specific order after the map marker
   if (map_index + 10 <= num_lumps) {
     // THINGS
@@ -154,10 +164,10 @@ int main(int argc, char* argv[]) {
       return 1;
     }
     init_console();
-    load_console_font(file, directory, header.numlumps);
+    load_console_font(file, directory, header.numlumps, e1m1.palette);
     allocate_mapside_textures(&e1m1, file, directory, header.numlumps);
     allocate_flat_textures(&e1m1, file, directory, header.numlumps);
-    init_sprites(file, directory, header.numlumps);
+    init_sprites(&e1m1, file, directory, header.numlumps);
     build_wall_vertex_buffer(&e1m1);
     build_floor_vertex_buffer(&e1m1);
     run(&e1m1);

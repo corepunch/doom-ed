@@ -69,11 +69,11 @@ sprite_system_t g_sprite_system = {0};
 
 // Forward declarations
 GLuint compile_shader(GLenum type, const char* src);
-GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, int* height, int* offsetx, int* offsety);
+GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const*);
 GLuint generate_crosshair_texture(int size);
 
 // Initialize the sprite system
-bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps) {
+bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int num_lumps) {
   sprite_system_t* sys = &g_sprite_system;
   
   // Create shader program
@@ -110,23 +110,6 @@ bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps) {
   SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &width, &height);
   glm_ortho(0, width, height, 0, -1, 1, sys->projection);
   
-  // Find palette lump
-  int palette_index = find_lump(directory, num_lumps, "PLAYPAL");
-  if (palette_index < 0) {
-    printf("Error: Required lump not found (PLAYPAL)\n");
-    return false;
-  }
-  
-  // Load palette
-  filelump_t* palette_lump = &directory[palette_index];
-  fseek(wad_file, palette_lump->filepos, SEEK_SET);
-  palette_entry_t* palette = malloc(256 * sizeof(palette_entry_t));
-  if (!palette) {
-    printf("Error: Failed to allocate memory for palette\n");
-    return false;
-  }
-  fread(palette, sizeof(palette_entry_t), 256, wad_file);
-  
   // Find and preload weapon sprites (starting with SHT)
   sys->num_sprites = 0;
   
@@ -144,7 +127,7 @@ bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps) {
       // Check if this is a sprite we're interested in (starting with SHTG)
       if (strncmp(sprite_lump->name, "SHTG", 4) == 0) {
         int width, height, offsetx, offsety;
-        GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety);
+        GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety, map->palette);
         
         if (texture) {
           sprite_t* sprite = &sys->sprites[sys->num_sprites];
@@ -163,7 +146,7 @@ bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps) {
       // Also load crosshair sprite if it exists (usually named "CROSXXXX")
       if (strncmp(sprite_lump->name, "CROS", 4) == 0) {
         int width, height, offsetx, offsety;
-        GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety);
+        GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety, map->palette);
         
         if (texture) {
           sprite_t* sprite = &sys->sprites[sys->num_sprites];
@@ -185,7 +168,7 @@ bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps) {
     if (shotgun_sprite >= 0) {
       filelump_t* sprite_lump = &directory[shotgun_sprite];
       int width, height, offsetx, offsety;
-      GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety);
+      GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety, map->palette);
       
       if (texture) {
         sprite_t* sprite = &sys->sprites[sys->num_sprites];
@@ -206,7 +189,7 @@ bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps) {
     if (crosshair_sprite >= 0) {
       filelump_t* sprite_lump = &directory[crosshair_sprite];
       int width, height, offsetx, offsety;
-      GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety);
+      GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety, map->palette);
       
       if (texture) {
         sprite_t* sprite = &sys->sprites[sys->num_sprites];
@@ -225,8 +208,6 @@ bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps) {
   
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
-  
-  free(palette);
   
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
@@ -256,7 +237,7 @@ GLuint compile_shader(GLenum type, const char* src) {
 }
 
 // Load a sprite texture from WAD
-GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, int* height, int* offsetx, int* offsety) {
+GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const *palette) {
   // Seek to sprite lump
   fseek(wad_file, sprite_lump->filepos, SEEK_SET);
   
@@ -287,23 +268,7 @@ GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, 
     free(columnofs);
     return 0;
   }
-  
-  // Load palette
-  int palette_index = find_lump_from_file(wad_file, "PLAYPAL");
-  if (palette_index < 0) {
-    free(columnofs);
-    free(tex_data);
-    return 0;
-  }
-  
-  filelump_t palette_lump;
-  fseek(wad_file, palette_index, SEEK_SET);
-  fread(&palette_lump, sizeof(filelump_t), 1, wad_file);
-  
-  palette_entry_t palette[256];
-  fseek(wad_file, palette_lump.filepos, SEEK_SET);
-  fread(palette, sizeof(palette_entry_t), 256, wad_file);
-  
+    
   // Process each column
   for (int x = 0; x < sprite_width; x++) {
     // Seek to column data

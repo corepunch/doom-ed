@@ -10,7 +10,7 @@
 void init_console(void);
 
 // Load the DOOM font from the WAD file
-bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps);
+bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps, palette_entry_t const* palette);
 
 // Print a message to the console
 void conprintf(const char* format, ...);

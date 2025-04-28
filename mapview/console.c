@@ -94,7 +94,7 @@ static const char* FONT_LUMPS_PREFIX = "STCFN";
 
 // Forward declarations
 static void draw_text_gl3(const char* text, int x, int y, float alpha);
-static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps, int char_code);
+static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps, int char_code, palette_entry_t const *);
 static GLuint compile_shader(GLenum type, const char* src);
 static void create_orthographic_matrix(float left, float right, float bottom, float top, float near, float far, float* out);
 
@@ -216,13 +216,13 @@ static GLuint compile_shader(GLenum type, const char* src) {
 }
 
 // Load the DOOM font from the WAD file
-bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps) {
+bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps, palette_entry_t const* palette) {
   bool success = true;
   
   // Find and load all STCFN## font characters
   // In Doom, only certain ASCII characters are stored (33-95, i.e., ! through _)
   for (int i = 33; i <= 95; i++) {
-    if (!load_font_char(wad_file, directory, num_lumps, i)) {
+    if (!load_font_char(wad_file, directory, num_lumps, i, palette)) {
       // Not all characters might be present, that's fine
       printf("Warning: Could not load font character %c (%d)\n", (char)i, i);
       // Not counting this as a failure since some characters might be legitimately missing
@@ -233,33 +233,11 @@ bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps) {
   return success;
 }
 
-typedef struct {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-} palette_entry_t;
-
 // Load a specific font character
-static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps, int char_code) {
+static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps, int char_code, palette_entry_t const* palette) {
   // Construct font lump name (e.g., "STCFN065" for 'A')
   char lump_name[16];
   snprintf(lump_name, sizeof(lump_name), "%s%03d", FONT_LUMPS_PREFIX, char_code);
-  // Find palette lump
-  int palette_index = find_lump(directory, num_lumps, "PLAYPAL");
-  if (palette_index < 0) {
-    printf("Error: Required lump not found (PLAYPAL)\n");
-    return false;
-  }
-  
-  // Load palette
-  filelump_t* palette_lump = &directory[palette_index];
-  fseek(wad_file, palette_lump->filepos, SEEK_SET);
-  palette_entry_t* palette = malloc(256 * sizeof(palette_entry_t));
-  if (!palette) {
-    printf("Error: Failed to allocate memory for palette\n");
-    return false;
-  }
-  fread(palette, sizeof(palette_entry_t), 256, wad_file);
 
   // Find lump
   int lump_index = find_lump(directory, num_lumps, lump_name);
@@ -339,7 +317,6 @@ static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps,
   // Cleanup
   free(column_offsets);
   free(texture_data);
-  free(palette);
   
   return true;
 }

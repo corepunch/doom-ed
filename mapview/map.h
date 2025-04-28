@@ -154,6 +154,13 @@ typedef struct {
   wall_section_t ceiling;
 } mapsector2_t;
 
+// Palette structure
+typedef struct {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+} palette_entry_t;
+
 // Map data structure using the collection macro
 typedef struct {
   DEFINE_COLLECTION(mapvertex_t, vertices);
@@ -161,6 +168,8 @@ typedef struct {
   DEFINE_COLLECTION(mapsidedef_t, sidedefs);
   DEFINE_COLLECTION(mapthing_t, things);
   DEFINE_COLLECTION(mapsector_t, sectors);
+  
+  palette_entry_t palette[256];
   
   struct {
     mapsidedef2_t *sections;

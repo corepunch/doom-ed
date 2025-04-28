@@ -5,15 +5,8 @@
 #include <stdbool.h>
 #include <OpenGL/gl3.h>
 
-// Palette entry (same as in texture.c)
-typedef struct {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-} palette_entry_t;
-
 // Initialize sprite system
-bool init_sprites(FILE* wad_file, filelump_t* directory, int num_lumps);
+bool init_sprites(map_data_t *, FILE* wad_file, filelump_t* directory, int num_lumps);
 
 // Draw a sprite at the specified screen position
 void draw_sprite(const char* name, float x, float y, float scale, float alpha);
