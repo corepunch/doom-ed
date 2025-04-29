@@ -37,6 +37,13 @@ float compute_normal_packed(float dx, float dy, int8_t out[3]) {
 }
 
 void build_wall_vertex_buffer(map_data_t *map) {
+  map->walls.sections = realloc(map->walls.sections, sizeof(mapsidedef2_t) * map->num_sidedefs);
+  memset(map->walls.sections, 0, sizeof(mapsidedef2_t) * map->num_sidedefs);
+  for (uint32_t i = 0; i < map->num_sidedefs; i++) {
+    map->walls.sections[i].def = &map->sidedefs[i];
+    map->walls.sections[i].sector = &map->sectors[map->sidedefs[i].sector];
+  }
+  
   map->walls.num_vertices = 0;
   // Create VAO for walls if not already created
   if (!map->walls.vao) {

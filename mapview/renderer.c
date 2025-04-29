@@ -7,6 +7,7 @@
 #include "map.h"
 #include "sprites.h"
 #include "console.h"
+#include "editor.h"
 
 //const char* vs_src = "#version 150 core\n"
 //"in vec3 pos;\n"
@@ -88,6 +89,7 @@ GLuint compile(GLenum type, const char* src) {
 GLuint world_prog, ui_prog;
 GLuint error_tex;
 
+editor_state_t editor = {0};
 SDL_Window* window = NULL;
 SDL_GLContext ctx;
 bool running = true;
@@ -148,7 +150,7 @@ bool init_sdl(void) {
   glDeleteShader(vs);
   glDeleteShader(fs);
 
-//  glEnable(GL_CULL_FACE);
+  glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
   
   glEnable(GL_DEPTH_TEST);
@@ -162,6 +164,8 @@ bool init_sdl(void) {
     
   init_floor_shader();
     
+  init_editor(&editor);
+  
   return true;
 }
 
@@ -303,27 +307,28 @@ int run(map_data_t const *map) {
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-    void draw_wall_ids(map_data_t const *map, mat4 mvp);
-    void draw_floor_ids(map_data_t const *map, mat4 mvp);
-    void draw_minimap(map_data_t const *map, player_t const *player);
-
-    glUseProgram(ui_prog);
-    glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-
-    draw_floor_ids(map, mvp);
-    
-    draw_wall_ids(map, mvp);
-
-    int fb_width, fb_height;
-    int window_width, window_height;
-
-    SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
-    SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
-
-    glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
-
-    if (!mode) {
+    if (editor.active) {
+      draw_editor(map, &editor, &player);
+    } else {
+      void draw_wall_ids(map_data_t const *map, mat4 mvp);
+      void draw_floor_ids(map_data_t const *map, mat4 mvp);
+      void draw_minimap(map_data_t const *map, player_t const *player);
+      
+      glUseProgram(ui_prog);
+      glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+      
+      draw_floor_ids(map, mvp);
+      
+      draw_wall_ids(map, mvp);
+      
+      int fb_width, fb_height;
+      int window_width, window_height;
+      
+      SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
+      SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
+      
+      glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+      
       glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
       glUseProgram(world_prog);
       glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
@@ -332,15 +337,16 @@ int run(map_data_t const *map) {
       draw_floors(map, mvp);
       
       draw_walls(map, mvp);
-    }
-    draw_weapon();
-
-    draw_crosshair();
-    
-    draw_palette(map, 0, 0, window_height/PALETTE_WIDTH);
-    
-    if (mode) {
-      draw_minimap(map, &player);
+      
+      draw_weapon();
+      
+      draw_crosshair();
+      
+      draw_palette(map, 0, 0, window_height/PALETTE_WIDTH);
+      
+      if (mode) {
+        draw_minimap(map, &player);
+      }
     }
     
     draw_console();

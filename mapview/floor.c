@@ -119,6 +119,12 @@ uint32_t get_sector_vertices(map_data_t const *map,
 }
 
 void build_floor_vertex_buffer(map_data_t *map) {
+  map->floors.sectors = realloc(map->floors.sectors, sizeof(mapsector2_t) * map->num_sectors);
+  memset(map->floors.sectors, 0, sizeof(mapsector2_t) * map->num_sectors);
+  for (uint32_t i = 0; i < map->num_sectors; i++) {
+    map->floors.sectors[i].sector = &map->sectors[i];
+  }
+  
   map->floors.num_vertices = 0;
   // Create VAO for walls if not already created
   if (!map->floors.vao) {
@@ -193,16 +199,19 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     float light = map->sectors[i].lightlevel / 255.0f;
     
     extern int pixel;
+    glCullFace(GL_BACK);
     if (CHECK_PIXEL(pixel, FLOOR, i)) {
       draw_textured_surface(&map->floors.sectors[i].floor, light + 0.25, GL_TRIANGLES);
     } else {
       draw_textured_surface(&map->floors.sectors[i].floor, light, GL_TRIANGLES);
     }
+    glCullFace(GL_FRONT);
     if (CHECK_PIXEL(pixel, CEILING, i)) {
       draw_textured_surface(&map->floors.sectors[i].ceiling, light + 0.25, GL_TRIANGLES);
     } else {
       draw_textured_surface(&map->floors.sectors[i].ceiling, light, GL_TRIANGLES);
     }
+    glCullFace(GL_BACK);
   }
 }
 

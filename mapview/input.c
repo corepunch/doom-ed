@@ -2,6 +2,7 @@
 #include <limits.h>
 
 #include "map.h"
+#include "editor.h"
 
 extern SDL_Window* window;
 extern bool running;
@@ -117,6 +118,13 @@ void handle_scroll(SDL_Event event, map_data_t *map) {
  * @param player Pointer to the player object
  */
 void handle_input(map_data_t *map, player_t *player) {
+  extern editor_state_t editor;
+  // If in editor mode, use the editor input handler
+  if (editor.active) {
+    handle_editor_input(map, &editor, player);
+    return;
+  }
+  
   SDL_Event event;
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
   
@@ -175,6 +183,9 @@ void handle_input(map_data_t *map, player_t *player) {
           break;
         case SDL_SCANCODE_X:
           selected_texture++;
+          break;
+        case SDL_SCANCODE_TAB:
+          toggle_editor_mode(&editor);
           break;
         default:
           break;

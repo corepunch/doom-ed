@@ -70,19 +70,6 @@ map_data_t load_map(FILE* file, filelump_t* directory, int num_lumps, const char
     int sectors_idx = map_index + 8;
     map.num_sectors = directory[sectors_idx].size / sizeof(mapsector_t);
     map.sectors = (mapsector_t*)read_lump_data(file, directory[sectors_idx].filepos, directory[sectors_idx].size);
-    
-    map.walls.sections = malloc(sizeof(mapsidedef2_t) * map.num_sidedefs);
-    memset(map.walls.sections, 0, sizeof(mapsidedef2_t) * map.num_sidedefs);
-    for (uint32_t i = 0; i < map.num_sidedefs; i++) {
-      map.walls.sections[i].def = &map.sidedefs[i];
-      map.walls.sections[i].sector = &map.sectors[map.sidedefs[i].sector];
-    }
-
-    map.floors.sectors = malloc(sizeof(mapsector2_t) * map.num_sectors);
-    memset(map.floors.sectors, 0, sizeof(mapsector2_t) * map.num_sectors);
-    for (uint32_t i = 0; i < map.num_sectors; i++) {
-      map.floors.sectors[i].sector = &map.sectors[i];
-    }
   }
   
   return map;

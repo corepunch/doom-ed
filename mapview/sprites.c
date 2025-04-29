@@ -621,7 +621,7 @@ void draw_rect(int tex, float x, float y, float w, float h) {
   // Set uniforms
   glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
   glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
-  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);//tex->width, tex->height);
+  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
   glUniform1f(glGetUniformLocation(sys->program, "alpha"), 1);
   
   // Bind sprite texture
