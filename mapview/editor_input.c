@@ -5,10 +5,10 @@
 extern SDL_Window* window;
 
 // Utility function to snap coordinates to grid
-static void snap_to_grid(int *x, int *y, int grid_size) {
-  *x = (*x / grid_size) * grid_size;
-  *y = (*y / grid_size) * grid_size;
-}
+//static void snap_to_grid(int *x, int *y, int grid_size) {
+//  *x = (*x / grid_size) * grid_size;
+//  *y = (*y / grid_size) * grid_size;
+//}
 
 // Toggle editor mode on/off
 void toggle_editor_mode(editor_state_t *editor) {
