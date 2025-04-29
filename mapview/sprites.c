@@ -36,12 +36,10 @@ const char* sprite_fs_src = "#version 150 core\n"
 float sprite_verts[] = {
   // pos.x  pos.y    tex.x tex.y
   -0.5f,   -0.5f,    0.0f, 0.0f, // bottom left
-  0.5f,   -0.5f,    1.0f, 0.0f, // bottom right
+  -0.5f,    0.5f,    0.0f, 1.0f,  // top left
   0.5f,    0.5f,    1.0f, 1.0f, // top right
-  -0.5f,    0.5f,    0.0f, 1.0f  // top left
+  0.5f,   -0.5f,    1.0f, 0.0f, // bottom right
 };
-
-unsigned int sprite_idx[] = { 0, 1, 2, 2, 3, 0 };
 
 // Sprite cache structure
 typedef struct {
@@ -58,7 +56,6 @@ typedef struct {
   GLuint program;        // Shader program
   GLuint vao;            // Vertex array object
   GLuint vbo;            // Vertex buffer object
-  GLuint ebo;            // Element buffer object
   sprite_t sprites[MAX_SPRITES];
   int num_sprites;
   mat4 projection;       // Orthographic projection matrix
@@ -94,10 +91,6 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
   glGenBuffers(1, &sys->vbo);
   glBindBuffer(GL_ARRAY_BUFFER, sys->vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_verts), sprite_verts, GL_STATIC_DRAW);
-  
-  glGenBuffers(1, &sys->ebo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sys->ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sprite_idx), sprite_idx, GL_STATIC_DRAW);
   
   // Set up vertex attributes
   glEnableVertexAttribArray(0);
@@ -460,7 +453,7 @@ void draw_sprite(const char* name, float x, float y, float scale, float alpha) {
   
   // Bind VAO and draw
   glBindVertexArray(sys->vao);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
   
   // Reset state
   glEnable(GL_DEPTH_TEST);
@@ -575,7 +568,7 @@ void draw_crosshair(void) {
       
       // Bind VAO and draw
       glBindVertexArray(sys->vao);
-      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+      glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
       
       // Reset state
       glEnable(GL_DEPTH_TEST);
@@ -597,7 +590,6 @@ void cleanup_sprites(void) {
   glDeleteProgram(sys->program);
   glDeleteVertexArrays(1, &sys->vao);
   glDeleteBuffers(1, &sys->vbo);
-  glDeleteBuffers(1, &sys->ebo);
   
   // Reset sprite count
   sys->num_sprites = 0;
@@ -631,7 +623,7 @@ void draw_rect(int tex, float x, float y, float w, float h) {
   
   // Bind VAO and draw
   glBindVertexArray(sys->vao);
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
   
   // Reset state
   glEnable(GL_DEPTH_TEST);

@@ -208,6 +208,7 @@ void update_player_position_with_sliding(map_data_t const *map, player_t *player
 void draw_rect(int tex, float x, float y, float w, float h);
 void draw_palette(map_data_t const *map, float x, float y, int w);
 char const* get_texture_name(int i);
+float dist_sq(float x1, float y1, float x2, float y2);
 
 enum {
   PIXEL_MID = 0 << 28,

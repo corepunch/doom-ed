@@ -148,7 +148,50 @@ void check_vertex_collision(map_data_t const *map, float x, float y, float max_d
 }
 
 /**
- * Check point-line collision
+ * Calculate the closest point on a line segment to a given point
+ *
+ * @param point_x X coordinate of point
+ * @param point_y Y coordinate of point
+ * @param line_x1 X coordinate of line start
+ * @param line_y1 Y coordinate of line start
+ * @param line_x2 X coordinate of line end
+ * @param line_y2 Y coordinate of line end
+ * @param closest_x Pointer to store closest point X coordinate
+ * @param closest_y Pointer to store closest point Y coordinate
+ * @param t_param Pointer to store parametric value (0-1) along line
+ * @return Distance squared from point to line
+ */
+float closest_point_on_line(float point_x, float point_y,
+                            float line_x1, float line_y1,
+                            float line_x2, float line_y2,
+                            float *closest_x, float *closest_y,
+                            float *t_param) {
+  // Line segment properties
+  float dx = line_x2 - line_x1;
+  float dy = line_y2 - line_y1;
+  float len_sq = dx*dx + dy*dy;
+  
+  // If line segment is effectively a point
+  if (len_sq < EPSILON) {
+    *closest_x = line_x1;
+    *closest_y = line_y1;
+    *t_param = 0.0f;
+    return dist_sq(point_x, point_y, line_x1, line_y1);
+  }
+  
+  // Find closest point on line
+  float t = ((point_x - line_x1) * dx + (point_y - line_y1) * dy) / len_sq;
+  t = t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
+  
+  *closest_x = line_x1 + t * dx;
+  *closest_y = line_y1 + t * dy;
+  *t_param = t;
+  
+  return dist_sq(point_x, point_y, *closest_x, *closest_y);
+}
+
+/**
+ * Check for collisions between a point and map line segments
  */
 void check_line_collision(map_data_t const *map, float x, float y, float player_z,
                           float max_dist_sq, collision_t *result) {
@@ -165,25 +208,20 @@ void check_line_collision(map_data_t const *map, float x, float y, float player_
     // Line segment properties
     float wx1 = v1->x, wy1 = v1->y;
     float wx2 = v2->x, wy2 = v2->y;
-    float dx = wx2 - wx1, dy = wy2 - wy1;
-    float len_sq = dx*dx + dy*dy;
-    
-    if (len_sq < EPSILON) continue;
     
     // Find closest point on line
-    float t = ((x - wx1) * dx + (y - wy1) * dy) / len_sq;
-    t = t < 0.0f ? 0.0f : (t > 1.0f ? 1.0f : t);
-    
-    float cx = wx1 + t * dx;
-    float cy = wy1 + t * dy;
-    float d_sq = dist_sq(x, y, cx, cy);
+    float cx, cy, t;
+    float d_sq = closest_point_on_line(x, y, wx1, wy1, wx2, wy2, &cx, &cy, &t);
     
     // Check for collision
     if (d_sq < max_dist_sq && t > 0.01f && t < 0.99f) {
       max_dist_sq = d_sq;
       
       // Calculate wall normal
-      float len = sqrt(len_sq);
+      float dx = wx2 - wx1;
+      float dy = wy2 - wy1;
+      float len = sqrt(dx*dx + dy*dy);
+      
       if (len > EPSILON) {
         float nx = -dy / len;
         float ny = dx / len;
@@ -206,7 +244,6 @@ void check_line_collision(map_data_t const *map, float x, float y, float player_
     }
   }
 }
-
 /**
  * Check all wall collisions
  */

@@ -60,12 +60,10 @@ const char* text_fs_src = "#version 150 core\n"
 float text_vertices[] = {
   // pos.x  pos.y    tex.x tex.y
   0.0f,    0.0f,    0.0f, 0.0f, // bottom left
-  1.0f,    0.0f,    1.0f, 0.0f, // bottom right
+  0.0f,    1.0f,    0.0f, 1.0f,  // top left
   1.0f,    1.0f,    1.0f, 1.0f, // top right
-  0.0f,    1.0f,    0.0f, 1.0f  // top left
+  1.0f,    0.0f,    1.0f, 0.0f, // bottom right
 };
-
-unsigned int text_indices[] = { 0, 1, 2, 2, 3, 0 };
 
 // Console state
 static struct {
@@ -80,7 +78,6 @@ static struct {
   GLuint program;        // Shader program
   GLuint vao;            // Vertex array object
   GLuint vbo;            // Vertex buffer object
-  GLuint ebo;            // Element buffer object
   GLint projection_loc;  // Location of projection uniform
   GLint offset_loc;      // Location of offset uniform
   GLint scale_loc;       // Location of scale uniform
@@ -145,11 +142,7 @@ void init_console(void) {
   glGenBuffers(1, &console.vbo);
   glBindBuffer(GL_ARRAY_BUFFER, console.vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(text_vertices), text_vertices, GL_STATIC_DRAW);
-  
-  glGenBuffers(1, &console.ebo);
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, console.ebo);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(text_indices), text_indices, GL_STATIC_DRAW);
-  
+    
   // Set up vertex attributes
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
@@ -379,7 +372,7 @@ static void draw_char_gl3(char c, int x, int y, float alpha) {
                   console.text_color.g / 255.0f,
                   console.text_color.b / 255.0f,
                   alpha);
-      glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+      glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
     }
     return;
   }
@@ -399,7 +392,7 @@ static void draw_char_gl3(char c, int x, int y, float alpha) {
               alpha);
   
   // Draw the character quad
-  glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
 }
 
 // Draw text string using GL3
@@ -493,7 +486,6 @@ void shutdown_console(void) {
   glDeleteProgram(console.program);
   glDeleteVertexArrays(1, &console.vao);
   glDeleteBuffers(1, &console.vbo);
-  glDeleteBuffers(1, &console.ebo);
 }
 
 // Toggle console visibility
