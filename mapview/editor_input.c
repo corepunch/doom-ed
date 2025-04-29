@@ -57,6 +57,15 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
           break;
       }
     }
+    else if (event.type == SDL_MOUSEBUTTONUP && editor->dragging) {
+      extern float sn_x, sn_y;
+      editor->dragging = false;
+      map->vertices[editor->num_drag_point].x = sn_x;
+      map->vertices[editor->num_drag_point].y = sn_y;
+      // Rebuild vertex buffers
+      build_wall_vertex_buffer(map);
+      build_floor_vertex_buffer(map);
+    }
     else if (event.type == SDL_MOUSEBUTTONDOWN && editor->active) {
       if (event.button.button == SDL_BUTTON_LEFT) {
         int snapped_x, snapped_y;
@@ -85,14 +94,21 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
         }
       }
       else if (event.button.button == SDL_BUTTON_RIGHT) {
+        extern int splitting_line;
+        extern float sn_x, sn_y;
+        int point = -1;
         if (editor->drawing) {
           // Cancel current drawing
           editor->drawing = false;
           editor->num_draw_points = 0;
-        } else {
-          extern int splitting_line;
-          extern float sn_x, sn_y;
+        } else if (editor->dragging) {
+          editor->dragging = false;
+          editor->num_drag_point = -1;
+        } else if (splitting_line>=0) {
           split_linedef(map, splitting_line, sn_x, sn_y);
+        } else if (point_exists(sn_x, sn_y, map, &point)) {
+          editor->dragging = true;
+          editor->num_drag_point = point;
         }
       }
     }

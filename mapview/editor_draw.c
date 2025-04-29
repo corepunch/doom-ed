@@ -267,11 +267,12 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   }
   
   // If currently drawing, show line from last point to cursor
-  if (editor->drawing && editor->num_draw_points > 0) {
+  if (editor->dragging || (editor->drawing && editor->num_draw_points > 0)) {
     glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
+    float x = editor->dragging ? map->vertices[editor->num_drag_point].x : editor->draw_points[editor->num_draw_points-1][0];
+    float y = editor->dragging ? map->vertices[editor->num_drag_point].y : editor->draw_points[editor->num_draw_points-1][1];;
     wall_vertex_t verts[2] = {
-      { editor->draw_points[editor->num_draw_points-1][0],
-        editor->draw_points[editor->num_draw_points-1][1], 0, 0, 0, 0, 0, 0 },
+      { x, y, 0, 0, 0, 0, 0, 0 },
       { snapped_x, snapped_y, 0, 0, 0, 0, 0, 0 }
     };
     

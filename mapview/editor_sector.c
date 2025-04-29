@@ -19,10 +19,11 @@ return 0xFFFF; \
 #define DIST_SQ(X1, Y1, X2, Y2) ((X1-X2)*(X1-X2) + (Y1-Y2)*(Y1-Y2))
 
 // Check if a point exists at the given coordinates
-bool point_exists(int x, int y, map_data_t *map) {
+bool point_exists(int x, int y, map_data_t *map, int *index) {
   const int threshold = 8;
   for (int i = 0; i < map->num_vertices; i++) {
     if (DIST_SQ(map->vertices[i].x, map->vertices[i].y, x, y) < threshold*threshold) {
+      if (index) *index = i;
       return true;
     }
   }

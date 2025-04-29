@@ -17,8 +17,10 @@ typedef struct {
   bool active;           // Is editor mode active?
   int grid_size;         // Grid size (8 units by default)
   bool drawing;          // Currently drawing a sector?
+  bool dragging;          // Currently dragging a vertex?
   int draw_points[MAX_DRAW_POINTS][2]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
+  int num_drag_point;    // Number of point
   uint32_t vao, vbo;
 } editor_state_t;
 
@@ -27,7 +29,7 @@ void toggle_editor_mode(editor_state_t *editor);
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player);
 void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *player);
 void finish_sector(map_data_t *map, editor_state_t *editor);
-bool point_exists(int x, int y, map_data_t *map);
+bool point_exists(int x, int y, map_data_t *map, int *index);
 void snap_mouse_position(editor_state_t const *editor, player_t const *player, int *snapped_x, int *snapped_y);
 void get_mouse_position(editor_state_t const *editor, player_t const *player, float *world_x, float *world_y);
 void split_linedef(map_data_t *map, int linedef_id, float x, float y);
