@@ -392,6 +392,20 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
   if (num_containing_sectors > 0) {
     handle_sector_splitting(map, new_sector_index, editor->draw_points,
                             editor->num_draw_points, containing_sectors[0]);
+  } else for (int i = 0; i < map->num_linedefs; i++) {
+    if (map->linedefs[i].sidenum[0] >= map->num_sidedefs ||
+        map->linedefs[i].sidenum[1] >= map->num_sidedefs)
+      continue;
+    if (map->sidedefs[map->linedefs[i].sidenum[0]].sector == new_sector_index) {
+      copy_sector_properties(map, new_sector_index, map->sidedefs[map->linedefs[i].sidenum[1]].sector);
+      printf("New sector inherits properties from sector %d\n", map->sidedefs[map->linedefs[i].sidenum[1]].sector);
+      break;
+    }
+    if (map->sidedefs[map->linedefs[i].sidenum[1]].sector == new_sector_index) {
+      copy_sector_properties(map, new_sector_index, map->sidedefs[map->linedefs[i].sidenum[0]].sector);
+      printf("New sector inherits properties from sector %d\n", map->sidedefs[map->linedefs[i].sidenum[0]].sector);
+      break;
+    }
   }
   
   printf("Created sector %d with %d vertices and %d walls\n",
@@ -400,6 +414,27 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
   // Reset drawing state
   editor->drawing = false;
   editor->num_draw_points = 0;
+  
+  // Rebuild vertex buffers
+  build_wall_vertex_buffer(map);
+  build_floor_vertex_buffer(map);
+}
+
+
+void split_linedef(map_data_t *map, int linedef_id, float x, float y) {
+  maplinedef_t *linedef = &map->linedefs[linedef_id];
+  int vertex = add_vertex(map, x, y);
+  uint16_t front = 0xffff, back = 0xffff;
+  if (linedef->sidenum[0] < map->num_sidedefs) {
+    front = add_sidedef(map, 0);
+    memcpy(&map->sidedefs[front], &map->sidedefs[linedef->sidenum[0]], sizeof(mapsidedef_t));
+  }
+  if (linedef->sidenum[1] < map->num_sidedefs) {
+    back = add_sidedef(map, 0);
+    memcpy(&map->sidedefs[back], &map->sidedefs[linedef->sidenum[1]], sizeof(mapsidedef_t));
+  }
+  add_linedef(map, linedef->end, vertex, front, back);
+  linedef->end = vertex;
   
   // Rebuild vertex buffers
   build_wall_vertex_buffer(map);

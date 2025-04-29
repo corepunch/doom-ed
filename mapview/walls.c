@@ -227,17 +227,17 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
 
     // Draw front side
     if (CHECK_PIXEL(pixel, TOP, linedef->sidenum[0])) {
-      draw_textured_surface(&front->upper_section, light + 0.25, GL_TRIANGLE_FAN);
+      draw_textured_surface(&front->upper_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
     } else {
       draw_textured_surface(&front->upper_section, light, GL_TRIANGLE_FAN);
     }
     if (CHECK_PIXEL(pixel, BOTTOM, linedef->sidenum[0])) {
-      draw_textured_surface(&front->lower_section, light + 0.25, GL_TRIANGLE_FAN);
+      draw_textured_surface(&front->lower_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
     } else {
       draw_textured_surface(&front->lower_section, light, GL_TRIANGLE_FAN);
     }
     if (CHECK_PIXEL(pixel, MID, linedef->sidenum[0])) {
-      draw_textured_surface(&front->mid_section, light + 0.25, GL_TRIANGLE_FAN);
+      draw_textured_surface(&front->mid_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
     } else {
       draw_textured_surface(&front->mid_section, light, GL_TRIANGLE_FAN);
     }

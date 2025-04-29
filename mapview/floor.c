@@ -201,13 +201,13 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
     extern int pixel;
     glCullFace(GL_BACK);
     if (CHECK_PIXEL(pixel, FLOOR, i)) {
-      draw_textured_surface(&map->floors.sectors[i].floor, light + 0.25, GL_TRIANGLES);
+      draw_textured_surface(&map->floors.sectors[i].floor, HIGHLIGHT(light), GL_TRIANGLES);
     } else {
       draw_textured_surface(&map->floors.sectors[i].floor, light, GL_TRIANGLES);
     }
     glCullFace(GL_FRONT);
     if (CHECK_PIXEL(pixel, CEILING, i)) {
-      draw_textured_surface(&map->floors.sectors[i].ceiling, light + 0.25, GL_TRIANGLES);
+      draw_textured_surface(&map->floors.sectors[i].ceiling, HIGHLIGHT(light), GL_TRIANGLES);
     } else {
       draw_textured_surface(&map->floors.sectors[i].ceiling, light, GL_TRIANGLES);
     }
@@ -219,10 +219,13 @@ void draw_floor_ids(map_data_t const *map, mat4 mvp) {
   glBindVertexArray(map->floors.vao);
 
   for (int i = 0; i < map->num_sectors; i++) {
+    glCullFace(GL_BACK);
     draw_textured_surface_id(&map->floors.sectors[i].floor, i | PIXEL_FLOOR, GL_TRIANGLES);
+    glCullFace(GL_FRONT);
     draw_textured_surface_id(&map->floors.sectors[i].ceiling, i | PIXEL_CEILING, GL_TRIANGLES);
   }
   
   // Reset texture binding
+  glCullFace(GL_BACK);
   glBindTexture(GL_TEXTURE_2D, 0);
 }

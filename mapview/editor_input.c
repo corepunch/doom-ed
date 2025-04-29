@@ -60,7 +60,10 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
     else if (event.type == SDL_MOUSEBUTTONDOWN && editor->active) {
       if (event.button.button == SDL_BUTTON_LEFT) {
         int snapped_x, snapped_y;
-        snap_mouse_position(editor, player, &snapped_x, &snapped_y);
+//        snap_mouse_position(editor, player, &snapped_x, &snapped_y);
+        extern float sn_x, sn_y;
+        snapped_x = sn_x;
+        snapped_y = sn_y;
         
         if (!editor->drawing) {
           // Start drawing new sector
@@ -82,9 +85,15 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
         }
       }
       else if (event.button.button == SDL_BUTTON_RIGHT) {
-        // Cancel current drawing
-        editor->drawing = false;
-        editor->num_draw_points = 0;
+        if (editor->drawing) {
+          // Cancel current drawing
+          editor->drawing = false;
+          editor->num_draw_points = 0;
+        } else {
+          extern int splitting_line;
+          extern float sn_x, sn_y;
+          split_linedef(map, splitting_line, sn_x, sn_y);
+        }
       }
     }
     else if (event.type == SDL_MOUSEWHEEL && editor->active) {

@@ -115,9 +115,11 @@ static void draw_walls_editor(map_data_t const *map) {
     
     // Determine if this is a one-sided or two-sided wall
     bool two_sided = (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs);
-    
+    extern int splitting_line;
     // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
-    if (!two_sided) {
+    if (splitting_line == i) {
+      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 1.0f);
+    } else if (!two_sided) {
       glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
     } else {
       glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 0.0f, 0.0f, 1.0f);
@@ -149,7 +151,7 @@ static void draw_cursor(int x, int y) {
   glUniform4f(glGetUniformLocation(ui_prog, "color"), 0.0f, 1.0f, 0.0f, 1.0f);
   
   // Draw crosshair
-  int size = 4;
+  int size = 16;
   wall_vertex_t verts[4] = {
     { x - size, y, 0, 0, 0, 0, 0, 0 },
     { x + size, y, 0, 0, 0, 0, 0, 0 },
@@ -165,6 +167,9 @@ static void draw_cursor(int x, int y) {
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[2].u);
   glDrawArrays(GL_LINES, 0, 2);
 }
+
+int splitting_line = 0;
+float sn_x = 0, sn_y = 0;
 
 // Draw the editor UI
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player) {
@@ -216,7 +221,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   float world_x, world_y;
   get_mouse_position(editor, player, &world_x, &world_y);
   
-  float sn_x = world_x, sn_y = world_y;
+  sn_x = world_x;
+  sn_y = world_y;
   float dist = 100000;
   for (int i = 0; i < map->num_linedefs; i++) {
     float x, y, z;
@@ -231,16 +237,31 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
       sn_x = x;
       sn_y = y;
       dist = d;
+      splitting_line = i;
+    }
+  }
+  for (int i = 0; i < map->num_vertices; i++) {
+    float dx = world_x - map->vertices[i].x;
+    float dy = world_y - map->vertices[i].y;
+    float d = dx*dx + dy*dy;
+    if (editor->grid_size * 8.0f > d)
+    {
+      sn_x = map->vertices[i].x;
+      sn_y = map->vertices[i].y;
+      dist = d;
+      splitting_line = -1;
     }
   }
   int snapped_x = sn_x, snapped_y = sn_y;
 
-  if (dist < editor->grid_size * 4.0f) {
+  if (dist < editor->grid_size * 8.0f) {
     draw_cursor(sn_x, sn_y);
   } else {
+    splitting_line = -1;
     // Snap to grid
     snap_mouse_position(editor, player, &snapped_x, &snapped_y);
-    
+    sn_x = snapped_x;
+    sn_y = snapped_y;
     // Draw cursor at the snapped position
     draw_cursor(snapped_x, snapped_y);
   }

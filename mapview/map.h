@@ -35,6 +35,8 @@ if ((map)->name) free((map)->name); \
 
 #define PALETTE_WIDTH 64
 
+#define HIGHLIGHT(light) light//((light)+0.25)
+
 // Constants for rendering
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600

@@ -30,6 +30,7 @@ void finish_sector(map_data_t *map, editor_state_t *editor);
 bool point_exists(int x, int y, map_data_t *map);
 void snap_mouse_position(editor_state_t const *editor, player_t const *player, int *snapped_x, int *snapped_y);
 void get_mouse_position(editor_state_t const *editor, player_t const *player, float *world_x, float *world_y);
+void split_linedef(map_data_t *map, int linedef_id, float x, float y);
 
 /**
  * Calculate the closest point on a line segment to a given point
