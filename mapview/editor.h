@@ -18,7 +18,7 @@ typedef struct {
   int grid_size;         // Grid size (8 units by default)
   bool drawing;          // Currently drawing a sector?
   bool dragging;          // Currently dragging a vertex?
-  int draw_points[MAX_DRAW_POINTS][2]; // Points for current sector being drawn
+  mapvertex_t draw_points[MAX_DRAW_POINTS]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
   int num_drag_point;    // Number of point
   uint32_t vao, vbo;

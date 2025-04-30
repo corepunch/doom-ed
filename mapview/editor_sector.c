@@ -108,11 +108,11 @@ static uint16_t add_sector(map_data_t *map) {
 }
 
 // Calculate if points form clockwise polygon
-static bool is_clockwise(int points[][2], int num_points) {
+static bool is_clockwise(mapvertex_t points[], int num_points) {
   double sum = 0.0;
   for (int i = 0; i < num_points; i++) {
     int j = (i + 1) % num_points;
-    sum += (points[j][0] - points[i][0]) * (points[j][1] + points[i][1]);
+    sum += (points[j].x - points[i].x) * (points[j].y + points[i].y);
   }
   return sum > 0;
 }
@@ -133,17 +133,17 @@ static void find_containing_sectors(map_data_t const *map, int x, int y, int new
 
 // Check if a linedef intersects any points in the draw path
 static bool linedef_intersects_path(map_data_t *map, uint16_t linedef_index,
-                                    int draw_points[][2], int num_draw_points) {
+                                    mapvertex_t draw_points[], int num_draw_points) {
   maplinedef_t *linedef = &map->linedefs[linedef_index];
   mapvertex_t *v1 = &map->vertices[linedef->start];
   mapvertex_t *v2 = &map->vertices[linedef->end];
   
   for (int i = 0; i < num_draw_points; i++) {
     int next = (i + 1) % num_draw_points;
-    int x1 = draw_points[i][0];
-    int y1 = draw_points[i][1];
-    int x2 = draw_points[next][0];
-    int y2 = draw_points[next][1];
+    int x1 = draw_points[i].x;
+    int y1 = draw_points[i].y;
+    int x2 = draw_points[next].x;
+    int y2 = draw_points[next].y;
     
     // Line segment intersection test
     int dx1 = v2->x - v1->x;
@@ -285,7 +285,7 @@ static void process_sector_edges(map_data_t const *map, uint16_t new_sector_inde
 
 // Handle sector splitting
 static void handle_sector_splitting(map_data_t *map, uint16_t new_sector_index,
-                                    int draw_points[][2], int num_points, uint16_t parent_sector) {
+                                    mapvertex_t draw_points[], int num_points, uint16_t parent_sector) {
   // Find linedefs that intersect with new sector boundary
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t *linedef = &map->linedefs[i];
@@ -341,12 +341,12 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
     for (int i = 0; i < editor->num_draw_points / 2; i++) {
       int j = editor->num_draw_points - 1 - i;
       // Swap points
-      int temp_x = editor->draw_points[i][0];
-      int temp_y = editor->draw_points[i][1];
-      editor->draw_points[i][0] = editor->draw_points[j][0];
-      editor->draw_points[i][1] = editor->draw_points[j][1];
-      editor->draw_points[j][0] = temp_x;
-      editor->draw_points[j][1] = temp_y;
+      int temp_x = editor->draw_points[i].x;
+      int temp_y = editor->draw_points[i].y;
+      editor->draw_points[i].x = editor->draw_points[j].x;
+      editor->draw_points[i].y = editor->draw_points[j].y;
+      editor->draw_points[j].x = temp_x;
+      editor->draw_points[j].y = temp_y;
     }
   }
   
@@ -362,8 +362,8 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
   // Find center point of new sector
   int center_x = 0, center_y = 0;
   for (int i = 0; i < editor->num_draw_points; i++) {
-    center_x += editor->draw_points[i][0];
-    center_y += editor->draw_points[i][1];
+    center_x += editor->draw_points[i].x;
+    center_y += editor->draw_points[i].y;
   }
   center_x /= editor->num_draw_points;
   center_y /= editor->num_draw_points;
@@ -383,7 +383,7 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
   // Get or create vertices
   uint16_t vertex_indices[MAX_DRAW_POINTS];
   for (int i = 0; i < editor->num_draw_points; i++) {
-    vertex_indices[i] = get_or_add_vertex(map, editor->draw_points[i][0], editor->draw_points[i][1]);
+    vertex_indices[i] = get_or_add_vertex(map, editor->draw_points[i].x, editor->draw_points[i].y);
   }
   
   // Process sector edges

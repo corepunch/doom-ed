@@ -82,14 +82,14 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
         
         // Check if we're clicking on the first point to close the loop
         if (editor->num_draw_points > 2 &&
-            abs(snapped_x - editor->draw_points[0][0]) < editor->grid_size/2 &&
-            abs(snapped_y - editor->draw_points[0][1]) < editor->grid_size/2) {
+            abs(snapped_x - editor->draw_points[0].x) < editor->grid_size/2 &&
+            abs(snapped_y - editor->draw_points[0].y) < editor->grid_size/2) {
           // Finish the sector
           finish_sector(map, editor);
         } else if (editor->num_draw_points < MAX_DRAW_POINTS) {
           // Add point to current sector
-          editor->draw_points[editor->num_draw_points][0] = snapped_x;
-          editor->draw_points[editor->num_draw_points][1] = snapped_y;
+          editor->draw_points[editor->num_draw_points].x = snapped_x;
+          editor->draw_points[editor->num_draw_points].y = snapped_y;
           editor->num_draw_points++;
         }
       }

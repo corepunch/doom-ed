@@ -80,8 +80,8 @@ static void draw_current_sector(editor_state_t const *editor) {
   // Draw lines connecting all points
   for (int i = 0; i < editor->num_draw_points - 1; i++) {
     wall_vertex_t verts[2] = {
-      { editor->draw_points[i][0], editor->draw_points[i][1], 0, 0, 0, 0, 0, 0 },
-      { editor->draw_points[i+1][0], editor->draw_points[i+1][1], 0, 0, 0, 0, 0, 0 }
+      { editor->draw_points[i].x, editor->draw_points[i].y, 0, 0, 0, 0, 0, 0 },
+      { editor->draw_points[i+1].x, editor->draw_points[i+1].y, 0, 0, 0, 0, 0, 0 }
     };
     
     glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
@@ -93,8 +93,8 @@ static void draw_current_sector(editor_state_t const *editor) {
   glPointSize(5.0f);
   for (int i = 0; i < editor->num_draw_points; i++) {
     wall_vertex_t vert = {
-      editor->draw_points[i][0],
-      editor->draw_points[i][1],
+      editor->draw_points[i].x,
+      editor->draw_points[i].y,
       0, 0, 0, 0, 0, 0
     };
     
@@ -269,8 +269,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // If currently drawing, show line from last point to cursor
   if (editor->dragging || (editor->drawing && editor->num_draw_points > 0)) {
     glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
-    float x = editor->dragging ? map->vertices[editor->num_drag_point].x : editor->draw_points[editor->num_draw_points-1][0];
-    float y = editor->dragging ? map->vertices[editor->num_drag_point].y : editor->draw_points[editor->num_draw_points-1][1];;
+    float x = editor->dragging ? map->vertices[editor->num_drag_point].x : editor->draw_points[editor->num_draw_points-1].x;
+    float y = editor->dragging ? map->vertices[editor->num_drag_point].y : editor->draw_points[editor->num_draw_points-1].y;
     wall_vertex_t verts[2] = {
       { x, y, 0, 0, 0, 0, 0, 0 },
       { snapped_x, snapped_y, 0, 0, 0, 0, 0, 0 }
