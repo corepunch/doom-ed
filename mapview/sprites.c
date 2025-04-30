@@ -76,7 +76,7 @@ int find_sprite_lump(filelump_t* directory, int num_lumps, const char* name) {
   if (s_start >= 0 && s_end >= 0 && s_start < s_end) {
     // Iterate through all sprites
     for (int i = s_start + 1; i < s_end; i++) {
-      puts(directory[i].name);
+//      puts(directory[i].name);
       if (strncmp(directory[i].name, name, sizeof(lumpname_t)) == 0) {
         return i;
       }
