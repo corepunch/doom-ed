@@ -194,6 +194,8 @@ void init_player(map_data_t const *map, player_t *player) {
   }
 }
 
+//#define ISOMETRIC
+
 /**
  * Generate the view matrix incorporating player position, angle, and pitch
  * @param map Pointer to the map data
@@ -202,13 +204,20 @@ void init_player(map_data_t const *map, player_t *player) {
  */
 void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   // Convert angle to radians for direction calculation
+#ifdef ISOMETRIC
+  float angle_rad = (player->angle + 45*3) * M_PI / 180.0f + 0.001f;
+  float pitch_rad = 60/*player->pitch*/ * M_PI / 180.0f;
+#else
   float angle_rad = player->angle * M_PI / 180.0f + 0.001f;
   float pitch_rad = player->pitch * M_PI / 180.0f;
+#endif
   
   // Calculate looking direction vector
   float look_dir_x = -cos(angle_rad);
   float look_dir_y = sin(angle_rad);
   float look_dir_z = sin(pitch_rad);
+  
+  float camera_dist = 200;
   
   // Scale the horizontal component of the look direction by the cosine of the pitch
   // This prevents the player from moving faster when looking up or down
@@ -217,9 +226,9 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   look_dir_y *= cos_pitch;
   
   // Calculate look-at point
-  float look_x = player->x + look_dir_x * 10.0f;
-  float look_y = player->y + look_dir_y * 10.0f;
-  float look_z = player->z + look_dir_z * 10.0f;
+  float look_x = player->x + look_dir_x * camera_dist;
+  float look_y = player->y + look_dir_y * camera_dist;
+  float look_z = player->z + look_dir_z * camera_dist;
   
   // Create projection matrix
   mat4 proj;
@@ -238,9 +247,13 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
     up[1] = -cos(angle_rad);
     up[2] = 0.0f;
   }
-  
+
+#ifdef ISOMETRIC
+  glm_lookat(center, eye, up, view);
+#else
   glm_lookat(eye, center, up, view);
-  
+#endif
+
   // Combine view and projection into MVP
   glm_mat4_mul(proj, view, out);
 }

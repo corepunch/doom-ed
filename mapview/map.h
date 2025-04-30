@@ -38,8 +38,8 @@ if ((map)->name) free((map)->name); \
 #define HIGHLIGHT(light) light//((light)+0.25)
 
 // Constants for rendering
-#define SCREEN_WIDTH 800
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 1280
+#define SCREEN_HEIGHT 720
 #define FOV 90.0
 #define NEAR_Z 0.1
 #define FAR_Z 1000.0

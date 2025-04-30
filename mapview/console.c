@@ -15,8 +15,6 @@
 #define CONSOLE_FONT_HEIGHT 8     // Height of the Doom font character
 #define CONSOLE_FONT_WIDTH 8      // Width of each character
 #define CONSOLE_SCALE 2.0f        // Scale factor for console text
-#define SCREEN_WIDTH 800          // Default screen width if not defined elsewhere
-#define SCREEN_HEIGHT 600         // Default screen height if not defined elsewhere
 
 // Console message structure
 typedef struct {
