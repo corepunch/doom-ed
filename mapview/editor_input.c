@@ -106,7 +106,7 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
           editor->num_drag_point = -1;
         } else if (splitting_line>=0) {
           split_linedef(map, splitting_line, sn_x, sn_y);
-        } else if (point_exists(sn_x, sn_y, map, &point)) {
+        } else if (point_exists((mapvertex_t){sn_x, sn_y}, map, &point)) {
           editor->dragging = true;
           editor->num_drag_point = point;
         }

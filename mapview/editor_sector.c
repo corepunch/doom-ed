@@ -16,13 +16,56 @@ printf("Maximum number of %s reached!\n", #ARRAY); \
 return 0xFFFF; \
 }
 
-#define DIST_SQ(X1, Y1, X2, Y2) ((X1-X2)*(X1-X2) + (Y1-Y2)*(Y1-Y2))
+// Utility functions for vertex manipulation
+static float vertex_distance_sq(mapvertex_t v1, mapvertex_t v2) {
+  float dx = v1.x - v2.x;
+  float dy = v1.y - v2.y;
+  return dx*dx + dy*dy;
+}
+
+static mapvertex_t vertex_midpoint(mapvertex_t v1, mapvertex_t v2) {
+  mapvertex_t mid = {
+    .x = (v1.x + v2.x) / 2,
+    .y = (v1.y + v2.y) / 2
+  };
+  return mid;
+}
+
+static mapvertex_t vertex_normal(mapvertex_t v1, mapvertex_t v2, float scale) {
+  float dx = v2.x - v1.x;
+  float dy = v2.y - v1.y;
+  float length = sqrtf(dx*dx + dy*dy);
+  
+  mapvertex_t normal = {
+    .x = (int)(-dy / length * scale),
+    .y = (int)(dx / length * scale)
+  };
+  return normal;
+}
+
+static bool vertex_is_near(mapvertex_t v1, mapvertex_t v2, int threshold) {
+  return vertex_distance_sq(v1, v2) < threshold * threshold;
+}
+
+static mapvertex_t compute_centroid(mapvertex_t vertices[], int count) {
+  int sum_x = 0, sum_y = 0;
+  for (int i = 0; i < count; i++) {
+    sum_x += vertices[i].x;
+    sum_y += vertices[i].y;
+  }
+  
+  mapvertex_t centroid = {
+    .x = sum_x / count,
+    .y = sum_y / count
+  };
+  return centroid;
+}
 
 // Check if a point exists at the given coordinates
-bool point_exists(int x, int y, map_data_t *map, int *index) {
+bool point_exists(mapvertex_t point, map_data_t *map, int *index) {
   const int threshold = 8;
   for (int i = 0; i < map->num_vertices; i++) {
-    if (DIST_SQ(map->vertices[i].x, map->vertices[i].y, x, y) < threshold*threshold) {
+    if (vertex_is_near(map->vertices[i], point, threshold)) {
       if (index) *index = i;
       return true;
     }
@@ -31,12 +74,12 @@ bool point_exists(int x, int y, map_data_t *map, int *index) {
 }
 
 // Add a new vertex to the map
-static uint16_t add_vertex(map_data_t *map, int x, int y) {
+static uint16_t add_vertex(map_data_t *map, mapvertex_t vertex) {
   CHECK_CAPACITY(mapvertex_t, vertices);
   RESIZE_ARRAY(mapvertex_t, vertices, map->num_vertices + 1);
   
   uint16_t index = map->num_vertices;
-  map->vertices[index] = (mapvertex_t){ .x = x, .y = y };
+  map->vertices[index] = vertex;
   map->num_vertices++;
   
   return index;
@@ -118,46 +161,48 @@ static bool is_clockwise(mapvertex_t points[], int num_points) {
 }
 
 // Forward declaration
-bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
+bool point_in_sector(map_data_t const* map, mapvertex_t point, int sector_index);
 
 // Find sectors containing a given point
-static void find_containing_sectors(map_data_t const *map, int x, int y, int new_sector_index,
+static void find_containing_sectors(map_data_t const *map, mapvertex_t point, int new_sector_index,
                                     uint16_t *sectors, int *num_sectors) {
   *num_sectors = 0;
   for (int i = 0; i < map->num_sectors; i++) {
-    if (point_in_sector(map, x, y, i) && new_sector_index != i) {
+    if (point_in_sector(map, point, i) && new_sector_index != i) {
       sectors[(*num_sectors)++] = i;
     }
   }
+}
+
+// Check if two line segments intersect
+static bool segments_intersect(mapvertex_t v1, mapvertex_t v2, mapvertex_t v3, mapvertex_t v4) {
+  int dx1 = v2.x - v1.x;
+  int dy1 = v2.y - v1.y;
+  int dx2 = v4.x - v3.x;
+  int dy2 = v4.y - v3.y;
+  
+  int delta = dx1 * dy2 - dy1 * dx2;
+  if (delta == 0) return false; // Parallel lines
+  
+  float t1 = ((v3.x - v1.x) * dy2 - (v3.y - v1.y) * dx2) / (float)delta;
+  float t2 = ((v1.x - v3.x) * dy1 - (v1.y - v3.y) * dx1) / (float)(-delta);
+  
+  return (t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1);
 }
 
 // Check if a linedef intersects any points in the draw path
 static bool linedef_intersects_path(map_data_t *map, uint16_t linedef_index,
                                     mapvertex_t draw_points[], int num_draw_points) {
   maplinedef_t *linedef = &map->linedefs[linedef_index];
-  mapvertex_t *v1 = &map->vertices[linedef->start];
-  mapvertex_t *v2 = &map->vertices[linedef->end];
+  mapvertex_t v1 = map->vertices[linedef->start];
+  mapvertex_t v2 = map->vertices[linedef->end];
   
   for (int i = 0; i < num_draw_points; i++) {
     int next = (i + 1) % num_draw_points;
-    int x1 = draw_points[i].x;
-    int y1 = draw_points[i].y;
-    int x2 = draw_points[next].x;
-    int y2 = draw_points[next].y;
+    mapvertex_t p1 = draw_points[i];
+    mapvertex_t p2 = draw_points[next];
     
-    // Line segment intersection test
-    int dx1 = v2->x - v1->x;
-    int dy1 = v2->y - v1->y;
-    int dx2 = x2 - x1;
-    int dy2 = y2 - y1;
-    
-    int delta = dx1 * dy2 - dy1 * dx2;
-    if (delta == 0) continue; // Parallel lines
-    
-    float t1 = ((x1 - v1->x) * dy2 - (y1 - v1->y) * dx2) / (float)delta;
-    float t2 = ((v1->x - x1) * dy1 - (v1->y - y1) * dx1) / (float)(-delta);
-    
-    if (t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1) {
+    if (segments_intersect(v1, v2, p1, p2)) {
       return true; // Intersection found
     }
   }
@@ -165,18 +210,18 @@ static bool linedef_intersects_path(map_data_t *map, uint16_t linedef_index,
 }
 
 // Find or create a vertex at the given position
-static uint16_t get_or_add_vertex(map_data_t *map, int x, int y) {
+static uint16_t get_or_add_vertex(map_data_t *map, mapvertex_t vertex) {
   const int threshold = 8;
   
   // Check if vertex already exists
   for (int j = 0; j < map->num_vertices; j++) {
-    if (DIST_SQ(map->vertices[j].x, map->vertices[j].y, x, y) < threshold*threshold) {
+    if (vertex_is_near(map->vertices[j], vertex, threshold)) {
       return j;
     }
   }
   
   // Create new vertex
-  return add_vertex(map, x, y);
+  return add_vertex(map, vertex);
 }
 
 // Check if linedef already exists between vertices
@@ -190,11 +235,31 @@ static int find_existing_linedef(map_data_t const *map, uint16_t v1, uint16_t v2
   return -1;
 }
 
+// Determine which side of a line a point is on
+static int point_side_of_line(mapvertex_t line_start, mapvertex_t line_end, mapvertex_t point) {
+  return (line_end.x - line_start.x) * (point.y - line_start.y) -
+  (line_end.y - line_start.y) * (point.x - line_start.x);
+}
+
+// Update linedef to be two-sided
+static void make_linedef_two_sided(map_data_t *map, maplinedef_t *linedef, uint16_t sector_index) {
+  if (linedef->sidenum[0] != 0xFFFF && linedef->sidenum[1] == 0xFFFF) {
+    linedef->sidenum[1] = add_sidedef(map, sector_index);
+    linedef->flags &= ~1; // Remove impassable flag
+    linedef->flags |= 4;  // Set two-sided flag
+    
+    // Clear middle textures for two-sided linedefs
+    memset(map->sidedefs[linedef->sidenum[0]].midtexture, 0, sizeof(texname_t));
+    memset(map->sidedefs[linedef->sidenum[1]].midtexture, 0, sizeof(texname_t));
+  }
+}
+
 // Process each edge of the new sector
 static void process_sector_edges(map_data_t const *map, uint16_t new_sector_index,
-                                 uint16_t vertex_indices[], int num_points, int center_x, int center_y) {
+                                 uint16_t vertex_indices[], int num_points, mapvertex_t center) {
   map_data_t tmp={0};
   memcpy(&tmp, map, sizeof(map_data_t));
+  
   for (int i = 0; i < num_points; i++) {
     int next = (i + 1) % num_points;
     int linedef_idx = find_existing_linedef(map, vertex_indices[i], vertex_indices[next]);
@@ -206,11 +271,10 @@ static void process_sector_edges(map_data_t const *map, uint16_t new_sector_inde
       // Handle two-sided linedef
       if (linedef->sidenum[0] != 0xFFFF && linedef->sidenum[1] != 0xFFFF) {
         // Determine which side our sector is on
-        int x1 = map->vertices[linedef->start].x;
-        int y1 = map->vertices[linedef->start].y;
-        int x2 = map->vertices[linedef->end].x;
-        int y2 = map->vertices[linedef->end].y;
-        int side = (x2 - x1) * (center_y - y1) - (y2 - y1) * (center_x - x1);
+        mapvertex_t line_start = map->vertices[linedef->start];
+        mapvertex_t line_end = map->vertices[linedef->end];
+        
+        int side = point_side_of_line(line_start, line_end, center);
         
         if (side < 0) { // Point is on left side
           if (linedef->sidenum[1] != 0xFFFF) {
@@ -240,10 +304,12 @@ static void process_sector_edges(map_data_t const *map, uint16_t new_sector_inde
           linedef->sidenum[0] = add_sidedef(&tmp, new_sector_index);
         }
       }
-
+      
       memset(tmp.sidedefs[linedef->sidenum[0]].midtexture, 0, sizeof(texname_t));
-      memset(tmp.sidedefs[linedef->sidenum[1]].midtexture, 0, sizeof(texname_t));
-
+      if (linedef->sidenum[1] != 0xFFFF) {
+        memset(tmp.sidedefs[linedef->sidenum[1]].midtexture, 0, sizeof(texname_t));
+      }
+      
       // Update linedef flags
       linedef->flags &= ~1;  // Remove impassable flag
       linedef->flags |= 4;   // Set two-sided flag
@@ -253,22 +319,21 @@ static void process_sector_edges(map_data_t const *map, uint16_t new_sector_inde
       uint16_t back_side = 0xFFFF;
       
       // Check if should be two-sided
-      float dx = map->vertices[vertex_indices[next]].x - map->vertices[vertex_indices[i]].x;
-      float dy = map->vertices[vertex_indices[next]].y - map->vertices[vertex_indices[i]].y;
-      float length = sqrtf(dx*dx + dy*dy);
-      float nx = -dy / length; // Normal points right
-      float ny = dx / length;
+      mapvertex_t v1 = map->vertices[vertex_indices[i]];
+      mapvertex_t v2 = map->vertices[vertex_indices[next]];
       
-      // Check point to right of linedef
-      int mid_x = (map->vertices[vertex_indices[i]].x + map->vertices[vertex_indices[next]].x) / 2;
-      int mid_y = (map->vertices[vertex_indices[i]].y + map->vertices[vertex_indices[next]].y) / 2;
-      int check_x = mid_x + (int)(nx * 5);
-      int check_y = mid_y + (int)(ny * 5);
+      // Calculate normal and check point
+      mapvertex_t mid = vertex_midpoint(v1, v2);
+      mapvertex_t normal = vertex_normal(v1, v2, 5);
+      mapvertex_t check_point = {
+        .x = mid.x + normal.x,
+        .y = mid.y + normal.y
+      };
       
       // Find sectors at this point
       uint16_t right_sectors[1024];
       int num_right_sectors = 0;
-      find_containing_sectors(map, check_x, check_y, new_sector_index, right_sectors, &num_right_sectors);
+      find_containing_sectors(map, check_point, new_sector_index, right_sectors, &num_right_sectors);
       
       // If sector found on right, make linedef two-sided
       if (num_right_sectors > 0) {
@@ -304,11 +369,7 @@ static void handle_sector_splitting(map_data_t *map, uint16_t new_sector_index,
     // Check if linedef intersects new sector boundary
     if (linedef_intersects_path(map, i, draw_points, num_points)) {
       // Update intersected linedef to be two-sided
-      if (linedef->sidenum[0] != 0xFFFF && linedef->sidenum[1] == 0xFFFF) {
-        linedef->sidenum[1] = add_sidedef(map, new_sector_index);
-        linedef->flags &= ~1; // Remove impassable flag
-        linedef->flags |= 4;  // Set two-sided flag
-      }
+      make_linedef_two_sided(map, linedef, new_sector_index);
     }
   }
 }
@@ -327,27 +388,59 @@ static void copy_sector_properties(map_data_t *map, uint16_t dest, uint16_t src)
   dest_sector->tag = src_sector->tag;
 }
 
-void finish_sector(map_data_t *map, editor_state_t *editor) {
+// Find a sector to inherit properties from based on surrounding linedefs
+static void find_and_copy_sector_properties(map_data_t *map, uint16_t new_sector_index) {
+  for (int i = 0; i < map->num_linedefs; i++) {
+    maplinedef_t *linedef = &map->linedefs[i];
+    
+    if (linedef->sidenum[0] >= map->num_sidedefs || linedef->sidenum[1] >= map->num_sidedefs)
+      continue;
+    
+    if (map->sidedefs[linedef->sidenum[0]].sector == new_sector_index) {
+      copy_sector_properties(map, new_sector_index, map->sidedefs[linedef->sidenum[1]].sector);
+      printf("New sector inherits properties from sector %d\n", map->sidedefs[linedef->sidenum[1]].sector);
+      return;
+    }
+    
+    if (map->sidedefs[linedef->sidenum[1]].sector == new_sector_index) {
+      copy_sector_properties(map, new_sector_index, map->sidedefs[linedef->sidenum[0]].sector);
+      printf("New sector inherits properties from sector %d\n", map->sidedefs[linedef->sidenum[0]].sector);
+      return;
+    }
+  }
+}
+
+// Reverse the order of points in an array
+static void reverse_vertex_array(mapvertex_t points[], int count) {
+  for (int i = 0; i < count / 2; i++) {
+    int j = count - 1 - i;
+    // Swap points
+    mapvertex_t temp = points[i];
+    points[i] = points[j];
+    points[j] = temp;
+  }
+}
+
+// Validate and prepare draw points for sector creation
+static bool prepare_draw_points(editor_state_t *editor) {
   if (editor->num_draw_points < 3) {
     printf("Need at least 3 points to create a sector!\n");
     editor->drawing = false;
     editor->num_draw_points = 0;
-    return;
+    return false;
   }
   
   // Ensure counter-clockwise winding (standard for Doom)
   if (is_clockwise(editor->draw_points, editor->num_draw_points)) {
-    // Reverse the points
-    for (int i = 0; i < editor->num_draw_points / 2; i++) {
-      int j = editor->num_draw_points - 1 - i;
-      // Swap points
-      int temp_x = editor->draw_points[i].x;
-      int temp_y = editor->draw_points[i].y;
-      editor->draw_points[i].x = editor->draw_points[j].x;
-      editor->draw_points[i].y = editor->draw_points[j].y;
-      editor->draw_points[j].x = temp_x;
-      editor->draw_points[j].y = temp_y;
-    }
+    reverse_vertex_array(editor->draw_points, editor->num_draw_points);
+  }
+  
+  return true;
+}
+
+void finish_sector(map_data_t *map, editor_state_t *editor) {
+  if (!prepare_draw_points(editor)) {
+    return;
   }
   
   // Create a new sector
@@ -360,18 +453,12 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
   }
   
   // Find center point of new sector
-  int center_x = 0, center_y = 0;
-  for (int i = 0; i < editor->num_draw_points; i++) {
-    center_x += editor->draw_points[i].x;
-    center_y += editor->draw_points[i].y;
-  }
-  center_x /= editor->num_draw_points;
-  center_y /= editor->num_draw_points;
+  mapvertex_t center = compute_centroid(editor->draw_points, editor->num_draw_points);
   
   // Find containing sectors
   uint16_t containing_sectors[1024];
   int num_containing_sectors = 0;
-  find_containing_sectors(map, center_x, center_y, -1, containing_sectors, &num_containing_sectors);
+  find_containing_sectors(map, center, -1, containing_sectors, &num_containing_sectors);
   
   // Copy properties from parent sector if inside one
   if (num_containing_sectors > 0) {
@@ -383,30 +470,18 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
   // Get or create vertices
   uint16_t vertex_indices[MAX_DRAW_POINTS];
   for (int i = 0; i < editor->num_draw_points; i++) {
-    vertex_indices[i] = get_or_add_vertex(map, editor->draw_points[i].x, editor->draw_points[i].y);
+    vertex_indices[i] = get_or_add_vertex(map, editor->draw_points[i]);
   }
   
   // Process sector edges
-  process_sector_edges(map, new_sector_index, vertex_indices, editor->num_draw_points, center_x, center_y);
+  process_sector_edges(map, new_sector_index, vertex_indices, editor->num_draw_points, center);
   
   // Handle sector splitting if inside another sector
   if (num_containing_sectors > 0) {
     handle_sector_splitting(map, new_sector_index, editor->draw_points,
                             editor->num_draw_points, containing_sectors[0]);
-  } else for (int i = 0; i < map->num_linedefs; i++) {
-    if (map->linedefs[i].sidenum[0] >= map->num_sidedefs ||
-        map->linedefs[i].sidenum[1] >= map->num_sidedefs)
-      continue;
-    if (map->sidedefs[map->linedefs[i].sidenum[0]].sector == new_sector_index) {
-      copy_sector_properties(map, new_sector_index, map->sidedefs[map->linedefs[i].sidenum[1]].sector);
-      printf("New sector inherits properties from sector %d\n", map->sidedefs[map->linedefs[i].sidenum[1]].sector);
-      break;
-    }
-    if (map->sidedefs[map->linedefs[i].sidenum[1]].sector == new_sector_index) {
-      copy_sector_properties(map, new_sector_index, map->sidedefs[map->linedefs[i].sidenum[0]].sector);
-      printf("New sector inherits properties from sector %d\n", map->sidedefs[map->linedefs[i].sidenum[0]].sector);
-      break;
-    }
+  } else {
+    find_and_copy_sector_properties(map, new_sector_index);
   }
   
   printf("Created sector %d with %d vertices and %d walls\n",
@@ -421,19 +496,23 @@ void finish_sector(map_data_t *map, editor_state_t *editor) {
   build_floor_vertex_buffer(map);
 }
 
-
 void split_linedef(map_data_t *map, int linedef_id, float x, float y) {
   maplinedef_t *linedef = &map->linedefs[linedef_id];
-  int vertex = add_vertex(map, x, y);
+  mapvertex_t split_point = {.x = (int16_t)x, .y = (int16_t)y};
+  
+  int vertex = add_vertex(map, split_point);
   uint16_t front = 0xffff, back = 0xffff;
+  
   if (linedef->sidenum[0] < map->num_sidedefs) {
     front = add_sidedef(map, 0);
     memcpy(&map->sidedefs[front], &map->sidedefs[linedef->sidenum[0]], sizeof(mapsidedef_t));
   }
+  
   if (linedef->sidenum[1] < map->num_sidedefs) {
     back = add_sidedef(map, 0);
     memcpy(&map->sidedefs[back], &map->sidedefs[linedef->sidenum[1]], sizeof(mapsidedef_t));
   }
+  
   add_linedef(map, linedef->end, vertex, front, back);
   linedef->end = vertex;
   
