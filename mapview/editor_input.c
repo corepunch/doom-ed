@@ -69,75 +69,48 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
       extern mapvertex_t sn;
       int point = -1;
       int old_point = editor->current_point;
-      if (point_exists(sn, map, &point)) {
-        editor->current_point = point;
-      } else {
-        editor->current_point = add_vertex(map, sn);
-      }
-      if (editor->drawing) {
-        mapvertex_t a = map->vertices[old_point];
-        mapvertex_t b = map->vertices[editor->current_point];
-        uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
-        uint16_t line = -1;
-        if (sec != 0xFFFF) {
-          line = add_linedef(map, old_point, editor->current_point, add_sidedef(map, sec), add_sidedef(map, sec));
+      if (event.button.button == SDL_BUTTON_LEFT) {
+        if (point_exists(sn, map, &point)) {
+          editor->current_point = point;
         } else {
-          line = add_linedef(map, old_point, editor->current_point, 0xFFFF, 0xFFFF);
+          editor->current_point = add_vertex(map, sn);
         }
-        uint16_t vertices[256];
-        int num_vertices = check_closed_loop(map, line, vertices);
-        if (num_vertices) {
-          uint16_t sector = add_sector(map);
-          set_loop_sector(map, sector, vertices, num_vertices);
+        if (editor->drawing) {
+          mapvertex_t a = map->vertices[old_point];
+          mapvertex_t b = map->vertices[editor->current_point];
+          uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
+          uint16_t line = -1;
+          if (sec != 0xFFFF) {
+            line = add_linedef(map, old_point, editor->current_point, add_sidedef(map, sec), add_sidedef(map, sec));
+          } else {
+            line = add_linedef(map, old_point, editor->current_point, 0xFFFF, 0xFFFF);
+          }
+          uint16_t vertices[256];
+          int num_vertices = check_closed_loop(map, line, vertices);
+          if (num_vertices) {
+            uint16_t sector = add_sector(map);
+            set_loop_sector(map, sector, vertices, num_vertices);
+            editor->drawing = false;
+          }
+        } else {
+          editor->drawing = true;
+        }
+      } else if (event.button.button == SDL_BUTTON_RIGHT) {
+        extern int splitting_line;
+        if (editor->drawing) {
+          // Cancel current drawing
           editor->drawing = false;
+          editor->num_draw_points = 0;
+        } else if (editor->dragging) {
+          editor->dragging = false;
+          editor->current_point = -1;
+        } else if (splitting_line>=0) {
+          split_linedef(map, splitting_line, sn.x, sn.y);
+        } else if (point_exists(sn, map, &point)) {
+          editor->dragging = true;
+          editor->current_point = point;
         }
-      } else {
-        editor->drawing = true;
       }
-
-//      if (event.button.button == SDL_BUTTON_LEFT) {
-//        int snapped_x, snapped_y;
-////        snap_mouse_position(editor, player, &snapped_x, &snapped_y);
-//        extern float sn_x, sn_y;
-//        snapped_x = sn_x;
-//        snapped_y = sn_y;
-//        
-//        if (!editor->drawing) {
-//          // Start drawing new sector
-//          editor->drawing = true;
-//          editor->num_draw_points = 0;
-//        }
-//        
-//        // Check if we're clicking on the first point to close the loop
-//        if (editor->num_draw_points > 2 &&
-//            abs(snapped_x - editor->draw_points[0].x) < editor->grid_size/2 &&
-//            abs(snapped_y - editor->draw_points[0].y) < editor->grid_size/2) {
-//          // Finish the sector
-//          finish_sector(map, editor);
-//        } else if (editor->num_draw_points < MAX_DRAW_POINTS) {
-//          // Add point to current sector
-//          editor->draw_points[editor->num_draw_points].x = snapped_x;
-//          editor->draw_points[editor->num_draw_points].y = snapped_y;
-//          editor->num_draw_points++;
-//        }
-//      }
-//      else if (event.button.button == SDL_BUTTON_RIGHT) {
-//        extern int splitting_line;
-//        extern float sn_x, sn_y;
-//        if (editor->drawing) {
-//          // Cancel current drawing
-//          editor->drawing = false;
-//          editor->num_draw_points = 0;
-//        } else if (editor->dragging) {
-//          editor->dragging = false;
-//          editor->current_point = -1;
-//        } else if (splitting_line>=0) {
-//          split_linedef(map, splitting_line, sn_x, sn_y);
-//        } else if (point_exists((mapvertex_t){sn_x, sn_y}, map, &point)) {
-//          editor->dragging = true;
-//          editor->current_point = point;
-//        }
-//      }
     }
     else if (event.type == SDL_MOUSEWHEEL && editor->active) {
       // Zoom in/out by adjusting view size

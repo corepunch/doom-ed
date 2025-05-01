@@ -377,6 +377,7 @@ bool set_loop_sector(map_data_t *map, uint16_t sector, uint16_t *vertices, uint1
           line->start = line->end;
           line->end = tmp;
         }
+        continue;
       } else {
         line->sidenum[side] = add_sidedef(map, sector);
       }
@@ -387,6 +388,9 @@ bool set_loop_sector(map_data_t *map, uint16_t sector, uint16_t *vertices, uint1
     if (line->sidenum[side] != 0xFFFF && line->sidenum[!side] != 0xFFFF) {
       memset(map->sidedefs[line->sidenum[!side]].midtexture, 0, sizeof(texname_t));
       memset(map->sidedefs[line->sidenum[side]].midtexture, 0, sizeof(texname_t));
+    }
+    if (parent == 0xFFFF && line->sidenum[!side] != 0xFFFF) {
+      parent = map->sidedefs[line->sidenum[!side]].sector;
     }
   }
   
@@ -399,4 +403,28 @@ bool set_loop_sector(map_data_t *map, uint16_t sector, uint16_t *vertices, uint1
   build_floor_vertex_buffer(map);
   
   return true;
+}
+
+void split_linedef(map_data_t *map, int linedef_id, float x, float y) {
+  maplinedef_t *linedef = &map->linedefs[linedef_id];
+  mapvertex_t split_point = { x, y };
+  
+  int vertex = add_vertex(map, split_point);
+  uint16_t front = 0xffff, back = 0xffff;
+  
+  if (linedef->sidenum[0] < map->num_sidedefs) {
+    front = add_sidedef(map, 0);
+    memcpy(&map->sidedefs[front], &map->sidedefs[linedef->sidenum[0]], sizeof(mapsidedef_t));
+  }
+  
+  if (linedef->sidenum[1] < map->num_sidedefs) {
+    back = add_sidedef(map, 0);
+    memcpy(&map->sidedefs[back], &map->sidedefs[linedef->sidenum[1]], sizeof(mapsidedef_t));
+  }
+  
+  add_linedef(map, linedef->end, vertex, front, back);
+  linedef->end = vertex;
+  
+  // Rebuild vertex buffers
+  build_wall_vertex_buffer(map);
 }
