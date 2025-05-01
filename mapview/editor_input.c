@@ -189,18 +189,18 @@ get_mouse_position(editor_state_t const *editor,
 
 void
 snap_mouse_position(editor_state_t const *editor,
-                   player_t const *player,
-                   int *snapped_x,
-                   int *snapped_y)
+                    player_t const *player,
+                    int *snapped_x,
+                    int *snapped_y)
 {
   float world_x, world_y;
 
   get_mouse_position(editor, player, &world_x, &world_y);
   
-  world_x -= editor->grid_size/2;
-  world_y += editor->grid_size/2;
+  world_x += editor->grid_size/2;
+  world_y -= editor->grid_size/2;
   
   // Snap to grid
-  *snapped_x = ((int)world_x / editor->grid_size) * editor->grid_size;
-  *snapped_y = ((int)world_y / editor->grid_size) * editor->grid_size;
+  *snapped_x = floorf(world_x / editor->grid_size) * editor->grid_size;
+  *snapped_y = ceilf(world_y / editor->grid_size) * editor->grid_size;
 }

@@ -114,7 +114,7 @@ static void draw_walls_editor(map_data_t const *map) {
     mapvertex_t const *v2 = &map->vertices[linedef->end];
     
     // Determine if this is a one-sided or two-sided wall
-    bool two_sided = (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs);
+    bool two_sided = linedef->sidenum[1] != 0xFFFF;
     extern int splitting_line;
     // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
     if (splitting_line == i) {
