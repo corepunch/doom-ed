@@ -169,7 +169,7 @@ static void draw_cursor(int x, int y) {
 }
 
 int splitting_line = 0;
-float sn_x = 0, sn_y = 0;
+mapvertex_t sn;
 
 // Draw the editor UI
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player) {
@@ -221,8 +221,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   float world_x, world_y;
   get_mouse_position(editor, player, &world_x, &world_y);
   
-  sn_x = world_x;
-  sn_y = world_y;
+  sn.x = world_x;
+  sn.y = world_y;
   float dist = 100000;
   for (int i = 0; i < map->num_linedefs; i++) {
     float x, y, z;
@@ -234,8 +234,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
                                     &x, &y, &z);
     if (dist > d)
     {
-      sn_x = x;
-      sn_y = y;
+      sn.x = x;
+      sn.y = y;
       dist = d;
       splitting_line = i;
     }
@@ -246,31 +246,31 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     float d = dx*dx + dy*dy;
     if (editor->grid_size * 8.0f > d)
     {
-      sn_x = map->vertices[i].x;
-      sn_y = map->vertices[i].y;
+      sn.x = map->vertices[i].x;
+      sn.y = map->vertices[i].y;
       dist = d;
       splitting_line = -1;
     }
   }
-  int snapped_x = sn_x, snapped_y = sn_y;
+  int snapped_x = sn.x, snapped_y = sn.y;
 
   if (dist < editor->grid_size * 8.0f) {
-    draw_cursor(sn_x, sn_y);
+    draw_cursor(sn.x, sn.y);
   } else {
     splitting_line = -1;
     // Snap to grid
     snap_mouse_position(editor, player, &snapped_x, &snapped_y);
-    sn_x = snapped_x;
-    sn_y = snapped_y;
+    sn.x = snapped_x;
+    sn.y = snapped_y;
     // Draw cursor at the snapped position
     draw_cursor(snapped_x, snapped_y);
   }
   
   // If currently drawing, show line from last point to cursor
-  if (editor->dragging || (editor->drawing && editor->num_draw_points > 0)) {
+  if (editor->dragging || editor->drawing) {
     glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
-    float x = editor->dragging ? map->vertices[editor->num_drag_point].x : editor->draw_points[editor->num_draw_points-1].x;
-    float y = editor->dragging ? map->vertices[editor->num_drag_point].y : editor->draw_points[editor->num_draw_points-1].y;
+    float x = map->vertices[editor->current_point].x;
+    float y = map->vertices[editor->current_point].y;
     wall_vertex_t verts[2] = {
       { x, y, 0, 0, 0, 0, 0, 0 },
       { snapped_x, snapped_y, 0, 0, 0, 0, 0, 0 }

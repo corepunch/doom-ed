@@ -20,7 +20,7 @@ typedef struct {
   bool dragging;          // Currently dragging a vertex?
   mapvertex_t draw_points[MAX_DRAW_POINTS]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
-  int num_drag_point;    // Number of point
+  int current_point;    // Number of point
   uint32_t vao, vbo;
 } editor_state_t;
 
@@ -53,5 +53,23 @@ float closest_point_on_line(float point_x, float point_y,
                             float line_x2, float line_y2,
                             float *closest_x, float *closest_y,
                             float *t_param);
+
+
+uint16_t add_vertex(map_data_t *map, mapvertex_t vertex);
+uint16_t add_linedef(map_data_t *map, uint16_t start, uint16_t end,
+                     uint16_t front_side, uint16_t back_side);
+uint16_t add_sidedef(map_data_t *map, uint16_t sector_index);
+uint16_t add_sector(map_data_t *map);
+
+mapvertex_t vertex_midpoint(mapvertex_t v1, mapvertex_t v2);
+uint16_t find_point_sector(map_data_t const *map, mapvertex_t vertex);
+
+int check_closed_loop(map_data_t *map, uint16_t line, uint16_t vertices[]);
+int find_existing_linedef(map_data_t const *map, uint16_t v1, uint16_t v2);
+bool set_loop_sector(map_data_t *map, uint16_t sector, uint16_t *vertices, uint16_t num_vertices);
+
+
+mapvertex_t compute_centroid(map_data_t const *map, uint16_t vertices[], int count);
+
 
 #endif
