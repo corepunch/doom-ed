@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VariablesViewState
+   version = "1.0">
+   <ContextStates>
+      <ContextState
+         contextName = "load_sprite:sprites.c">
+      </ContextState>
+      <ContextState
+         contextName = "draw_rect:sprites.c">
+      </ContextState>
+      <ContextState
+         contextName = "draw_palette:texture.c">
+      </ContextState>
+      <ContextState
+         contextName = "process_sector_edges:editor_sector.c">
+      </ContextState>
+      <ContextState
+         contextName = "draw_weapon:sprites.c">
+      </ContextState>
+      <ContextState
+         contextName = "set_loop_sector:editor_sector.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "map-&gt;sidedefs[529]">
+            </PersistentString>
+         </PersistentStrings>
+      </ContextState>
+   </ContextStates>
+</VariablesViewState>

@@ -368,20 +368,23 @@ bool set_loop_sector(map_data_t *map, uint16_t sector, uint16_t *vertices, uint1
       side = 1; // Outside/right side
     }
     
+    // Make sure the sidedef exists
     if (line->sidenum[side] == 0xFFFF) {
-      // Make sure the sidedef exists
-      line->sidenum[0] = add_sidedef(map, sector);
-      if (clockwise) {
-        uint16_t tmp = line->start;
-        line->start = line->end;
-        line->end = tmp;
+      if (line->sidenum[!side] == 0xFFFF) {
+        line->sidenum[0] = add_sidedef(map, sector);
+        if (clockwise) {
+          uint16_t tmp = line->start;
+          line->start = line->end;
+          line->end = tmp;
+        }
+      } else {
+        line->sidenum[side] = add_sidedef(map, sector);
       }
     } else {
       // Set the sector reference in the sidedef
       map->sidedefs[line->sidenum[side]].sector = sector;
     }
-    
-    if (line->sidenum[!side] != 0xFFFF) {
+    if (line->sidenum[side] != 0xFFFF && line->sidenum[!side] != 0xFFFF) {
       memset(map->sidedefs[line->sidenum[!side]].midtexture, 0, sizeof(texname_t));
       memset(map->sidedefs[line->sidenum[side]].midtexture, 0, sizeof(texname_t));
     }
