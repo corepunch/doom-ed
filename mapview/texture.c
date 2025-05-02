@@ -680,20 +680,45 @@ char const* get_texture_name(int i) {
   return g_cache.textures[i%g_cache.num_textures].name;
 }
 
-void draw_palette(map_data_t const *map, float x, float y, int w) {
+char const* get_flat_texture_name(int i) {
+  return g_flat_cache.textures[i%g_flat_cache.num_textures].name;
+}
+
+void draw_palette(map_data_t const *map, float x, float y, int width, int height) {
   extern int pixel;
   extern uint32_t selected_texture;
-  int i = 0;
-  for (; i < MIN(g_cache.num_textures, w); i++) {
-    int x = (i/w+0.5)*(PALETTE_WIDTH + 1);
-    int y = (i%w+0.5)*(PALETTE_WIDTH + 1);
-    if (selected_texture%g_cache.num_textures == i) {
+  extern uint32_t selected_floor_texture;
+  int amount = 4;
+  
+  selected_texture = selected_texture%g_cache.num_textures;
+  selected_floor_texture = selected_floor_texture%g_flat_cache.num_textures;
+
+  for (int i = selected_texture - MIN(selected_texture, amount);
+       i <= MIN(g_cache.num_textures, selected_texture + amount); i++)
+  {
+    int a =0;
+  }
+
+  
+  for (int i = selected_texture - MIN(selected_texture, amount);
+       i <= MIN(g_cache.num_textures, selected_texture + amount); i++)
+  {
+    int x = (0.5) * (PALETTE_WIDTH + 1);
+    int y = (i-(int)selected_texture+0.5)*(PALETTE_WIDTH + 1)+height/2;
+    if (selected_texture == i) {
       draw_rect(1, x, y, PALETTE_WIDTH + 2, PALETTE_WIDTH + 2);
     }
     draw_rect(g_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
   }
-  
-//  for (int j = 0; j < g_flat_cache.num_textures; i++, j++) {
-//    draw_rect(&g_flat_cache.textures[i], (i%w+0.5)*PALETTE_WIDTH, (i/w+0.5)*PALETTE_WIDTH, 0.3);
-//  }
+
+  for (int i = selected_floor_texture - MIN(selected_floor_texture, amount);
+       i <= MIN(g_flat_cache.num_textures, selected_floor_texture + amount); i++)
+  {
+    int x = width - (0.5)*(PALETTE_WIDTH + 1);
+    int y = (i-(int)selected_floor_texture+0.5)*(PALETTE_WIDTH + 1)+height/2;
+    if (selected_floor_texture == i) {
+      draw_rect(1, x, y, PALETTE_WIDTH + 2, PALETTE_WIDTH + 2);
+    }
+    draw_rect(g_flat_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
+  }
 }

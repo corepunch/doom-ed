@@ -208,8 +208,9 @@ void update_player_position_with_sliding(map_data_t const *map, player_t *player
                                          float move_x, float move_y);
 
 void draw_rect(int tex, float x, float y, float w, float h);
-void draw_palette(map_data_t const *map, float x, float y, int w);
+void draw_palette(map_data_t const *map, float x, float y, int w, int h);
 char const* get_texture_name(int i);
+char const* get_flat_texture_name(int i);
 float dist_sq(float x1, float y1, float x2, float y2);
 
 enum {

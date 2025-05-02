@@ -9,6 +9,7 @@ extern bool running;
 extern bool mode;
 
 uint32_t selected_texture = 0;
+uint32_t selected_floor_texture = 0;
 
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
   int inside = 0;
@@ -168,6 +169,16 @@ void handle_input(map_data_t *map, player_t *player) {
                    get_texture_name(selected_texture),
                    sizeof(texname_t));
             break;
+          case PIXEL_FLOOR:
+            memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic,
+                   get_flat_texture_name(selected_floor_texture),
+                   sizeof(texname_t));
+            break;
+          case PIXEL_CEILING:
+            memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic,
+                   get_flat_texture_name(selected_floor_texture),
+                   sizeof(texname_t));
+            break;
         }
         build_wall_vertex_buffer(map);
         build_floor_vertex_buffer(map);
@@ -183,6 +194,12 @@ void handle_input(map_data_t *map, player_t *player) {
           break;
         case SDL_SCANCODE_X:
           selected_texture++;
+          break;
+        case SDL_SCANCODE_C:
+          selected_floor_texture--;
+          break;
+        case SDL_SCANCODE_V:
+          selected_floor_texture++;
           break;
         case SDL_SCANCODE_TAB:
           toggle_editor_mode(&editor);

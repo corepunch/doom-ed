@@ -355,7 +355,7 @@ int run(map_data_t const *map) {
       
       draw_crosshair();
       
-      draw_palette(map, 0, 0, window_height/PALETTE_WIDTH);
+      draw_palette(map, 0, 0, window_width, window_height);
       
       if (mode) {
         draw_minimap(map, &player);
