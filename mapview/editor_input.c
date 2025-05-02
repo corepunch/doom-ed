@@ -67,11 +67,14 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
     }
     else if (event.type == SDL_MOUSEBUTTONDOWN && editor->active) {
       extern mapvertex_t sn;
+      extern int splitting_line;
       int point = -1;
       int old_point = editor->current_point;
       if (event.button.button == SDL_BUTTON_LEFT) {
         if (point_exists(sn, map, &point)) {
           editor->current_point = point;
+        } else if (splitting_line>=0) {
+          editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
         } else {
           editor->current_point = add_vertex(map, sn);
         }

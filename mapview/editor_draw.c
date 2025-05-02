@@ -175,10 +175,6 @@ mapvertex_t sn;
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player) {
   if (!editor->active) return;
   
-  glBindVertexArray(editor->vao);
-  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
-  glDisable(GL_DEPTH_TEST);
-  
   // Set up orthographic projection for 2D view
   mat4 mvp;
   float scale = 1;
@@ -195,11 +191,6 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // Combine matrices
   glm_mat4_mul(proj, view, mvp);
   
-  // Set up rendering
-  glUseProgram(ui_prog);
-  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  glBindTexture(GL_TEXTURE_2D, 1); // Use default 1x1 white texture
-  
   // Clear the screen to black
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -208,6 +199,26 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
 //  draw_minimap(map, player);
 //  glBindVertexArray(map->walls.vao);
 //  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
+  
+  
+  extern GLuint world_prog;
+  glUseProgram(world_prog);
+  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glUniform3f(glGetUniformLocation(world_prog, "viewPos"), 0,0,-10001);//player->x, player->y, player->z);
+
+  void draw_floors(map_data_t const *map, mat4 mvp);
+  void draw_walls(map_data_t const *map, mat4 mvp);
+  
+  draw_floors(map, mvp);
+  
+  // Set up rendering
+  glUseProgram(ui_prog);
+  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glBindTexture(GL_TEXTURE_2D, 1); // Use default 1x1 white texture
+  
+  glBindVertexArray(editor->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
+  glDisable(GL_DEPTH_TEST);
   
   // Draw grid
   draw_grid(editor->grid_size, player, 100);

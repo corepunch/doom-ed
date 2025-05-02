@@ -66,6 +66,7 @@ const char* fs_src = "#version 150 core\n"
 "  float distance = smoothstep(500,0,distance(viewPos, fragPos));\n"
 "  float facingFactor = abs(dot(normalize(normal), viewDir));\n"
 "  float fading = mix(distance * light, 1.0, light * light);\n"
+"  if (viewDir.z < -10000) { outColor = texture(tex0, tex) * light; return; }"
 "  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * fading * 1.5;\n"
 "}";
 
@@ -92,6 +93,7 @@ GLuint error_tex;
 editor_state_t editor = {0};
 SDL_Window* window = NULL;
 SDL_GLContext ctx;
+SDL_Joystick* joystick = NULL;
 bool running = true;
 bool mode = false;
 
@@ -99,7 +101,7 @@ void init_floor_shader(void);
 
 // Initialize SDL and create window/renderer
 bool init_sdl(void) {
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
     return false;
   }
@@ -111,6 +113,21 @@ bool init_sdl(void) {
   if (!window) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
     return false;
+  }
+  
+  // Open the first available controller
+  for (int i = 0; i < SDL_NumJoysticks(); ++i) {
+    joystick = SDL_JoystickOpen(i);
+    if (joystick) {
+      SDL_JoystickEventState(SDL_ENABLE);
+      printf("Opened joystick: %s\n", SDL_JoystickName(joystick));
+    } else {
+      printf("Could not open joystick: %s\n", SDL_GetError());
+    }
+  }
+  
+  if (!joystick) {
+    printf("No game controller found\n");
   }
   
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
@@ -171,6 +188,9 @@ bool init_sdl(void) {
 
 // Clean up SDL resources
 void cleanup(void) {
+  if (joystick) {
+    SDL_JoystickClose(joystick);
+  }
   SDL_DestroyWindow(window);
   SDL_Quit();
 }
@@ -316,7 +336,7 @@ int run(map_data_t const *map) {
 //    }
 //
     SDL_Event e;
-    while (SDL_PollEvent(&e)) if (e.type == SDL_QUIT) return 0;
+
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);

@@ -37,6 +37,18 @@ if ((map)->name) free((map)->name); \
 
 #define HIGHLIGHT(light) light//((light)+0.25)
 
+enum {
+  PIXEL_MID = 0 << 28,
+  PIXEL_BOTTOM = 1 << 28,
+  PIXEL_TOP = 2 << 28,
+  PIXEL_FLOOR = 3 << 28,
+  PIXEL_CEILING = 4 << 28,
+  PIXEL_MASK = 7 << 28,
+};
+
+#define CHECK_PIXEL(PIXEL, TYPE, ID) ((PIXEL & PIXEL_MASK) == PIXEL_##TYPE && (PIXEL & ~PIXEL_MASK) == ID)
+
+
 // Constants for rendering
 #define SCREEN_WIDTH 1280
 #define SCREEN_HEIGHT 720
@@ -213,15 +225,5 @@ char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);
 float dist_sq(float x1, float y1, float x2, float y2);
 
-enum {
-  PIXEL_MID = 0 << 28,
-  PIXEL_BOTTOM = 1 << 28,
-  PIXEL_TOP = 2 << 28,
-  PIXEL_FLOOR = 3 << 28,
-  PIXEL_CEILING = 4 << 28,
-  PIXEL_MASK = 7 << 28,
-};
-
-#define CHECK_PIXEL(PIXEL, TYPE, ID) ((PIXEL & PIXEL_MASK) == PIXEL_##TYPE && (PIXEL & ~PIXEL_MASK) == ID)
 
 #endif

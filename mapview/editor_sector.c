@@ -405,7 +405,7 @@ bool set_loop_sector(map_data_t *map, uint16_t sector, uint16_t *vertices, uint1
   return true;
 }
 
-void split_linedef(map_data_t *map, int linedef_id, float x, float y) {
+int split_linedef(map_data_t *map, int linedef_id, float x, float y) {
   maplinedef_t *linedef = &map->linedefs[linedef_id];
   mapvertex_t split_point = { x, y };
   
@@ -427,4 +427,6 @@ void split_linedef(map_data_t *map, int linedef_id, float x, float y) {
   
   // Rebuild vertex buffers
   build_wall_vertex_buffer(map);
+  
+  return vertex;
 }

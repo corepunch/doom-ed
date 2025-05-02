@@ -130,8 +130,15 @@ void handle_input(map_data_t *map, player_t *player) {
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
   
   // Variables for mouse movement
-  int mouse_x_rel = 0;
-  int mouse_y_rel = 0;
+  static int mouse_x_rel = 0;
+  static int mouse_y_rel = 0;
+  static float forward_move = 0;
+  static float strafe_move = 0;
+
+  if (SDL_GetRelativeMouseMode()) {
+    mouse_x_rel = 0;
+    mouse_y_rel = 0;
+  }
   
   // Center position for relative mouse mode
   int window_width, window_height;
@@ -142,15 +149,32 @@ void handle_input(map_data_t *map, player_t *player) {
     if (event.type == SDL_QUIT) {
       running = false;
     }
+    else if (event.type == SDL_JOYAXISMOTION) {
+      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
+      switch (event.jaxis.axis) {
+        case 3: mouse_x_rel = event.jaxis.value/1200.f; break;
+        case 4: mouse_y_rel = event.jaxis.value/1200.f; break;
+        case 0: strafe_move = event.jaxis.value/(float)0x8000; break;
+        case 1: forward_move = -event.jaxis.value/(float)0x8000; break;
+      }
+//    } else if (event.type == SDL_JOYBUTTONDOWN) {
+//      printf("Button %d pressed\n", event.jbutton.button);
+//    } else if (event.type == SDL_JOYBUTTONUP) {
+//      printf("Button %d released\n", event.jbutton.button);
+    } else if (event.type == SDL_JOYHATMOTION) {
+      printf("Hat %d moved to %d\n", event.jhat.hat, event.jhat.value);
+    }
     else if (event.type == SDL_MOUSEMOTION) {
-      // Get relative mouse movement
-      mouse_x_rel = event.motion.xrel;
-      mouse_y_rel = event.motion.yrel;
+      if (SDL_GetRelativeMouseMode()) {
+        // Get relative mouse movement
+        mouse_x_rel = event.motion.xrel;
+        mouse_y_rel = event.motion.yrel;
+      }
     }
     else if (event.type == SDL_MOUSEWHEEL) {
       handle_scroll(event, map);
     }
-    else if (event.type == SDL_MOUSEBUTTONUP) {
+    else if (event.type == SDL_MOUSEBUTTONUP || (event.type == SDL_JOYBUTTONDOWN && event.jbutton.button==0)) {
       extern int pixel;
       if ((pixel&~PIXEL_MASK) < map->num_sidedefs) {
         switch (pixel&PIXEL_MASK) {
@@ -204,6 +228,42 @@ void handle_input(map_data_t *map, player_t *player) {
         case SDL_SCANCODE_TAB:
           toggle_editor_mode(&editor);
           break;
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP:
+          forward_move = 1;
+          break;
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN:
+          forward_move = -1;
+          break;
+          // Calculate strafe direction vector (perpendicular to forward)
+        case SDL_SCANCODE_D:
+        case SDL_SCANCODE_RIGHT:
+          strafe_move = 1;
+          break;
+        case SDL_SCANCODE_A:
+        case SDL_SCANCODE_LEFT:
+          strafe_move = -1;
+          break;
+        default:
+          break;
+      }
+    }
+    else if (event.type == SDL_KEYUP) {
+      switch (event.key.keysym.scancode) {
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP:
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN:
+          forward_move = 0;
+          break;
+          // Calculate strafe direction vector (perpendicular to forward)
+        case SDL_SCANCODE_D:
+        case SDL_SCANCODE_RIGHT:
+        case SDL_SCANCODE_A:
+        case SDL_SCANCODE_LEFT:
+          strafe_move = 0;
+          break;
         default:
           break;
       }
@@ -211,7 +271,7 @@ void handle_input(map_data_t *map, player_t *player) {
   }
   
   // Apply mouse rotation if relative mode is enabled
-  if (SDL_GetRelativeMouseMode()) {
+  if (true) {
     // Horizontal mouse movement controls yaw (left/right rotation)
     float sensitivity_x = 0.15f; // Adjust sensitivity as needed
     player->angle += mouse_x_rel * sensitivity_x;
@@ -232,31 +292,11 @@ void handle_input(map_data_t *map, player_t *player) {
   // Convert player angle to radians for movement calculations
   float angle_rad = player->angle * M_PI / 180.0;
   
-  // Calculate movement vectors
-  float forward_x = 0.0f;
-  float forward_y = 0.0f;
-  float strafe_x = 0.0f;
-  float strafe_y = 0.0f;
-  
   // Calculate forward/backward direction vector
-  if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
-    forward_x -= cos(angle_rad) * MOVEMENT_SPEED; // Negative because DOOM's coordinate system
-    forward_y += sin(angle_rad) * MOVEMENT_SPEED;
-  }
-  if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
-    forward_x += cos(angle_rad) * MOVEMENT_SPEED;
-    forward_y -= sin(angle_rad) * MOVEMENT_SPEED;
-  }
-  
-  // Calculate strafe direction vector (perpendicular to forward)
-  if (keystates[SDL_SCANCODE_D] || keystates[SDL_SCANCODE_RIGHT]) {
-    strafe_x += sin(angle_rad) * MOVEMENT_SPEED;
-    strafe_y += cos(angle_rad) * MOVEMENT_SPEED;
-  }
-  if (keystates[SDL_SCANCODE_A] || keystates[SDL_SCANCODE_LEFT]) {
-    strafe_x -= sin(angle_rad) * MOVEMENT_SPEED;
-    strafe_y -= cos(angle_rad) * MOVEMENT_SPEED;
-  }
+  float forward_x = -forward_move * cos(angle_rad) * MOVEMENT_SPEED; // Negative because DOOM's coordinate system
+  float forward_y = forward_move * sin(angle_rad) * MOVEMENT_SPEED;
+  float strafe_x = strafe_move * sin(angle_rad) * MOVEMENT_SPEED;
+  float strafe_y = strafe_move * cos(angle_rad) * MOVEMENT_SPEED;
   
   // Combine movement vectors
   float move_x = forward_x + strafe_x;
