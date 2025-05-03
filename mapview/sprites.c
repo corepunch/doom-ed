@@ -277,7 +277,7 @@ sprite_t* find_sprite(const char* name) {
   sprite_system_t* sys = &g_sprite_system;
   
   for (int i = 0; i < sys->num_sprites; i++) {
-    if (strncmp(sys->sprites[i].name, name, 16) == 0) {
+    if (strncmp(sys->sprites[i].name, name, 4) == 0) {
       return &sys->sprites[i];
     }
   }

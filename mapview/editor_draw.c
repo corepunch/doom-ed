@@ -208,7 +208,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
 
   void draw_floors(map_data_t const *map, mat4 mvp);
   void draw_walls(map_data_t const *map, mat4 mvp);
-  
+  void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool rotate);
+
   draw_floors(map, mvp);
   
   // Set up rendering
@@ -228,6 +229,14 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   
   // Draw sector being created
   draw_current_sector(editor);
+
+  glDisable(GL_CULL_FACE);
+  draw_things(map, player, mvp, false);
+
+  glUseProgram(ui_prog);
+  glBindVertexArray(editor->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
+  glDisable(GL_DEPTH_TEST);
 
   float world_x, world_y;
   get_mouse_position(editor, player, &world_x, &world_y);

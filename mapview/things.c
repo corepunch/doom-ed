@@ -17,7 +17,7 @@ const char* thing_vs_src = "#version 150 core\n"
 "uniform vec2 scale;\n"
 "void main() {\n"
 "  tex = texcoord;\n"
-"  gl_Position = mvp * vec4(position * scale, 0.0, 1.0).xzyw;\n"
+"  gl_Position = mvp * vec4(position * scale, 0.0, 1.0);\n"
 "}";
 
 const char* thing_fs_src = "#version 150 core\n"
@@ -34,10 +34,10 @@ const char* thing_fs_src = "#version 150 core\n"
 // Vertex data for a quad
 float thing_verts[] = {
   // pos.x  pos.y    tex.x tex.y
-  -0.5f,   0.0f,    0.0f, 1.0f, // bottom left
-  -0.5f,   1.0f,    0.0f, 0.0f, // top left
-  0.5f,    1.0f,    1.0f, 0.0f, // top right
-  0.5f,    0.0f,    1.0f, 1.0f, // bottom right
+  -0.5f,   -0.5f,    0.0f, 1.0f, // bottom left
+  -0.5f,   0.5f,    0.0f, 0.0f, // top left
+  0.5f,    0.5f,    1.0f, 0.0f, // top right
+  0.5f,    -0.5f,    1.0f, 1.0f, // bottom right
 };
 
 // Thing rendering system
@@ -148,10 +148,10 @@ sprite_t *get_thing_sprite_name(int thing_type, int angle) {
   snprintf(sprite_name, sizeof(sprite_name), "%sA0", prefix);
   sprite = find_sprite(sprite_name);
   if(sprite) return sprite;
-
+  
   static sprite_t emtpy = {
-    .width = 32,
-    .height = 32,
+    .width = 8,
+    .height = 8,
     .texture = 1,
   };
 
@@ -159,7 +159,7 @@ sprite_t *get_thing_sprite_name(int thing_type, int angle) {
 }
 
 // Draw things in the map
-void draw_things(map_data_t const *map, player_t const *player, mat4 mvp) {
+void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool rotate) {
   thing_renderer_t* renderer = &g_thing_renderer;
   
   // Enable blending for transparency
@@ -174,7 +174,7 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp) {
   
   // Set uniforms that don't change per-thing
   glUniformMatrix4fv(glGetUniformLocation(renderer->program, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  
+
   // Loop through all things in the map
   for (int i = 0; i < map->num_things; i++) {
     mapthing_t const *thing = &map->things[i];
@@ -210,7 +210,7 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp) {
     glm_mat4_identity(model);
     
     // Translate to thing position
-    glm_translate(model, (vec3){thing->x, thing->y, z_pos});
+    glm_translate(model, (vec3){thing->x, thing->y, z_pos+sprite->height/2});
     
     // Rotate to face the defined angle
 //    float angle_rad = glm_rad(thing->angle);
@@ -218,9 +218,12 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp) {
     
     float dx = player->x - thing->x;
     float dy = player->y - thing->y;
-    
-    glm_rotate_z(model, atan2f(dy, dx)-M_PI_2, model);
-    
+
+    if (rotate) {
+      glm_rotate_z(model, atan2f(dy, dx)-M_PI_2, model);
+      glm_rotate_x(model, M_PI_2, model);
+    }
+
     glm_mat4_mul(mvp, model, mv);
     glUniformMatrix4fv(glGetUniformLocation(renderer->program, "mvp"), 1, GL_FALSE, (const float*)mv);
     
@@ -230,7 +233,7 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp) {
     
     // Set light level
     float light = sector->lightlevel / 255.0f;
-    glUniform1f(glGetUniformLocation(renderer->program, "light"), light);
+    glUniform1f(glGetUniformLocation(renderer->program, "light"), rotate?light:1.25);
     
     // Bind texture
     glActiveTexture(GL_TEXTURE0);
@@ -243,7 +246,6 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp) {
     
   // Reset state
   glDisable(GL_BLEND);
-  glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 // Cleanup thing rendering resources
