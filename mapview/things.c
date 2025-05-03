@@ -162,6 +162,8 @@ sprite_t *get_thing_sprite_name(int thing_type, int angle) {
 void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool rotate) {
   thing_renderer_t* renderer = &g_thing_renderer;
   
+  glDisable(GL_CULL_FACE);
+  
   // Enable blending for transparency
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -233,7 +235,7 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool r
     
     // Set light level
     float light = sector->lightlevel / 255.0f;
-    glUniform1f(glGetUniformLocation(renderer->program, "light"), rotate?light:1.25);
+    glUniform1f(glGetUniformLocation(renderer->program, "light"), rotate?light*1.5:1.25);
     
     // Bind texture
     glActiveTexture(GL_TEXTURE0);
@@ -246,6 +248,7 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool r
     
   // Reset state
   glDisable(GL_BLEND);
+  glEnable(GL_CULL_FACE);
 }
 
 // Cleanup thing rendering resources

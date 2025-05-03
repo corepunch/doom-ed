@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define OFFSET_OF(type, field) (void*)((size_t)&(((type *)0)->field))
+
 // Macro to define a collection of elements (pointer and count)
 #define DEFINE_COLLECTION(type, name) \
 type* name;                   \
@@ -27,7 +29,7 @@ if ((map)->name) free((map)->name); \
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #endif
 
-#define EYE_HEIGHT 41 // Typical eye height in Doom is 41 units above floor
+#define EYE_HEIGHT 48 // Typical eye height in Doom is 41 units above floor
 #define MAX_WALL_VERTICES 50000  // Adjust based on map complexity
 #define P_RADIUS 12.0f        // Player radius
 
@@ -76,6 +78,7 @@ typedef struct {
   int16_t x, y, z;    // Position
   int16_t u, v;       // Texture coordinates
   int8_t nx, ny, nz;  // Normal
+  int32_t color;
 } wall_vertex_t;
 
 // Struct to represent a texture with OpenGL

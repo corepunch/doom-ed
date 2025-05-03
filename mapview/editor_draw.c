@@ -13,6 +13,7 @@ void init_editor(editor_state_t *editor) {
   editor->grid_size = 32;
   editor->drawing = false;
   editor->num_draw_points = 0;
+  editor->scale = 1;
   
   // Create VAO and VBO for editor rendering
   glGenVertexArrays(1, &editor->vao);
@@ -25,7 +26,8 @@ void init_editor(editor_state_t *editor) {
   // Enable vertex attributes
   glEnableVertexAttribArray(0); // Position
   glEnableVertexAttribArray(1); // Texture coords
-  
+//  glEnableVertexAttribArray(3); // Color
+
   // Reset bindings
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -107,42 +109,61 @@ static void draw_current_sector(editor_state_t const *editor) {
 
 // Draw walls with different colors based on whether they're one-sided or two-sided
 static void draw_walls_editor(map_data_t const *map) {
-  // Draw each linedef
-  for (int i = 0; i < map->num_linedefs; i++) {
-    maplinedef_t const *linedef = &map->linedefs[i];
-    mapvertex_t const *v1 = &map->vertices[linedef->start];
-    mapvertex_t const *v2 = &map->vertices[linedef->end];
-    
-    // Determine if this is a one-sided or two-sided wall
-    bool two_sided = linedef->sidenum[1] != 0xFFFF;
-    extern int splitting_line;
-    // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
-    if (splitting_line == i) {
-      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 1.0f);
-    } else if (!two_sided) {
-      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
-    } else {
-      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 0.0f, 0.0f, 1.0f);
-    }
-    
-    // Create and draw vertices
-    wall_vertex_t verts[2] = {
-      { v1->x, v1->y, 0, 0, 0, 0, 0, 0 },
-      { v2->x, v2->y, 0, 0, 0, 0, 0, 0 }
-    };
-    
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-    glDrawArrays(GL_LINES, 0, 2);
-    
-    // Draw vertices as points
-    glPointSize(3.0f);
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-    glDrawArrays(GL_POINTS, 0, 1);
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[1].x);
-    glDrawArrays(GL_POINTS, 0, 1);
-    glPointSize(1.0f);
-  }
+  
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+  glBindVertexArray(map->walls.vao);
+  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
+  
+//  glDisableVertexAttribArray(3);
+  glPointSize(3.0f);
+  glDrawArrays(GL_POINTS, 0, map->walls.num_vertices);
+  glPointSize(1.0f);
+  glEnableVertexAttribArray(3);
+
+  return;
+//  
+//  // Draw each linedef
+//  for (int i = 0; i < map->num_linedefs; i++) {
+//    maplinedef_t const *linedef = &map->linedefs[i];
+//    mapvertex_t const *v1 = &map->vertices[linedef->start];
+//    mapvertex_t const *v2 = &map->vertices[linedef->end];
+//    
+//    // Determine if this is a one-sided or two-sided wall
+//    bool two_sided = linedef->sidenum[1] != 0xFFFF;
+//    extern int splitting_line;
+//    // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
+//    if (splitting_line == i) {
+//      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 1.0f);
+//    } else if (!two_sided) {
+//      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+//    } else {
+//      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 0.0f, 0.0f, 1.0f);
+//    }
+//    
+//    int16_t z = 0;
+//    
+//    if (linedef->sidenum[0] != 0xFFFF) {
+//      z = map->sectors[map->sidedefs[linedef->sidenum[0]].sector].floorheight;
+//    }
+//    
+//    // Create and draw vertices
+//    wall_vertex_t verts[2] = {
+//      { v1->x, v1->y, z, 0, 0, 0, 0, 0 },
+//      { v2->x, v2->y, z, 0, 0, 0, 0, 0 }
+//    };
+//    
+//    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+//    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+//    glDrawArrays(GL_LINES, 0, 2);
+//    
+//    // Draw vertices as points
+//    glPointSize(3.0f);
+//    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+//    glDrawArrays(GL_POINTS, 0, 1);
+//    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[1].x);
+//    glDrawArrays(GL_POINTS, 0, 1);
+//    glPointSize(1.0f);
+//  }
 }
 
 // Draw cursor position
@@ -171,18 +192,19 @@ static void draw_cursor(int x, int y) {
 int splitting_line = 0;
 mapvertex_t sn;
 
+void get_mouse_position(editor_state_t const *, player_t const *, mat4 const, vec2);
+void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
+
 // Draw the editor UI
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player) {
   if (!editor->active) return;
   
   // Set up orthographic projection for 2D view
-  mat4 mvp;
-  float scale = 1;
-  float w = SCREEN_WIDTH * scale;
-  float h = SCREEN_HEIGHT * scale;
+  float w = SCREEN_WIDTH * editor->scale;
+  float h = SCREEN_HEIGHT * editor->scale;
   
   // Create projection and view matrices
-  mat4 proj, view;
+  mat4 mvp, proj, view;
   glm_ortho(-w, w, -h, h, -1000, 1000, proj);
   
   // Center view on player
@@ -190,6 +212,9 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   
   // Combine matrices
   glm_mat4_mul(proj, view, mvp);
+
+  void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out);
+  get_view_matrix(map, player, mvp);
   
   // Clear the screen to black
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -230,7 +255,6 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // Draw sector being created
   draw_current_sector(editor);
 
-  glDisable(GL_CULL_FACE);
   draw_things(map, player, mvp, false);
 
   glUseProgram(ui_prog);
@@ -238,52 +262,48 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
   glDisable(GL_DEPTH_TEST);
 
-  float world_x, world_y;
-  get_mouse_position(editor, player, &world_x, &world_y);
+  vec2 world;
+  get_mouse_position(editor, player, mvp, world);
   
-  sn.x = world_x;
-  sn.y = world_y;
+  sn.x = world[0];
+  sn.y = world[1];
   float dist = 100000;
   for (int i = 0; i < map->num_linedefs; i++) {
     float x, y, z;
-    float d = closest_point_on_line(world_x, world_y,
+    float d = closest_point_on_line(world[0], world[1],
                                     map->vertices[map->linedefs[i].start].x,
                                     map->vertices[map->linedefs[i].start].y,
                                     map->vertices[map->linedefs[i].end].x,
                                     map->vertices[map->linedefs[i].end].y,
                                     &x, &y, &z);
-    if (dist > d)
-    {
+    if (dist > d) {
       sn.x = x;
       sn.y = y;
       dist = d;
       splitting_line = i;
     }
   }
+
   for (int i = 0; i < map->num_vertices; i++) {
-    float dx = world_x - map->vertices[i].x;
-    float dy = world_y - map->vertices[i].y;
+    float dx = world[0] - map->vertices[i].x;
+    float dy = world[1] - map->vertices[i].y;
     float d = dx*dx + dy*dy;
-    if (editor->grid_size * 8.0f > d)
-    {
+    if (editor->grid_size * 8.0f > d) {
       sn.x = map->vertices[i].x;
       sn.y = map->vertices[i].y;
       dist = d;
       splitting_line = -1;
     }
   }
-  int snapped_x = sn.x, snapped_y = sn.y;
 
   if (dist < editor->grid_size * 8.0f) {
     draw_cursor(sn.x, sn.y);
   } else {
     splitting_line = -1;
     // Snap to grid
-    snap_mouse_position(editor, player, &snapped_x, &snapped_y);
-    sn.x = snapped_x;
-    sn.y = snapped_y;
+    snap_mouse_position(editor, world, &sn);
     // Draw cursor at the snapped position
-    draw_cursor(snapped_x, snapped_y);
+    draw_cursor(sn.x, sn.y);
   }
   
   // If currently drawing, show line from last point to cursor
@@ -291,13 +311,11 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
     float x = map->vertices[editor->current_point].x;
     float y = map->vertices[editor->current_point].y;
-    wall_vertex_t verts[2] = {
-      { x, y, 0, 0, 0, 0, 0, 0 },
-      { snapped_x, snapped_y, 0, 0, 0, 0, 0, 0 }
-    };
-    
+    wall_vertex_t verts[2] = { { x, y}, { sn.x, sn.y } };
+    glBindTexture(GL_TEXTURE_2D, 1);
     glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
     glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
     glDrawArrays(GL_LINES, 0, 2);
   }
 }

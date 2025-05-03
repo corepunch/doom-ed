@@ -85,7 +85,7 @@ int load_sprite(FILE *wad_file, filelump_t* sprite_lump, palette_entry_t const *
     sprite->height = height;
     sprite->offsetx = offsetx;
     sprite->offsety = offsety;
-    printf("Loaded sprite: %s (%dx%d)\n", sprite_lump->name, width, height);
+//    printf("Loaded sprite: %s (%dx%d)\n", sprite_lump->name, width, height);
     return g_sprite_system.num_sprites++;
   } else {
     return -1;
@@ -155,6 +155,11 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
 //  if (stbar_lump >= 0) {
 //    load_sprite(wad_file, &directory[stbar_lump], map->palette);
 //  }
+  
+  int stbar_lump = find_lump(directory, num_lumps, "STBAR");
+  if (stbar_lump >= 0) {
+    load_sprite(wad_file, &directory[stbar_lump], map->palette);
+  }
   
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
@@ -426,17 +431,17 @@ void draw_weapon(void) {
   const char* shotgun_sprite = "SHTGA0";
   sprite_t* sprite = find_sprite(shotgun_sprite);
   
-  if (!sprite) {
-    // Try alternative names if not found
-    const char* alternatives[] = {"SHTFA0", "SHTGB0", "SHTFC0"};
-    for (int i = 0; i < 3; i++) {
-      sprite = find_sprite(alternatives[i]);
-      if (sprite) {
-        shotgun_sprite = alternatives[i];
-        break;
-      }
-    }
-  }
+//  if (!sprite) {
+//    // Try alternative names if not found
+//    const char* alternatives[] = {"SHTFA0", "SHTGB0", "SHTFC0"};
+//    for (int i = 0; i < 3; i++) {
+//      sprite = find_sprite(alternatives[i]);
+//      if (sprite) {
+//        shotgun_sprite = alternatives[i];
+//        break;
+//      }
+//    }
+//  }
 
   // Scale up the weapon a bit
   float scale = 2.0f;
@@ -446,15 +451,15 @@ void draw_weapon(void) {
     draw_sprite("STBAR", window_width / 2.0f, window_height-STBAR->height/2*scale, 2, 1.0f);
   }
 
-//  if (sprite) {
-//    
-//    // Position at bottom center of screen, slightly raised
-//    float x = window_width / 2.0f;
-//    float y = window_height - (sprite->height / 2 + STBAR->height) * scale;
-//    
-//    // Draw with full opacity
-//    draw_sprite(shotgun_sprite, x, y, scale, 1.0f);
-//  }
+  if (sprite) {
+    
+    // Position at bottom center of screen, slightly raised
+    float x = window_width / 2.0f;
+    float y = window_height - (sprite->height / 2 + STBAR->height) * scale;
+    
+    // Draw with full opacity
+    draw_sprite(shotgun_sprite, x, y, scale, 1.0f);
+  }
   
 }
 

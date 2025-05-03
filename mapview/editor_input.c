@@ -1,4 +1,5 @@
 #include <SDL2/SDL.h>
+#include <cglm/struct.h>
 
 #include "editor.h"
 
@@ -56,6 +57,11 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
         default:
           break;
       }
+    }
+    else if (event.type == SDL_MOUSEWHEEL) {
+//      if (event.wheel.y) {
+        editor->scale -= event.wheel.y/30.f;
+//      }
     }
     else if (event.type == SDL_MOUSEBUTTONUP && editor->dragging) {
       extern mapvertex_t sn;
@@ -144,10 +150,12 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
 
 void
 get_mouse_position(editor_state_t const *editor,
-                    player_t const *player,
-                    float *world_x,
-                    float *world_y)
+                   player_t const *player,
+                   mat4 view_proj_matrix,
+                   vec2 world)
 {
+  float z_plane = 0;
+  
   int mouse_x, mouse_y;
   // Get mouse position
   SDL_GetMouseState(&mouse_x, &mouse_y);
@@ -156,27 +164,51 @@ get_mouse_position(editor_state_t const *editor,
   int win_width, win_height;
   SDL_GetWindowSize(window, &win_width, &win_height);
   
-  float w = SCREEN_WIDTH * 2;
-  float h = SCREEN_HEIGHT * 2;
+  // Convert to normalized device coordinates (-1 to 1)
+  float ndc_x = (2.0f * mouse_x) / win_width - 1.0f;
+  float ndc_y = 1.0f - (2.0f * mouse_y) / win_height;
   
-  *world_x = player->x + (mouse_x - win_width/2) * (w / win_width);
-  *world_y = player->y + (win_height/2 - mouse_y) * (h / win_height);
+  vec4 clip_near = { ndc_x, ndc_y, -1.0f, 1.0f };
+  vec4 clip_far  = { ndc_x, ndc_y,  1.0f, 1.0f };
+  
+  // Inverse view-projection matrix (you need to pass it in or compute it here)
+  mat4 inv_view_proj;
+  glm_mat4_inv(view_proj_matrix, inv_view_proj);
+  
+  vec4 ray_origin, ray_direction;
+  
+  // Unproject to world space
+  vec4 world_near, world_far;
+  glm_mat4_mulv(inv_view_proj, clip_near, world_near);
+  glm_mat4_mulv(inv_view_proj, clip_far,  world_far);
+  
+  // Perspective divide
+  glm_vec4_scale(world_near, 1.0f / world_near[3], world_near);
+  glm_vec4_scale(world_far,  1.0f / world_far[3],  world_far);
+  
+  // Ray origin and direction
+  glm_vec3(world_near, ray_origin);
+  glm_vec3_sub(world_far, world_near, ray_direction);
+  glm_vec3_normalize(ray_direction);
+  
+  // Intersection with z = z_plane
+  float t = (z_plane - ray_origin[2]) / ray_direction[2];
+  
+  glm_vec3_scale(ray_direction, t, world);
+  glm_vec3_add(ray_origin, world, world);
 }
 
 void
 snap_mouse_position(editor_state_t const *editor,
-                    player_t const *player,
-                    int *snapped_x,
-                    int *snapped_y)
+                    vec2 const world,
+                    mapvertex_t *snapped)
 {
   float world_x, world_y;
-
-  get_mouse_position(editor, player, &world_x, &world_y);
   
-  world_x += editor->grid_size/2;
-  world_y -= editor->grid_size/2;
+  world_x = world[0] + editor->grid_size/2;
+  world_y = world[1] - editor->grid_size/2;
   
   // Snap to grid
-  *snapped_x = floorf(world_x / editor->grid_size) * editor->grid_size;
-  *snapped_y = ceilf(world_y / editor->grid_size) * editor->grid_size;
+  snapped->x = floorf(world_x / editor->grid_size) * editor->grid_size;
+  snapped->y = ceilf(world_y / editor->grid_size) * editor->grid_size;
 }

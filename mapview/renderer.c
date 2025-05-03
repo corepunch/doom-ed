@@ -9,44 +9,21 @@
 #include "console.h"
 #include "editor.h"
 
-//const char* vs_src = "#version 150 core\n"
-//"in vec3 pos;\n"
-//"in vec2 uv;\n"
-//"in vec3 norm;\n"
-//"out vec2 tex;\n"
-//"out vec4 vpos;\n"
-//"out vec3 normal;\n"
-//"uniform vec2 tex0_size;\n"
-//"uniform mat4 mvp;\n"
-//"void main() {\n"
-//"  tex = uv / tex0_size;\n"
-//"  normal = norm;\n"
-//"  gl_Position = mvp * vec4(pos, 1.0);\n"
-//"}";
-//
-//const char* fs_src = "#version 150 core\n"
-//"in vec2 tex;\n"
-//"in vec3 normal;\n"
-//"out vec4 outColor;\n"
-//"uniform vec4 color;\n"
-//"uniform sampler2D tex0;\n"
-//"void main() {\n"
-//"  float light = dot(vec3(0.3,0.75,0.75),abs(normal));\n"
-//"  outColor = texture(tex0, tex) * color * light;\n"
-//"}";
-
 const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
 "in vec2 uv;\n"
 "in vec3 norm;\n"
+"in vec4 color;\n"
 "out vec2 tex;\n"
 "out vec3 normal;\n"
 "out vec3 fragPos;\n"
+"out vec4 col;\n"
 "uniform vec2 tex0_size;\n"
 "uniform mat4 mvp;\n"
 "void main() {\n"
 "  tex = uv / tex0_size;\n"
 "  normal = norm;\n"
+"  col = vec4(1)-color;\n"
 "  fragPos = pos;\n"
 "  gl_Position = mvp * vec4(pos, 1.0);\n"
 "}";
@@ -72,11 +49,12 @@ const char* fs_src = "#version 150 core\n"
 
 const char* fs_unlit_src = "#version 150 core\n"
 "in vec2 tex;\n"
+"in vec4 col;\n"
 "out vec4 outColor;\n"
 "uniform vec4 color;\n"
 "uniform sampler2D tex0;\n"
 "void main() {\n"
-"  outColor = texture(tex0, tex) * color;\n"
+"  outColor = /*texture(tex0, tex) */ color * col;\n"
 "}";
 
 GLuint compile(GLenum type, const char* src) {
@@ -146,6 +124,7 @@ bool init_sdl(void) {
   glBindAttribLocation(world_prog, 0, "pos");
   glBindAttribLocation(world_prog, 1, "uv");
   glBindAttribLocation(world_prog, 2, "norm");
+  glBindAttribLocation(world_prog, 3, "color");
   glLinkProgram(world_prog);
   glUseProgram(world_prog);
   glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
@@ -161,6 +140,7 @@ bool init_sdl(void) {
   glBindAttribLocation(ui_prog, 0, "pos");
   glBindAttribLocation(ui_prog, 1, "uv");
   glBindAttribLocation(ui_prog, 2, "norm");
+  glBindAttribLocation(ui_prog, 3, "color");
   glLinkProgram(ui_prog);
   glUseProgram(ui_prog);
   glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
@@ -216,7 +196,7 @@ void init_player(map_data_t const *map, player_t *player) {
   }
 }
 
-//#define ISOMETRIC
+#define ISOMETRIC
 
 /**
  * Generate the view matrix incorporating player position, angle, and pitch

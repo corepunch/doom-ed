@@ -7,7 +7,7 @@
 
 #define init_wall_vertex(X, Y, Z, U, V) \
 map->walls.vertices[map->walls.num_vertices++] = \
-(wall_vertex_t) {X,Y,Z,U*dist+u_offset,V*height+v_offset,n[0],n[1],n[2]}
+(wall_vertex_t) {X,Y,Z,U*dist+u_offset,V*height+v_offset,n[0],n[1],n[2],color}
 
 extern GLuint world_prog;
 extern GLuint ui_prog;
@@ -68,7 +68,9 @@ void build_wall_vertex_buffer(map_data_t *map) {
     float dx = v2->x - v1->x;
     float dy = v2->y - v1->y;
     float dist = compute_normal_packed(-dx, -dy, n);
-    
+    bool two_sided = linedef->sidenum[1] != 0xFFFF;
+    int32_t color = two_sided ? 0x00ffff00 : 0;
+
     // Check if there's a back side to this linedef
     if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
       back = &map->walls.sections[linedef->sidenum[1]];
@@ -179,12 +181,14 @@ void build_wall_vertex_buffer(map_data_t *map) {
   glBufferData(GL_ARRAY_BUFFER, map->walls.num_vertices * sizeof(wall_vertex_t), map->walls.vertices, GL_STATIC_DRAW);
   
   // Set up vertex attributes
-  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)0); // Position
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, x)); // Position
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, u)); // UV
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, sizeof(wall_vertex_t), (void*)(5 * sizeof(int16_t))); // Normal
+  glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, nx)); // Normal
   glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Normal
+  glEnableVertexAttribArray(3);
 
 //  printf("Built wall vertex buffer with %d vertices\n", map->walls.num_vertices);
 }
