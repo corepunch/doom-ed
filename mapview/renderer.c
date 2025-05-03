@@ -183,6 +183,8 @@ bool init_sdl(void) {
     
   init_editor(&editor);
   
+  init_things();
+  
   return true;
 }
 
@@ -346,6 +348,7 @@ int run(map_data_t const *map) {
       void draw_wall_ids(map_data_t const *map, mat4 mvp);
       void draw_floor_ids(map_data_t const *map, mat4 mvp);
       void draw_minimap(map_data_t const *map, player_t const *player);
+      void draw_things(map_data_t const *map, player_t const *player, mat4 mvp);
       
       glUseProgram(ui_prog);
       glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
@@ -370,6 +373,8 @@ int run(map_data_t const *map) {
       draw_floors(map, mvp);
       
       draw_walls(map, mvp);
+
+      draw_things(map, &player, mvp);
       
       draw_weapon();
       

@@ -5,6 +5,16 @@
 #include <stdbool.h>
 #include <OpenGL/gl3.h>
 
+// Sprite cache structure
+typedef struct {
+  char name[16];         // Sprite name (e.g., "SHTGA0")
+  GLuint texture;        // OpenGL texture ID
+  int width;             // Sprite width
+  int height;            // Sprite height
+  int offsetx;           // X offset for centering
+  int offsety;           // Y offset for centering
+} sprite_t;
+
 // Initialize sprite system
 bool init_sprites(map_data_t *, FILE* wad_file, filelump_t* directory, int num_lumps);
 
@@ -22,5 +32,13 @@ void draw_crosshair(void);
 
 // Helper function to find a lump directly from file
 int find_lump_from_file(FILE* wad_file, const char* name);
+
+
+// things
+
+
+bool init_things(void);
+sprite_t* get_thing_sprite_name(int thing_type, int angle);
+void cleanup_things(void);
 
 #endif /* __SPRITES__ */

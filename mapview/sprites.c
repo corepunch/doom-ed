@@ -7,7 +7,7 @@
 #include "map.h"
 #include "sprites.h"
 
-#define MAX_SPRITES 128
+#define MAX_SPRITES 10000
 
 // Sprite shader sources
 const char* sprite_vs_src = "#version 150 core\n"
@@ -41,16 +41,6 @@ float sprite_verts[] = {
   0.5f,   -0.5f,    1.0f, 0.0f, // bottom right
 };
 
-// Sprite cache structure
-typedef struct {
-  char name[16];         // Sprite name (e.g., "SHTGA0")
-  GLuint texture;        // OpenGL texture ID
-  int width;             // Sprite width
-  int height;            // Sprite height
-  int offsetx;           // X offset for centering
-  int offsety;           // Y offset for centering
-} sprite_t;
-
 // Sprite system state
 typedef struct {
   GLuint program;        // Shader program
@@ -76,7 +66,6 @@ int find_sprite_lump(filelump_t* directory, int num_lumps, const char* name) {
   if (s_start >= 0 && s_end >= 0 && s_start < s_end) {
     // Iterate through all sprites
     for (int i = s_start + 1; i < s_end; i++) {
-//      puts(directory[i].name);
       if (strncmp(directory[i].name, name, sizeof(lumpname_t)) == 0) {
         return i;
       }
@@ -139,23 +128,33 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
   
   // Find and preload weapon sprites (starting with SHT)
   sys->num_sprites = 0;
+
   
-  // If no sprite markers, try loading directly by name
-  int shotgun_sprite = find_sprite_lump(directory, num_lumps, "SHTGA0");
-  if (shotgun_sprite >= 0) {
-    load_sprite(wad_file, &directory[shotgun_sprite], map->palette);
+  int s_start = find_lump(directory, num_lumps, "S_START");
+  int s_end = find_lump(directory, num_lumps, "S_END");
+  if (s_start >= 0 && s_end >= 0 && s_start < s_end) {
+    // Iterate through all sprites
+    for (int i = s_start + 1; i < s_end; i++) {
+      load_sprite(wad_file, &directory[i], map->palette);
+    }
   }
-  
-  // Try loading crosshair directly
-  int crosshair_sprite = find_sprite_lump(directory, num_lumps, "CROSA0");
-  if (crosshair_sprite >= 0) {
-    load_sprite(wad_file, &directory[crosshair_sprite], map->palette);
-  }
-  
-  int stbar_lump = find_sprite_lump(directory, num_lumps, "STBAR");
-  if (stbar_lump >= 0) {
-    load_sprite(wad_file, &directory[stbar_lump], map->palette);
-  }
+
+//  // If no sprite markers, try loading directly by name
+//  int shotgun_sprite = find_sprite_lump(directory, num_lumps, "SHTGA0");
+//  if (shotgun_sprite >= 0) {
+//    load_sprite(wad_file, &directory[shotgun_sprite], map->palette);
+//  }
+//  
+//  // Try loading crosshair directly
+//  int crosshair_sprite = find_sprite_lump(directory, num_lumps, "CROSA0");
+//  if (crosshair_sprite >= 0) {
+//    load_sprite(wad_file, &directory[crosshair_sprite], map->palette);
+//  }
+//  
+//  int stbar_lump = find_sprite_lump(directory, num_lumps, "STBAR");
+//  if (stbar_lump >= 0) {
+//    load_sprite(wad_file, &directory[stbar_lump], map->palette);
+//  }
   
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;

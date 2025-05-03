@@ -72,6 +72,15 @@ map_data_t load_map(FILE* file, filelump_t* directory, int num_lumps, const char
     map.sectors = (mapsector_t*)read_lump_data(file, directory[sectors_idx].filepos, directory[sectors_idx].size);
   }
   
+  for (int i = 0; i < map.num_things; i++) {
+    mapsector_t const *sector = find_player_sector(&map, map.things[i].x, map.things[i].y);
+    if(sector) {
+      map.things[i].flags = sector - map.sectors;
+    } else {
+      map.things[i].flags = -1;
+    }
+  }
+  
   return map;
 }
 

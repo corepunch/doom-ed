@@ -42,20 +42,22 @@ mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
   mapsector_t const *highest_sector = NULL;
   int highest_floor = INT_MIN;
   
-  // Check center point and four points at player radius distance
-  int check_points[5][2] = {
-    {x, y},               // Center
-    {x - P_RADIUS, y},    // Left
-    {x + P_RADIUS, y},    // Right
-    {x, y - P_RADIUS},    // Up
-    {x, y + P_RADIUS}     // Down
-  };
-  
-  // Check each sample point
-  for (int p = 0; p < 5; p++) {
-    int px = check_points[p][0];
-    int py = check_points[p][1];
-    
+//  // Check center point and four points at player radius distance
+//  int check_points[5][2] = {
+//    {x, y},               // Center
+//    {x - P_RADIUS, y},    // Left
+//    {x + P_RADIUS, y},    // Right
+//    {x, y - P_RADIUS},    // Up
+//    {x, y + P_RADIUS}     // Down
+//  };
+//  
+//  // Check each sample point
+//  for (int p = 0; p < 5; p++) {
+//    int px = check_points[p][0];
+//    int py = check_points[p][1];
+    int px = x;
+    int py = y;
+
     for (int i = 0; i < map->num_sectors; i++) {
       if (point_in_sector(map, px, py, i)) {
         // If this is a higher sector than what we've found so far, remember it
@@ -65,7 +67,7 @@ mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
         }
       }
     }
-  }
+//  }
   
   return highest_sector; // Returns NULL if no sector was found
 }
