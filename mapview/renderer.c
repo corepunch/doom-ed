@@ -44,7 +44,7 @@ const char* fs_src = "#version 150 core\n"
 "  float facingFactor = abs(dot(normalize(normal), viewDir));\n"
 "  float fading = mix(distance * light, 1.0, light * light);\n"
 "  if (viewDir.z < -10000) { outColor = texture(tex0, tex) * light; return; }"
-"  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * fading * 1.5;\n"
+"  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * fading * 2.0;\n"
 "}";
 
 const char* fs_unlit_src = "#version 150 core\n"

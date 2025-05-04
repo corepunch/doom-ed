@@ -55,7 +55,7 @@ map_data_t load_map(FILE* file, filelump_t* directory, int num_lumps, const char
     int linedefs_idx = map_index + 2;
     map.num_linedefs = directory[linedefs_idx].size / sizeof(maplinedef_t);
     map.linedefs = (maplinedef_t*)read_lump_data(file, directory[linedefs_idx].filepos, directory[linedefs_idx].size);
-    
+
     // SIDEDEFS
     int sidedefs_idx = map_index + 3;
     map.num_sidedefs = directory[sidedefs_idx].size / sizeof(mapsidedef_t);
@@ -149,7 +149,7 @@ int main(int argc, char* argv[]) {
 //  E4M4 – The Halls of Fear: shows how moody lighting and vertical loops can go a long way.
   
   // Load E1M1 map
-  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP14");
+  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP02");
   
   // Print map info
   if (e1m1.num_vertices > 0) {

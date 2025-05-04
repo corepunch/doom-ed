@@ -97,7 +97,7 @@ uint16_t add_linedef(map_data_t *map, uint16_t start, uint16_t end,
     .end = start,
     .flags = (back_side == 0xFFFF) ? 1 : 4, // 1=impassable, 4=two-sided
     .special = 0,
-    .tag = 0,
+//    .tag = 0,
     .sidenum = { front_side, back_side }
   };
   map->num_linedefs++;

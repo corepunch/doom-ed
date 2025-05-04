@@ -37,6 +37,8 @@ if ((map)->name) free((map)->name); \
 
 #define PALETTE_WIDTH 64
 
+//#define HEXEN
+
 #define HIGHLIGHT(light) light//((light)+0.25)
 
 enum {
@@ -110,6 +112,33 @@ typedef struct {
   lumpname_t name;           // Name of the lump, null-terminated
 } filelump_t;
 
+#ifdef HEXEN
+// Thing structure
+typedef struct {
+  int16_t tid;
+  int16_t x;
+  int16_t y;
+  int16_t flags;
+  int16_t angle;
+  int16_t type;
+  int16_t options;
+  int8_t special;
+  int8_t arg1;
+  int8_t arg2;
+  int8_t arg3;
+  int8_t arg4;
+  int8_t arg5;
+} mapthing_t;
+// Linedef structure
+typedef struct {
+  uint16_t start;             // Start vertex
+  uint16_t end;               // End vertex
+  uint16_t flags;             // Flags
+  uint8_t special;           // Special type
+  uint8_t args[5];           // Arguments for special (e.g., script number, delay)
+  uint16_t sidenum[2];        // Sidedef numbers
+} maplinedef_t;
+#else
 // Thing structure
 typedef struct {
   int16_t x;                 // X position
@@ -118,7 +147,6 @@ typedef struct {
   int16_t type;              // Thing type
   int16_t flags;             // Flags
 } mapthing_t;
-
 // Linedef structure
 typedef struct {
   uint16_t start;             // Start vertex
@@ -128,6 +156,7 @@ typedef struct {
   uint16_t tag;               // Tag number
   uint16_t sidenum[2];        // Sidedef numbers
 } maplinedef_t;
+#endif
 
 // Vertex structure
 typedef struct {
