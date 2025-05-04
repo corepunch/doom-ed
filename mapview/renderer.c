@@ -196,7 +196,7 @@ void init_player(map_data_t const *map, player_t *player) {
   }
 }
 
-#define ISOMETRIC
+//#define ISOMETRIC
 
 /**
  * Generate the view matrix incorporating player position, angle, and pitch
@@ -219,7 +219,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   float look_dir_y = sin(angle_rad);
   float look_dir_z = sin(pitch_rad);
   
-  float camera_dist = 200;
+  float camera_dist = 500;
   
   // Scale the horizontal component of the look direction by the cosine of the pitch
   // This prevents the player from moving faster when looking up or down

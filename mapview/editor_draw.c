@@ -213,8 +213,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // Combine matrices
   glm_mat4_mul(proj, view, mvp);
 
-  void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out);
-  get_view_matrix(map, player, mvp);
+//  void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out);
+//  get_view_matrix(map, player, mvp);
   
   // Clear the screen to black
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
