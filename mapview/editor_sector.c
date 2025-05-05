@@ -100,10 +100,13 @@ uint16_t add_linedef(map_data_t *map, uint16_t start, uint16_t end,
 //    .tag = 0,
     .sidenum = { front_side, back_side }
   };
+
+  printf(": %d\n", map->num_linedefs);
+  
   map->num_linedefs++;
 
   build_wall_vertex_buffer(map);
-
+  
   return index;
 }
 
@@ -112,22 +115,20 @@ uint16_t add_sidedef(map_data_t *map, uint16_t sector_index) {
   CHECK_CAPACITY(mapsidedef_t, sidedefs);
   RESIZE_ARRAY(mapsidedef_t, sidedefs, map->num_sidedefs + 1);
   
-  uint16_t index = map->num_sidedefs;
-  map->sidedefs[index] = (mapsidedef_t){
+  map->sidedefs[map->num_sidedefs] = (mapsidedef_t){
     .textureoffset = 0,
     .rowoffset = 0,
     .sector = sector_index,
   };
   
   // Set default textures
-  map->sidedefs[index].toptexture[0] = '-';
-  map->sidedefs[index].toptexture[1] = '\0';
-  map->sidedefs[index].bottomtexture[0] = '-';
-  map->sidedefs[index].bottomtexture[1] = '\0';
-  strcpy(map->sidedefs[index].midtexture, "BRONZE1");
-  
-  map->num_sidedefs++;
-  return index;
+  map->sidedefs[map->num_sidedefs].toptexture[0] = '-';
+  map->sidedefs[map->num_sidedefs].toptexture[1] = '\0';
+  map->sidedefs[map->num_sidedefs].bottomtexture[0] = '-';
+  map->sidedefs[map->num_sidedefs].bottomtexture[1] = '\0';
+  strcpy(map->sidedefs[map->num_sidedefs].midtexture, "BRONZE1");
+  printf("%x\n", map->num_sidedefs);
+  return map->num_sidedefs++;
 }
 
 // Add a new sector to the map

@@ -178,12 +178,14 @@ void build_floor_vertex_buffer(map_data_t *map) {
   glBufferData(GL_ARRAY_BUFFER, map->floors.num_vertices * sizeof(wall_vertex_t), map->floors.vertices, GL_STATIC_DRAW);
   
   // Set up vertex attributes
-  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)0); // Position
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, x)); // Position
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, u)); // UV
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, sizeof(wall_vertex_t), (void*)(5 * sizeof(int16_t))); // Normal
+  glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, nx)); // Normal
   glEnableVertexAttribArray(2);
+  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Normal
+  glEnableVertexAttribArray(3);
 }
 
 // Main function to draw floors and ceilings
@@ -218,7 +220,7 @@ void draw_floors(map_data_t const *map, mat4 mvp) {
 void draw_floor_ids(map_data_t const *map, mat4 mvp) {
   glBindVertexArray(map->floors.vao);
 
-  for (int i = 0; i < map->num_sectors; i++) {
+  for (uint32_t i = 0; i < map->num_sectors; i++) {
     glCullFace(GL_BACK);
     draw_textured_surface_id(&map->floors.sectors[i].floor, i | PIXEL_FLOOR, GL_TRIANGLES);
     glCullFace(GL_FRONT);

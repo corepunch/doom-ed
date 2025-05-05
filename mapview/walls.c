@@ -187,7 +187,7 @@ void build_wall_vertex_buffer(map_data_t *map) {
   glEnableVertexAttribArray(1);
   glVertexAttribPointer(2, 3, GL_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, nx)); // Normal
   glEnableVertexAttribArray(2);
-  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Normal
+  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Color
   glEnableVertexAttribArray(3);
 
 //  printf("Built wall vertex buffer with %d vertices\n", map->walls.num_vertices);
@@ -260,7 +260,7 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
 }
 
 // Helper function to draw a textured quad from the wall vertex buffer
-void draw_textured_surface_id(wall_section_t const *surface, int id, int mode) {
+void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mode) {
 //  if (!surface->texture)
 //    return;
   
@@ -277,29 +277,33 @@ void draw_textured_surface_id(wall_section_t const *surface, int id, int mode) {
 
 void draw_wall_ids(map_data_t const *map, mat4 mvp) {
   glBindVertexArray(map->walls.vao);
-  
+  glDisableVertexAttribArray(3);
+  glVertexAttrib4f(3, 0, 0, 0, 0);
   // Draw linedefs
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t const *linedef = &map->linedefs[i];
     
     // Check if front sidedef exists
-    if (linedef->sidenum[0] != 0xFFFF && linedef->sidenum[0] < map->num_sidedefs) {
+    if (linedef->sidenum[0] != 0xFFFF) {
+      uint32_t sidenum = linedef->sidenum[0];
       mapsidedef2_t const *front = &map->walls.sections[linedef->sidenum[0]];
-      draw_textured_surface_id(&front->upper_section, linedef->sidenum[0]|PIXEL_TOP, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&front->lower_section, linedef->sidenum[0]|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&front->mid_section, linedef->sidenum[0]|PIXEL_MID, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&front->upper_section, sidenum|PIXEL_TOP, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&front->lower_section, sidenum|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&front->mid_section, sidenum|PIXEL_MID, GL_TRIANGLE_FAN);
     }
 
     // Draw back side if it exists
-    if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
+    if (linedef->sidenum[1] != 0xFFFF) {
+      uint32_t sidenum = linedef->sidenum[1];
       mapsidedef2_t const *back = &map->walls.sections[linedef->sidenum[1]];
-      draw_textured_surface_id(&back->upper_section, linedef->sidenum[1]|PIXEL_TOP, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&back->lower_section, linedef->sidenum[1]|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&back->mid_section, linedef->sidenum[1]|PIXEL_MID, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&back->upper_section, sidenum|PIXEL_TOP, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&back->lower_section, sidenum|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
+      draw_textured_surface_id(&back->mid_section, sidenum|PIXEL_MID, GL_TRIANGLE_FAN);
     }
   }
   
   // Reset texture binding
+  glEnableVertexAttribArray(3);
   glBindTexture(GL_TEXTURE_2D, 0);
 }
 
@@ -343,7 +347,6 @@ void draw_minimap(map_data_t const *map, player_t const *player) {
   glBindTexture(GL_TEXTURE_2D, 1);
   glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
   glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 0.25f);
-
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
   glBindVertexArray(map->walls.vao);

@@ -54,7 +54,7 @@ const char* fs_unlit_src = "#version 150 core\n"
 "uniform vec4 color;\n"
 "uniform sampler2D tex0;\n"
 "void main() {\n"
-"  outColor = /*texture(tex0, tex) */ color * col;\n"
+"  outColor = texture(tex0, tex) * color * col;\n"
 "}";
 
 GLuint compile(GLenum type, const char* src) {
@@ -234,7 +234,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   
   // Create projection matrix
   mat4 proj;
-  glm_perspective(glm_rad(90.0f), 4.0f / 3.0f, 1.0f, 2000.0f, proj);
+  glm_perspective(glm_rad(90.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 1.0f, 2000.0f, proj);
   
   // Create view matrix
   mat4 view;
@@ -345,15 +345,20 @@ int run(map_data_t const *map) {
       
       glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
       
-      glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-      glUseProgram(world_prog);
-      glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-      glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
-      
-      draw_floors(map, mvp);
-      
-      draw_walls(map, mvp);
+      static int p=0;
+      if (p!=pixel)printf("%08x\n", pixel);
+      p = pixel;
 
+      if (!mode) {
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+        glUseProgram(world_prog);
+        glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+        glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
+        
+        draw_floors(map, mvp);
+        
+        draw_walls(map, mvp);
+      }
       draw_things(map, &player, mvp, true);
       
       draw_weapon();

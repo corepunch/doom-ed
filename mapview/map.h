@@ -33,8 +33,6 @@ if ((map)->name) free((map)->name); \
 #define MAX_WALL_VERTICES 50000  // Adjust based on map complexity
 #define P_RADIUS 12.0f        // Player radius
 
-#define HEIGHT(VAR) ((VAR) & ~7)
-
 #define PALETTE_WIDTH 64
 
 //#define HEXEN
@@ -246,7 +244,7 @@ void build_wall_vertex_buffer(map_data_t *map);
 void build_floor_vertex_buffer(map_data_t *map);
 void handle_input(map_data_t *map, player_t *player);
 void draw_textured_surface(wall_section_t const *surface, float light, int mode);
-void draw_textured_surface_id(wall_section_t const *surface, int id, int mode);
+void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mode);
 
 void update_player_position_with_sliding(map_data_t const *map, player_t *player,
                                          float move_x, float move_y);

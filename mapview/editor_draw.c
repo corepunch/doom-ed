@@ -41,7 +41,7 @@ static void draw_grid(int grid_size, player_t const *player, int view_size) {
   int end_y = ((int)player->y / grid_size + view_size) * grid_size;
   
   // Set grid color (dark gray)
-  glUniform4f(glGetUniformLocation(ui_prog, "color"), 0.3f, 0.3f, 0.3f, 1.0f);
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), 0.1f, 0.1f, 0.1f, 1.0f);
   
   // Draw vertical grid lines
   for (int x = start_x; x <= end_x; x += grid_size) {
@@ -109,61 +109,61 @@ static void draw_current_sector(editor_state_t const *editor) {
 
 // Draw walls with different colors based on whether they're one-sided or two-sided
 static void draw_walls_editor(map_data_t const *map) {
-  
-  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
-  glBindVertexArray(map->walls.vao);
-  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
-  
-//  glDisableVertexAttribArray(3);
-  glPointSize(3.0f);
-  glDrawArrays(GL_POINTS, 0, map->walls.num_vertices);
-  glPointSize(1.0f);
-  glEnableVertexAttribArray(3);
-
-  return;
 //  
-//  // Draw each linedef
-//  for (int i = 0; i < map->num_linedefs; i++) {
-//    maplinedef_t const *linedef = &map->linedefs[i];
-//    mapvertex_t const *v1 = &map->vertices[linedef->start];
-//    mapvertex_t const *v2 = &map->vertices[linedef->end];
-//    
-//    // Determine if this is a one-sided or two-sided wall
-//    bool two_sided = linedef->sidenum[1] != 0xFFFF;
-//    extern int splitting_line;
-//    // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
-//    if (splitting_line == i) {
-//      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 1.0f);
-//    } else if (!two_sided) {
-//      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
-//    } else {
-//      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 0.0f, 0.0f, 1.0f);
-//    }
-//    
-//    int16_t z = 0;
-//    
-//    if (linedef->sidenum[0] != 0xFFFF) {
-//      z = map->sectors[map->sidedefs[linedef->sidenum[0]].sector].floorheight;
-//    }
-//    
-//    // Create and draw vertices
-//    wall_vertex_t verts[2] = {
-//      { v1->x, v1->y, z, 0, 0, 0, 0, 0 },
-//      { v2->x, v2->y, z, 0, 0, 0, 0, 0 }
-//    };
-//    
-//    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-//    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-//    glDrawArrays(GL_LINES, 0, 2);
-//    
-//    // Draw vertices as points
-//    glPointSize(3.0f);
-//    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-//    glDrawArrays(GL_POINTS, 0, 1);
-//    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[1].x);
-//    glDrawArrays(GL_POINTS, 0, 1);
-//    glPointSize(1.0f);
-//  }
+//  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+//  glBindVertexArray(map->walls.vao);
+//  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
+//  
+////  glDisableVertexAttribArray(3);
+//  glPointSize(3.0f);
+//  glDrawArrays(GL_POINTS, 0, map->walls.num_vertices);
+//  glPointSize(1.0f);
+//  glEnableVertexAttribArray(3);
+//
+//  return;
+  
+  // Draw each linedef
+  for (int i = 0; i < map->num_linedefs; i++) {
+    maplinedef_t const *linedef = &map->linedefs[i];
+    mapvertex_t const *v1 = &map->vertices[linedef->start];
+    mapvertex_t const *v2 = &map->vertices[linedef->end];
+    
+    // Determine if this is a one-sided or two-sided wall
+    bool two_sided = linedef->sidenum[1] != 0xFFFF;
+    extern int splitting_line;
+    // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
+    if (splitting_line == i) {
+      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 1.0f);
+    } else if (!two_sided) {
+      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+    } else {
+      glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 0.0f, 0.0f, 1.0f);
+    }
+    
+    int16_t z = 0;
+    
+    if (linedef->sidenum[0] != 0xFFFF) {
+      z = map->sectors[map->sidedefs[linedef->sidenum[0]].sector].floorheight;
+    }
+    
+    // Create and draw vertices
+    wall_vertex_t verts[2] = {
+      { v1->x, v1->y, z, 0, 0, 0, 0, 0 },
+      { v2->x, v2->y, z, 0, 0, 0, 0, 0 }
+    };
+    
+    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+    glDrawArrays(GL_LINES, 0, 2);
+    
+    // Draw vertices as points
+    glPointSize(3.0f);
+    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+    glDrawArrays(GL_POINTS, 0, 1);
+    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[1].x);
+    glDrawArrays(GL_POINTS, 0, 1);
+    glPointSize(1.0f);
+  }
 }
 
 // Draw cursor position
@@ -179,6 +179,8 @@ static void draw_cursor(int x, int y) {
     { x, y - size, 0, 0, 0, 0, 0, 0 },
     { x, y + size, 0, 0, 0, 0, 0, 0 }
   };
+  
+  glBindTexture(GL_TEXTURE_2D, 1);
   
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
