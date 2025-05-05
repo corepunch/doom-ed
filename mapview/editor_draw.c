@@ -6,6 +6,7 @@
 
 // Globals
 extern GLuint ui_prog;
+extern GLuint white_tex;
 
 // Initialize editor state
 void init_editor(editor_state_t *editor) {
@@ -180,7 +181,7 @@ static void draw_cursor(int x, int y) {
     { x, y + size, 0, 0, 0, 0, 0, 0 }
   };
   
-  glBindTexture(GL_TEXTURE_2D, 1);
+  glBindTexture(GL_TEXTURE_2D, white_tex);
   
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
@@ -242,7 +243,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // Set up rendering
   glUseProgram(ui_prog);
   glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  glBindTexture(GL_TEXTURE_2D, 1); // Use default 1x1 white texture
+  glBindTexture(GL_TEXTURE_2D, white_tex); // Use default 1x1 white texture
   
   glBindVertexArray(editor->vao);
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
@@ -314,7 +315,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     float x = map->vertices[editor->current_point].x;
     float y = map->vertices[editor->current_point].y;
     wall_vertex_t verts[2] = { { x, y}, { sn.x, sn.y } };
-    glBindTexture(GL_TEXTURE_2D, 1);
+    glBindTexture(GL_TEXTURE_2D, white_tex);
     glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
     glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
     glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);

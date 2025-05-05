@@ -9,8 +9,8 @@
 map->walls.vertices[map->walls.num_vertices++] = \
 (wall_vertex_t) {X,Y,Z,U*dist+u_offset,V*height+v_offset,n[0],n[1],n[2],color}
 
-extern GLuint world_prog;
-extern GLuint ui_prog;
+extern GLuint world_prog, ui_prog;
+extern GLuint no_tex, white_tex;
 
 float compute_normal_packed(float dx, float dy, int8_t out[3]) {
   // 2. Normal vector (perpendicular, e.g., CCW)
@@ -199,7 +199,7 @@ void draw_textured_surface(wall_section_t const *surface, float light, int mode)
     glBindTexture(GL_TEXTURE_2D, surface->texture->texture);
     glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), surface->texture->width, surface->texture->height);
   } else {
-    glBindTexture(GL_TEXTURE_2D, 1);
+    glBindTexture(GL_TEXTURE_2D, no_tex);
     glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), 1, 1);
   }
   glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
@@ -232,7 +232,7 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
     // Draw front side
     if (CHECK_PIXEL(pixel, TOP, linedef->sidenum[0])) {
       draw_textured_surface(&front->upper_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
-    } else {
+    } else if (front->upper_section.texture || strcmp(front->sector->ceilingpic, "F_SKY1")) {
       draw_textured_surface(&front->upper_section, light, GL_TRIANGLE_FAN);
     }
     if (CHECK_PIXEL(pixel, BOTTOM, linedef->sidenum[0])) {
@@ -261,12 +261,9 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
 
 // Helper function to draw a textured quad from the wall vertex buffer
 void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mode) {
-//  if (!surface->texture)
-//    return;
-  
   uint8_t *c = (uint8_t *)&id;
 
-  glBindTexture(GL_TEXTURE_2D, 1);
+  glBindTexture(GL_TEXTURE_2D, white_tex);
   glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
   glUniform2f(glGetUniformLocation(ui_prog, "tex0_size"), 1, 1);
   glUniform4f(glGetUniformLocation(ui_prog, "color"), c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
@@ -344,7 +341,7 @@ void draw_minimap(map_data_t const *map, player_t const *player) {
   minimap_matrix(player, mvp);
   
   glUseProgram(ui_prog);
-  glBindTexture(GL_TEXTURE_2D, 1);
+  glBindTexture(GL_TEXTURE_2D, no_tex);
   glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
   glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 0.25f);
   glEnable(GL_BLEND);

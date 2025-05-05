@@ -34,6 +34,7 @@ if ((map)->name) free((map)->name); \
 #define P_RADIUS 12.0f        // Player radius
 
 #define PALETTE_WIDTH 64
+#define NOTEX_SIZE 64
 
 //#define HEXEN
 

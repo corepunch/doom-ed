@@ -45,6 +45,7 @@ const char* fs_src = "#version 150 core\n"
 "  float fading = mix(distance * light, 1.0, light * light);\n"
 "  if (viewDir.z < -10000) { outColor = texture(tex0, tex) * light; return; }"
 "  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * fading * 2.0;\n"
+"  if(outColor.a < 0.1) discard;\n"
 "}";
 
 const char* fs_unlit_src = "#version 150 core\n"
@@ -66,7 +67,7 @@ GLuint compile(GLenum type, const char* src) {
 
 // Global variables
 GLuint world_prog, ui_prog;
-GLuint error_tex;
+GLuint white_tex, no_tex;
 
 editor_state_t editor = {0};
 SDL_Window* window = NULL;
@@ -154,11 +155,14 @@ bool init_sdl(void) {
   glDepthMask(GL_TRUE);
   
   // 1x1 white texture
-  unsigned char pix[] = { 255, 255, 255, 255 };
-  glGenTextures(1, &error_tex);
-  glBindTexture(GL_TEXTURE_2D, error_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, pix);
-    
+  glGenTextures(1, &white_tex);
+  glBindTexture(GL_TEXTURE_2D, white_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){-1});
+  
+  glGenTextures(1, &no_tex);
+  glBindTexture(GL_TEXTURE_2D, no_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xffffff00});
+
   init_floor_shader();
     
   init_editor(&editor);
@@ -316,9 +320,8 @@ int run(map_data_t const *map) {
 //      
 //      ((float*)mvp)[i] = ((float*)mvp)[i] * k + ((float*)mvp2)[i] * (1-k);
 //    }
-//
-    SDL_Event e;
 
+    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -345,9 +348,9 @@ int run(map_data_t const *map) {
       
       glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
       
-      static int p=0;
-      if (p!=pixel)printf("%08x\n", pixel);
-      p = pixel;
+//      static int p=0;
+//      if (p!=pixel)printf("%08x\n", pixel);
+//      p = pixel;
 
       if (!mode) {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);

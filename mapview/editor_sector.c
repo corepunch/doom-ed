@@ -101,8 +101,6 @@ uint16_t add_linedef(map_data_t *map, uint16_t start, uint16_t end,
     .sidenum = { front_side, back_side }
   };
 
-  printf(": %d\n", map->num_linedefs);
-  
   map->num_linedefs++;
 
   build_wall_vertex_buffer(map);
@@ -127,7 +125,6 @@ uint16_t add_sidedef(map_data_t *map, uint16_t sector_index) {
   map->sidedefs[map->num_sidedefs].bottomtexture[0] = '-';
   map->sidedefs[map->num_sidedefs].bottomtexture[1] = '\0';
   strcpy(map->sidedefs[map->num_sidedefs].midtexture, "BRONZE1");
-  printf("%x\n", map->num_sidedefs);
   return map->num_sidedefs++;
 }
 
