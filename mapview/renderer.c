@@ -44,7 +44,7 @@ const char* fs_src = "#version 150 core\n"
 "  float facingFactor = abs(dot(normalize(normal), viewDir));\n"
 "  float fading = mix(distance * light, 1.0, light * light);\n"
 "  if (viewDir.z < -10000) { outColor = texture(tex0, tex) * light; return; }"
-"  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * fading * 2.0;\n"
+"  outColor = texture(tex0, tex) * mix(facingFactor, 1.0, 0.5) * fading * 1.5;\n"
 "  if(outColor.a < 0.1) discard;\n"
 "}";
 
@@ -55,7 +55,7 @@ const char* fs_unlit_src = "#version 150 core\n"
 "uniform vec4 color;\n"
 "uniform sampler2D tex0;\n"
 "void main() {\n"
-"  outColor = texture(tex0, tex) * color * col;\n"
+"  outColor = texture(tex0, tex) * color/* * col*/;\n"
 "}";
 
 GLuint compile(GLenum type, const char* src) {
@@ -77,6 +77,7 @@ bool running = true;
 bool mode = false;
 
 void init_floor_shader(void);
+void init_sky_geometry(void);
 
 // Initialize SDL and create window/renderer
 bool init_sdl(void) {
@@ -168,6 +169,8 @@ bool init_sdl(void) {
   init_editor(&editor);
   
   init_things();
+  
+  init_sky_geometry();
   
   return true;
 }
@@ -266,6 +269,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
 
 void draw_floors(map_data_t const *map, mat4 mvp);
 void draw_walls(map_data_t const *map, mat4 mvp);
+void draw_sky(mat4 mvp, player_t *player);
 
 int pixel = 0;
 
@@ -354,6 +358,9 @@ int run(map_data_t const *map) {
 
       if (!mode) {
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+        draw_sky(mvp, &player);
+
         glUseProgram(world_prog);
         glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
         glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);

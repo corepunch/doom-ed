@@ -115,6 +115,8 @@ void print_map_info(map_data_t* map) {
   }
 }
 
+bool init_sky(map_data_t const*, FILE* wad_file, filelump_t* directory, int num_lumps);
+
 int main(int argc, char* argv[]) {
   if (argc < 2) {
     printf("Usage: %s <wad_file>\n", argv[0]);
@@ -164,6 +166,7 @@ int main(int argc, char* argv[]) {
     allocate_mapside_textures(&e1m1, file, directory, header.numlumps);
     allocate_flat_textures(&e1m1, file, directory, header.numlumps);
     init_sprites(&e1m1, file, directory, header.numlumps);
+    init_sky(&e1m1, file, directory, header.numlumps);
     build_wall_vertex_buffer(&e1m1);
     build_floor_vertex_buffer(&e1m1);
     run(&e1m1);

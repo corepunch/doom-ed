@@ -722,3 +722,120 @@ void draw_palette(map_data_t const *map, float x, float y, int width, int height
     draw_rect(g_flat_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
   }
 }
+
+// Load a sky texture and create an OpenGL texture
+static mapside_texture_t *
+load_sky_texture(FILE* wad_file,
+                 filelump_t* sky_lump,
+                 const palette_entry_t* palette,
+                 texname_t const skypic)
+{
+  static mapside_texture_t tmp = {0};
+  if (!sky_lump || sky_lump->size <= 0) return 0;
+  
+  // Sky textures in Doom are stored as patches
+  int width, height;
+  uint8_t* patch_data = load_patch(wad_file, sky_lump, &width, &height);
+  
+  if (!patch_data) {
+    printf("Error: Failed to load sky texture %s\n", skypic);
+    return 0;
+  }
+  
+  // Now convert the color indices to RGBA using the palette
+  uint8_t* sky_data = malloc(width * height * 4);
+  if (!sky_data) {
+    free(patch_data);
+    return 0;
+  }
+  
+  // Convert color indices to RGBA using palette
+  for (int i = 0; i < width * height; i++) {
+    if (patch_data[i * 4 + 3] == 255) { // Only copy opaque pixels
+      uint8_t index = patch_data[i * 4]; // Color index is stored in the red channel
+      sky_data[i * 4] = palette[index].r;     // R
+      sky_data[i * 4 + 1] = palette[index].g; // G
+      sky_data[i * 4 + 2] = palette[index].b; // B
+      
+      // For sky textures, use transparency for index 0 (typically black)
+      // This allows parts of the sky to be transparent if needed
+      sky_data[i * 4 + 3] = (index == 0) ? 0 : 255;
+    } else {
+      // Keep transparent pixels transparent
+      sky_data[i * 4] = 0;
+      sky_data[i * 4 + 1] = 0;
+      sky_data[i * 4 + 2] = 0;
+      sky_data[i * 4 + 3] = 0;
+    }
+  }
+  
+  // Create OpenGL texture
+  GLuint tex;
+  glGenTextures(1, &tex);
+  glBindTexture(GL_TEXTURE_2D, tex);
+  
+  // For sky textures, we want different parameters:
+  // - Use linear filtering for smoother appearance
+  // - Enable horizontal wrapping for scrolling effect
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, sky_data);
+  
+  glGenerateMipmap(GL_TEXTURE_2D);
+  
+  free(patch_data);
+  free(sky_data);
+  
+  tmp.texture = tex;
+  tmp.width = width;
+  tmp.height = height;
+  strncpy(tmp.name, skypic, sizeof(texname_t));
+  
+  return &tmp;
+}
+
+// Helper function to find and load sky texture
+mapside_texture_t *
+find_and_load_sky_texture(FILE* wad_file, filelump_t* directory, int num_lumps,
+                          const palette_entry_t* palette, const char* sky_name)
+{
+  // Find sky texture lump
+  int sky_index = find_lump(directory, num_lumps, sky_name);
+  if (sky_index < 0) {
+    printf("Warning: Could not find sky texture: %s\n", sky_name);
+    return NULL;
+  }
+  
+  filelump_t* sky_lump = &directory[sky_index];
+  return load_sky_texture(wad_file, sky_lump, palette, sky_name);
+}
+
+// Function to load all sky textures for a map
+// This should be called during map loading
+int load_sky_textures(map_data_t* map, FILE* wad_file, filelump_t* directory, int num_lumps)
+{
+  // Common sky texture names in Doom 2
+  const char* sky_names[] = {
+    "SKY1", "SKY2", "SKY3", "SKY4", "RSKY1", "RSKY2", "RSKY3", NULL
+  };
+  
+  int sky_count = 0;
+  
+  // Try to load each sky texture
+  for (int i = 0; sky_names[i] != NULL; i++) {
+    mapside_texture_t* sky = find_and_load_sky_texture(wad_file, directory, num_lumps,
+                                                       map->palette, sky_names[i]);
+    if (sky) {
+      // Add to the texture cache
+      if (g_cache.num_textures < MAX_TEXTURES) {
+        g_cache.textures[g_cache.num_textures++] = *sky;
+        sky_count++;
+      }
+    }
+  }
+  
+  return sky_count;
+}
