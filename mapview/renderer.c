@@ -374,13 +374,13 @@ int run(map_data_t const *map) {
       
       draw_palette(map, 0, 0, window_width, window_height);
 
-      draw_fps(5, 5);
-      
       if (mode) {
         draw_minimap(map, &player);
       }
     }
-    
+
+    draw_fps(5, 5);
+
     draw_console();
 
     SDL_GL_SwapWindow(window);

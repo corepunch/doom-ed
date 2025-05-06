@@ -278,7 +278,8 @@ void draw_portals(map_data_t const *map,
       continue;
     for (int j = 0; j < 2; j++) {
       if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors &&
-          (linedef_in_frustum_2d(viewdef->frustum,
+          (viewdef->nowalls ||
+           linedef_in_frustum_2d(viewdef->frustum,
                                 (vec3){a->x,a->y,sector->floorheight},
                                 (vec3){b->x,b->y,sector->floorheight}) ||
            linedef_in_frustum_2d(viewdef->frustum,
@@ -336,7 +337,9 @@ void draw_floors(map_data_t const *map,
 //  }
   glCullFace(GL_BACK);
 
-  draw_walls(map, sector, viewdef);
+  if (!viewdef->nowalls) {
+    draw_walls(map, sector, viewdef);
+  }
   
   draw_portals(map, sector, viewdef, draw_floors);
 }

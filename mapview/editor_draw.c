@@ -237,7 +237,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   void draw_floors(map_data_t const *map, mapsector_t const *sector, viewdef_t const *viewdef);
   void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate);
 
-  viewdef_t viewdef={0};
+  static int frame = 0;
+  viewdef_t viewdef={.nowalls=true,.frame=frame++};
   memcpy(viewdef.mvp, mvp, sizeof(mat4));
   memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
   glm_frustum_planes(mvp, viewdef.frustum);
