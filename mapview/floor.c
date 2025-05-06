@@ -13,6 +13,73 @@ extern GLuint world_prog;
 GLuint compile(GLenum type, const char* src);
 mapside_texture_t const *get_flat_texture(const char* name);
 
+bool point_in_frustum(vec3 point, vec4 const planes[6]) {
+  for (int i = 0; i < 6; i++) {
+    float distance = glm_vec3_dot(point, (float*)planes[i]) + planes[i][3];
+    if (distance < 0.0f) {
+      return false; // Point is outside this plane
+    }
+  }
+  return true; // Inside all planes
+}
+
+// Improved frustum culling for 2D linedefs
+bool linedef_in_frustum_2d(vec4 const frustum[6], vec3 a, vec3 b) {
+  // Quick reject: both endpoints are outside the same plane
+  float a_left = glm_vec3_dot(a, (float*)frustum[0]) + frustum[0][3] < 0;
+  float b_left = glm_vec3_dot(b, (float*)frustum[0]) + frustum[0][3] < 0;
+  float a_right = glm_vec3_dot(a, (float*)frustum[1]) + frustum[1][3] < 0;
+  float b_right = glm_vec3_dot(b, (float*)frustum[1]) + frustum[1][3] < 0;
+  float a_near = glm_vec3_dot(a, (float*)frustum[4]) + frustum[4][3] < 0;
+  float b_near = glm_vec3_dot(b, (float*)frustum[4]) + frustum[4][3] < 0;
+
+  if ((a_left && b_left) || (a_right && b_right) || (a_near && b_near))
+    return false;
+  
+  return true;
+}
+
+// Improved linedef-in-MVP check that handles edge cases better
+bool linedef_in_mvp_2d(mat4 mvp, vec2 a, vec2 b) {
+  vec4 pa = { a[0], a[1], 0.0f, 1.0f };
+  vec4 pb = { b[0], b[1], 0.0f, 1.0f };
+  
+  // Transform points to clip space
+  glm_mat4_mulv(mvp, pa, pa);
+  glm_mat4_mulv(mvp, pb, pb);
+  
+  // Handle points behind the camera (negative w)
+  if (pa[3] <= 0.0f && pb[3] <= 0.0f)
+    return false;
+  
+  // Perspective divide for points with positive w
+  if (pa[3] > 0.0f) {
+    pa[0] /= pa[3]; pa[1] /= pa[3]; pa[2] /= pa[3];
+  }
+  
+  if (pb[3] > 0.0f) {
+    pb[0] /= pb[3]; pb[1] /= pb[3]; pb[2] /= pb[3];
+  }
+  
+  // Special case: handle one point behind camera
+  if (pa[3] <= 0.0f || pb[3] <= 0.0f) {
+    // Line crosses near plane, so part is visible
+    return true;
+  }
+  
+  // Clipping check in normalized device coordinates
+  const float EPSILON = 0.01f; // Small buffer to avoid edge cases
+  bool completely_left = (pa[0] < -1.0f-EPSILON && pb[0] < -1.0f-EPSILON);
+  bool completely_right = (pa[0] > 1.0f+EPSILON && pb[0] > 1.0f+EPSILON);
+  bool completely_top = (pa[1] > 1.0f+EPSILON && pb[1] > 1.0f+EPSILON);
+  bool completely_bottom = (pa[1] < -1.0f-EPSILON && pb[1] < -1.0f-EPSILON);
+  
+  // If completely outside any plane, reject
+  if (completely_left || completely_right || completely_top || completely_bottom)
+    return false;
+  
+  return true; // At least partially visible
+}
 // Add this to your init_sdl function
 void init_floor_shader(void) {
 }
@@ -131,8 +198,10 @@ void build_floor_vertex_buffer(map_data_t *map) {
     glGenVertexArrays(1, &map->floors.vao);
     glGenBuffers(1, &map->floors.vbo);
   }
-  
+    
   for (int i = 0; i < map->num_sectors; i++) {
+    
+    
     // Collect all vertices for this sector
     mapvertex_t sector_vertices[MAX_VERTICES]; // Assuming max MAX_VERTICES vertices per sector
     int num_vertices = get_sector_vertices(map, i, sector_vertices);
@@ -192,46 +261,112 @@ void build_floor_vertex_buffer(map_data_t *map) {
   glEnableVertexAttribArray(3);
 }
 
-// Main function to draw floors and ceilings
-void draw_floors(map_data_t const *map, mat4 mvp) {
-  glBindVertexArray(map->floors.vao);
-  
-  // Set MVP matrix uniform
-  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  
-  // Process each sector
-  for (int i = 0; i < map->num_sectors; i++) {
-    // Use flat color based on sector light level
-    float light = map->sectors[i].lightlevel / 255.0f;
-    
-    extern int pixel;
-    glCullFace(GL_BACK);
-    if (CHECK_PIXEL(pixel, FLOOR, i)) {
-      draw_textured_surface(&map->floors.sectors[i].floor, HIGHLIGHT(light), GL_TRIANGLES);
-    } else {
-      draw_textured_surface(&map->floors.sectors[i].floor, light, GL_TRIANGLES);
+int sectors_drawn = 0;
+
+void draw_portals(map_data_t const *map,
+                  mapsector_t const *sector,
+                  viewdef_t const *viewdef,
+                  void(*func)(map_data_t const *,
+                              mapsector_t const *,
+                              viewdef_t const *))
+{
+  for (int i = 0; i < map->num_linedefs; i++) {
+    maplinedef_t const *linedef = &map->linedefs[i];
+    mapvertex_t const *a = &map->vertices[linedef->start];
+    mapvertex_t const *b = &map->vertices[linedef->end];
+    if (linedef->sidenum[0] == 0xFFFF || linedef->sidenum[1] == 0xFFFF)
+      continue;
+    for (int j = 0; j < 2; j++) {
+      if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors &&
+          (linedef_in_frustum_2d(viewdef->frustum,
+                                (vec3){a->x,a->y,sector->floorheight},
+                                (vec3){b->x,b->y,sector->floorheight}) ||
+           linedef_in_frustum_2d(viewdef->frustum,
+                                 (vec3){a->x,a->y,sector->ceilingheight},
+                                 (vec3){b->x,b->y,sector->ceilingheight})))
+      {
+        func(map, &map->sectors[map->sidedefs[linedef->sidenum[!j]].sector], viewdef);
+      }
     }
-    glCullFace(GL_FRONT);
-    if (CHECK_PIXEL(pixel, CEILING, i)) {
-      draw_textured_surface(&map->floors.sectors[i].ceiling, HIGHLIGHT(light), GL_TRIANGLES);
-    } else {
-      draw_textured_surface(&map->floors.sectors[i].ceiling, light, GL_TRIANGLES);
-    }
-    glCullFace(GL_BACK);
   }
 }
 
-void draw_floor_ids(map_data_t const *map, mat4 mvp) {
+void draw_walls(map_data_t const *map,
+                mapsector_t const *sector,
+                viewdef_t const *viewdef);
+
+void draw_wall_ids(map_data_t const *map,
+                   mapsector_t const *sector,
+                   viewdef_t const *viewdef);
+
+// Main function to draw floors and ceilings
+void draw_floors(map_data_t const *map,
+                 mapsector_t const *sector,
+                 viewdef_t const *viewdef)
+{
+  if (!sector || map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
+    return;
+  
+  sectors_drawn++;
+  
+  glBindVertexArray(map->floors.vao);
+  
+  // Set MVP matrix uniform
+  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
+  glUniform3fv(glGetUniformLocation(world_prog, "viewPos"), 1, viewdef->viewpos);
+
+  mapsector2_t *sec = &map->floors.sectors[sector-map->sectors];
+  sec->frame = viewdef->frame;
+  
+  // Use flat color based on sector light level
+  float light = sector->lightlevel / 255.0f;
+  
+  extern int pixel;
+  glCullFace(GL_BACK);
+//  if (CHECK_PIXEL(pixel, FLOOR, sector - map->sectors)) {
+//    draw_textured_surface(&sec->floor, HIGHLIGHT(light), GL_TRIANGLES);
+//  } else {
+    draw_textured_surface(&sec->floor, light, GL_TRIANGLES);
+//  }
+  glCullFace(GL_FRONT);
+//  if (CHECK_PIXEL(pixel, CEILING, sector - map->sectors)) {
+//    draw_textured_surface(&sec->ceiling, HIGHLIGHT(light), GL_TRIANGLES);
+//  } else {
+    draw_textured_surface(&sec->ceiling, light, GL_TRIANGLES);
+//  }
+  glCullFace(GL_BACK);
+
+  draw_walls(map, sector, viewdef);
+  
+  draw_portals(map, sector, viewdef, draw_floors);
+}
+
+void
+draw_floor_ids(map_data_t const *map,
+               mapsector_t const *sector,
+               viewdef_t const *viewdef)
+{
+  if (!sector || map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
+    return;
+
+  uint32_t i = (uint32_t)(sector - map->sectors);
+  mapsector2_t *sec = &map->floors.sectors[sector-map->sectors];
+  sec->frame = viewdef->frame;
+
   glBindVertexArray(map->floors.vao);
 
-  for (uint32_t i = 0; i < map->num_sectors; i++) {
-    glCullFace(GL_BACK);
-    draw_textured_surface_id(&map->floors.sectors[i].floor, i | PIXEL_FLOOR, GL_TRIANGLES);
-    glCullFace(GL_FRONT);
-    draw_textured_surface_id(&map->floors.sectors[i].ceiling, i | PIXEL_CEILING, GL_TRIANGLES);
-  }
+  glCullFace(GL_BACK);
+  draw_textured_surface_id(&sec->floor, i | PIXEL_FLOOR, GL_TRIANGLES);
+
+  glCullFace(GL_FRONT);
+  draw_textured_surface_id(&sec->ceiling, i | PIXEL_CEILING, GL_TRIANGLES);
   
   // Reset texture binding
   glCullFace(GL_BACK);
   glBindTexture(GL_TEXTURE_2D, 0);
+
+  draw_wall_ids(map, sector, viewdef);
+
+  draw_portals(map, sector, viewdef, draw_floor_ids);
 }
+

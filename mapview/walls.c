@@ -210,9 +210,15 @@ void draw_textured_surface(wall_section_t const *surface, float light, int mode)
 }
 
 // Draw the map from player perspective
-void draw_walls(map_data_t const *map, mat4 mvp) {
+void draw_walls(map_data_t const *map,
+                mapsector_t const *sector,
+                viewdef_t const *viewdef)
+{
   // Bind the wall VAO
   glBindVertexArray(map->walls.vao);
+  
+  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
+  glUniform3fv(glGetUniformLocation(world_prog, "viewPos"), 1, viewdef->viewpos);
   
   // Draw linedefs
   for (int i = 0; i < map->num_linedefs; i++) {
@@ -226,32 +232,35 @@ void draw_walls(map_data_t const *map, mat4 mvp) {
     mapsidedef2_t const *front = &map->walls.sections[linedef->sidenum[0]];
     float light = front->sector->lightlevel / 255.0f;
     
-    
     extern int pixel;
 
-    // Draw front side
-    if (CHECK_PIXEL(pixel, TOP, linedef->sidenum[0])) {
-      draw_textured_surface(&front->upper_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
-    } else if (front->upper_section.texture || strcmp(front->sector->ceilingpic, "F_SKY1")) {
-      draw_textured_surface(&front->upper_section, light, GL_TRIANGLE_FAN);
-    }
-    if (CHECK_PIXEL(pixel, BOTTOM, linedef->sidenum[0])) {
-      draw_textured_surface(&front->lower_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
-    } else {
-      draw_textured_surface(&front->lower_section, light, GL_TRIANGLE_FAN);
-    }
-    if (CHECK_PIXEL(pixel, MID, linedef->sidenum[0])) {
-      draw_textured_surface(&front->mid_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
-    } else {
-      draw_textured_surface(&front->mid_section, light, GL_TRIANGLE_FAN);
+    if (front->sector == sector) {
+      // Draw front side
+      if (CHECK_PIXEL(pixel, TOP, linedef->sidenum[0])) {
+        draw_textured_surface(&front->upper_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
+      } else if (front->upper_section.texture || strcmp(front->sector->ceilingpic, "F_SKY1")) {
+        draw_textured_surface(&front->upper_section, light, GL_TRIANGLE_FAN);
+      }
+      if (CHECK_PIXEL(pixel, BOTTOM, linedef->sidenum[0])) {
+        draw_textured_surface(&front->lower_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
+      } else {
+        draw_textured_surface(&front->lower_section, light, GL_TRIANGLE_FAN);
+      }
+      if (CHECK_PIXEL(pixel, MID, linedef->sidenum[0])) {
+        draw_textured_surface(&front->mid_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
+      } else {
+        draw_textured_surface(&front->mid_section, light, GL_TRIANGLE_FAN);
+      }
     }
 
     // Draw back side if it exists
     if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
       mapsidedef2_t const *back = &map->walls.sections[linedef->sidenum[1]];
-      draw_textured_surface(&back->upper_section, light, GL_TRIANGLE_FAN);
-      draw_textured_surface(&back->lower_section, light, GL_TRIANGLE_FAN);
-      draw_textured_surface(&back->mid_section, light, GL_TRIANGLE_FAN);
+      if (back->sector == sector) {
+        draw_textured_surface(&back->upper_section, light, GL_TRIANGLE_FAN);
+        draw_textured_surface(&back->lower_section, light, GL_TRIANGLE_FAN);
+        draw_textured_surface(&back->mid_section, light, GL_TRIANGLE_FAN);
+      }
     }
   }
   
@@ -272,7 +281,11 @@ void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mo
   glDrawArrays(mode, surface->vertex_start, surface->vertex_count);
 }
 
-void draw_wall_ids(map_data_t const *map, mat4 mvp) {
+void
+draw_wall_ids(map_data_t const *map,
+              mapsector_t const *sector,
+              viewdef_t const *viewdef)
+{
   glBindVertexArray(map->walls.vao);
   glDisableVertexAttribArray(3);
   glVertexAttrib4f(3, 0, 0, 0, 0);
@@ -284,18 +297,22 @@ void draw_wall_ids(map_data_t const *map, mat4 mvp) {
     if (linedef->sidenum[0] != 0xFFFF) {
       uint32_t sidenum = linedef->sidenum[0];
       mapsidedef2_t const *front = &map->walls.sections[linedef->sidenum[0]];
-      draw_textured_surface_id(&front->upper_section, sidenum|PIXEL_TOP, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&front->lower_section, sidenum|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&front->mid_section, sidenum|PIXEL_MID, GL_TRIANGLE_FAN);
+      if (front->sector == sector) {
+        draw_textured_surface_id(&front->upper_section, sidenum|PIXEL_TOP, GL_TRIANGLE_FAN);
+        draw_textured_surface_id(&front->lower_section, sidenum|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
+        draw_textured_surface_id(&front->mid_section, sidenum|PIXEL_MID, GL_TRIANGLE_FAN);
+      }
     }
 
     // Draw back side if it exists
     if (linedef->sidenum[1] != 0xFFFF) {
       uint32_t sidenum = linedef->sidenum[1];
       mapsidedef2_t const *back = &map->walls.sections[linedef->sidenum[1]];
-      draw_textured_surface_id(&back->upper_section, sidenum|PIXEL_TOP, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&back->lower_section, sidenum|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
-      draw_textured_surface_id(&back->mid_section, sidenum|PIXEL_MID, GL_TRIANGLE_FAN);
+      if (back->sector == sector) {
+        draw_textured_surface_id(&back->upper_section, sidenum|PIXEL_TOP, GL_TRIANGLE_FAN);
+        draw_textured_surface_id(&back->lower_section, sidenum|PIXEL_BOTTOM, GL_TRIANGLE_FAN);
+        draw_textured_surface_id(&back->mid_section, sidenum|PIXEL_MID, GL_TRIANGLE_FAN);
+      }
     }
   }
   

@@ -220,7 +220,7 @@ bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps, pal
     }
   }
   
-  conprintf("Console initialized with DOOM font");
+//  conprintf("Console initialized with DOOM font");
   return success;
 }
 
@@ -496,4 +496,38 @@ void set_console_color(uint8_t r, uint8_t g, uint8_t b) {
   console.text_color.r = r;
   console.text_color.g = g;
   console.text_color.b = b;
+}
+// Add these to your console.c file at the top with other static variables
+static struct {
+  Uint32 ticks[64];
+  Uint32 last_fps_update;   // Last time the FPS was calculated
+  Uint32 frame_count;       // Number of frames since last update
+  float current_fps;        // Current FPS value to display
+  char fps_text[32];        // Buffer for the FPS text
+  Uint32 counter;
+} fps_state = {0};
+
+// Draw FPS counter
+void draw_fps(int x, int y) {
+  Uint32 ticks = SDL_GetTicks();
+  fps_state.ticks[fps_state.counter++&63] = ticks - fps_state.last_fps_update;
+  fps_state.last_fps_update = ticks;
+  
+  Uint32 totals = 0;
+  for (int i = 0; i < 64; i++) {
+    totals += fps_state.ticks[i];
+  }
+
+  fps_state.current_fps = 64 * 1000.f / totals;
+
+  // Format the FPS text
+  snprintf(fps_state.fps_text, sizeof(fps_state.fps_text), "FPS: %.1f %d", fps_state.current_fps, totals);
+
+  extern int sectors_drawn;
+  char sec[64]={0};
+  snprintf(sec, sizeof(sec), "Sectors: %d", sectors_drawn);
+
+  // Draw the FPS text
+  draw_text_gl3(fps_state.fps_text, x, y, 1.0f);
+  draw_text_gl3(sec, x, y+20, 1.0f);
 }

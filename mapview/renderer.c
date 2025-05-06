@@ -267,9 +267,8 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   glm_mat4_mul(proj, view, out);
 }
 
-void draw_floors(map_data_t const *map, mat4 mvp);
-void draw_walls(map_data_t const *map, mat4 mvp);
-void draw_sky(mat4 mvp, player_t *player);
+void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);
+void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp);
 
 int pixel = 0;
 
@@ -291,13 +290,14 @@ int run(map_data_t const *map) {
   
   // Main game loop
   Uint32 last_time = SDL_GetTicks();
+  Uint32 frame = 0;
   mat4 mvp;
 
   while (running) {
     mode = false;
     // Calculate delta time for smooth movement
     Uint32 current_time = SDL_GetTicks();
-//    float delta_time = (current_time - last_time) / 1000.0f;
+    float delta_time = (current_time - last_time) / 1000.0f;
     last_time = current_time;
 
     mapsector_t const *sector = find_player_sector(map, player.x, player.y);
@@ -309,7 +309,7 @@ int run(map_data_t const *map) {
     }
     
     // Handle input
-    handle_input((map_data_t *)map, &player);
+    handle_input((map_data_t *)map, &player, delta_time);
 
     update_player_height(map, &player);
     
@@ -318,12 +318,11 @@ int run(map_data_t const *map) {
     mat4 mvp2;
     minimap_matrix(&player, mvp2);
     
-//    for (int i = 0; i < 16; i++) {
-//      
-//      float k =MAX(0,sin(current_time / 2000.f));
-//      
-//      ((float*)mvp)[i] = ((float*)mvp)[i] * k + ((float*)mvp2)[i] * (1-k);
-//    }
+    viewdef_t viewdef={0};
+    memcpy(viewdef.mvp, mvp, sizeof(mat4));
+    memcpy(viewdef.viewpos, &player.x, sizeof(vec3));
+    viewdef.frame = frame++;
+    glm_frustum_planes(mvp, viewdef.frustum);
 
     glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -332,17 +331,14 @@ int run(map_data_t const *map) {
     if (editor.active) {
       draw_editor(map, &editor, &player);
     } else {
-      void draw_wall_ids(map_data_t const *map, mat4 mvp);
-      void draw_floor_ids(map_data_t const *map, mat4 mvp);
-      void draw_minimap(map_data_t const *map, player_t const *player);
-      void draw_things(map_data_t const *map, player_t const *, mat4, bool);
-      
+      void draw_floor_ids(map_data_t const *, mapsector_t const *, viewdef_t const *);
+      void draw_minimap(map_data_t const *, player_t const *);
+      void draw_things(map_data_t const *, viewdef_t const *, bool);
+
       glUseProgram(ui_prog);
       glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
       
-      draw_floor_ids(map, mvp);
-      
-      draw_wall_ids(map, mvp);
+      draw_floor_ids(map, sector, &viewdef);
       
       int fb_width, fb_height;
       int window_width, window_height;
@@ -356,26 +352,29 @@ int run(map_data_t const *map) {
 //      if (p!=pixel)printf("%08x\n", pixel);
 //      p = pixel;
 
-      if (!mode) {
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+      glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-        draw_sky(mvp, &player);
+      draw_sky(map, &player, mvp);
 
-        glUseProgram(world_prog);
-        glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-        glUniform3f(glGetUniformLocation(world_prog, "viewPos"), player.x, player.y, player.z);
-        
-        draw_floors(map, mvp);
-        
-        draw_walls(map, mvp);
-      }
-      draw_things(map, &player, mvp, true);
+      glUseProgram(world_prog);
+      glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+      
+      extern int sectors_drawn;
+      sectors_drawn = 0;
+      
+      viewdef.frame = frame++;
+      
+      draw_floors(map, sector, &viewdef);
+
+      draw_things(map, &viewdef, true);
       
       draw_weapon();
       
       draw_crosshair();
       
       draw_palette(map, 0, 0, window_width, window_height);
+
+      draw_fps(5, 5);
       
       if (mode) {
         draw_minimap(map, &player);
@@ -387,7 +386,7 @@ int run(map_data_t const *map) {
     SDL_GL_SwapWindow(window);
     
     // Cap frame rate
-    SDL_Delay(16);  // ~60 FPS
+//    SDL_Delay(16);  // ~60 FPS
   }
   
   // Clean up

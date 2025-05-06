@@ -3,19 +3,42 @@
    version = "1.0">
    <ContextStates>
       <ContextState
+         contextName = "draw_floors:floor.c">
+      </ContextState>
+      <ContextState
+         contextName = "draw_palette:texture.c">
+      </ContextState>
+      <ContextState
+         contextName = "run:renderer.c">
+      </ContextState>
+      <ContextState
+         contextName = "load_sky_texture:sky.c">
+      </ContextState>
+      <ContextState
          contextName = "load_sprite:sprites.c">
       </ContextState>
       <ContextState
          contextName = "draw_rect:sprites.c">
       </ContextState>
       <ContextState
-         contextName = "draw_palette:texture.c">
+         contextName = "draw_sky:sky.c">
+      </ContextState>
+      <ContextState
+         contextName = "draw_weapon:sprites.c">
       </ContextState>
       <ContextState
          contextName = "process_sector_edges:editor_sector.c">
       </ContextState>
       <ContextState
-         contextName = "draw_weapon:sprites.c">
+         contextName = "load_flat_texture:texture.c">
+      </ContextState>
+      <ContextState
+         contextName = "linedef_in_frustum_2d:floor.c">
+         <PersistentStrings>
+            <PersistentString
+               value = "frustum[1]">
+            </PersistentString>
+         </PersistentStrings>
       </ContextState>
       <ContextState
          contextName = "set_loop_sector:editor_sector.c">

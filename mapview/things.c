@@ -52,6 +52,7 @@ thing_renderer_t g_thing_renderer = {0};
 // Forward declarations
 GLuint compile_thing_shader(GLenum type, const char* src);
 sprite_t *get_thing_sprite_name(int thing_type, int angle);
+bool point_in_frustum(vec3 point, vec4 const planes[6]);
 
 // Initialize the thing rendering system
 bool init_things(void) {
@@ -159,7 +160,7 @@ sprite_t *get_thing_sprite_name(int thing_type, int angle) {
 }
 
 // Draw things in the map
-void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool rotate) {
+void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
   thing_renderer_t* renderer = &g_thing_renderer;
   
   glDisable(GL_CULL_FACE);
@@ -175,7 +176,7 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool r
   glBindVertexArray(renderer->vao);
   
   // Set uniforms that don't change per-thing
-  glUniformMatrix4fv(glGetUniformLocation(renderer->program, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glUniformMatrix4fv(glGetUniformLocation(renderer->program, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
 
   // Loop through all things in the map
   for (int i = 0; i < map->num_things; i++) {
@@ -218,15 +219,18 @@ void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool r
 //    float angle_rad = glm_rad(thing->angle);
 //    glm_rotate_z(model, angle_rad, model);
     
-    float dx = player->x - thing->x;
-    float dy = player->y - thing->y;
+    float dx = viewdef->viewpos[0] - thing->x;
+    float dy = viewdef->viewpos[1] - thing->y;
 
     if (rotate) {
       glm_rotate_z(model, atan2f(dy, dx)-M_PI_2, model);
       glm_rotate_x(model, M_PI_2, model);
     }
+    
+    if (!point_in_frustum((vec3){thing->x, thing->y, z_pos}, viewdef->frustum))
+      continue;
 
-    glm_mat4_mul(mvp, model, mv);
+    glm_mat4_mul(viewdef->mvp, model, mv);
     glUniformMatrix4fv(glGetUniformLocation(renderer->program, "mvp"), 1, GL_FALSE, (const float*)mv);
     
     // Set scale uniform

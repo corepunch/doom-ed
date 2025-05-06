@@ -120,7 +120,7 @@ void handle_scroll(SDL_Event event, map_data_t *map) {
  * @param map Pointer to the map data
  * @param player Pointer to the player object
  */
-void handle_input(map_data_t *map, player_t *player) {
+void handle_input(map_data_t *map, player_t *player, float delta_time) {
   extern editor_state_t editor;
   // If in editor mode, use the editor input handler
   if (editor.active) {
@@ -307,8 +307,8 @@ void handle_input(map_data_t *map, player_t *player) {
   // If there's any movement, apply it with collision detection and sliding
   if (move_x != 0.0f || move_y != 0.0f) {
 //    update_player_position_with_sliding(map, player, move_x, move_y);
-    player->x += move_x;
-    player->y += move_y;
+    player->x += move_x * delta_time;
+    player->y += move_y * delta_time;
   }
   
   // Additional vertical movement if needed (flying up/down)

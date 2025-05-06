@@ -234,11 +234,15 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
   glUniform3f(glGetUniformLocation(world_prog, "viewPos"), 0,0,-10001);//player->x, player->y, player->z);
 
-  void draw_floors(map_data_t const *map, mat4 mvp);
-  void draw_walls(map_data_t const *map, mat4 mvp);
-  void draw_things(map_data_t const *map, player_t const *player, mat4 mvp, bool rotate);
+  void draw_floors(map_data_t const *map, mapsector_t const *sector, viewdef_t const *viewdef);
+  void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate);
 
-  draw_floors(map, mvp);
+  viewdef_t viewdef={0};
+  memcpy(viewdef.mvp, mvp, sizeof(mat4));
+  memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
+  glm_frustum_planes(mvp, viewdef.frustum);
+  
+  draw_floors(map, find_player_sector(map, player->x, player->y), &viewdef);
   
   // Set up rendering
   glUseProgram(ui_prog);
@@ -258,7 +262,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // Draw sector being created
   draw_current_sector(editor);
 
-  draw_things(map, player, mvp, false);
+  draw_things(map, &viewdef, false);
 
   glUseProgram(ui_prog);
   glBindVertexArray(editor->vao);

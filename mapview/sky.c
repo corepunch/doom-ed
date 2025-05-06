@@ -213,7 +213,7 @@ void init_sky_geometry(void) {
 }
 
 // Draw the sky with the current view
-void draw_sky(mat4 mvp, player_t *player) {
+void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp) {
   if (!g_sky.initialized) return;
   
   // Save current OpenGL state

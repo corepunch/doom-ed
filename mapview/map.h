@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include <cglm/struct.h>
+
 #define OFFSET_OF(type, field) (void*)((size_t)&(((type *)0)->field))
 
 // Macro to define a collection of elements (pointer and count)
@@ -58,7 +60,7 @@ enum {
 #define FOV 90.0
 #define NEAR_Z 0.1
 #define FAR_Z 1000.0
-#define MOVEMENT_SPEED 10.0
+#define MOVEMENT_SPEED 400.0
 #define ROTATION_SPEED 3.0
 
 // Type definitions to better represent the WAD format
@@ -197,6 +199,7 @@ typedef struct {
   mapsector_t *sector;
   wall_section_t floor;
   wall_section_t ceiling;
+  uint32_t frame;
 } mapsector2_t;
 
 // Palette structure
@@ -231,6 +234,14 @@ typedef struct {
   } floors;
 } map_data_t;
 
+typedef struct {
+  mat4 mvp;
+  vec4 frustum[6];
+  vec3 viewpos;
+  uint32_t frame;
+  bool nowalls;
+} viewdef_t;
+
 bool init_sdl(void);
 int run(map_data_t const *map);
 
@@ -243,7 +254,7 @@ mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
 void build_floor_vertex_buffer(map_data_t *map);
-void handle_input(map_data_t *map, player_t *player);
+void handle_input(map_data_t *map, player_t *player, float delta_time);
 void draw_textured_surface(wall_section_t const *surface, float light, int mode);
 void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mode);
 
