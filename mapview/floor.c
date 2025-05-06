@@ -305,7 +305,14 @@ void draw_floors(map_data_t const *map,
                  mapsector_t const *sector,
                  viewdef_t const *viewdef)
 {
-  if (!sector || map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
+  if (!sector) {
+    if (map->sectors) {
+      sector = map->sectors;
+    } else {
+      return;
+    }
+  }
+  if (map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
     return;
   
   sectors_drawn++;
@@ -349,7 +356,14 @@ draw_floor_ids(map_data_t const *map,
                mapsector_t const *sector,
                viewdef_t const *viewdef)
 {
-  if (!sector || map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
+  if (!sector) {
+    if (map->sectors) {
+      sector = map->sectors;
+    } else {
+      return;
+    }
+  }
+  if (map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
     return;
 
   uint32_t i = (uint32_t)(sector - map->sectors);

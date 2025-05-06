@@ -26,7 +26,10 @@ void toggle_editor_mode(editor_state_t *editor) {
 }
 
 // Handle mouse and keyboard input for the editor
-void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *player) {
+void handle_editor_input(map_data_t *map,
+                         editor_state_t *editor,
+                         player_t *player,
+                         float delta_time) {
   SDL_Event event;
   
   while (SDL_PollEvent(&event)) {
@@ -130,7 +133,7 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
   // If in editor mode, handle keyboard movement
   if (editor->active) {
     const Uint8* keystates = SDL_GetKeyboardState(NULL);
-    float move_speed = 32.0f;
+    float move_speed = 1000 * delta_time;
     
     if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
       player->y += move_speed;

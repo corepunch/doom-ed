@@ -124,7 +124,7 @@ void handle_input(map_data_t *map, player_t *player, float delta_time) {
   extern editor_state_t editor;
   // If in editor mode, use the editor input handler
   if (editor.active) {
-    handle_editor_input(map, &editor, player);
+    handle_editor_input(map, &editor, player, delta_time);
     return;
   }
   

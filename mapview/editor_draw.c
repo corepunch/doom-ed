@@ -42,35 +42,53 @@ static void draw_grid(int grid_size, player_t const *player, int view_size) {
   int end_y = ((int)player->y / grid_size + view_size) * grid_size;
   
   // Set grid color (dark gray)
-  glUniform4f(glGetUniformLocation(ui_prog, "color"), 0.1f, 0.1f, 0.1f, 1.0f);
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), .15f, .15f, 0.15f, 1.0f);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_ONE, GL_ONE);
   
-  // Draw vertical grid lines
-  for (int x = start_x; x <= end_x; x += grid_size) {
-    // Create two vertices for each grid line
-    wall_vertex_t verts[2] = {
-      { x, start_y, 0, 0, 0, 0, 0, 0 },
-      { x, end_y, 0, 0, 0, 0, 0, 0 }
-    };
-    
-    // Draw the line
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-    glDrawArrays(GL_LINES, 0, 2);
-  }
+    // Draw vertical grid lines
+    for (int x = start_x; x <= end_x; x += grid_size) {
+      // Create two vertices for each grid line
+      wall_vertex_t verts[2] = {
+        { x, start_y, 0, 0, 0, 0, 0, 0 },
+        { x, end_y, 0, 0, 0, 0, 0, 0 }
+      };
   
-  // Draw horizontal grid lines
-  for (int y = start_y; y <= end_y; y += grid_size) {
-    // Create two vertices for each grid line
-    wall_vertex_t verts[2] = {
-      { start_x, y, 0, 0, 0, 0, 0, 0 },
-      { end_x, y, 0, 0, 0, 0, 0, 0 }
-    };
-    
-    // Draw the line
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-    glDrawArrays(GL_LINES, 0, 2);
-  }
+      // Draw the line
+      glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+      glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+      glDrawArrays(GL_LINES, 0, 2);
+    }
+  
+    // Draw horizontal grid lines
+    for (int y = start_y; y <= end_y; y += grid_size) {
+      // Create two vertices for each grid line
+      wall_vertex_t verts[2] = {
+        { start_x, y, 0, 0, 0, 0, 0, 0 },
+        { end_x, y, 0, 0, 0, 0, 0, 0 }
+      };
+  
+      // Draw the line
+      glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+      glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+      glDrawArrays(GL_LINES, 0, 2);
+    }
+  
+  // Draw dots at grid intersections
+//  for (int y = start_y; y <= end_y; y += grid_size) {
+//    for (int x = start_x; x <= end_x; x += grid_size) {
+//      wall_vertex_t vert = { x, y, 0, 0, 0, 0, 0, 0 };
+//      
+//      // Set up vertex attributes
+//      glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &vert.x);
+//      glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &vert.u);
+//
+//      // Draw a single point
+//      glPointSize(!((x/grid_size) % 4)&&!((y/grid_size) % 4) ? 2.0f : 1.f);
+//      glDrawArrays(GL_POINTS, 0, 1);
+//    }
+//  }
+  glDisable(GL_BLEND);
 }
 
 // Draw the current sector being created
@@ -241,6 +259,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   viewdef_t viewdef={.nowalls=true,.frame=frame++};
   memcpy(viewdef.mvp, mvp, sizeof(mat4));
   memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
+  viewdef.viewpos[2] = -100000;
   glm_frustum_planes(mvp, viewdef.frustum);
   
   draw_floors(map, find_player_sector(map, player->x, player->y), &viewdef);
@@ -255,7 +274,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   glDisable(GL_DEPTH_TEST);
   
   // Draw grid
-  draw_grid(editor->grid_size, player, 100);
+  draw_grid(editor->grid_size, player, 64);
   
   // Draw existing walls
   draw_walls_editor(map);
