@@ -56,15 +56,15 @@ sprite_system_t g_sprite_system = {0};
 
 // Forward declarations
 GLuint compile_shader(GLenum type, const char* src);
-GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const*);
+GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const*);
 GLuint generate_crosshair_texture(int size);
 
-int load_sprite(FILE *wad_file, filelump_t* sprite_lump, palette_entry_t const *palette) {
+int load_sprite(const char *name, palette_entry_t const *palette) {
   int width, height, offsetx, offsety;
-  GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety, palette);
+  GLuint texture = load_sprite_texture(cache_lump(name), &width, &height, &offsetx, &offsety, palette);
   if (texture) {
     sprite_t* sprite = &g_sprite_system.sprites[g_sprite_system.num_sprites];
-    strncpy(sprite->name, sprite_lump->name, 16);
+    strncpy(sprite->name, name, 16);
     sprite->texture = texture;
     sprite->width = width;
     sprite->height = height;
@@ -78,7 +78,7 @@ int load_sprite(FILE *wad_file, filelump_t* sprite_lump, palette_entry_t const *
 }
 
 // Initialize the sprite system
-bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int num_lumps) {
+bool init_sprites(map_data_t *map) {
   sprite_system_t* sys = &g_sprite_system;
   
   // Create shader program
@@ -115,12 +115,12 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
   sys->num_sprites = 0;
 
   
-  int s_start = find_lump("S_START");
-  int s_end = find_lump("S_END");
+  int s_start = find_lump_num("S_START");
+  int s_end = find_lump_num("S_END");
   if (s_start >= 0 && s_end >= 0 && s_start < s_end) {
     // Iterate through all sprites
     for (int i = s_start + 1; i < s_end; i++) {
-      load_sprite(wad_file, &directory[i], map->palette);
+      load_sprite(get_lump_name(i), map->palette);
     }
   }
 
@@ -141,10 +141,7 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
 //    load_sprite(wad_file, &directory[stbar_lump], map->palette);
 //  }
   
-  int stbar_lump = find_lump("STBAR");
-  if (stbar_lump >= 0) {
-    load_sprite(wad_file, &directory[stbar_lump], map->palette);
-  }
+  load_sprite("STBAR", map->palette);
   
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
@@ -175,64 +172,61 @@ GLuint compile_shader(GLenum type, const char* src) {
   
   return shader;
 }
+// Sprite header structure (same as patch_t)
+typedef struct {
+  int16_t width;      // width of the sprite
+  int16_t height;     // height of the sprite
+  int16_t leftoffset; // left offset of sprite
+  int16_t topoffset;  // top offset of sprite
+  int32_t columnofs[]; // column offsets (flexible array member)
+} spriteheader_t;
 
-// Load a sprite texture from WAD
-GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const *palette) {
-  // Seek to sprite lump
-  fseek(wad_file, sprite_lump->filepos, SEEK_SET);
+// Load a sprite texture from memory
+GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const *palette) {
+  if (!data) return 0;
   
-  // Read header
-  int16_t sprite_width, sprite_height;
-  int16_t left_offset, top_offset;
+  // Cast to sprite structure for header access
+  spriteheader_t* sprite_header = data;
   
-  fread(&sprite_width, sizeof(int16_t), 1, wad_file);
-  fread(&sprite_height, sizeof(int16_t), 1, wad_file);
-  fread(&left_offset, sizeof(int16_t), 1, wad_file);
-  fread(&top_offset, sizeof(int16_t), 1, wad_file);
-  
-  *width = sprite_width;
-  *height = sprite_height;
-  *offsetx = left_offset;
-  *offsety = top_offset;
-  
-  // Allocate memory for column offsets
-  int32_t* columnofs = malloc(sprite_width * sizeof(int32_t));
-  if (!columnofs) return 0;
-  
-  // Read column offsets
-  fread(columnofs, sizeof(int32_t), sprite_width, wad_file);
+  // Get dimensions and offsets
+  *width = sprite_header->width;
+  *height = sprite_header->height;
+  *offsetx = sprite_header->leftoffset;
+  *offsety = sprite_header->topoffset;
   
   // Allocate memory for texture data (RGBA)
-  uint8_t* tex_data = calloc(sprite_width * sprite_height * 4, 1);
+  uint8_t* tex_data = calloc(sprite_header->width * sprite_header->height * 4, 1);
   if (!tex_data) {
-    free(columnofs);
     return 0;
   }
-    
+  
+  // Column offsets are directly accessible in the sprite header
+  int32_t* columnofs = sprite_header->columnofs;
+  
+  // Base address for byte calculations
+  uint8_t* sprite_bytes = (uint8_t*)data;
+  
   // Process each column
-  for (int x = 0; x < sprite_width; x++) {
-    // Seek to column data
-    fseek(wad_file, sprite_lump->filepos + columnofs[x], SEEK_SET);
+  for (int x = 0; x < sprite_header->width; x++) {
+    // Calculate position of this column's data
+    uint8_t* column_data = sprite_bytes + columnofs[x];
     
     // Process each post
     while (1) {
-      uint8_t top_delta;
-      fread(&top_delta, 1, 1, wad_file);
+      uint8_t top_delta = *column_data++;
       
       if (top_delta == 0xFF) break; // End of column
       
-      uint8_t length;
-      fread(&length, 1, 1, wad_file);
+      uint8_t length = *column_data++;
       
       // Skip dummy byte
-      fseek(wad_file, 1, SEEK_CUR);
+      column_data++;
       
       // Read pixel data
       for (int y = 0; y < length; y++) {
-        uint8_t color_index;
-        fread(&color_index, 1, 1, wad_file);
+        uint8_t color_index = *column_data++;
         
-        int pos = ((top_delta + y) * sprite_width + x) * 4;
+        int pos = ((top_delta + y) * sprite_header->width + x) * 4;
         tex_data[pos] = palette[color_index].r;
         tex_data[pos + 1] = palette[color_index].g;
         tex_data[pos + 2] = palette[color_index].b;
@@ -240,26 +234,27 @@ GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, 
       }
       
       // Skip dummy byte
-      fseek(wad_file, 1, SEEK_CUR);
+      column_data++;
     }
   }
   
   // Create OpenGL texture
-  GLuint texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
+  GLuint texture_id;
+  glGenTextures(1, &texture_id);
+  glBindTexture(GL_TEXTURE_2D, texture_id);
   
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+  // Set texture parameters
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sprite_width, sprite_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
+  // Upload texture data
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, sprite_header->width, sprite_header->height,
+               0, GL_RGBA, GL_UNSIGNED_BYTE, tex_data);
   
-  free(columnofs);
+  // Free temporary data
   free(tex_data);
   
-  return texture;
+  return texture_id;
 }
 
 // Helper function to find sprite in cache

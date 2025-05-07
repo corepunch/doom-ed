@@ -89,7 +89,7 @@ static const char* FONT_LUMPS_PREFIX = "STCFN";
 
 // Forward declarations
 static void draw_text_gl3(const char* text, int x, int y, float alpha);
-static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps, int char_code, palette_entry_t const *);
+static bool load_font_char(int char_code, palette_entry_t const *);
 static GLuint compile_shader(GLenum type, const char* src);
 static void create_orthographic_matrix(float left, float right, float bottom, float top, float near, float far, float* out);
 
@@ -207,13 +207,13 @@ static GLuint compile_shader(GLenum type, const char* src) {
 }
 
 // Load the DOOM font from the WAD file
-bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps, palette_entry_t const* palette) {
+bool load_console_font(palette_entry_t const* palette) {
   bool success = true;
   
   // Find and load all STCFN## font characters
   // In Doom, only certain ASCII characters are stored (33-95, i.e., ! through _)
   for (int i = 33; i <= 95; i++) {
-    if (!load_font_char(wad_file, directory, num_lumps, i, palette)) {
+    if (!load_font_char(i, palette)) {
       // Not all characters might be present, that's fine
       printf("Warning: Could not load font character %c (%d)\n", (char)i, i);
       // Not counting this as a failure since some characters might be legitimately missing
@@ -225,89 +225,21 @@ bool load_console_font(FILE* wad_file, filelump_t* directory, int num_lumps, pal
 }
 
 // Load a specific font character
-static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps, int char_code, palette_entry_t const* palette) {
+static bool load_font_char(int char_code, palette_entry_t const* palette) {
   // Construct font lump name (e.g., "STCFN065" for 'A')
   char lump_name[16];
   snprintf(lump_name, sizeof(lump_name), "%s%03d", FONT_LUMPS_PREFIX, char_code);
 
-  // Find lump
-  int lump_index = find_lump(lump_name);
-  if (lump_index < 0) return false;
+  int width, height, leftoffset, topoffset;
+
+  GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const*);
   
-  filelump_t* lump = &directory[lump_index];
-  
-  // Seek to start of lump
-  fseek(wad_file, lump->filepos, SEEK_SET);
-  
-  // Read patch header (based on Doom WAD patch format)
-  int16_t width, height, leftoffset, topoffset;
-  fread(&width, sizeof(int16_t), 1, wad_file);
-  fread(&height, sizeof(int16_t), 1, wad_file);
-  fread(&leftoffset, sizeof(int16_t), 1, wad_file);
-  fread(&topoffset, sizeof(int16_t), 1, wad_file);
-  
-  // Read column offsets
-  int32_t* column_offsets = malloc(width * sizeof(int32_t));
-  fread(column_offsets, sizeof(int32_t), width, wad_file);
-  
-  // Allocate texture data (RGBA)
-  unsigned char* texture_data = calloc(width * height * 4, 1);
-  
-  // Process each column
-  for (int x = 0; x < width; x++) {
-    // Seek to column data
-    fseek(wad_file, lump->filepos + column_offsets[x], SEEK_SET);
-    
-    while (1) {
-      uint8_t topdelta;
-      fread(&topdelta, 1, 1, wad_file);
-      
-      // End of column
-      if (topdelta == 0xFF) break;
-      
-      uint8_t length;
-      fread(&length, 1, 1, wad_file);
-      
-      // Skip padding byte
-      fseek(wad_file, 1, SEEK_CUR);
-      
-      // Read pixels
-      for (int y = 0; y < length; y++) {
-        uint8_t color_index;
-        fread(&color_index, 1, 1, wad_file);
-        
-        int pos = ((topdelta + y) * width + x) * 4;
-        
-        // Set white color (for shader-based coloring)
-        texture_data[pos] = palette[color_index].r;
-        texture_data[pos + 1] = palette[color_index].g;
-        texture_data[pos + 2] = palette[color_index].b;
-        texture_data[pos + 3] = 255;   // A
-      }
-      
-      // Skip padding byte
-      fseek(wad_file, 1, SEEK_CUR);
-    }
-  }
-  
-  // Create OpenGL texture
-  GLuint texture;
-  glGenTextures(1, &texture);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-  
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, texture_data);
+  int texture = load_sprite_texture(cache_lump(lump_name), &width, &height, &leftoffset, &topoffset, palette);
   
   // Store character data
   console.font[char_code].texture = texture;
   console.font[char_code].width = width;
   console.font[char_code].height = height;
-  
-  // Cleanup
-  free(column_offsets);
-  free(texture_data);
   
   return true;
 }

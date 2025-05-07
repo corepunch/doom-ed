@@ -29,22 +29,22 @@ extern GLuint ui_prog;
 #define SKY_SEGMENTS 32
 
 // Function to load sky texture from WAD
-bool load_sky_texture(map_data_t const *map, FILE* wad_file, filelump_t* directory, int num_lumps) {
+bool load_sky_texture(map_data_t const *map) {
   // Try to find a sky texture - common names in Doom/Doom2
   const char* sky_names[] = {"SKY1", "SKY2", "SKY3", "RSKY1", "RSKY2", "RSKY3", NULL};
-  int sky_index = -1;
+  filelump_t *sky_lump = NULL;
   
   // Find the first available sky texture
   for (int i = 0; sky_names[i] != NULL; i++) {
-    sky_index = find_lump(sky_names[i]);
-    if (sky_index >= 0) {
+    sky_lump = find_lump(sky_names[i]);
+    if (sky_lump) {
       printf("Found sky texture: %s\n", sky_names[i]);
       break;
     }
   }
   
   // If no sky texture found, try to find it in texture directories
-  if (sky_index < 0) {
+  if (!sky_lump) {
     mapside_texture_t* sky_tex = get_texture("SKY1");
     if (sky_tex) {
       g_sky.texture_id = sky_tex->texture;
@@ -58,22 +58,15 @@ bool load_sky_texture(map_data_t const *map, FILE* wad_file, filelump_t* directo
     return false;
   }
   
-  // Load the sky texture lump
-  filelump_t* sky_lump = &directory[sky_index];
-  
   // Sky textures are typically 256x128 or similar wide format
   // We'll need to determine dimensions from the texture itself
   
-  
   mapside_texture_t *
-  find_and_load_sky_texture(FILE* wad_file, filelump_t* directory, int num_lumps,
-                            const palette_entry_t* palette, const char* sky_name);
+  find_and_load_sky_texture(const palette_entry_t* palette,
+                            const char* sky_name);
 
-  //  // Get the texture data
-//  mapside_texture_t* sky_tex = load_flat_texture(wad_file, sky_lump, palette, sky_lump->name);
-//  
-  mapside_texture_t *sky_tex=
-  find_and_load_sky_texture(wad_file, directory, num_lumps, map->palette, sky_lump->name);
+  // Get the texture data
+  mapside_texture_t *sky_tex = find_and_load_sky_texture(map->palette, sky_lump->name);
 
   if (sky_tex) {
     g_sky.texture_id = sky_tex->texture;
@@ -271,9 +264,9 @@ void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp) {
 }
 
 // Initialize sky renderer
-bool init_sky(map_data_t const *map, FILE* wad_file, filelump_t* directory, int num_lumps) {
+bool init_sky(map_data_t const *map) {
   // Load the sky texture
-  if (!load_sky_texture(map, wad_file, directory, num_lumps)) {
+  if (!load_sky_texture(map)) {
     printf("Warning: Failed to load sky texture\n");
     return false;
   }

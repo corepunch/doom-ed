@@ -31,18 +31,18 @@ mapvertex_t vertex_midpoint(mapvertex_t v1, mapvertex_t v2) {
   return mid;
 }
 
-static mapvertex_t vertex_normal(mapvertex_t v1, mapvertex_t v2, float scale) {
-  float dx = v2.x - v1.x;
-  float dy = v2.y - v1.y;
-  float length = sqrtf(dx*dx + dy*dy);
-  
-  mapvertex_t normal = {
-    .x = (int)(-dy / length * scale),
-    .y = (int)(dx / length * scale)
-  };
-  return normal;
-}
-
+//static mapvertex_t vertex_normal(mapvertex_t v1, mapvertex_t v2, float scale) {
+//  float dx = v2.x - v1.x;
+//  float dy = v2.y - v1.y;
+//  float length = sqrtf(dx*dx + dy*dy);
+//  
+//  mapvertex_t normal = {
+//    .x = (int)(-dy / length * scale),
+//    .y = (int)(dx / length * scale)
+//  };
+//  return normal;
+//}
+//
 static bool vertex_is_near(mapvertex_t v1, mapvertex_t v2, int threshold) {
   return vertex_distance_sq(v1, v2) < threshold * threshold;
 }

@@ -217,7 +217,7 @@ typedef struct {
   DEFINE_COLLECTION(mapthing_t, things);
   DEFINE_COLLECTION(mapsector_t, sectors);
   
-  palette_entry_t palette[256];
+  palette_entry_t *palette;
   
   struct {
     mapsidedef2_t *sections;
@@ -247,12 +247,12 @@ int run(map_data_t const *map);
 
 filelump_t *find_lump(const char* name);
 void *cache_lump(const char* name);
+int find_lump_num(const char* name);
+char const *get_lump_name(int i);
 
+int allocate_mapside_textures(map_data_t* map);
+int allocate_flat_textures(map_data_t* map);
 
-int allocate_mapside_textures(map_data_t* map, FILE* wad_file,
-                              filelump_t* directory, int num_lumps);
-int allocate_flat_textures(map_data_t* map, FILE* wad_file,
-                           filelump_t* directory, int num_lumps);
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
@@ -270,5 +270,9 @@ char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);
 float dist_sq(float x1, float y1, float x2, float y2);
 
+map_data_t load_map(const char* map_name);
+void find_all_maps(void);
+void print_map_info(map_data_t* map);
+void free_map_data(map_data_t* map);
 
 #endif

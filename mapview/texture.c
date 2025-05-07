@@ -70,66 +70,65 @@ typedef struct texture_cache_s {
 flat_cache_t g_flat_cache = {0};
 texture_cache_t g_cache = {0};
 
-// Load a single patch and return its data
+// Convenience function to get flat texture
+mapside_texture_t const *
+get_flat_texture(const char* name);
+
 uint8_t* load_patch(void* patch_lump, int* width, int* height) {
-  if (!patch_lump || patch_lump->size <= 0) return NULL;
+  if (!patch_lump) return NULL;
   
-  // Read patch header
-  patch_t *header = patch_lump;
+  // Cast to patch structure for header access
+  patch_t* header = (patch_t*)patch_lump;
   
-  *width = header.width;
-  *height = header.height;
-  
-  // Allocate memory for column offsets
-  int32_t* columnofs = malloc(header.width * sizeof(int32_t));
-  if (!columnofs) return NULL;
-  
-  // Read column offsets
-  fread(columnofs, sizeof(int32_t), header.width, wad_file);
+  *width = header->width;
+  *height = header->height;
   
   // Allocate memory for the patch data (RGBA)
-  uint8_t* patch_data = calloc(header.width * header.height * 4, 1);
+  uint8_t* patch_data = calloc(*width * *height * 4, 1);
   if (!patch_data) {
-    free(columnofs);
     return NULL;
   }
   
+  // Column offsets are directly accessible in the patch header
+  int32_t* columnofs = header->columnofs;
+  
+  // Base address for byte calculations
+  uint8_t* lump_bytes = (uint8_t*)patch_lump;
+  
   // Process each column
-  for (int x = 0; x < header.width; x++) {
-    // Seek to the start of this column's data
-    fseek(wad_file, patch_lump->filepos + columnofs[x], SEEK_SET);
+  for (int x = 0; x < header->width; x++) {
+    // Calculate position of this column's data
+    uint8_t* column_data = lump_bytes + columnofs[x];
     
     // Process posts in this column
     while (1) {
-      uint8_t topdelta;
-      fread(&topdelta, 1, 1, wad_file);
+      uint8_t topdelta = *column_data++;
       
       // 0xFF indicates end of column
       if (topdelta == 0xFF) break;
       
-      uint8_t length;
-      fread(&length, 1, 1, wad_file);
+      uint8_t length = *column_data++;
       
-      // Skip unused byte
-      fseek(wad_file, 1, SEEK_CUR);
+      // Skip unused byte (padding)
+      column_data++;
       
       // Read post data
       for (int y = 0; y < length; y++) {
-        uint8_t color;
-        fread(&color, 1, 1, wad_file);
+        uint8_t color = *column_data++;
         
-        // Store in RGBA format (alpha set below)
-        int pos = ((topdelta + y) * header.width + x) * 4;
-        patch_data[pos] = color;  // Store color index in red channel temporarily
-        patch_data[pos + 3] = 255; // Make pixel opaque
+        // Store in RGBA format (alpha set to opaque)
+        int pos = ((topdelta + y) * header->width + x) * 4;
+        patch_data[pos] = color;     // R (temporarily storing color index)
+        patch_data[pos + 1] = color; // G (you might want to map to palette later)
+        patch_data[pos + 2] = color; // B (you might want to map to palette later)
+        patch_data[pos + 3] = 255;   // A (opaque)
       }
       
-      // Skip unused byte
-      fseek(wad_file, 1, SEEK_CUR);
+      // Skip unused byte (padding)
+      column_data++;
     }
   }
   
-  free(columnofs);
   return patch_data;
 }
 
@@ -236,7 +235,7 @@ find_texture(texture_directory_t* directory,
 // Try to load texture from texture directories
 static mapside_texture_t*
 load_texture_from_directories(texname_t tex_name,
-                              texture_directory_t* tex_dirs,
+                              texture_directory_t* tex_dirs[],
                               mappatchnames_t* pnames,
                               const palette_entry_t* palette)
 {
@@ -249,14 +248,14 @@ load_texture_from_directories(texname_t tex_name,
   }
   
   // Try each texture directory until we find the texture
-  for (int i = 0; i < MAX_TEXDIR && tex_dirs[i].offsets; i++) {
-    tex_def = find_texture(&tex_dirs[i], uppercase);
+  for (int i = 0; i < MAX_TEXDIR; i++) {
+    tex_def = find_texture(tex_dirs[i], uppercase);
     if (tex_def) break;
   }
   
   // If texture definition found, create OpenGL texture
   if (tex_def) {
-    tmp.texture = create_texture_from_definition(wad_file, directory, num_lumps, tex_def, pnames, palette);
+    tmp.texture = create_texture_from_definition(tex_def, pnames, palette);
     tmp.width = tex_def->width;
     tmp.height = tex_def->height;
     strncpy(tmp.name, tex_name, sizeof(texname_t));
@@ -269,7 +268,7 @@ load_texture_from_directories(texname_t tex_name,
 
 // Try to load texture
 static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
-                               texture_directory_t* tex_dirs, mappatchnames_t* pnames,
+                               texture_directory_t* tex_dirs[], mappatchnames_t* pnames,
                                palette_entry_t* palette) {
   if (tex_name[0] == '-' || tex_name[0] == '\0') return;
   if (cache->num_textures == MAX_TEXTURES) return;
@@ -324,15 +323,9 @@ int allocate_mapside_textures(map_data_t* map) {
   for (int i = 0; i < map->num_sidedefs; i++) {
     mapsidedef_t* side = &map->sidedefs[i];
     
-    maybe_load_texture(wad_file, directory, num_lumps, cache, side->toptexture, tex_dirs, pnames, map->palette);
-    maybe_load_texture(wad_file, directory, num_lumps, cache, side->midtexture, tex_dirs, pnames, map->palette);
-    maybe_load_texture(wad_file, directory, num_lumps, cache, side->bottomtexture, tex_dirs, pnames, map->palette);
-  }
-  
-  // Clean up
-  free(pnames);
-  for (int i = 0; i < dir_count; i++) {
-    free(tex_dirs[i].offsets);
+    maybe_load_texture(cache, side->toptexture, tex_dirs, pnames, map->palette);
+    maybe_load_texture(cache, side->midtexture, tex_dirs, pnames, map->palette);
+    maybe_load_texture(cache, side->bottomtexture, tex_dirs, pnames, map->palette);
   }
   
   return cache->num_textures;
@@ -373,13 +366,11 @@ mapside_texture_t *get_texture(const char* name) {
 
 // Load a single flat texture and create an OpenGL texture
 mapside_texture_t *
-load_flat_texture(FILE* wad_file,
-                  filelump_t* flat_lump,
-                  const palette_entry_t* palette,
-                  texname_t floorpic)
+load_flat_texture(const palette_entry_t* palette,
+                  texname_t const floorpic)
 {
+  filelump_t *flat_lump = find_lump(floorpic);
   static mapside_texture_t tmp = {0};
-  if (!flat_lump || flat_lump->size <= 0) return 0;
   
   // Check size - flats should be 64x64 (4096 bytes)
   if (flat_lump->size != 4096) {
@@ -387,20 +378,13 @@ load_flat_texture(FILE* wad_file,
     if (flat_lump->size < 4096) return 0;
   }
   
-  // Seek to flat data
-  fseek(wad_file, flat_lump->filepos, SEEK_SET);
-  
   // Flats are 64x64 pixels
   const int width = 64;
   const int height = 64;
   
-  // Allocate memory for the flat data (RGBA)
-  uint8_t* flat_data = malloc(width * height * 4);
-  if (!flat_data) return 0;
-  
   // Read raw flat data (just color indices)
   uint8_t raw_flat[4096];
-  fread(raw_flat, 1, 4096, wad_file);
+  uint8_t *flat_data = cache_lump(floorpic);
   
   // Convert color indices to RGBA using palette
   for (int i = 0; i < width * height; i++) {
@@ -423,8 +407,6 @@ load_flat_texture(FILE* wad_file,
   
   glGenerateMipmap(GL_TEXTURE_2D);
   
-  free(flat_data);
-  
   tmp.texture = tex;
   tmp.width = width;
   tmp.height = height;
@@ -434,127 +416,96 @@ load_flat_texture(FILE* wad_file,
 }
 
 // Check if a lump is a marker (like F_START, F_END)
-bool is_marker(const char* name) {
-  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "START") == 0) return true;
-  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "END") == 0) return true;
-  if (strcmp(name, "FF_START") == 0) return true;
-  if (strcmp(name, "FF_END") == 0) return true;
-  return false;
-}
+//bool is_marker(const char* name) {
+//  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "START") == 0) return true;
+//  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "END") == 0) return true;
+//  if (strcmp(name, "FF_START") == 0) return true;
+//  if (strcmp(name, "FF_END") == 0) return true;
+//  return false;
+//}
 
 // Main function to allocate flat textures for map
-int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* directory, int num_lumps) {
+int allocate_flat_textures(map_data_t* map) {
   flat_cache_t* cache = &g_flat_cache;
-  
-  // Find F_START and F_END markers
-  int f_start = -1, f_end = -1;
-  int ff_start = -1, ff_end = -1;
-  
-  for (int i = 0; i < num_lumps; i++) {
-    if (strncmp(directory[i].name, "F_START", 8) == 0) f_start = i;
-    else if (strncmp(directory[i].name, "F_END", 8) == 0) f_end = i;
-    else if (strncmp(directory[i].name, "FF_START", 8) == 0) ff_start = i;
-    else if (strncmp(directory[i].name, "FF_END", 8) == 0) ff_end = i;
-  }
-  
-  if (f_start < 0 || f_end < 0 || f_start >= f_end) {
-    printf("Error: Could not find flat markers (F_START/F_END)\n");
-    return 0;
-  }
-  
-  // Load flats between F_START and F_END
-  for (int i = f_start + 1; i < f_end; i++) {
-    // Skip markers
-    if (is_marker(directory[i].name)) continue;
-    
-    // Check if we're at capacity
-    if (cache->num_textures >= MAX_TEXTURES) break;
-    
-    // Check if flat is already in cache
-    bool already_cached = false;
-    for (int j = 0; j < cache->num_textures; j++) {
-      if (strncmp(cache->textures[j].name, directory[i].name, 8) == 0) {
-        already_cached = true;
-        break;
-      }
-    }
-    if (already_cached) continue;
-    
-    // Load the flat texture
-    mapside_texture_t *tex = load_flat_texture(wad_file, &directory[i], map->palette, directory[i].name);
-    if (tex) {
-      cache->textures[cache->num_textures++] = *tex;
-    }
-  }
-  
-  // If FF_START/FF_END exist, load those flats too (DOOM II)
-  if (ff_start >= 0 && ff_end >= 0 && ff_start < ff_end) {
-    for (int i = ff_start + 1; i < ff_end; i++) {
-      // Skip markers
-      if (is_marker(directory[i].name)) continue;
-      
-      // Check if we're at capacity
-      if (cache->num_textures >= MAX_TEXTURES) break;
-      
-      // Check if flat is already in cache
-      bool already_cached = false;
-      for (int j = 0; j < cache->num_textures; j++) {
-        if (strncmp(cache->textures[j].name, directory[i].name, 8) == 0) {
-          already_cached = true;
-          break;
-        }
-      }
-      if (already_cached) continue;
-      
-      // Load the flat texture
-      mapside_texture_t *tex = load_flat_texture(wad_file, &directory[i], map->palette, directory[i].name);
-      if (tex) {
-        cache->textures[cache->num_textures++] = *tex;
-      }
-    }
-  }
+//  
+//  // Find F_START and F_END markers
+//  int f_start = find_lump_num("F_START"), f_end = find_lump_num("F_END");
+//  int ff_start = find_lump_num("FF_START"), ff_end = find_lump_num("FF_END");
+//  
+//  if (f_start < 0 || f_end < 0 || f_start >= f_end) {
+//    printf("Error: Could not find flat markers (F_START/F_END)\n");
+//    return 0;
+//  }
+//  
+//  // Load flats between F_START and F_END
+//  for (int i = f_start + 1; i < f_end; i++) {
+//    // Skip markers
+//    if (is_marker(get_lump_name(i))) continue;
+//    
+//    // Check if we're at capacity
+//    if (cache->num_textures >= MAX_TEXTURES) break;
+//    
+//    // Check if flat is already in cache
+//    bool already_cached = false;
+//    for (int j = 0; j < cache->num_textures; j++) {
+//      if (strncmp(cache->textures[j].name, get_lump_name(i), 8) == 0) {
+//        already_cached = true;
+//        break;
+//      }
+//    }
+//    if (already_cached) continue;
+//    
+//    // Load the flat texture
+//    mapside_texture_t *tex = load_flat_texture(map->palette, get_lump_name(i));
+//    if (tex) {
+//      cache->textures[cache->num_textures++] = *tex;
+//    }
+//  }
+//  
+//  // If FF_START/FF_END exist, load those flats too (DOOM II)
+//  if (ff_start >= 0 && ff_end >= 0 && ff_start < ff_end) {
+//    for (int i = ff_start + 1; i < ff_end; i++) {
+//      // Skip markers
+//      if (is_marker(get_lump_name(i))) continue;
+//
+//      // Check if we're at capacity
+//      if (cache->num_textures >= MAX_TEXTURES) break;
+//      
+//      // Check if flat is already in cache
+//      bool already_cached = false;
+//      for (int j = 0; j < cache->num_textures; j++) {
+//        if (strncmp(cache->textures[j].name, get_lump_name(i), 8) == 0) {
+//          already_cached = true;
+//          break;
+//        }
+//      }
+//      if (already_cached) continue;
+//      
+//      // Load the flat texture
+//      mapside_texture_t *tex = load_flat_texture(map->palette, get_lump_name(i));
+//      if (tex) {
+//        cache->textures[cache->num_textures++] = *tex;
+//      }
+//    }
+//  }
   
   // Process each sector to preload required flat textures
   for (int i = 0; i < map->num_sectors; i++) {
     mapsector_t* sector = &map->sectors[i];
     
-    // Preload floor texture if not already loaded
-    bool floor_loaded = false;
-    for (int j = 0; j < cache->num_textures; j++) {
-      if (strncmp(cache->textures[j].name, sector->floorpic, 8) == 0) {
-        floor_loaded = true;
-        break;
+    // If not loaded yet, try to find and load it
+    if (!get_flat_texture(sector->floorpic)) {
+      mapside_texture_t *tex = load_flat_texture(map->palette, sector->floorpic);
+      if (tex && cache->num_textures < MAX_TEXTURES) {
+        cache->textures[cache->num_textures++] = *tex;
       }
     }
     
     // If not loaded yet, try to find and load it
-    if (!floor_loaded) {
-      int flat_index = find_lump(sector->floorpic);
-      if (flat_index >= 0) {
-        mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], map->palette, sector->floorpic);
-        if (tex && cache->num_textures < MAX_TEXTURES) {
-          cache->textures[cache->num_textures++] = *tex;
-        }
-      }
-    }
-    
-    // Preload ceiling texture if not already loaded
-    bool ceiling_loaded = false;
-    for (int j = 0; j < cache->num_textures; j++) {
-      if (strncmp(cache->textures[j].name, sector->ceilingpic, 8) == 0) {
-        ceiling_loaded = true;
-        break;
-      }
-    }
-    
-    // If not loaded yet, try to find and load it
-    if (!ceiling_loaded) {
-      int flat_index = find_lump(sector->ceilingpic);
-      if (flat_index >= 0) {
-        mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], map->palette, sector->ceilingpic);
-        if (tex && cache->num_textures < MAX_TEXTURES) {
-          cache->textures[cache->num_textures++] = *tex;
-        }
+    if (!get_flat_texture(sector->ceilingpic)) {
+      mapside_texture_t *tex = load_flat_texture(map->palette, sector->ceilingpic);
+      if (tex && cache->num_textures < MAX_TEXTURES) {
+        cache->textures[cache->num_textures++] = *tex;
       }
     }
   }
@@ -613,13 +564,6 @@ void draw_palette(map_data_t const *map, float x, float y, int width, int height
   for (int i = selected_texture - MIN(selected_texture, amount);
        i <= MIN(g_cache.num_textures, selected_texture + amount); i++)
   {
-    int a =0;
-  }
-
-  
-  for (int i = selected_texture - MIN(selected_texture, amount);
-       i <= MIN(g_cache.num_textures, selected_texture + amount); i++)
-  {
     int x = (0.5) * (PALETTE_WIDTH + 1);
     int y = (i-(int)selected_texture+0.5)*(PALETTE_WIDTH + 1)+height/2;
     if (selected_texture == i) {
@@ -641,18 +585,15 @@ void draw_palette(map_data_t const *map, float x, float y, int width, int height
 }
 
 // Load a sky texture and create an OpenGL texture
-static mapside_texture_t *
-load_sky_texture(FILE* wad_file,
-                 filelump_t* sky_lump,
-                 const palette_entry_t* palette,
-                 texname_t const skypic)
+mapside_texture_t *
+find_and_load_sky_texture(palette_entry_t const* palette,
+                          texname_t const skypic)
 {
   static mapside_texture_t tmp = {0};
-  if (!sky_lump || sky_lump->size <= 0) return 0;
   
   // Sky textures in Doom are stored as patches
   int width, height;
-  uint8_t* patch_data = load_patch(wad_file, sky_lump, &width, &height);
+  uint8_t* patch_data = load_patch(cache_lump(skypic), &width, &height);
   
   if (!patch_data) {
     printf("Error: Failed to load sky texture %s\n", skypic);
@@ -714,25 +655,9 @@ load_sky_texture(FILE* wad_file,
   return &tmp;
 }
 
-// Helper function to find and load sky texture
-mapside_texture_t *
-find_and_load_sky_texture(FILE* wad_file, filelump_t* directory, int num_lumps,
-                          const palette_entry_t* palette, const char* sky_name)
-{
-  // Find sky texture lump
-  int sky_index = find_lump(sky_name);
-  if (sky_index < 0) {
-    printf("Warning: Could not find sky texture: %s\n", sky_name);
-    return NULL;
-  }
-  
-  filelump_t* sky_lump = &directory[sky_index];
-  return load_sky_texture(wad_file, sky_lump, palette, sky_name);
-}
-
 // Function to load all sky textures for a map
 // This should be called during map loading
-int load_sky_textures(map_data_t* map, FILE* wad_file, filelump_t* directory, int num_lumps)
+int find_and_load_sky_textures(map_data_t* map)
 {
   // Common sky texture names in Doom 2
   const char* sky_names[] = {
@@ -743,8 +668,7 @@ int load_sky_textures(map_data_t* map, FILE* wad_file, filelump_t* directory, in
   
   // Try to load each sky texture
   for (int i = 0; sky_names[i] != NULL; i++) {
-    mapside_texture_t* sky = find_and_load_sky_texture(wad_file, directory, num_lumps,
-                                                       map->palette, sky_names[i]);
+    mapside_texture_t* sky = find_and_load_sky_texture(map->palette, sky_names[i]);
     if (sky) {
       // Add to the texture cache
       if (g_cache.num_textures < MAX_TEXTURES) {
