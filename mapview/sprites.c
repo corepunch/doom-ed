@@ -59,21 +59,6 @@ GLuint compile_shader(GLenum type, const char* src);
 GLuint load_sprite_texture(FILE* wad_file, filelump_t* sprite_lump, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const*);
 GLuint generate_crosshair_texture(int size);
 
-int find_sprite_lump(filelump_t* directory, int num_lumps, const char* name) {
-  // Locate sprite lump markers
-  int s_start = find_lump(directory, num_lumps, "S_START");
-  int s_end = find_lump(directory, num_lumps, "S_END");
-  if (s_start >= 0 && s_end >= 0 && s_start < s_end) {
-    // Iterate through all sprites
-    for (int i = s_start + 1; i < s_end; i++) {
-      if (strncmp(directory[i].name, name, sizeof(lumpname_t)) == 0) {
-        return i;
-      }
-    }
-  }
-  return find_lump(directory, num_lumps, name);
-}
-
 int load_sprite(FILE *wad_file, filelump_t* sprite_lump, palette_entry_t const *palette) {
   int width, height, offsetx, offsety;
   GLuint texture = load_sprite_texture(wad_file, sprite_lump, &width, &height, &offsetx, &offsety, palette);
@@ -140,18 +125,18 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
   }
 
 //  // If no sprite markers, try loading directly by name
-//  int shotgun_sprite = find_sprite_lump(directory, num_lumps, "SHTGA0");
+//  int shotgun_sprite = find_lump(directory, num_lumps, "SHTGA0");
 //  if (shotgun_sprite >= 0) {
 //    load_sprite(wad_file, &directory[shotgun_sprite], map->palette);
 //  }
 //  
 //  // Try loading crosshair directly
-//  int crosshair_sprite = find_sprite_lump(directory, num_lumps, "CROSA0");
+//  int crosshair_sprite = find_lump(directory, num_lumps, "CROSA0");
 //  if (crosshair_sprite >= 0) {
 //    load_sprite(wad_file, &directory[crosshair_sprite], map->palette);
 //  }
 //  
-//  int stbar_lump = find_sprite_lump(directory, num_lumps, "STBAR");
+//  int stbar_lump = find_lump(directory, num_lumps, "STBAR");
 //  if (stbar_lump >= 0) {
 //    load_sprite(wad_file, &directory[stbar_lump], map->palette);
 //  }

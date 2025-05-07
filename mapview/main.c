@@ -13,14 +13,24 @@ void* read_lump_data(FILE* file, int offset, int size) {
   return data;
 }
 
-// Function to find a lump index by name
-int find_lump(filelump_t* directory, int num_lumps, const char* name) {
-  for (int i = 0; i < num_lumps; i++) {
-    if (strncmp(directory[i].name, name, sizeof(lumpname_t)) == 0) {
-      return i;
+bool is_map_block_valid(filelump_t* dir, int index, int total_lumps) {
+  static const char* expected[] = {
+    "THINGS", "LINEDEFS", "SIDEDEFS", "VERTEXES",
+    "SEGS", "SSECTORS", "NODES", "SECTORS", "REJECT", "BLOCKMAP"
+  };
+  for (int i = 0; i < 10; i++) {
+    if (index + 1 + i >= total_lumps) return false;
+    if (strncmp(dir[index + 1 + i].name, expected[i], 8) != 0) return false;
+  }
+  return true;
+}
+
+void find_all_maps(filelump_t* directory, int num_lumps) {
+  for (int i = 0; i < num_lumps - 10; i++) {
+    if (is_map_block_valid(directory, i, num_lumps)) {
+      printf("Found map: %s\n", directory[i].name);
     }
   }
-  return -1; // Not found
 }
 
 // Function to load map data
@@ -151,11 +161,17 @@ int main(int argc, char* argv[]) {
 //  E4M4 – The Halls of Fear: shows how moody lighting and vertical loops can go a long way.
   
   // Load E1M1 map
-  map_data_t e1m1 = load_map(file, directory, header.numlumps, "MAP01");
+  
+  const char *mapname = "MAP01";
+  
+  map_data_t e1m1 = load_map(file, directory, header.numlumps, mapname);
+  
+  find_all_maps(directory, header.numlumps);
+  
+  const char *get_map_name(const char *name);
   
   // Print map info
   if (e1m1.num_vertices > 0) {
-    printf("\nSuccessfully loaded map\n");
     print_map_info(&e1m1);
     // Initialize SDL
     if (!init_sdl()) {
@@ -163,6 +179,9 @@ int main(int argc, char* argv[]) {
     }
     init_console();
     load_console_font(file, directory, header.numlumps, e1m1.palette);
+
+    conprintf("Successfully loaded map %s", get_map_name(mapname));
+
     allocate_mapside_textures(&e1m1, file, directory, header.numlumps);
     allocate_flat_textures(&e1m1, file, directory, header.numlumps);
     init_sprites(&e1m1, file, directory, header.numlumps);
