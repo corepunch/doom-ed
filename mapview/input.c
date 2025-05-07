@@ -122,12 +122,6 @@ void handle_scroll(SDL_Event event, map_data_t *map) {
  */
 void handle_input(map_data_t *map, player_t *player, float delta_time) {
   extern editor_state_t editor;
-  // If in editor mode, use the editor input handler
-  if (editor.active) {
-    handle_editor_input(map, &editor, player, delta_time);
-    return;
-  }
-  
   SDL_Event event;
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
   

@@ -13,15 +13,6 @@ typedef struct {
   lumpname_t name[1];         // Array of patch names (variable size)
 } mappatchnames_t;
 
-// Patch header structure
-typedef struct {
-  int16_t width;              // Width of the patch
-  int16_t height;             // Height of the patch
-  int16_t leftoffset;         // Left offset of the patch
-  int16_t topoffset;          // Top offset of the patch
-  int32_t columnofs[1];       // Column offsets (variable size)
-} patch_t;
-
 // Post (column segment) structure
 typedef struct {
   uint8_t topdelta;           // Top delta

@@ -113,6 +113,15 @@ typedef struct {
   lumpname_t name;           // Name of the lump, null-terminated
 } filelump_t;
 
+// Patch header structure
+typedef struct {
+  int16_t width;              // Width of the patch
+  int16_t height;             // Height of the patch
+  int16_t leftoffset;         // Left offset of the patch
+  int16_t topoffset;          // Top offset of the patch
+  int32_t columnofs[1];       // Column offsets (variable size)
+} patch_t;
+
 #ifdef HEXEN
 // Thing structure
 typedef struct {
@@ -242,8 +251,20 @@ typedef struct {
   bool nowalls;
 } viewdef_t;
 
+typedef enum {
+  GS_DUNGEON,
+  GS_EDITOR,
+  GS_WORLD
+} gameState_t;
+
+typedef struct {
+  gameState_t state;
+} game_t;
+
+extern game_t game;
+
 bool init_sdl(void);
-int run(map_data_t const *map);
+int run(map_data_t *map);
 
 filelump_t *find_lump(const char* name);
 void *cache_lump(const char* name);

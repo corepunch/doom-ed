@@ -14,7 +14,6 @@
 #define MAX_DRAW_POINTS 64
 
 typedef struct {
-  bool active;           // Is editor mode active?
   int grid_size;         // Grid size (8 units by default)
   bool drawing;          // Currently drawing a sector?
   bool dragging;          // Currently dragging a vertex?

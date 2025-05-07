@@ -281,8 +281,78 @@ void update_player_height(map_data_t const *map, player_t *player) {
 
 void minimap_matrix(player_t const *player, mat4 mvp);
 
+void draw_dungeon(map_data_t const *map, player_t *player) {
+  void draw_floor_ids(map_data_t const *, mapsector_t const *, viewdef_t const *);
+  void draw_minimap(map_data_t const *, player_t const *);
+  void draw_things(map_data_t const *, viewdef_t const *, bool);
+  
+  mapsector_t const *sector = find_player_sector(map, player->x, player->y);
+  mat4 mvp;
+
+  static unsigned frame = 0;
+
+  float z = 0;
+  
+  if (sector) {
+    z = sector->floorheight + EYE_HEIGHT;
+  }
+  
+  update_player_height(map, player);
+  
+  get_view_matrix(map, player, mvp);
+  
+  viewdef_t viewdef={0};
+  memcpy(viewdef.mvp, mvp, sizeof(mat4));
+  memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
+  viewdef.frame = frame++;
+  glm_frustum_planes(mvp, viewdef.frustum);
+  
+  glUseProgram(ui_prog);
+  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  
+  draw_floor_ids(map, sector, &viewdef);
+  
+  int fb_width, fb_height;
+  int window_width, window_height;
+  
+  SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
+  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
+  
+  glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+  
+  //      static int p=0;
+  //      if (p!=pixel)printf("%08x\n", pixel);
+  //      p = pixel;
+  
+  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+  
+  draw_sky(map, player, mvp);
+  
+  glUseProgram(world_prog);
+  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  
+  extern int sectors_drawn;
+  sectors_drawn = 0;
+  
+  viewdef.frame = frame++;
+  
+  draw_floors(map, sector, &viewdef);
+  
+  draw_things(map, &viewdef, true);
+  
+  draw_weapon();
+  
+  draw_crosshair();
+  
+  draw_palette(map, 0, 0, window_width, window_height);
+  
+  if (mode) {
+    draw_minimap(map, player);
+  }
+}
+
 // Main function
-int run(map_data_t const *map) {
+int run(map_data_t *map) {
   player_t player = {0};
   
   // Initialize player position based on map data
@@ -290,9 +360,7 @@ int run(map_data_t const *map) {
   
   // Main game loop
   Uint32 last_time = SDL_GetTicks();
-  Uint32 frame = 0;
-  mat4 mvp;
-
+  
   while (running) {
     mode = false;
     // Calculate delta time for smooth movement
@@ -300,83 +368,22 @@ int run(map_data_t const *map) {
     float delta_time = (current_time - last_time) / 1000.0f;
     last_time = current_time;
 
-    mapsector_t const *sector = find_player_sector(map, player.x, player.y);
-    
-    float z = 0;
-    
-    if (sector) {
-      z = sector->floorheight + EYE_HEIGHT;
-    }
-    
-    // Handle input
-    handle_input((map_data_t *)map, &player, delta_time);
-
-    update_player_height(map, &player);
-    
-    get_view_matrix(map, &player, mvp);
-    
-    mat4 mvp2;
-    minimap_matrix(&player, mvp2);
-    
-    viewdef_t viewdef={0};
-    memcpy(viewdef.mvp, mvp, sizeof(mat4));
-    memcpy(viewdef.viewpos, &player.x, sizeof(vec3));
-    viewdef.frame = frame++;
-    glm_frustum_planes(mvp, viewdef.frustum);
-
     glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    if (editor.active) {
-      draw_editor(map, &editor, &player);
-    } else {
-      void draw_floor_ids(map_data_t const *, mapsector_t const *, viewdef_t const *);
-      void draw_minimap(map_data_t const *, player_t const *);
-      void draw_things(map_data_t const *, viewdef_t const *, bool);
 
-      glUseProgram(ui_prog);
-      glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-      
-      draw_floor_ids(map, sector, &viewdef);
-      
-      int fb_width, fb_height;
-      int window_width, window_height;
-      
-      SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
-      SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
-      
-      glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
-      
-//      static int p=0;
-//      if (p!=pixel)printf("%08x\n", pixel);
-//      p = pixel;
-
-      glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-      draw_sky(map, &player, mvp);
-
-      glUseProgram(world_prog);
-      glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-      
-      extern int sectors_drawn;
-      sectors_drawn = 0;
-      
-      viewdef.frame = frame++;
-      
-      draw_floors(map, sector, &viewdef);
-
-      draw_things(map, &viewdef, true);
-      
-      draw_weapon();
-      
-      draw_crosshair();
-      
-      draw_palette(map, 0, 0, window_width, window_height);
-
-      if (mode) {
-        draw_minimap(map, &player);
-      }
+    switch (game.state) {
+      case GS_DUNGEON:
+        handle_input(map, &player, delta_time);
+        draw_dungeon(map, &player);
+        break;
+      case GS_EDITOR:
+        handle_editor_input(map, &editor, &player, delta_time);
+        draw_editor(map, &editor, &player);
+        break;
+      default:
+        break;
     }
 
     draw_fps(5, 5);

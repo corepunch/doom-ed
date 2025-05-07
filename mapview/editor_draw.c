@@ -10,7 +10,6 @@ extern GLuint white_tex;
 
 // Initialize editor state
 void init_editor(editor_state_t *editor) {
-  editor->active = false;
   editor->grid_size = 32;
   editor->drawing = false;
   editor->num_draw_points = 0;
@@ -218,8 +217,6 @@ void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
 
 // Draw the editor UI
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player) {
-  if (!editor->active) return;
-  
   // Set up orthographic projection for 2D view
   float w = SCREEN_WIDTH * editor->scale;
   float h = SCREEN_HEIGHT * editor->scale;

@@ -142,6 +142,7 @@ bool init_sprites(map_data_t *map) {
 //  }
   
   load_sprite("STBAR", map->palette);
+  load_sprite("INTERPIC", map->palette);
   
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
@@ -429,6 +430,11 @@ void draw_weapon(void) {
   sprite_t* STBAR = find_sprite("STBAR");
   if (STBAR) {
     draw_sprite("STBAR", window_width / 2.0f, window_height-STBAR->height/2*scale, 2, 1.0f);
+  }
+
+  sprite_t* INTERPIC = find_sprite("INTERPIC");
+  if (INTERPIC) {
+    draw_sprite("INTERPIC", window_width / 2, window_height / 2, 2, 1.0f);
   }
 
   if (sprite) {

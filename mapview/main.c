@@ -2,6 +2,7 @@
 #include "sprites.h"
 #include "console.h"
 
+game_t game;
 
 bool init_sky(map_data_t const*);
 
@@ -35,6 +36,8 @@ int main(int argc, char* argv[]) {
   find_all_maps();
   
   const char *get_map_name(const char *name);
+  
+  game.state = GS_DUNGEON;
   
   // Print map info
   if (e1m1.num_vertices > 0) {

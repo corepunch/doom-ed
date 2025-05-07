@@ -13,16 +13,16 @@ extern SDL_Window* window;
 
 // Toggle editor mode on/off
 void toggle_editor_mode(editor_state_t *editor) {
-  editor->active = !editor->active;
-  
-  // Reset drawing state when exiting editor
-  if (!editor->active) {
+  if (game.state == GS_DUNGEON) {
+    game.state = GS_EDITOR;
+  } else if (game.state == GS_EDITOR) {
+    game.state = GS_DUNGEON;
     editor->drawing = false;
     editor->num_draw_points = 0;
   }
   
   // Set mouse mode based on editor state
-  SDL_SetRelativeMouseMode(editor->active ? SDL_FALSE : SDL_TRUE);
+  SDL_SetRelativeMouseMode(game.state == GS_EDITOR ? SDL_FALSE : SDL_TRUE);
 }
 
 // Handle mouse and keyboard input for the editor
@@ -47,7 +47,7 @@ void handle_editor_input(map_data_t *map,
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
-          } else if (editor->active) {
+          } else if (game.state == GS_EDITOR) {
             // Exit editor mode
             toggle_editor_mode(editor);
           }
@@ -74,7 +74,7 @@ void handle_editor_input(map_data_t *map,
       build_wall_vertex_buffer(map);
       build_floor_vertex_buffer(map);
     }
-    else if (event.type == SDL_MOUSEBUTTONDOWN && editor->active) {
+    else if (event.type == SDL_MOUSEBUTTONDOWN) {
       extern mapvertex_t sn;
       extern int splitting_line;
       int point = -1;
@@ -124,29 +124,27 @@ void handle_editor_input(map_data_t *map,
         }
       }
     }
-    else if (event.type == SDL_MOUSEWHEEL && editor->active) {
+    else if (event.type == SDL_MOUSEWHEEL) {
       // Zoom in/out by adjusting view size
       // (This would require implementing zoom in the view matrix)
     }
   }
   
   // If in editor mode, handle keyboard movement
-  if (editor->active) {
-    const Uint8* keystates = SDL_GetKeyboardState(NULL);
-    float move_speed = 1000 * delta_time;
-    
-    if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
-      player->y += move_speed;
-    }
-    if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
-      player->y -= move_speed;
-    }
-    if (keystates[SDL_SCANCODE_A] || keystates[SDL_SCANCODE_LEFT]) {
-      player->x -= move_speed;
-    }
-    if (keystates[SDL_SCANCODE_D] || keystates[SDL_SCANCODE_RIGHT]) {
-      player->x += move_speed;
-    }
+  const Uint8* keystates = SDL_GetKeyboardState(NULL);
+  float move_speed = 1000 * delta_time;
+  
+  if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
+    player->y += move_speed;
+  }
+  if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
+    player->y -= move_speed;
+  }
+  if (keystates[SDL_SCANCODE_A] || keystates[SDL_SCANCODE_LEFT]) {
+    player->x -= move_speed;
+  }
+  if (keystates[SDL_SCANCODE_D] || keystates[SDL_SCANCODE_RIGHT]) {
+    player->x += move_speed;
   }
 }
 
