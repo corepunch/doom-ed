@@ -259,7 +259,6 @@ load_texture_from_directories(texname_t tex_name,
     tmp.width = tex_def->width;
     tmp.height = tex_def->height;
     strncpy(tmp.name, tex_name, sizeof(texname_t));
-    free(tex_def);
     return &tmp;
   }
   
@@ -366,7 +365,7 @@ mapside_texture_t *get_texture(const char* name) {
 
 // Load a single flat texture and create an OpenGL texture
 mapside_texture_t *
-load_flat_texture(const palette_entry_t* palette,
+load_flat_texture(palette_entry_t const *palette,
                   texname_t const floorpic)
 {
   filelump_t *flat_lump = find_lump(floorpic);
@@ -383,9 +382,9 @@ load_flat_texture(const palette_entry_t* palette,
   const int height = 64;
   
   // Read raw flat data (just color indices)
-  uint8_t raw_flat[4096];
-  uint8_t *flat_data = cache_lump(floorpic);
-  
+  uint8_t *raw_flat = cache_lump(floorpic);
+  uint8_t *flat_data = malloc(width*height*4);
+
   // Convert color indices to RGBA using palette
   for (int i = 0; i < width * height; i++) {
     uint8_t index = raw_flat[i];
@@ -411,6 +410,8 @@ load_flat_texture(const palette_entry_t* palette,
   tmp.width = width;
   tmp.height = height;
   strncpy(tmp.name, floorpic, sizeof(texname_t));
+  
+  free(flat_data);
 
   return &tmp;
 }

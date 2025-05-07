@@ -7,6 +7,35 @@ struct {
   FILE *file;
 } wad = {0};
 
+bool init_wad(const char *filename) {
+  wad.file = fopen(filename, "rb");
+  if (!wad.file) {
+    printf("Error: Could not open file %s\n", filename);
+    return false;
+  }
+  
+  // Read WAD header
+  wadheader_t header;
+  fread(&header, sizeof(wadheader_t), 1, wad.file);
+  
+  printf("WAD Type: %.4s\n", header.identification);
+  printf("Lumps: %d\n", header.numlumps);
+  
+  // Read directory
+  wad.directory = malloc(sizeof(filelump_t) * header.numlumps);
+  wad.num_lumps = header.numlumps;
+  wad.cache = malloc(sizeof(void*) * header.numlumps);
+  fseek(wad.file, header.infotableofs, SEEK_SET);
+  fread(wad.directory, sizeof(filelump_t), header.numlumps, wad.file);
+  return true;
+}
+
+void shutdown_wad(void) {
+  free(wad.directory);
+  free(wad.cache);
+  fclose(wad.file);
+}
+
 // Function to find a lump index by name
 filelump_t *find_lump(const char* name) {
   for (int i = 0; i < wad.num_lumps; i++) {

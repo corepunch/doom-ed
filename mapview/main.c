@@ -12,24 +12,12 @@ int main(int argc, char* argv[]) {
   }
   
   const char* filename = argv[1];
-  FILE* file = fopen(filename, "rb");
-  if (!file) {
+
+  if (!init_wad(filename)) {
     printf("Error: Could not open file %s\n", filename);
     return 1;
   }
-  
-  // Read WAD header
-  wadheader_t header;
-  fread(&header, sizeof(wadheader_t), 1, file);
-  
-  printf("WAD Type: %.4s\n", header.identification);
-  printf("Lumps: %d\n", header.numlumps);
-  
-  // Read directory
-  filelump_t* directory = malloc(sizeof(filelump_t) * header.numlumps);
-  fseek(file, header.infotableofs, SEEK_SET);
-  fread(directory, sizeof(filelump_t), header.numlumps, file);
-  
+
 //  MAP29  The Living End  ~1300 linedefs, ~1900 sidedefs, ~1100 vertices
 //  MAP15  Industrial Zone  Also very large, very open with many secrets
 //  MAP14  The Inmost Dens  Highly detailed architecture
@@ -73,8 +61,8 @@ int main(int argc, char* argv[]) {
   
   // Cleanup
   free_map_data(&e1m1);
-  free(directory);
-  fclose(file);
+
+  shutdown_wad();
   
   return 0;
 }

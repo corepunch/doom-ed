@@ -253,6 +253,7 @@ char const *get_lump_name(int i);
 int allocate_mapside_textures(map_data_t* map);
 int allocate_flat_textures(map_data_t* map);
 
+uint8_t* load_patch(void* patch_lump, int* width, int* height);
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
@@ -274,5 +275,8 @@ map_data_t load_map(const char* map_name);
 void find_all_maps(void);
 void print_map_info(map_data_t* map);
 void free_map_data(map_data_t* map);
+
+bool init_wad(const char *filename);
+void shutdown_wad(void);
 
 #endif
