@@ -38,13 +38,13 @@ map_data_t load_map(FILE* file, filelump_t* directory, int num_lumps, const char
   map_data_t map = {0};
   
   // Find the map marker lump
-  int map_index = find_lump(directory, num_lumps, map_name);
+  int map_index = find_lump(map_name);
   if (map_index == -1) {
     printf("Map %s not found!\n", map_name);
     return map;
   }
   
-  int palette_index = find_lump(directory, num_lumps, "PLAYPAL");
+  int palette_index = find_lump("PLAYPAL");
   if (palette_index < 0) {
     printf("Error: Required lump not found (PLAYPAL)\n");
     return map;

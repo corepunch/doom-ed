@@ -115,8 +115,8 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
   sys->num_sprites = 0;
 
   
-  int s_start = find_lump(directory, num_lumps, "S_START");
-  int s_end = find_lump(directory, num_lumps, "S_END");
+  int s_start = find_lump("S_START");
+  int s_end = find_lump("S_END");
   if (s_start >= 0 && s_end >= 0 && s_start < s_end) {
     // Iterate through all sprites
     for (int i = s_start + 1; i < s_end; i++) {
@@ -125,23 +125,23 @@ bool init_sprites(map_data_t *map, FILE* wad_file, filelump_t* directory, int nu
   }
 
 //  // If no sprite markers, try loading directly by name
-//  int shotgun_sprite = find_lump(directory, num_lumps, "SHTGA0");
+//  int shotgun_sprite = find_lump("SHTGA0");
 //  if (shotgun_sprite >= 0) {
 //    load_sprite(wad_file, &directory[shotgun_sprite], map->palette);
 //  }
 //  
 //  // Try loading crosshair directly
-//  int crosshair_sprite = find_lump(directory, num_lumps, "CROSA0");
+//  int crosshair_sprite = find_lump("CROSA0");
 //  if (crosshair_sprite >= 0) {
 //    load_sprite(wad_file, &directory[crosshair_sprite], map->palette);
 //  }
 //  
-//  int stbar_lump = find_lump(directory, num_lumps, "STBAR");
+//  int stbar_lump = find_lump("STBAR");
 //  if (stbar_lump >= 0) {
 //    load_sprite(wad_file, &directory[stbar_lump], map->palette);
 //  }
   
-  int stbar_lump = find_lump(directory, num_lumps, "STBAR");
+  int stbar_lump = find_lump("STBAR");
   if (stbar_lump >= 0) {
     load_sprite(wad_file, &directory[stbar_lump], map->palette);
   }

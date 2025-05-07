@@ -231,7 +231,7 @@ static bool load_font_char(FILE* wad_file, filelump_t* directory, int num_lumps,
   snprintf(lump_name, sizeof(lump_name), "%s%03d", FONT_LUMPS_PREFIX, char_code);
 
   // Find lump
-  int lump_index = find_lump(directory, num_lumps, lump_name);
+  int lump_index = find_lump(lump_name);
   if (lump_index < 0) return false;
   
   filelump_t* lump = &directory[lump_index];

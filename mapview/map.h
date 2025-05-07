@@ -245,7 +245,10 @@ typedef struct {
 bool init_sdl(void);
 int run(map_data_t const *map);
 
-int find_lump(filelump_t* directory, int num_lumps, const char* name);
+filelump_t *find_lump(const char* name);
+void *cache_lump(const char* name);
+
+
 int allocate_mapside_textures(map_data_t* map, FILE* wad_file,
                               filelump_t* directory, int num_lumps);
 int allocate_flat_textures(map_data_t* map, FILE* wad_file,

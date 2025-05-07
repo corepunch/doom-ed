@@ -52,8 +52,7 @@ typedef struct {
 // Texture directory structure for TEXTURE1/2
 typedef struct {
   uint32_t numtextures;       // Number of textures
-  uint32_t *offsets;          // Array of offsets to maptexture_t
-  filelump_t *lump;           // Pointer to the lump containing this directory
+  uint32_t offsets[1];        // Array of offsets to maptexture_t
 } texture_directory_t;
 
 // Collection to store loaded flat textures
@@ -72,15 +71,11 @@ flat_cache_t g_flat_cache = {0};
 texture_cache_t g_cache = {0};
 
 // Load a single patch and return its data
-uint8_t* load_patch(FILE* wad_file, filelump_t* patch_lump, int* width, int* height) {
+uint8_t* load_patch(void* patch_lump, int* width, int* height) {
   if (!patch_lump || patch_lump->size <= 0) return NULL;
   
-  // Seek to patch data
-  fseek(wad_file, patch_lump->filepos, SEEK_SET);
-  
   // Read patch header
-  patch_t header;
-  fread(&header, 8, 1, wad_file); // Read fixed part of header (width, height, offsets)
+  patch_t *header = patch_lump;
   
   *width = header.width;
   *height = header.height;
@@ -139,9 +134,11 @@ uint8_t* load_patch(FILE* wad_file, filelump_t* patch_lump, int* width, int* hei
 }
 
 // Create a GL texture from the given texture definition and patches
-GLuint create_texture_from_definition(FILE* wad_file, filelump_t* directory, int num_lumps,
-                                      maptexture_t* tex_def, mappatchnames_t* pnames,
-                                      const palette_entry_t* palette) {
+GLuint
+create_texture_from_definition(maptexture_t* tex_def,
+                               mappatchnames_t* pnames,
+                               const palette_entry_t* palette)
+{
   int width = tex_def->width;
   int height = tex_def->height;
   
@@ -162,17 +159,15 @@ GLuint create_texture_from_definition(FILE* wad_file, filelump_t* directory, int
     char* patch_name = pnames->name[patch_ref->patch];
     
     // Find patch lump
-    int patch_index = find_lump(directory, num_lumps, patch_name);
-    if (patch_index < 0) {
+    void *patch_lump = cache_lump(patch_name);
+    if (!patch_lump) {
       printf("Warning: Could not find patch: %s\n", patch_name);
       continue;
     }
-    
-    filelump_t* patch_lump = &directory[patch_index];
-    
+
     // Load patch data
     int patch_width, patch_height;
-    uint8_t* patch_data = load_patch(wad_file, patch_lump, &patch_width, &patch_height);
+    uint8_t* patch_data = load_patch(patch_lump, &patch_width, &patch_height);
     if (!patch_data) continue;
     
     // Composite patch into texture at specified position
@@ -223,87 +218,27 @@ GLuint create_texture_from_definition(FILE* wad_file, filelump_t* directory, int
   return tex;
 }
 
-// Read texture definitions from TEXTURE1/TEXTURE2 lumps
-bool load_texture_directory(FILE* wad_file,
-                            filelump_t* lump,
-                            texture_directory_t *directory)
-{
-  if (!lump || lump->size <= 0) return NULL;
-  
-  fseek(wad_file, lump->filepos, SEEK_SET);
-  
-  // Read number of textures
-  fread(&directory->numtextures, sizeof(uint32_t), 1, wad_file);
-  
-  // Allocate memory for offsets
-  directory->offsets = malloc(directory->numtextures * sizeof(uint32_t));
-  if (!directory->offsets) {
-    free(directory);
-    return false;
-  }
-  
-  // Read offsets
-  fread(directory->offsets, sizeof(uint32_t), directory->numtextures, wad_file);
-  
-  // Store the lump pointer
-  directory->lump = lump;
-  
-  return true;
-}
-
 // Find a texture in the directory by name
-maptexture_t* find_texture(FILE* wad_file, texture_directory_t* directory, texname_t name) {
-  if (!directory || !directory->lump) return NULL;
-  
+maptexture_t*
+find_texture(texture_directory_t* directory,
+             texname_t name)
+{
+  if (!directory) return NULL;
   for (uint32_t i = 0; i < directory->numtextures; i++) {
-    fseek(wad_file, directory->lump->filepos + directory->offsets[i], SEEK_SET);
-    
-    maptexture_t tex_header;
-    fread(&tex_header, sizeof(maptexture_t) - sizeof(mappatch_t), 1, wad_file);
-
-    if (strncmp(tex_header.name, name, sizeof(texname_t)) == 0) {
-      // Found texture, allocate memory and read full texture definition
-      int size = sizeof(maptexture_t) - sizeof(mappatch_t) + tex_header.patchcount * sizeof(mappatch_t);
-      maptexture_t* tex = malloc(size);
-      if (!tex) return NULL;
-      
-      fseek(wad_file, directory->lump->filepos + directory->offsets[i], SEEK_SET);
-      fread(tex, size, 1, wad_file);
-      
+    maptexture_t *tex = ((void*)directory)+directory->offsets[i];
+    if (strncmp(tex->name, name, sizeof(texname_t)) == 0) {
       return tex;
     }
   }
-  
   return NULL;
-}
-
-// Load PNAMES lump
-mappatchnames_t* load_pnames(FILE* wad_file, filelump_t* lump) {
-  if (!lump || lump->size <= 0) return NULL;
-  
-  fseek(wad_file, lump->filepos, SEEK_SET);
-  
-  int32_t num_patches;
-  fread(&num_patches, sizeof(int32_t), 1, wad_file);
-  
-  // Allocate memory for patch names
-  int size = sizeof(mappatchnames_t) + (num_patches - 1) * sizeof(lumpname_t);
-  mappatchnames_t* pnames = malloc(size);
-  if (!pnames) return NULL;
-  
-  pnames->nummappatches = num_patches;
-  
-  // Read patch names
-  fread(pnames->name, sizeof(lumpname_t), num_patches, wad_file);
-  
-  return pnames;
 }
 
 // Try to load texture from texture directories
 static mapside_texture_t*
-load_texture_from_directories(FILE* wad_file, filelump_t* directory, int num_lumps,
-                              texname_t tex_name, texture_directory_t* tex_dirs,
-                              mappatchnames_t* pnames, const palette_entry_t* palette)
+load_texture_from_directories(texname_t tex_name,
+                              texture_directory_t* tex_dirs,
+                              mappatchnames_t* pnames,
+                              const palette_entry_t* palette)
 {
   static mapside_texture_t tmp;
   maptexture_t* tex_def = NULL;
@@ -315,7 +250,7 @@ load_texture_from_directories(FILE* wad_file, filelump_t* directory, int num_lum
   
   // Try each texture directory until we find the texture
   for (int i = 0; i < MAX_TEXDIR && tex_dirs[i].offsets; i++) {
-    tex_def = find_texture(wad_file, &tex_dirs[i], uppercase);
+    tex_def = find_texture(&tex_dirs[i], uppercase);
     if (tex_def) break;
   }
   
@@ -333,8 +268,7 @@ load_texture_from_directories(FILE* wad_file, filelump_t* directory, int num_lum
 }
 
 // Try to load texture
-static void maybe_load_texture(FILE* wad_file, filelump_t* directory, int num_lumps,
-                               texture_cache_t* cache, texname_t tex_name,
+static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
                                texture_directory_t* tex_dirs, mappatchnames_t* pnames,
                                palette_entry_t* palette) {
   if (tex_name[0] == '-' || tex_name[0] == '\0') return;
@@ -349,8 +283,7 @@ static void maybe_load_texture(FILE* wad_file, filelump_t* directory, int num_lu
   
   // Try to load from texture directories
   mapside_texture_t *tex =
-  load_texture_from_directories(wad_file, directory, num_lumps, tex_name,
-                                tex_dirs, pnames, palette);
+  load_texture_from_directories(tex_name, tex_dirs, pnames, palette);
   
   if (tex) {
     cache->textures[cache->num_textures++] = *tex;
@@ -358,33 +291,20 @@ static void maybe_load_texture(FILE* wad_file, filelump_t* directory, int num_lu
 }
 
 // Main function to allocate textures for map sides
-int allocate_mapside_textures(map_data_t* map, FILE* wad_file, filelump_t* directory, int num_lumps) {
+int allocate_mapside_textures(map_data_t* map) {
   texture_cache_t* cache = &g_cache;
   
-  // Find lumps
-  int pnames_index = find_lump(directory, num_lumps, "PNAMES");
-  
-  if (pnames_index < 0) {
-    printf("Error: Required PNAMES not found\n");
-    return 0;
-  }
-  
-  filelump_t* pnames_lump  = &directory[pnames_index];
-  
   // Array of texture directories
-  texture_directory_t tex_dirs[MAX_TEXDIR]={0};
+  texture_directory_t *tex_dirs[MAX_TEXDIR]={0};
   int dir_count = 0;
   
   // Find and load all texture directories (TEXTURE1, TEXTURE2, etc.)
   for (int i = 0; dir_count < MAX_TEXDIR; i++) {
     char tex_lump_name[sizeof(lumpname_t)+1]={0};
     snprintf(tex_lump_name, sizeof(tex_lump_name), "TEXTURE%d", i+1);
-    int index = find_lump(directory, num_lumps, tex_lump_name);
-    if (index >= 0) {
-      filelump_t* lump = &directory[index];
-      if (load_texture_directory(wad_file, lump, &tex_dirs[dir_count])) {
-        dir_count++;
-      }
+    texture_directory_t *td = cache_lump(tex_lump_name);
+    if (td) {
+      tex_dirs[dir_count++] = td;
     }
   }
   
@@ -394,12 +314,9 @@ int allocate_mapside_textures(map_data_t* map, FILE* wad_file, filelump_t* direc
   }
     
   // Load PNAMES
-  mappatchnames_t* pnames = load_pnames(wad_file, pnames_lump);
+  mappatchnames_t* pnames = cache_lump("PNAMES");
   if (!pnames) {
     printf("Error: Failed to load PNAMES lump\n");
-    for (int i = 0; i < dir_count; i++) {
-      free(tex_dirs[i].offsets);
-    }
     return 0;
   }
   
@@ -612,7 +529,7 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
     
     // If not loaded yet, try to find and load it
     if (!floor_loaded) {
-      int flat_index = find_lump(directory, num_lumps, sector->floorpic);
+      int flat_index = find_lump(sector->floorpic);
       if (flat_index >= 0) {
         mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], map->palette, sector->floorpic);
         if (tex && cache->num_textures < MAX_TEXTURES) {
@@ -632,7 +549,7 @@ int allocate_flat_textures(map_data_t* map, FILE* wad_file, filelump_t* director
     
     // If not loaded yet, try to find and load it
     if (!ceiling_loaded) {
-      int flat_index = find_lump(directory, num_lumps, sector->ceilingpic);
+      int flat_index = find_lump(sector->ceilingpic);
       if (flat_index >= 0) {
         mapside_texture_t *tex = load_flat_texture(wad_file, &directory[flat_index], map->palette, sector->ceilingpic);
         if (tex && cache->num_textures < MAX_TEXTURES) {
@@ -803,7 +720,7 @@ find_and_load_sky_texture(FILE* wad_file, filelump_t* directory, int num_lumps,
                           const palette_entry_t* palette, const char* sky_name)
 {
   // Find sky texture lump
-  int sky_index = find_lump(directory, num_lumps, sky_name);
+  int sky_index = find_lump(sky_name);
   if (sky_index < 0) {
     printf("Warning: Could not find sky texture: %s\n", sky_name);
     return NULL;

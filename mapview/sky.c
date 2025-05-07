@@ -36,7 +36,7 @@ bool load_sky_texture(map_data_t const *map, FILE* wad_file, filelump_t* directo
   
   // Find the first available sky texture
   for (int i = 0; sky_names[i] != NULL; i++) {
-    sky_index = find_lump(directory, num_lumps, sky_names[i]);
+    sky_index = find_lump(sky_names[i]);
     if (sky_index >= 0) {
       printf("Found sky texture: %s\n", sky_names[i]);
       break;
