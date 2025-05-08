@@ -287,22 +287,61 @@ void handle_game_input(float delta_time) {
   // Convert player angle to radians for movement calculations
   float angle_rad = player->angle * M_PI / 180.0;
   
-  // Calculate forward/backward direction vector
-  float forward_x = -forward_move * cos(angle_rad) * MOVEMENT_SPEED; // Negative because DOOM's coordinate system
-  float forward_y = forward_move * sin(angle_rad) * MOVEMENT_SPEED;
-  float strafe_x = strafe_move * sin(angle_rad) * MOVEMENT_SPEED;
-  float strafe_y = strafe_move * cos(angle_rad) * MOVEMENT_SPEED;
+//  // Calculate forward/backward direction vector
+//  float forward_x = -forward_move * cos(angle_rad) * MOVEMENT_SPEED; // Negative because DOOM's coordinate system
+//  float forward_y = forward_move * sin(angle_rad) * MOVEMENT_SPEED;
+//  float strafe_x = strafe_move * sin(angle_rad) * MOVEMENT_SPEED;
+//  float strafe_y = strafe_move * cos(angle_rad) * MOVEMENT_SPEED;
+//  
+//  // Combine movement vectors
+//  float move_x = forward_x + strafe_x;
+//  float move_y = forward_y + strafe_y;
+//  
+//  // If there's any movement, apply it with collision detection and sliding
+//  if (move_x != 0.0f || move_y != 0.0f) {
+////    update_player_position_with_sliding(map, player, move_x * delta_time, move_y * delta_time);
+//    player->x += move_x * delta_time;
+//    player->y += move_y * delta_time;
+//  }
+
+  float input_x = -forward_move * cos(angle_rad) + strafe_move * sin(angle_rad);
+  float input_y =  forward_move * sin(angle_rad) + strafe_move * cos(angle_rad);
   
-  // Combine movement vectors
-  float move_x = forward_x + strafe_x;
-  float move_y = forward_y + strafe_y;
-  
-  // If there's any movement, apply it with collision detection and sliding
-  if (move_x != 0.0f || move_y != 0.0f) {
-//    update_player_position_with_sliding(map, player, move_x, move_y);
-    player->x += move_x * delta_time;
-    player->y += move_y * delta_time;
+  // Normalize input direction
+  float input_len = sqrtf(input_x * input_x + input_y * input_y);
+  if (input_len > 0.0f) {
+    input_x /= input_len;
+    input_y /= input_len;
+    
+    // Accelerate
+    player->vel_x += input_x * ACCELERATION * delta_time;
+    player->vel_y += input_y * ACCELERATION * delta_time;
+  } else {
+    // Apply friction
+    float speed = sqrtf(player->vel_x * player->vel_x + player->vel_y * player->vel_y);
+    if (speed > 0.0f) {
+      float decel = FRICTION * delta_time;
+      float new_speed = fmaxf(0.0f, speed - decel);
+      float scale = new_speed / speed;
+      player->vel_x *= scale;
+      player->vel_y *= scale;
+    }
   }
+  
+  // Clamp velocity
+  float speed = sqrtf(player->vel_x * player->vel_x + player->vel_y * player->vel_y);
+  if (speed > MAX_SPEED) {
+    float scale = MAX_SPEED / speed;
+    player->vel_x *= scale;
+    player->vel_y *= scale;
+  }
+  
+  // Update position
+  player->x += player->vel_x * delta_time;
+  player->y += player->vel_y * delta_time;
+  
+  
+  
   
   // Additional vertical movement if needed (flying up/down)
   if (keystates[SDL_SCANCODE_E]) {

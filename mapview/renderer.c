@@ -244,8 +244,8 @@ int run(void) {
 void GetMouseInVirtualCoords(int* vx, int* vy) {
   extern SDL_Window* window;
   
-  const int target_width = 320;
-  const int target_height = 200;
+  const int target_width = DOOM_WIDTH;
+  const int target_height = DOOM_HEIGHT;
   
   int win_width, win_height;
   int mouse_x, mouse_y;

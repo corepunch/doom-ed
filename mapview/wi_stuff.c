@@ -65,32 +65,33 @@ void init_intermission(void) {
   load_sprite("WISPLAT");
   
   load_sprite("WILV00");
+  
+  load_sprite("WIURH0");
 }
 
 int selected = -1;
+int current = -1;
 
 void get_lnode(int e, int m, int *x, int *y);
 void draw_intermission(void) {
   int window_width, window_height;
   SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
-  
-  float scale = (float)window_height/200;
-  
   sprite_t* INTERPIC = find_sprite("WIMAP0");
   if (INTERPIC) {
-    draw_sprite("WIMAP0", window_width / 2, window_height / 2, scale, 1.0f);
+    draw_sprite("WIMAP0", 0, 0, 1, 1.0f);
   }
   
   for (int i = 0; i < 9; i++) {
     int x, y;
-    if (selected != i) continue;
     get_lnode(0, i, &x, &y);
-    draw_sprite("WISPLAT",
-                window_width / 2 + (x - 160) * scale,
-                window_height / 2 + (y - 100) * scale,
-                scale, 1.0f);
+    if (current == i) {
+      draw_sprite("WIURH0", x, y, 1, 1.0f);
+    } else if (selected == i) {
+      draw_sprite("WISPLAT", x, y, 1, 1.0f);
+    }
   }
-//  
+
+//
 //  draw_sprite("WILV00",
 //              window_width / 2,
 //              window_height / 2,
@@ -129,6 +130,7 @@ void handle_intermission_input(float delta_time) {
           char name[64]={0};
           snprintf(name, 64, "E1M%d", selected+1);
           goto_map(name);
+          current = selected;
         }
         break;
     }

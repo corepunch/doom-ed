@@ -35,10 +35,10 @@ const char* sprite_fs_src = "#version 150 core\n"
 // Sprite vertices (quad)
 float sprite_verts[] = {
   // pos.x  pos.y    tex.x tex.y
-  -0.5f,   -0.5f,    0.0f, 0.0f, // bottom left
-  -0.5f,    0.5f,    0.0f, 1.0f,  // top left
-  0.5f,    0.5f,    1.0f, 1.0f, // top right
-  0.5f,   -0.5f,    1.0f, 0.0f, // bottom right
+  0,   0,    0.0f, 0.0f, // bottom left
+  0,   1,    0.0f, 1.0f,  // top left
+  1,   1,    1.0f, 1.0f, // top right
+  1,   0,    1.0f, 0.0f, // bottom right
 };
 
 // Sprite system state
@@ -109,7 +109,10 @@ bool init_sprites(void) {
   // Create orthographic projection matrix for screen-space rendering
   int width, height;
   SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &width, &height);
-  glm_ortho(0, width, height, 0, -1, 1, sys->projection);
+  float scale = (float)height / DOOM_HEIGHT;
+  float render_width = DOOM_WIDTH * scale;
+  float offset_x = (width - render_width) / (2.0f * scale);
+  glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, sys->projection);
   
   // Find and preload weapon sprites (starting with SHT)
   sys->num_sprites = 0;
@@ -384,7 +387,7 @@ void draw_sprite(const char* name, float x, float y, float scale, float alpha) {
   
   // Set uniforms
   glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
-  glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
+  glUniform2f(glGetUniformLocation(sys->program, "offset"), x-sprite->offsetx*scale, y-sprite->offsety*scale);
   glUniform2f(glGetUniformLocation(sys->program, "scale"), sprite->width * scale, sprite->height * scale);
   glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
   
@@ -400,6 +403,20 @@ void draw_sprite(const char* name, float x, float y, float scale, float alpha) {
   // Reset state
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
+}
+
+void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
+  unsigned ticks = SDL_GetTicks();
+  float time = ticks / 1000.0f;
+  
+  float freq = 6.0f;             // How fast the bob oscillates
+  float amp_x = 4.0f;            // Side-to-side movement
+  float amp_y = 2.0f;            // Vertical bobbing
+  
+  float phase = time * freq;
+  
+  *offset_x = (int)(sin(phase) * amp_x * speed);
+  *offset_y = (int)(fabs(sin(phase)) * amp_y * speed); // U-shaped vertical bob
 }
 
 // Draw the shotgun at the bottom center of the screen
@@ -423,22 +440,19 @@ void draw_weapon(void) {
 //    }
 //  }
 
-  // Scale up the weapon a bit
-  float scale = 2.0f;
+  if (sprite) {
+    // Draw with full opacity
+    
+    int x, y;
+    get_weapon_wobble_offset(&x, &y, MAX(fabs(game.player.vel_x), fabs(game.player.vel_y))/75);
+    
+    draw_sprite(shotgun_sprite, x, 20-y, 1, 1.0f);
+  }
 
   sprite_t* STBAR = find_sprite("STBAR");
+
   if (STBAR) {
-    draw_sprite("STBAR", window_width / 2.0f, window_height-STBAR->height/2*scale, 2, 1.0f);
-  }
-  
-  if (sprite) {
-    
-    // Position at bottom center of screen, slightly raised
-    float x = window_width / 2.0f;
-    float y = window_height - (sprite->height / 2 + STBAR->height) * scale;
-    
-    // Draw with full opacity
-    draw_sprite(shotgun_sprite, x, y, scale, 1.0f);
+    draw_sprite("STBAR", 0, DOOM_HEIGHT-STBAR->height, 1, 1.0f);
   }
 }
 

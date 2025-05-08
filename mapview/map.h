@@ -38,6 +38,9 @@ if ((map)->name) free((map)->name); \
 #define PALETTE_WIDTH 64
 #define NOTEX_SIZE 64
 
+#define DOOM_WIDTH 320
+#define DOOM_HEIGHT 200
+
 //#define HEXEN
 
 #define HIGHLIGHT(light) light//((light)+0.25)
@@ -60,8 +63,12 @@ enum {
 #define FOV 90.0
 #define NEAR_Z 0.1
 #define FAR_Z 1000.0
-#define MOVEMENT_SPEED 400.0
+//#define MOVEMENT_SPEED 300.0
 #define ROTATION_SPEED 3.0
+
+#define ACCELERATION 1000.0f
+#define FRICTION     800.0f
+#define MAX_SPEED    200.0f
 
 // Type definitions to better represent the WAD format
 typedef char wadid_t[4];     // "IWAD" or "PWAD"
@@ -74,6 +81,7 @@ typedef struct {
   float angle;  // in degrees, 0 is east, 90 is north
   float pitch;
   float height;
+  float vel_x, vel_y; // Player velocity
 } player_t;
 
 // Vertex structure for our buffer (xyzuv)
