@@ -90,11 +90,11 @@ void draw_intermission(void) {
                 window_height / 2 + (y - 100) * scale,
                 scale, 1.0f);
   }
-  
-  draw_sprite("WILV00",
-              window_width / 2,
-              window_height / 2,
-              scale/2, 1.0f);
+//  
+//  draw_sprite("WILV00",
+//              window_width / 2,
+//              window_height / 2,
+//              scale/2, 1.0f);
 }
 
 void goto_intermisson(void) {
