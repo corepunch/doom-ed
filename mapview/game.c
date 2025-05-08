@@ -193,7 +193,7 @@ void draw_dungeon(void) {
   
   draw_crosshair();
   
-  draw_palette(map, 0, 0, window_width, window_height);
+  draw_palette(map, 0, 0);
   
   extern bool mode;
   if (mode) {

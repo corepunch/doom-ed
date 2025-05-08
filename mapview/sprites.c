@@ -59,6 +59,8 @@ GLuint compile_shader(GLenum type, const char* src);
 GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety);
 GLuint generate_crosshair_texture(int size);
 
+float black_bars = 0.f;
+
 int load_sprite(const char *name) {
   int width, height, offsetx, offsety;
   GLuint texture = load_sprite_texture(cache_lump(name), &width, &height, &offsetx, &offsety);
@@ -112,11 +114,11 @@ bool init_sprites(void) {
   float scale = (float)height / DOOM_HEIGHT;
   float render_width = DOOM_WIDTH * scale;
   float offset_x = (width - render_width) / (2.0f * scale);
+  black_bars = offset_x;
   glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, sys->projection);
   
   // Find and preload weapon sprites (starting with SHT)
   sys->num_sprites = 0;
-
   
   int s_start = find_lump_num("S_START");
   int s_end = find_lump_num("S_END");
@@ -304,50 +306,23 @@ int find_lump_from_file(FILE* wad_file, const char* name) {
 
 // Generate a simple crosshair texture
 GLuint generate_crosshair_texture(int size) {
-  // Create a simple crosshair texture
-  int crosshair_size = size; // Size of the crosshair texture
-  uint8_t* crosshair_data = calloc(crosshair_size * crosshair_size * 4, 1);
+  // Clamp size to minimum of 8
+  if (size < 8) size = 8;
   
+  uint32_t* crosshair_data = calloc(size * size * 4, 1);
   if (!crosshair_data) return 0;
-  
-  // Draw a simple plus-shaped crosshair
-  int thickness = 3;//crosshair_size / 8;
-  if (thickness < 1) thickness = 1;
-  
-  // Set color (white with full opacity)
-  uint8_t r = 255, g = 255, b = 255, a = 255;
-  
-  // Draw horizontal line
-  for (int y = crosshair_size/2 - thickness/2; y < crosshair_size/2 + thickness/2; y++) {
-    for (int x = 0; x < crosshair_size; x++) {
-      int idx = (y * crosshair_size + x) * 4;
-      crosshair_data[idx] = r;     // R
-      crosshair_data[idx + 1] = g; // G
-      crosshair_data[idx + 2] = b; // B
-      crosshair_data[idx + 3] = a; // A
-    }
+
+  for (int i = 0; i < size-1; i++) {
+    crosshair_data[i+size*(size/2-1)] = -1;
+    crosshair_data[i*size+(size/2-1)] = -1;
   }
   
-  // Draw vertical line
-  for (int x = crosshair_size/2 - thickness/2; x < crosshair_size/2 + thickness/2; x++) {
-    for (int y = 0; y < crosshair_size; y++) {
-      int idx = (y * crosshair_size + x) * 4;
-      crosshair_data[idx] = r;     // R
-      crosshair_data[idx + 1] = g; // G
-      crosshair_data[idx + 2] = b; // B
-      crosshair_data[idx + 3] = a; // A
-    }
-  }
-  
-  // Create empty space in the center
-  int center_size = thickness * 2;
-  for (int y = crosshair_size/2 - center_size/2; y < crosshair_size/2 + center_size/2; y++) {
-    for (int x = crosshair_size/2 - center_size/2; x < crosshair_size/2 + center_size/2; x++) {
-      int idx = (y * crosshair_size + x) * 4;
-      crosshair_data[idx + 3] = 0; // Transparent
-    }
-  }
-  
+  crosshair_data[(1+size)*(size/2-1)] = 0;
+  crosshair_data[(1+size)*(size/2-1)-1] = 0;
+  crosshair_data[(1+size)*(size/2-1)+1] = 0;
+  crosshair_data[(1+size)*(size/2-1)-size] = 0;
+  crosshair_data[(1+size)*(size/2-1)+size] = 0;
+
   // Create OpenGL texture
   GLuint texture;
   glGenTextures(1, &texture);
@@ -358,10 +333,9 @@ GLuint generate_crosshair_texture(int size) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
   
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, crosshair_size, crosshair_size, 0, GL_RGBA, GL_UNSIGNED_BYTE, crosshair_data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, crosshair_data);
   
   free(crosshair_data);
-  
   return texture;
 }
 
@@ -456,28 +430,28 @@ void draw_weapon(void) {
   }
 }
 
+#define CROSSHAIR_SIZE 10
+
 // Draw a crosshair in the center of the screen
 void draw_crosshair(void) {
   sprite_system_t* sys = &g_sprite_system;
-  int window_width, window_height;
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
   
   // First try to find a pre-existing crosshair sprite
   sprite_t* sprite = find_sprite("CROSA0");
   
   if (sprite) {
     // Use the existing crosshair sprite
-    float x = window_width / 2.0f;
-    float y = window_height / 2.0f;
+    float x = DOOM_WIDTH/2;
+    float y = DOOM_HEIGHT/2;
     float scale = 1.0f;
-    float alpha = 0.8f; // Slightly transparent for better visibility
+    float alpha = 0.6f; // Slightly transparent for better visibility
     
     draw_sprite("CROSA0", x, y, scale, alpha);
   } else {
     // No crosshair sprite found, generate one on demand
     if (sys->crosshair_texture == 0) {
       // Generate a crosshair texture of 16x16 pixels
-      sys->crosshair_texture = generate_crosshair_texture(16);
+      sys->crosshair_texture = generate_crosshair_texture(CROSSHAIR_SIZE);
       
       if (sys->crosshair_texture == 0) {
         printf("Failed to generate crosshair texture\n");
@@ -489,10 +463,10 @@ void draw_crosshair(void) {
         sprite_t* new_sprite = &sys->sprites[sys->num_sprites];
         strncpy(new_sprite->name, "CROSSH", 16);
         new_sprite->texture = sys->crosshair_texture;
-        new_sprite->width = 16;
-        new_sprite->height = 16;
-        new_sprite->offsetx = 0;
-        new_sprite->offsety = 0;
+        new_sprite->width = CROSSHAIR_SIZE;
+        new_sprite->height = CROSSHAIR_SIZE;
+        new_sprite->offsetx = CROSSHAIR_SIZE/2;
+        new_sprite->offsety = CROSSHAIR_SIZE/2;
         sys->num_sprites++;
         
         printf("Generated crosshair sprite (16x16)\n");
@@ -502,8 +476,8 @@ void draw_crosshair(void) {
     // Draw the generated crosshair
     sprite = find_sprite("CROSSH");
     if (sprite) {
-      float x = window_width / 2.0f;
-      float y = window_height / 2.0f;
+      float x = DOOM_WIDTH/2;
+      float y = DOOM_HEIGHT/2;
       float scale = 2.0f; // Scale up the small texture
       float alpha = 1.0f;
       
