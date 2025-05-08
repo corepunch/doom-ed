@@ -78,7 +78,7 @@ int load_sprite(const char *name) {
 }
 
 // Initialize the sprite system
-bool init_sprites(map_data_t *map) {
+bool init_sprites(void) {
   sprite_system_t* sys = &g_sprite_system;
   
   // Create shader program

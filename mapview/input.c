@@ -115,12 +115,7 @@ void handle_scroll(SDL_Event event, map_data_t *map) {
   }
 }
 
-/**
- * Handle player input including mouse movement for camera control
- * @param map Pointer to the map data
- * @param player Pointer to the player object
- */
-void handle_input(map_data_t *map, player_t *player, float delta_time) {
+void handle_game_input(float delta_time) {
   extern editor_state_t editor;
   SDL_Event event;
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
@@ -130,6 +125,9 @@ void handle_input(map_data_t *map, player_t *player, float delta_time) {
   static int mouse_y_rel = 0;
   static float forward_move = 0;
   static float strafe_move = 0;
+  
+  map_data_t *map = &game.map;
+  player_t *player = &game.player;
 
   if (SDL_GetRelativeMouseMode()) {
     mouse_x_rel = 0;
@@ -207,7 +205,8 @@ void handle_input(map_data_t *map, player_t *player, float delta_time) {
     else if (event.type == SDL_KEYDOWN) {
       switch (event.key.keysym.scancode) {
         case SDL_SCANCODE_ESCAPE:
-          SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
+          goto_intermisson();
+//          SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
           break;
         case SDL_SCANCODE_Z:
           selected_texture--;

@@ -186,179 +186,8 @@ void cleanup(void) {
   SDL_Quit();
 }
 
-// Initialize player position based on map data
-void init_player(map_data_t const *map, player_t *player) {
-  // Default values
-  player->x = 0;
-  player->y = 0;
-  player->angle = 0;
-  player->height = 41.0;  // Default DOOM player eye height
-  
-  // Find player start position (thing type 1)
-  for (int i = 0; i < map->num_things; i++) {
-    if (map->things[i].type == 1) {
-      player->x = map->things[i].x;
-      player->y = map->things[i].y;
-      player->angle = map->things[i].angle;
-      break;
-    }
-  }
-}
-
-//#define ISOMETRIC
-
-/**
- * Generate the view matrix incorporating player position, angle, and pitch
- * @param map Pointer to the map data
- * @param player Pointer to the player object
- * @param out Output matrix (view-projection combined)
- */
-void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
-  // Convert angle to radians for direction calculation
-#ifdef ISOMETRIC
-  float angle_rad = (player->angle + 45*3) * M_PI / 180.0f + 0.001f;
-  float pitch_rad = 60/*player->pitch*/ * M_PI / 180.0f;
-#else
-  float angle_rad = player->angle * M_PI / 180.0f + 0.001f;
-  float pitch_rad = player->pitch * M_PI / 180.0f;
-#endif
-  
-  // Calculate looking direction vector
-  float look_dir_x = -cos(angle_rad);
-  float look_dir_y = sin(angle_rad);
-  float look_dir_z = sin(pitch_rad);
-  
-  float camera_dist = 500;
-  
-  // Scale the horizontal component of the look direction by the cosine of the pitch
-  // This prevents the player from moving faster when looking up or down
-  float cos_pitch = cos(pitch_rad);
-  look_dir_x *= cos_pitch;
-  look_dir_y *= cos_pitch;
-  
-  // Calculate look-at point
-  float look_x = player->x + look_dir_x * camera_dist;
-  float look_y = player->y + look_dir_y * camera_dist;
-  float look_z = player->z + look_dir_z * camera_dist;
-  
-  // Create projection matrix
-  mat4 proj;
-  glm_perspective(glm_rad(90.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 1.0f, 2000.0f, proj);
-  
-  // Create view matrix
-  mat4 view;
-  vec3 eye = {player->x, player->y, player->z};
-  vec3 center = {look_x, look_y, look_z}; // Look vector now includes pitch
-  vec3 up = {0.0f, 0.0f, 1.0f};           // Z is up in Doom
-  
-  // Add a small offset to prevent precision issues with axis-aligned views
-  if (fabs(player->pitch) > 89.5f) {
-    // Adjust up vector when looking almost straight up or down
-    up[0] = -sin(angle_rad);
-    up[1] = -cos(angle_rad);
-    up[2] = 0.0f;
-  }
-
-#ifdef ISOMETRIC
-  glm_lookat(center, eye, up, view);
-#else
-  glm_lookat(eye, center, up, view);
-#endif
-
-  // Combine view and projection into MVP
-  glm_mat4_mul(proj, view, out);
-}
-
-void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);
-void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp);
-
-int pixel = 0;
-
-void update_player_height(map_data_t const *map, player_t *player) {
-  mapsector_t const *sector = find_player_sector(map, player->x, player->y);
-  if (sector) {
-    player->z = sector->floorheight + EYE_HEIGHT;
-  }
-}
-
-void minimap_matrix(player_t const *player, mat4 mvp);
-
-void draw_dungeon(map_data_t const *map, player_t *player) {
-  void draw_floor_ids(map_data_t const *, mapsector_t const *, viewdef_t const *);
-  void draw_minimap(map_data_t const *, player_t const *);
-  void draw_things(map_data_t const *, viewdef_t const *, bool);
-  
-  mapsector_t const *sector = find_player_sector(map, player->x, player->y);
-  mat4 mvp;
-
-  static unsigned frame = 0;
-
-  float z = 0;
-  
-  if (sector) {
-    z = sector->floorheight + EYE_HEIGHT;
-  }
-  
-  update_player_height(map, player);
-  
-  get_view_matrix(map, player, mvp);
-  
-  viewdef_t viewdef={0};
-  memcpy(viewdef.mvp, mvp, sizeof(mat4));
-  memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
-  viewdef.frame = frame++;
-  glm_frustum_planes(mvp, viewdef.frustum);
-  
-  glUseProgram(ui_prog);
-  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  
-  draw_floor_ids(map, sector, &viewdef);
-  
-  int fb_width, fb_height;
-  int window_width, window_height;
-  
-  SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
-  
-  glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
-  
-  //      static int p=0;
-  //      if (p!=pixel)printf("%08x\n", pixel);
-  //      p = pixel;
-  
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-  
-  draw_sky(map, player, mvp);
-  
-  glUseProgram(world_prog);
-  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  
-  extern int sectors_drawn;
-  sectors_drawn = 0;
-  
-  viewdef.frame = frame++;
-  
-  draw_floors(map, sector, &viewdef);
-  
-  draw_things(map, &viewdef, true);
-  
-  draw_weapon();
-  
-  draw_crosshair();
-  
-  draw_palette(map, 0, 0, window_width, window_height);
-  
-  if (mode) {
-    draw_minimap(map, player);
-  }
-}
-
 // Main function
-int run(map_data_t *map) {
-  player_t player = {0};
-  
-  // Initialize player position based on map data
-  init_player(map, &player);
+int run(void) {
   
   // Main game loop
   Uint32 last_time = SDL_GetTicks();
@@ -375,20 +204,21 @@ int run(map_data_t *map) {
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    void draw_dungeon(void);
     void draw_intermission(void);
-    void handle_intermission_input(player_t *player, float delta_time);
+    void handle_intermission_input(float delta_time);
 
     switch (game.state) {
       case GS_DUNGEON:
-        handle_input(map, &player, delta_time);
-        draw_dungeon(map, &player);
+        handle_game_input(delta_time);
+        draw_dungeon();
         break;
       case GS_EDITOR:
-        handle_editor_input(map, &editor, &player, delta_time);
-        draw_editor(map, &editor, &player);
+        handle_editor_input(&game.map, &editor, &game.player, delta_time);
+        draw_editor(&game.map, &editor, &game.player);
         break;
       case GS_WORLD:
-        handle_intermission_input(&player, delta_time);
+        handle_intermission_input(delta_time);
         draw_intermission();
         break;
       default:

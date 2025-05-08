@@ -16,7 +16,8 @@ typedef struct {
 } sprite_t;
 
 // Initialize sprite system
-bool init_sprites(map_data_t *);
+bool init_sprites(void);
+void init_intermission(void);
 
 // Draw a sprite at the specified screen position
 void draw_sprite(const char* name, float x, float y, float scale, float alpha);

@@ -159,6 +159,7 @@ void free_map_data(map_data_t* map) {
   CLEAR_COLLECTION(map, sidedefs);
   CLEAR_COLLECTION(map, things);
   CLEAR_COLLECTION(map, sectors);
+  memset(map, 0, sizeof(map_data_t));
 }
 
 // Function to print basic map info

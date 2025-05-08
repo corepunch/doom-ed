@@ -258,13 +258,17 @@ typedef enum {
 } gameState_t;
 
 typedef struct {
+  int episode;
+  int level;
   gameState_t state;
+  map_data_t map;
+  player_t player;
 } game_t;
 
 extern game_t game;
 
 bool init_sdl(void);
-int run(map_data_t *map);
+int run(void);
 
 filelump_t *find_lump(const char* name);
 void *cache_lump(const char* name);
@@ -279,7 +283,7 @@ mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
 void build_floor_vertex_buffer(map_data_t *map);
-void handle_input(map_data_t *map, player_t *player, float delta_time);
+void handle_game_input(float delta_time);
 void draw_textured_surface(wall_section_t const *surface, float light, int mode);
 void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mode);
 
@@ -296,6 +300,9 @@ map_data_t load_map(const char* map_name);
 void find_all_maps(void);
 void print_map_info(map_data_t* map);
 void free_map_data(map_data_t* map);
+
+void goto_intermisson(void);
+void goto_map(const char *mapname);
 
 bool init_wad(const char *filename);
 void shutdown_wad(void);

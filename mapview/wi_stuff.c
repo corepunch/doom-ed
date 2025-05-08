@@ -97,8 +97,15 @@ void draw_intermission(void) {
               scale/2, 1.0f);
 }
 
+void goto_intermisson(void) {
+  SDL_SetRelativeMouseMode(SDL_FALSE);
+  
+  free_map_data(&game.map);
 
-void handle_intermission_input(player_t *player, float delta_time) {
+  game.state = GS_WORLD;
+}
+
+void handle_intermission_input(float delta_time) {
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
     extern SDL_Window* window;
@@ -118,7 +125,11 @@ void handle_intermission_input(player_t *player, float delta_time) {
         }
         break;
       case SDL_MOUSEBUTTONUP:
-        
+        if (selected >= 0) {
+          char name[64]={0};
+          snprintf(name, 64, "E1M%d", selected+1);
+          goto_map(name);
+        }
         break;
     }
   }
