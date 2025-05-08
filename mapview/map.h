@@ -218,6 +218,8 @@ typedef struct {
   uint8_t b;
 } palette_entry_t;
 
+extern palette_entry_t *palette;
+
 // Map data structure using the collection macro
 typedef struct {
   DEFINE_COLLECTION(mapvertex_t, vertices);
@@ -225,8 +227,6 @@ typedef struct {
   DEFINE_COLLECTION(mapsidedef_t, sidedefs);
   DEFINE_COLLECTION(mapthing_t, things);
   DEFINE_COLLECTION(mapsector_t, sectors);
-  
-  palette_entry_t *palette;
   
   struct {
     mapsidedef2_t *sections;
@@ -299,5 +299,7 @@ void free_map_data(map_data_t* map);
 
 bool init_wad(const char *filename);
 void shutdown_wad(void);
+
+void GetMouseInVirtualCoords(int* vx, int* vy);
 
 #endif

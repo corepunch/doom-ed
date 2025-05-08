@@ -56,12 +56,12 @@ sprite_system_t g_sprite_system = {0};
 
 // Forward declarations
 GLuint compile_shader(GLenum type, const char* src);
-GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const*);
+GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety);
 GLuint generate_crosshair_texture(int size);
 
-int load_sprite(const char *name, palette_entry_t const *palette) {
+int load_sprite(const char *name) {
   int width, height, offsetx, offsety;
-  GLuint texture = load_sprite_texture(cache_lump(name), &width, &height, &offsetx, &offsety, palette);
+  GLuint texture = load_sprite_texture(cache_lump(name), &width, &height, &offsetx, &offsety);
   if (texture) {
     sprite_t* sprite = &g_sprite_system.sprites[g_sprite_system.num_sprites];
     strncpy(sprite->name, name, 16);
@@ -120,29 +120,28 @@ bool init_sprites(map_data_t *map) {
   if (s_start >= 0 && s_end >= 0 && s_start < s_end) {
     // Iterate through all sprites
     for (int i = s_start + 1; i < s_end; i++) {
-      load_sprite(get_lump_name(i), map->palette);
+      load_sprite(get_lump_name(i));
     }
   }
 
 //  // If no sprite markers, try loading directly by name
 //  int shotgun_sprite = find_lump("SHTGA0");
 //  if (shotgun_sprite >= 0) {
-//    load_sprite(wad_file, &directory[shotgun_sprite], map->palette);
+//    load_sprite(wad_file, &directory[shotgun_sprite]);
 //  }
 //  
 //  // Try loading crosshair directly
 //  int crosshair_sprite = find_lump("CROSA0");
 //  if (crosshair_sprite >= 0) {
-//    load_sprite(wad_file, &directory[crosshair_sprite], map->palette);
+//    load_sprite(wad_file, &directory[crosshair_sprite]);
 //  }
 //  
 //  int stbar_lump = find_lump("STBAR");
 //  if (stbar_lump >= 0) {
-//    load_sprite(wad_file, &directory[stbar_lump], map->palette);
+//    load_sprite(wad_file, &directory[stbar_lump]);
 //  }
   
-  load_sprite("STBAR", map->palette);
-  load_sprite("INTERPIC", map->palette);
+  load_sprite("STBAR");
   
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
@@ -183,7 +182,7 @@ typedef struct {
 } spriteheader_t;
 
 // Load a sprite texture from memory
-GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const *palette) {
+GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety) {
   if (!data) return 0;
   
   // Cast to sprite structure for header access
@@ -431,12 +430,7 @@ void draw_weapon(void) {
   if (STBAR) {
     draw_sprite("STBAR", window_width / 2.0f, window_height-STBAR->height/2*scale, 2, 1.0f);
   }
-
-  sprite_t* INTERPIC = find_sprite("INTERPIC");
-  if (INTERPIC) {
-    draw_sprite("INTERPIC", window_width / 2, window_height / 2, 2, 1.0f);
-  }
-
+  
   if (sprite) {
     
     // Position at bottom center of screen, slightly raised
@@ -446,7 +440,6 @@ void draw_weapon(void) {
     // Draw with full opacity
     draw_sprite(shotgun_sprite, x, y, scale, 1.0f);
   }
-  
 }
 
 // Draw a crosshair in the center of the screen

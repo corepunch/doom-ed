@@ -126,8 +126,7 @@ uint8_t* load_patch(void* patch_lump, int* width, int* height) {
 // Create a GL texture from the given texture definition and patches
 GLuint
 create_texture_from_definition(maptexture_t* tex_def,
-                               mappatchnames_t* pnames,
-                               const palette_entry_t* palette)
+                               mappatchnames_t* pnames)
 {
   int width = tex_def->width;
   int height = tex_def->height;
@@ -227,8 +226,7 @@ find_texture(texture_directory_t* directory,
 static mapside_texture_t*
 load_texture_from_directories(texname_t tex_name,
                               texture_directory_t* tex_dirs[],
-                              mappatchnames_t* pnames,
-                              const palette_entry_t* palette)
+                              mappatchnames_t* pnames)
 {
   static mapside_texture_t tmp;
   maptexture_t* tex_def = NULL;
@@ -246,7 +244,7 @@ load_texture_from_directories(texname_t tex_name,
   
   // If texture definition found, create OpenGL texture
   if (tex_def) {
-    tmp.texture = create_texture_from_definition(tex_def, pnames, palette);
+    tmp.texture = create_texture_from_definition(tex_def, pnames);
     tmp.width = tex_def->width;
     tmp.height = tex_def->height;
     strncpy(tmp.name, tex_name, sizeof(texname_t));
@@ -258,8 +256,7 @@ load_texture_from_directories(texname_t tex_name,
 
 // Try to load texture
 static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
-                               texture_directory_t* tex_dirs[], mappatchnames_t* pnames,
-                               palette_entry_t* palette) {
+                               texture_directory_t* tex_dirs[], mappatchnames_t* pnames) {
   if (tex_name[0] == '-' || tex_name[0] == '\0') return;
   if (cache->num_textures == MAX_TEXTURES) return;
   
@@ -272,7 +269,7 @@ static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
   
   // Try to load from texture directories
   mapside_texture_t *tex =
-  load_texture_from_directories(tex_name, tex_dirs, pnames, palette);
+  load_texture_from_directories(tex_name, tex_dirs, pnames);
   
   if (tex) {
     cache->textures[cache->num_textures++] = *tex;
@@ -313,9 +310,9 @@ int allocate_mapside_textures(map_data_t* map) {
   for (int i = 0; i < map->num_sidedefs; i++) {
     mapsidedef_t* side = &map->sidedefs[i];
     
-    maybe_load_texture(cache, side->toptexture, tex_dirs, pnames, map->palette);
-    maybe_load_texture(cache, side->midtexture, tex_dirs, pnames, map->palette);
-    maybe_load_texture(cache, side->bottomtexture, tex_dirs, pnames, map->palette);
+    maybe_load_texture(cache, side->toptexture, tex_dirs, pnames);
+    maybe_load_texture(cache, side->midtexture, tex_dirs, pnames);
+    maybe_load_texture(cache, side->bottomtexture, tex_dirs, pnames);
   }
   
   return cache->num_textures;
@@ -356,7 +353,7 @@ mapside_texture_t *get_texture(const char* name) {
 
 // Load a single flat texture and create an OpenGL texture
 mapside_texture_t *
-load_flat_texture(palette_entry_t const *palette,
+load_flat_texture(
                   texname_t const floorpic)
 {
   filelump_t *flat_lump = find_lump(floorpic);
@@ -448,7 +445,7 @@ int allocate_flat_textures(map_data_t* map) {
 //    if (already_cached) continue;
 //    
 //    // Load the flat texture
-//    mapside_texture_t *tex = load_flat_texture(map->palette, get_lump_name(i));
+//    mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
 //    if (tex) {
 //      cache->textures[cache->num_textures++] = *tex;
 //    }
@@ -474,7 +471,7 @@ int allocate_flat_textures(map_data_t* map) {
 //      if (already_cached) continue;
 //      
 //      // Load the flat texture
-//      mapside_texture_t *tex = load_flat_texture(map->palette, get_lump_name(i));
+//      mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
 //      if (tex) {
 //        cache->textures[cache->num_textures++] = *tex;
 //      }
@@ -487,7 +484,7 @@ int allocate_flat_textures(map_data_t* map) {
     
     // If not loaded yet, try to find and load it
     if (!get_flat_texture(sector->floorpic)) {
-      mapside_texture_t *tex = load_flat_texture(map->palette, sector->floorpic);
+      mapside_texture_t *tex = load_flat_texture(sector->floorpic);
       if (tex && cache->num_textures < MAX_TEXTURES) {
         cache->textures[cache->num_textures++] = *tex;
       }
@@ -495,7 +492,7 @@ int allocate_flat_textures(map_data_t* map) {
     
     // If not loaded yet, try to find and load it
     if (!get_flat_texture(sector->ceilingpic)) {
-      mapside_texture_t *tex = load_flat_texture(map->palette, sector->ceilingpic);
+      mapside_texture_t *tex = load_flat_texture(sector->ceilingpic);
       if (tex && cache->num_textures < MAX_TEXTURES) {
         cache->textures[cache->num_textures++] = *tex;
       }
@@ -578,8 +575,7 @@ void draw_palette(map_data_t const *map, float x, float y, int width, int height
 
 // Load a sky texture and create an OpenGL texture
 mapside_texture_t *
-find_and_load_sky_texture(palette_entry_t const* palette,
-                          texname_t const skypic)
+find_and_load_sky_texture(texname_t const skypic)
 {
   static mapside_texture_t tmp = {0};
   
@@ -660,7 +656,7 @@ int find_and_load_sky_textures(map_data_t* map)
   
   // Try to load each sky texture
   for (int i = 0; sky_names[i] != NULL; i++) {
-    mapside_texture_t* sky = find_and_load_sky_texture(map->palette, sky_names[i]);
+    mapside_texture_t* sky = find_and_load_sky_texture(sky_names[i]);
     if (sky) {
       // Add to the texture cache
       if (g_cache.num_textures < MAX_TEXTURES) {

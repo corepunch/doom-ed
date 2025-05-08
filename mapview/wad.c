@@ -111,13 +111,6 @@ map_data_t load_map(const char* map_name) {
     printf("Map %s not found!\n", map_name);
     return map;
   }
-  
-  if (!cache_lump("PLAYPAL")) {
-    printf("Error: Required lump not found (PLAYPAL)\n");
-    return map;
-  }
-  
-  map.palette = cache_lump("PLAYPAL");
 
   // Map lumps follow a specific order after the map marker
   if (map_index + 10 <= wad.num_lumps) {

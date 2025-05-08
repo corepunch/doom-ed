@@ -62,11 +62,10 @@ bool load_sky_texture(map_data_t const *map) {
   // We'll need to determine dimensions from the texture itself
   
   mapside_texture_t *
-  find_and_load_sky_texture(const palette_entry_t* palette,
-                            const char* sky_name);
+  find_and_load_sky_texture(const char* sky_name);
 
   // Get the texture data
-  mapside_texture_t *sky_tex = find_and_load_sky_texture(map->palette, sky_lump->name);
+  mapside_texture_t *sky_tex = find_and_load_sky_texture(sky_lump->name);
 
   if (sky_tex) {
     g_sky.texture_id = sky_tex->texture;

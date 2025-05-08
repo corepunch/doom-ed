@@ -154,20 +154,20 @@ uint16_t add_sector(map_data_t *map) {
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
 
 // Check if two line segments intersect
-static bool segments_intersect(mapvertex_t v1, mapvertex_t v2, mapvertex_t v3, mapvertex_t v4) {
-  int dx1 = v2.x - v1.x;
-  int dy1 = v2.y - v1.y;
-  int dx2 = v4.x - v3.x;
-  int dy2 = v4.y - v3.y;
-  
-  int delta = dx1 * dy2 - dy1 * dx2;
-  if (delta == 0) return false; // Parallel lines
-  
-  float t1 = ((v3.x - v1.x) * dy2 - (v3.y - v1.y) * dx2) / (float)delta;
-  float t2 = ((v1.x - v3.x) * dy1 - (v1.y - v3.y) * dx1) / (float)(-delta);
-  
-  return (t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1);
-}
+//static bool segments_intersect(mapvertex_t v1, mapvertex_t v2, mapvertex_t v3, mapvertex_t v4) {
+//  int dx1 = v2.x - v1.x;
+//  int dy1 = v2.y - v1.y;
+//  int dx2 = v4.x - v3.x;
+//  int dy2 = v4.y - v3.y;
+//  
+//  int delta = dx1 * dy2 - dy1 * dx2;
+//  if (delta == 0) return false; // Parallel lines
+//  
+//  float t1 = ((v3.x - v1.x) * dy2 - (v3.y - v1.y) * dx2) / (float)delta;
+//  float t2 = ((v1.x - v3.x) * dy1 - (v1.y - v3.y) * dx1) / (float)(-delta);
+//  
+//  return (t1 >= 0 && t1 <= 1 && t2 >= 0 && t2 <= 1);
+//}
 
 // Check if linedef already exists between vertices
 int find_existing_linedef(map_data_t const *map, uint16_t v1, uint16_t v2) {

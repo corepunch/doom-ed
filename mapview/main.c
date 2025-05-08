@@ -29,15 +29,24 @@ int main(int argc, char* argv[]) {
   
   // Load E1M1 map
   
-  const char *mapname = "MAP01";
+  
+  if (!cache_lump("PLAYPAL")) {
+    printf("Error: Required lump not found (PLAYPAL)\n");
+    return 0;
+  }
+  extern palette_entry_t *palette;
+  palette = cache_lump("PLAYPAL");
+  
+  const char *mapname = "E1M1";
   
   map_data_t e1m1 = load_map(mapname);
   
   find_all_maps();
   
   const char *get_map_name(const char *name);
+  void init_intermission(void);
   
-  game.state = GS_DUNGEON;
+  game.state = GS_WORLD;
   
   // Print map info
   if (e1m1.num_vertices > 0) {
@@ -47,7 +56,7 @@ int main(int argc, char* argv[]) {
       return 1;
     }
     init_console();
-    load_console_font(e1m1.palette);
+    load_console_font();
 
     conprintf("Successfully loaded map %s", get_map_name(mapname));
 
@@ -55,6 +64,7 @@ int main(int argc, char* argv[]) {
     allocate_flat_textures(&e1m1);
     init_sprites(&e1m1);
     init_sky(&e1m1);
+    init_intermission();
     build_wall_vertex_buffer(&e1m1);
     build_floor_vertex_buffer(&e1m1);
     run(&e1m1);

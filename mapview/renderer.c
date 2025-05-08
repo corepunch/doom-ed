@@ -76,6 +76,8 @@ SDL_Joystick* joystick = NULL;
 bool running = true;
 bool mode = false;
 
+palette_entry_t *palette;
+
 void init_floor_shader(void);
 void init_sky_geometry(void);
 
@@ -373,6 +375,9 @@ int run(map_data_t *map) {
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    void draw_intermission(void);
+    void handle_intermission_input(player_t *player, float delta_time);
+
     switch (game.state) {
       case GS_DUNGEON:
         handle_input(map, &player, delta_time);
@@ -381,6 +386,10 @@ int run(map_data_t *map) {
       case GS_EDITOR:
         handle_editor_input(map, &editor, &player, delta_time);
         draw_editor(map, &editor, &player);
+        break;
+      case GS_WORLD:
+        handle_intermission_input(&player, delta_time);
+        draw_intermission();
         break;
       default:
         break;
@@ -400,4 +409,36 @@ int run(map_data_t *map) {
   cleanup();
   
   return 0;
+}
+
+void GetMouseInVirtualCoords(int* vx, int* vy) {
+  extern SDL_Window* window;
+  
+  const int target_width = 320;
+  const int target_height = 200;
+  
+  int win_width, win_height;
+  int mouse_x, mouse_y;
+  
+  SDL_GetWindowSize(window, &win_width, &win_height);
+  SDL_GetMouseState(&mouse_x, &mouse_y);
+  
+  // Calculate uniform scale (based on height)
+  float scale = (float)win_height / target_height;
+  float render_width = target_width * scale;
+  float offset_x = (win_width - render_width) / 2.0f;
+  
+  // Convert real mouse coordinates to virtual
+  float virtual_x = (mouse_x - offset_x) / scale;
+  float virtual_y = mouse_y / scale;
+  
+  // Optional: Clamp to virtual bounds (if you want to restrict)
+  if (virtual_x < 0) virtual_x = 0;
+  if (virtual_x > target_width) virtual_x = target_width;
+  if (virtual_y < 0) virtual_y = 0;
+  if (virtual_y > target_height) virtual_y = target_height;
+  
+  // Return as integers
+  *vx = (int)virtual_x;
+  *vy = (int)virtual_y;
 }

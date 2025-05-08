@@ -89,7 +89,7 @@ static const char* FONT_LUMPS_PREFIX = "STCFN";
 
 // Forward declarations
 static void draw_text_gl3(const char* text, int x, int y, float alpha);
-static bool load_font_char(int char_code, palette_entry_t const *);
+static bool load_font_char(int char_code);
 static GLuint compile_shader(GLenum type, const char* src);
 static void create_orthographic_matrix(float left, float right, float bottom, float top, float near, float far, float* out);
 
@@ -207,13 +207,13 @@ static GLuint compile_shader(GLenum type, const char* src) {
 }
 
 // Load the DOOM font from the WAD file
-bool load_console_font(palette_entry_t const* palette) {
+bool load_console_font(void) {
   bool success = true;
   
   // Find and load all STCFN## font characters
   // In Doom, only certain ASCII characters are stored (33-95, i.e., ! through _)
   for (int i = 33; i <= 95; i++) {
-    if (!load_font_char(i, palette)) {
+    if (!load_font_char(i)) {
       // Not all characters might be present, that's fine
       printf("Warning: Could not load font character %c (%d)\n", (char)i, i);
       // Not counting this as a failure since some characters might be legitimately missing
@@ -225,16 +225,16 @@ bool load_console_font(palette_entry_t const* palette) {
 }
 
 // Load a specific font character
-static bool load_font_char(int char_code, palette_entry_t const* palette) {
+static bool load_font_char(int char_code) {
   // Construct font lump name (e.g., "STCFN065" for 'A')
   char lump_name[16];
   snprintf(lump_name, sizeof(lump_name), "%s%03d", FONT_LUMPS_PREFIX, char_code);
 
   int width, height, leftoffset, topoffset;
 
-  GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety, palette_entry_t const*);
+  GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety);
   
-  int texture = load_sprite_texture(cache_lump(lump_name), &width, &height, &leftoffset, &topoffset, palette);
+  int texture = load_sprite_texture(cache_lump(lump_name), &width, &height, &leftoffset, &topoffset);
   
   // Store character data
   console.font[char_code].texture = texture;
