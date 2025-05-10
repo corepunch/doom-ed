@@ -146,7 +146,16 @@ bool init_sprites(void) {
 //    load_sprite(wad_file, &directory[stbar_lump]);
 //  }
   
+  
+#ifdef HEXEN
+  load_sprite("H2BAR");
+  load_sprite("H2TOP");
+  load_sprite("INVBAR");
+  load_sprite("STATBAR");
+  load_sprite("KEYBAR");
+#else
   load_sprite("STBAR");
+#endif
   
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
@@ -399,7 +408,14 @@ void draw_weapon(void) {
   SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
   
   // Find appropriate shotgun sprite frame (usually "SHTGA0")
+#ifdef HEXEN
+//  int tick = SDL_GetTicks();
+//  char shotgun_sprite[64]={0};
+//  sprintf(shotgun_sprite, "CFLM%c0", 'A'+tick%8);
+  const char* shotgun_sprite = "MSTFA0";
+#else
   const char* shotgun_sprite = "SHTGA0";
+#endif
   sprite_t* sprite = find_sprite(shotgun_sprite);
   
 //  if (!sprite) {
@@ -420,14 +436,28 @@ void draw_weapon(void) {
     int x, y;
     get_weapon_wobble_offset(&x, &y, MAX(fabs(game.player.vel_x), fabs(game.player.vel_y))/75);
     
-    draw_sprite(shotgun_sprite, x, 20-y, 1, 1.0f);
+//#ifndef HEXEN
+//    y += 20;
+//#else
+    y += 50;
+//#endif
+    
+    draw_sprite(shotgun_sprite, x, y, 1, 1.0f);
+
   }
 
+#ifdef HEXEN
+  sprite_t* STBAR = find_sprite("H2BAR");
+  if (STBAR) {
+    draw_sprite("H2BAR", 0, 134, 1, 1);
+//    draw_sprite("INVBAR", 38, 162, 1, 1);
+  }
+#else
   sprite_t* STBAR = find_sprite("STBAR");
-
   if (STBAR) {
     draw_sprite("STBAR", 0, DOOM_HEIGHT-STBAR->height, 1, 1.0f);
   }
+#endif
 }
 
 #define CROSSHAIR_SIZE 10

@@ -27,6 +27,7 @@ bool init_wad(const char *filename) {
   wad.cache = malloc(sizeof(void*) * header.numlumps);
   fseek(wad.file, header.infotableofs, SEEK_SET);
   fread(wad.directory, sizeof(filelump_t), header.numlumps, wad.file);
+  
   return true;
 }
 
@@ -59,13 +60,17 @@ char const *get_lump_name(int i) {
   return wad.directory[i].name;
 }
 
+void *cache_lump_num(uint16_t i) {
+  wad.cache[i] = malloc(wad.directory[i].size);
+  fseek(wad.file, wad.directory[i].filepos, SEEK_SET);
+  fread(wad.cache[i], wad.directory[i].size, 1, wad.file);
+  return wad.cache[i];
+}
+
 void *cache_lump(const char* name) {
   for (int i = 0; i < wad.num_lumps; i++) {
     if (strncmp(wad.directory[i].name, name, sizeof(lumpname_t)) == 0) {
-      wad.cache[i] = malloc(wad.directory[i].size);
-      fseek(wad.file, wad.directory[i].filepos, SEEK_SET);
-      fread(wad.cache[i], wad.directory[i].size, 1, wad.file);
-      return wad.cache[i];
+      return cache_lump_num(i);
     }
   }
   return NULL; // Not found

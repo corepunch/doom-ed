@@ -34,6 +34,8 @@ int main(int argc, char* argv[]) {
   extern palette_entry_t *palette;
   palette = cache_lump("PLAYPAL");
   
+//  printf("%s\n", cache_lump("MAPINFO"));
+  
   game.state = GS_WORLD;
   
   // Print map info
@@ -48,7 +50,8 @@ int main(int argc, char* argv[]) {
   init_sprites();
   init_intermission();
 
-
+  goto_map("MAP01");
+  
   run();
   
   // Cleanup

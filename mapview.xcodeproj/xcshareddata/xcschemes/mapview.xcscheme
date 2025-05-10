@@ -53,6 +53,10 @@
       </BuildableProductRunnable>
       <CommandLineArguments>
          <CommandLineArgument
+            argument = "/Users/igor/Downloads/hexen.wad"
+            isEnabled = "YES">
+         </CommandLineArgument>
+         <CommandLineArgument
             argument = "/Users/igor/Downloads/Doom/doom.wad"
             isEnabled = "YES">
          </CommandLineArgument>
@@ -62,10 +66,6 @@
          </CommandLineArgument>
          <CommandLineArgument
             argument = "/Users/igor/Downloads/HERETIC/heretic.wad"
-            isEnabled = "YES">
-         </CommandLineArgument>
-         <CommandLineArgument
-            argument = "/Users/igor/Downloads/hexen.wad"
             isEnabled = "YES">
          </CommandLineArgument>
       </CommandLineArguments>

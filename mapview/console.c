@@ -26,6 +26,7 @@ typedef struct {
 // Font character structure
 typedef struct {
   GLuint texture;    // OpenGL texture ID
+  int x, y;
   int width;         // Width of this character
   int height;        // Height of this character
 } font_char_t;
@@ -84,12 +85,17 @@ static struct {
   float projection[16];  // Orthographic projection matrix (4x4)
 } console = {0};
 
+#ifdef HEXEN
+// Hexen font lump name
+static const char* HEXEN_FONT_LUMP = "FONTAY_S"; // "FONTA" or "FONTB" based on preference
+#else
 // Doom font lump names (original Doom font is stored in patches named STCFN*)
 static const char* FONT_LUMPS_PREFIX = "STCFN";
+#endif
 
 // Forward declarations
 static void draw_text_gl3(const char* text, int x, int y, float alpha);
-static bool load_font_char(int char_code);
+static bool load_font_char(int font, int char_code);
 static GLuint compile_shader(GLenum type, const char* src);
 static void create_orthographic_matrix(float left, float right, float bottom, float top, float near, float far, float* out);
 
@@ -140,7 +146,7 @@ void init_console(void) {
   glGenBuffers(1, &console.vbo);
   glBindBuffer(GL_ARRAY_BUFFER, console.vbo);
   glBufferData(GL_ARRAY_BUFFER, sizeof(text_vertices), text_vertices, GL_STATIC_DRAW);
-    
+  
   // Set up vertex attributes
   glEnableVertexAttribArray(0);
   glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
@@ -206,41 +212,65 @@ static GLuint compile_shader(GLenum type, const char* src) {
   return shader;
 }
 
-// Load the DOOM font from the WAD file
+// Load the appropriate font (Doom or Hexen)
 bool load_console_font(void) {
   bool success = true;
   
-  // Find and load all STCFN## font characters
+#ifdef HEXEN
+  // Load Hexen font
+  int fontdata = find_lump_num(HEXEN_FONT_LUMP);
+  if (fontdata == -1) {
+    printf("Error: Could not load Hexen font lump %s\n", HEXEN_FONT_LUMP);
+    return false;
+  }
+  
+  for (int i = 33; i <= 95; i++) {
+    if (!load_font_char(fontdata, i)) {
+      // Not all characters might be present, that's fine
+      printf("Warning: Could not load font character %c (%d)\n", (char)i, i);
+      // Not counting this as a failure since some characters might be legitimately missing
+    }
+  }
+
+  conprintf("Console initialized with Hexen font");
+#else
+  // Doom: Find and load all STCFN## font characters
   // In Doom, only certain ASCII characters are stored (33-95, i.e., ! through _)
   for (int i = 33; i <= 95; i++) {
-    if (!load_font_char(i)) {
+    if (!load_font_char(0, i)) {
       // Not all characters might be present, that's fine
       printf("Warning: Could not load font character %c (%d)\n", (char)i, i);
       // Not counting this as a failure since some characters might be legitimately missing
     }
   }
   
-//  conprintf("Console initialized with DOOM font");
+  conprintf("Console initialized with DOOM font");
+#endif
+  
   return success;
 }
 
-// Load a specific font character
-static bool load_font_char(int char_code) {
+// Load a specific font character for Doom
+static bool load_font_char(int font, int char_code) {
+  int width, height, leftoffset, topoffset;
+  GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety);
+
+#ifdef HEXEN
+  int texture = load_sprite_texture(cache_lump_num(font+char_code-32), &width, &height, &leftoffset, &topoffset);
+#else
   // Construct font lump name (e.g., "STCFN065" for 'A')
   char lump_name[16];
   snprintf(lump_name, sizeof(lump_name), "%s%03d", FONT_LUMPS_PREFIX, char_code);
-
-  int width, height, leftoffset, topoffset;
-
-  GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety);
-  
   int texture = load_sprite_texture(cache_lump(lump_name), &width, &height, &leftoffset, &topoffset);
-  
+#endif
+    
   // Store character data
   console.font[char_code].texture = texture;
+  console.font[char_code].x = leftoffset;
+  console.font[char_code].y = topoffset;
   console.font[char_code].width = width;
   console.font[char_code].height = height;
-  
+
   return true;
 }
 
@@ -276,8 +306,11 @@ void conprintf(const char* format, ...) {
 
 // Draw a single character
 static void draw_char_gl3(char c, int x, int y, float alpha) {
+#ifdef HEXEN
+  int char_code = toupper(c);
+#else
   int char_code = (int)(c);
-  
+#endif
   // Only handle characters we have textures for
   if (char_code < 0 || char_code >= 128 || console.font[char_code].texture == 0) {
     // Fallback for unsupported characters - draw a solid rectangle
@@ -296,7 +329,7 @@ static void draw_char_gl3(char c, int x, int y, float alpha) {
       
       glBindTexture(GL_TEXTURE_2D, white_texture);
       glUniform2f(console.scale_loc, CONSOLE_FONT_WIDTH * CONSOLE_SCALE, CONSOLE_FONT_HEIGHT * CONSOLE_SCALE);
-      glUniform2f(console.offset_loc, (float)x, (float)y);
+      glUniform2f(console.offset_loc, x, y);
       glUniform4f(console.color_loc,
                   console.text_color.r / 255.0f,
                   console.text_color.g / 255.0f,
@@ -314,7 +347,9 @@ static void draw_char_gl3(char c, int x, int y, float alpha) {
   
   // Set uniforms
   glUniform2f(console.scale_loc, ch->width * CONSOLE_SCALE, ch->height * CONSOLE_SCALE);
-  glUniform2f(console.offset_loc, (float)x, (float)y);
+  glUniform2f(console.offset_loc,
+              x - console.font[char_code].x * CONSOLE_SCALE,
+              y - console.font[char_code].y * CONSOLE_SCALE);
   glUniform4f(console.color_loc,
               console.text_color.r / 255.0f,
               console.text_color.g / 255.0f,
@@ -348,118 +383,131 @@ static void draw_text_gl3(const char* text, int x, int y, float alpha) {
   glBindVertexArray(console.vao);
   
   // Draw each character
+#ifdef HEXEN
+  // Hexen font is already uppercase
   for (int i = 0; text[i] != '\0'; i++) {
-    char c = toupper(text[i]);
-    draw_char_gl3(c, cursor_x, y, alpha);
-    
-    // Advance cursor
-    if (c >= 32 && c > 0) {
-      // Use character width if available, otherwise use default
-      int char_width = console.font[c].width;
-      cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH) * CONSOLE_SCALE;
-    } else {
-      cursor_x += CONSOLE_FONT_WIDTH * CONSOLE_SCALE;  // Default width for unsupported chars
-    }
-  }
-  
-  // Restore GL state
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
-}
-
-// Draw the console
-void draw_console(void) {
-  if (!console.show_console) return;
-  
-  Uint32 current_time = SDL_GetTicks();
-  int y = CONSOLE_PADDING;
-  int lines_shown = 0;
-  
-  // Start from the most recent message and go backwards
-  for (int i = 0; i < console.message_count && lines_shown < MAX_CONSOLE_LINES; i++) {
-    int msg_index = (console.last_message_index - i + MAX_CONSOLE_MESSAGES) % MAX_CONSOLE_MESSAGES;
-    console_message_t* msg = &console.messages[msg_index];
-    
-    // Check if the message should still be displayed
-    Uint32 age = current_time - msg->timestamp;
-    if (age < MESSAGE_DISPLAY_TIME) {
-      // Calculate alpha based on age (fade out during the last second)
-      float alpha = 1.0f;
-      if (age > MESSAGE_DISPLAY_TIME - MESSAGE_FADE_TIME) {
-        alpha = (MESSAGE_DISPLAY_TIME - age) / (float)MESSAGE_FADE_TIME;
+    char c = text[i];
+#else
+    // Doom font is uppercase only, convert lowercase to uppercase
+    for (int i = 0; text[i] != '\0'; i++) {
+      char c = toupper(text[i]);
+#endif
+      draw_char_gl3(c, cursor_x, y, alpha);
+      
+      // Advance cursor
+      if (c >= 32 && c > 0) {
+        // Use character width if available, otherwise use default
+        int char_width = console.font[c].width;
+        cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH) * CONSOLE_SCALE;
+      } else {
+        cursor_x += CONSOLE_FONT_WIDTH * CONSOLE_SCALE;  // Default width for unsupported chars
       }
-      
-      // Draw the message
-      draw_text_gl3(msg->text, CONSOLE_PADDING, y, alpha);
-      
-      // Move to next line
-      y += LINE_HEIGHT;
-      lines_shown++;
-    } else {
-      // Mark message as inactive
-      msg->active = false;
     }
+    
+    // Restore GL state
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
   }
-}
-
-// Clean up console resources
-void shutdown_console(void) {
-  // Delete all font textures
-  for (int i = 0; i < 128; i++) {
-    if (console.font[i].texture != 0) {
-      glDeleteTextures(1, &console.font[i].texture);
-      console.font[i].texture = 0;
+  
+  // Draw the console
+  void draw_console(void) {
+    if (!console.show_console) return;
+    
+    Uint32 current_time = SDL_GetTicks();
+    int y = CONSOLE_PADDING;
+    int lines_shown = 0;
+    
+    // Start from the most recent message and go backwards
+    for (int i = 0; i < console.message_count && lines_shown < MAX_CONSOLE_LINES; i++) {
+      int msg_index = (console.last_message_index - i + MAX_CONSOLE_MESSAGES) % MAX_CONSOLE_MESSAGES;
+      console_message_t* msg = &console.messages[msg_index];
+      
+      // Check if the message should still be displayed
+      Uint32 age = current_time - msg->timestamp;
+      if (age < MESSAGE_DISPLAY_TIME) {
+        // Calculate alpha based on age (fade out during the last second)
+        float alpha = 1.0f;
+        if (age > MESSAGE_DISPLAY_TIME - MESSAGE_FADE_TIME) {
+          alpha = (MESSAGE_DISPLAY_TIME - age) / (float)MESSAGE_FADE_TIME;
+        }
+        
+        // Draw the message
+        draw_text_gl3(msg->text, CONSOLE_PADDING, y, alpha);
+        
+        // Move to next line
+        y += LINE_HEIGHT;
+        lines_shown++;
+      } else {
+        // Mark message as inactive
+        msg->active = false;
+      }
     }
   }
   
-  // Delete shader program and buffers
-  glDeleteProgram(console.program);
-  glDeleteVertexArrays(1, &console.vao);
-  glDeleteBuffers(1, &console.vbo);
-}
-
-// Toggle console visibility
-void toggle_console(void) {
-  console.show_console = !console.show_console;
-}
-
-// Set console text color
-void set_console_color(uint8_t r, uint8_t g, uint8_t b) {
-  console.text_color.r = r;
-  console.text_color.g = g;
-  console.text_color.b = b;
-}
-// Add these to your console.c file at the top with other static variables
-static struct {
-  Uint32 ticks[64];
-  Uint32 last_fps_update;   // Last time the FPS was calculated
-  Uint32 frame_count;       // Number of frames since last update
-  float current_fps;        // Current FPS value to display
-  char fps_text[32];        // Buffer for the FPS text
-  Uint32 counter;
-} fps_state = {0};
-
-// Draw FPS counter
-void draw_fps(int x, int y) {
-  Uint32 ticks = SDL_GetTicks();
-  fps_state.ticks[fps_state.counter++&63] = ticks - fps_state.last_fps_update;
-  fps_state.last_fps_update = ticks;
-  
-  Uint32 totals = 0;
-  for (int i = 0; i < 64; i++) {
-    totals += fps_state.ticks[i];
+  // Clean up console resources
+  void shutdown_console(void) {
+    // Delete all font textures
+    for (int i = 0; i < 128; i++) {
+      if (console.font[i].texture != 0) {
+        glDeleteTextures(1, &console.font[i].texture);
+        console.font[i].texture = 0;
+      }
+    }
+    
+    // Delete shader program and buffers
+    glDeleteProgram(console.program);
+    glDeleteVertexArrays(1, &console.vao);
+    glDeleteBuffers(1, &console.vbo);
   }
-
-  fps_state.current_fps = 64 * 1000.f / totals;
-
-  // Format the FPS text
-  snprintf(fps_state.fps_text, sizeof(fps_state.fps_text), "FPS: %.1f %d", fps_state.current_fps, totals);
-
-  extern int sectors_drawn;
-  char sec[64]={0};
-  snprintf(sec, sizeof(sec), "Sectors: %d", sectors_drawn);
-
-  // Draw the FPS text
-  draw_text_gl3(fps_state.fps_text, x, y, 1.0f);
-  draw_text_gl3(sec, x, y+20, 1.0f);
-}
+  
+  // Toggle console visibility
+  void toggle_console(void) {
+    console.show_console = !console.show_console;
+  }
+  
+  // Set console text color
+  void set_console_color(uint8_t r, uint8_t g, uint8_t b) {
+    console.text_color.r = r;
+    console.text_color.g = g;
+    console.text_color.b = b;
+  }
+  
+  // Add these to your console.c file at the top with other static variables
+  static struct {
+    Uint32 ticks[64];
+    Uint32 last_fps_update;   // Last time the FPS was calculated
+    Uint32 frame_count;       // Number of frames since last update
+    float current_fps;        // Current FPS value to display
+    char fps_text[32];        // Buffer for the FPS text
+    Uint32 counter;
+  } fps_state = {0};
+  
+  // Draw FPS counter
+  void draw_fps(int x, int y) {
+    Uint32 ticks = SDL_GetTicks();
+    fps_state.ticks[fps_state.counter++&63] = ticks - fps_state.last_fps_update;
+    fps_state.last_fps_update = ticks;
+    
+    Uint32 totals = 0;
+    for (int i = 0; i < 64; i++) {
+      totals += fps_state.ticks[i];
+    }
+    
+    fps_state.current_fps = 64 * 1000.f / totals;
+    
+    int width, height;
+    SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &width, &height);
+    
+    // Format the FPS text
+    snprintf(fps_state.fps_text, sizeof(fps_state.fps_text), "FPS: %.1f", fps_state.current_fps);
+    
+    extern int sectors_drawn;
+    char sec[64]={0};
+    snprintf(sec, sizeof(sec), "SECTORS: %d", sectors_drawn);
+    
+    x = width - 120*CONSOLE_SCALE;
+    
+    // Draw the FPS text
+    draw_text_gl3(fps_state.fps_text, x, y, 1.0f);
+    draw_text_gl3(sec, x, y+20, 1.0f);
+  }

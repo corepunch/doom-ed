@@ -41,7 +41,7 @@ if ((map)->name) free((map)->name); \
 #define DOOM_WIDTH 320
 #define DOOM_HEIGHT 200
 
-//#define HEXEN
+#define HEXEN
 
 #define HIGHLIGHT(light) light//((light)+0.25)
 
@@ -67,8 +67,8 @@ enum {
 #define ROTATION_SPEED 3.0
 
 #define ACCELERATION 1000.0f
-#define FRICTION     800.0f
-#define MAX_SPEED    200.0f
+#define FRICTION     1200.0f
+#define MAX_SPEED    300.0f
 
 // Type definitions to better represent the WAD format
 typedef char wadid_t[4];     // "IWAD" or "PWAD"
@@ -82,6 +82,7 @@ typedef struct {
   float pitch;
   float height;
   float vel_x, vel_y; // Player velocity
+  int sector;
 } player_t;
 
 // Vertex structure for our buffer (xyzuv)
@@ -280,6 +281,7 @@ int run(void);
 
 filelump_t *find_lump(const char* name);
 void *cache_lump(const char* name);
+void *cache_lump_num(uint16_t i);
 int find_lump_num(const char* name);
 char const *get_lump_name(int i);
 
@@ -287,6 +289,7 @@ int allocate_mapside_textures(map_data_t* map);
 int allocate_flat_textures(map_data_t* map);
 
 uint8_t* load_patch(void* patch_lump, int* width, int* height);
+bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t *get_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);

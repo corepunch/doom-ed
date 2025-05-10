@@ -238,7 +238,7 @@ void draw_walls(map_data_t const *map,
       // Draw front side
       if (CHECK_PIXEL(pixel, TOP, linedef->sidenum[0])) {
         draw_textured_surface(&front->upper_section, HIGHLIGHT(light), GL_TRIANGLE_FAN);
-      } else if (front->upper_section.texture || strcmp(front->sector->ceilingpic, "F_SKY1")) {
+      } else if (front->upper_section.texture || strncmp(front->sector->ceilingpic, "F_SKY", 5)) {
         draw_textured_surface(&front->upper_section, light, GL_TRIANGLE_FAN);
       }
       if (CHECK_PIXEL(pixel, BOTTOM, linedef->sidenum[0])) {

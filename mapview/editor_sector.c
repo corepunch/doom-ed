@@ -124,7 +124,10 @@ uint16_t add_sidedef(map_data_t *map, uint16_t sector_index) {
   map->sidedefs[map->num_sidedefs].toptexture[1] = '\0';
   map->sidedefs[map->num_sidedefs].bottomtexture[0] = '-';
   map->sidedefs[map->num_sidedefs].bottomtexture[1] = '\0';
-  strcpy(map->sidedefs[map->num_sidedefs].midtexture, "BRONZE1");
+  
+  extern uint32_t selected_texture;
+  const char *texture = get_texture_name(selected_texture);
+  strncpy(map->sidedefs[map->num_sidedefs].midtexture, texture, 8);
   return map->num_sidedefs++;
 }
 
@@ -141,10 +144,12 @@ uint16_t add_sector(map_data_t *map) {
     .special = 0,
     .tag = 0
   };
+  extern uint32_t selected_floor_texture;
   
+  const char *texture = get_flat_texture_name(selected_floor_texture);
   // Set default textures
-  strncpy(map->sectors[index].floorpic, "FLOOR", 8);
-  strncpy(map->sectors[index].ceilingpic, "CEIL", 8);
+  strncpy(map->sectors[index].floorpic, texture, 8);
+  strncpy(map->sectors[index].ceilingpic, texture, 8);
   
   map->num_sectors++;
   return index;

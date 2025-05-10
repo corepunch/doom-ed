@@ -117,14 +117,23 @@ void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp);
 
 int pixel = 0;
 
-void update_player_height(map_data_t const *map, player_t *player) {
-  mapsector_t const *sector = find_player_sector(map, player->x, player->y);
+mapsector_t const *update_player_height(map_data_t const *map, player_t *player) {
+  mapsector_t const *sector;
+  if (player->sector != -1 && point_in_sector(map, player->x, player->y, player->sector)) {
+    sector = &map->sectors[player->sector];
+  } else {
+    sector = find_player_sector(map, player->x, player->y);
+  }
   if (sector) {
     player->z = sector->floorheight + EYE_HEIGHT;
+    player->sector = (int)(sector-map->sectors);
   }
+  return sector;
 }
 
 void draw_dungeon(void) {
+  static unsigned frame = 0;
+  
   void draw_floor_ids(map_data_t const *, mapsector_t const *, viewdef_t const *);
   void draw_minimap(map_data_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
@@ -133,20 +142,9 @@ void draw_dungeon(void) {
     return;
   
   map_data_t const *map = &game.map;
+  mapsector_t const *sector = update_player_height(map, &game.player);
   player_t *player = &game.player;
-  
-  mapsector_t const *sector = find_player_sector(map, player->x, player->y);
   mat4 mvp;
-  
-  static unsigned frame = 0;
-  
-  float z = 0;
-  
-  if (sector) {
-    z = sector->floorheight + EYE_HEIGHT;
-  }
-  
-  update_player_height(map, player);
   
   get_view_matrix(map, player, mvp);
   

@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include "editor.h"
+#include "sprites.h"
 
 // Globals
 extern GLuint ui_prog;
@@ -237,7 +238,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // Clear the screen to black
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
+  
 //  void draw_minimap(map_data_t const *map, player_t const *player);
 //  draw_minimap(map, player);
 //  glBindVertexArray(map->walls.vao);
@@ -342,4 +343,21 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
     glDrawArrays(GL_LINES, 0, 2);
   }
+  
+  
+  
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
+  
+  float angle_rad = player->angle * M_PI / 180.0;
+  float input_x = -50 * cos(angle_rad);
+  float input_y =  50 * sin(angle_rad);
+
+  wall_vertex_t verts[2] = { { player->x, player->y }, { player->x+input_x, player->y+input_y } };
+  glBindTexture(GL_TEXTURE_2D, white_tex);
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
+  glDrawArrays(GL_LINES, 0, 2);
+  glPointSize(4);
+  glDrawArrays(GL_POINTS, 0, 1);
 }

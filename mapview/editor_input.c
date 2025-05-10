@@ -32,10 +32,25 @@ void handle_editor_input(map_data_t *map,
                          float delta_time) {
   SDL_Event event;
   
+  static float forward_move = 0, strafe_move = 0;
+  
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
       extern bool running;
       running = false;
+    } else if (event.type == SDL_JOYBUTTONDOWN) {
+      if (event.jbutton.button == 8) {
+        toggle_editor_mode(editor);
+      }
+    }
+    else if (event.type == SDL_JOYAXISMOTION) {
+      //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
+      switch (event.jaxis.axis) {
+        case 0: strafe_move = event.jaxis.value/(float)0x8000; break;
+        case 1: forward_move = -event.jaxis.value/(float)0x8000; break;
+//        case 3: mouse_x_rel = event.jaxis.value/1200.f; break;
+//        case 4: mouse_y_rel = event.jaxis.value/1200.f; break;
+      }
     }
     else if (event.type == SDL_KEYDOWN) {
       switch (event.key.keysym.scancode) {
@@ -56,6 +71,42 @@ void handle_editor_input(map_data_t *map,
           // Toggle grid size (8, 16, 32, 64, 128)
           editor->grid_size *= 2;
           if (editor->grid_size > 128) editor->grid_size = 8;
+          break;
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP:
+          forward_move = 1;
+          break;
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN:
+          forward_move = -1;
+          break;
+          // Calculate strafe direction vector (perpendicular to forward)
+        case SDL_SCANCODE_D:
+        case SDL_SCANCODE_RIGHT:
+          strafe_move = 1;
+          break;
+        case SDL_SCANCODE_A:
+        case SDL_SCANCODE_LEFT:
+          strafe_move = -1;
+          break;
+        default:
+          break;
+      }
+    }
+    else if (event.type == SDL_KEYUP) {
+      switch (event.key.keysym.scancode) {
+        case SDL_SCANCODE_W:
+        case SDL_SCANCODE_UP:
+        case SDL_SCANCODE_S:
+        case SDL_SCANCODE_DOWN:
+          forward_move = 0;
+          break;
+          // Calculate strafe direction vector (perpendicular to forward)
+        case SDL_SCANCODE_D:
+        case SDL_SCANCODE_RIGHT:
+        case SDL_SCANCODE_A:
+        case SDL_SCANCODE_LEFT:
+          strafe_move = 0;
           break;
         default:
           break;
@@ -133,19 +184,23 @@ void handle_editor_input(map_data_t *map,
   // If in editor mode, handle keyboard movement
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
   float move_speed = 1000 * delta_time;
+
+  player->y += forward_move * move_speed;
+  player->x += strafe_move * move_speed;
+
   
-  if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
-    player->y += move_speed;
-  }
-  if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
-    player->y -= move_speed;
-  }
-  if (keystates[SDL_SCANCODE_A] || keystates[SDL_SCANCODE_LEFT]) {
-    player->x -= move_speed;
-  }
-  if (keystates[SDL_SCANCODE_D] || keystates[SDL_SCANCODE_RIGHT]) {
-    player->x += move_speed;
-  }
+//  if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
+//    player->y += move_speed;
+//  }
+//  if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
+//    player->y -= move_speed;
+//  }
+//  if (keystates[SDL_SCANCODE_A] || keystates[SDL_SCANCODE_LEFT]) {
+//    player->x -= move_speed;
+//  }
+//  if (keystates[SDL_SCANCODE_D] || keystates[SDL_SCANCODE_RIGHT]) {
+//    player->x += move_speed;
+//  }
 }
 
 

@@ -7,7 +7,11 @@
 #include "map.h"
 #include "sprites.h"
 
-#include "doom/info.h"
+#ifdef HEXEN
+#include "../hexen/info.h"
+#else
+#include "../hexen/info.h"
+#endif
 
 // Thing shader sources - we'll use view-aligned quads
 const char* thing_vs_src = "#version 150 core\n"
@@ -183,7 +187,11 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
     mapthing_t const *thing = &map->things[i];
     
     // Skip player
+#ifdef HEXEN
+    if (thing->type == MT_MAPSPOT) {
+#else
     if (thing->type == MT_PLAYER) {
+#endif
       continue;
     }
     

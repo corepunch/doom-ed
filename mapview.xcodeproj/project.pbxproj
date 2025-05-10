@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7815CD952DCE0F7C000617A1 /* libhexen.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7815CD662DCE0DC7000617A1 /* libhexen.dylib */; };
 		785D12BC2DB8E85000567DFE /* libSDL2-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 /* End PBXBuildFile section */
 
@@ -24,11 +25,54 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7815CD462DCE0CA6000617A1 /* libdoom.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libdoom.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		7815CD662DCE0DC7000617A1 /* libhexen.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhexen.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		785D12A92DB8DDF300567DFE /* mapview */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mapview; sourceTree = BUILT_PRODUCTS_DIR; };
 		785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		7815CD5A2DCE0CBC000617A1 /* Exceptions for "doom" folder in "doom" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				actions.c,
+				d_englsh.h,
+				d_think.h,
+				hu_stuff.c,
+				info.c,
+				info.h,
+				m_fixed.h,
+				p_mobj.h,
+				sounds.h,
+			);
+			target = 7815CD452DCE0CA6000617A1 /* doom */;
+		};
+		7815CD5B2DCE0CE7000617A1 /* Exceptions for "doom" folder in "mapview" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				actions.c,
+				hu_stuff.c,
+				info.c,
+			);
+			target = 785D12A82DB8DDF300567DFE /* mapview */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
+		7815CD532DCE0CAA000617A1 /* doom */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				7815CD5B2DCE0CE7000617A1 /* Exceptions for "doom" folder in "mapview" target */,
+				7815CD5A2DCE0CBC000617A1 /* Exceptions for "doom" folder in "doom" target */,
+			);
+			path = doom;
+			sourceTree = "<group>";
+		};
+		7815CD892DCE0E20000617A1 /* hexen */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = hexen;
+			sourceTree = "<group>";
+		};
 		785D12AB2DB8DDF300567DFE /* mapview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = mapview;
@@ -37,10 +81,25 @@
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7815CD442DCE0CA6000617A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7815CD622DCE0DC7000617A1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		785D12A62DB8DDF300567DFE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				7815CD952DCE0F7C000617A1 /* libhexen.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -50,9 +109,11 @@
 		785D12A02DB8DDF300567DFE = {
 			isa = PBXGroup;
 			children = (
+				7815CD892DCE0E20000617A1 /* hexen */,
 				785D12AB2DB8DDF300567DFE /* mapview */,
 				785D12B62DB8E4D600567DFE /* Frameworks */,
 				785D12AA2DB8DDF300567DFE /* Products */,
+				7815CD532DCE0CAA000617A1 /* doom */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,6 +121,8 @@
 			isa = PBXGroup;
 			children = (
 				785D12A92DB8DDF300567DFE /* mapview */,
+				7815CD462DCE0CA6000617A1 /* libdoom.dylib */,
+				7815CD662DCE0DC7000617A1 /* libhexen.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -74,7 +137,65 @@
 		};
 /* End PBXGroup section */
 
+/* Begin PBXHeadersBuildPhase section */
+		7815CD422DCE0CA6000617A1 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7815CD602DCE0DC7000617A1 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
 /* Begin PBXNativeTarget section */
+		7815CD452DCE0CA6000617A1 /* doom */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7815CD472DCE0CA6000617A1 /* Build configuration list for PBXNativeTarget "doom" */;
+			buildPhases = (
+				7815CD422DCE0CA6000617A1 /* Headers */,
+				7815CD432DCE0CA6000617A1 /* Sources */,
+				7815CD442DCE0CA6000617A1 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = doom;
+			packageProductDependencies = (
+			);
+			productName = doom;
+			productReference = 7815CD462DCE0CA6000617A1 /* libdoom.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
+		7815CD5F2DCE0DC7000617A1 /* hexen */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7815CD632DCE0DC7000617A1 /* Build configuration list for PBXNativeTarget "hexen" */;
+			buildPhases = (
+				7815CD602DCE0DC7000617A1 /* Headers */,
+				7815CD612DCE0DC7000617A1 /* Sources */,
+				7815CD622DCE0DC7000617A1 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7815CD892DCE0E20000617A1 /* hexen */,
+			);
+			name = hexen;
+			packageProductDependencies = (
+			);
+			productName = doom;
+			productReference = 7815CD662DCE0DC7000617A1 /* libhexen.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 		785D12A82DB8DDF300567DFE /* mapview */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 785D12B02DB8DDF300567DFE /* Build configuration list for PBXNativeTarget "mapview" */;
@@ -88,6 +209,7 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
+				7815CD532DCE0CAA000617A1 /* doom */,
 				785D12AB2DB8DDF300567DFE /* mapview */,
 			);
 			name = mapview;
@@ -106,6 +228,9 @@
 				BuildIndependentTargetsInParallel = 1;
 				LastUpgradeCheck = 1630;
 				TargetAttributes = {
+					7815CD452DCE0CA6000617A1 = {
+						CreatedOnToolsVersion = 16.3;
+					};
 					785D12A82DB8DDF300567DFE = {
 						CreatedOnToolsVersion = 16.3;
 					};
@@ -126,11 +251,27 @@
 			projectRoot = "";
 			targets = (
 				785D12A82DB8DDF300567DFE /* mapview */,
+				7815CD452DCE0CA6000617A1 /* doom */,
+				7815CD5F2DCE0DC7000617A1 /* hexen */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7815CD432DCE0CA6000617A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7815CD612DCE0DC7000617A1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		785D12A52DB8DDF300567DFE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -141,6 +282,66 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		7815CD482DCE0CA6000617A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		7815CD492DCE0CA6000617A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
+		7815CD642DCE0DC7000617A1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		7815CD652DCE0DC7000617A1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 		785D12AE2DB8DDF300567DFE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -295,6 +496,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7815CD472DCE0CA6000617A1 /* Build configuration list for PBXNativeTarget "doom" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7815CD482DCE0CA6000617A1 /* Debug */,
+				7815CD492DCE0CA6000617A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7815CD632DCE0DC7000617A1 /* Build configuration list for PBXNativeTarget "hexen" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7815CD642DCE0DC7000617A1 /* Debug */,
+				7815CD652DCE0DC7000617A1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		785D12A42DB8DDF300567DFE /* Build configuration list for PBXProject "mapview" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

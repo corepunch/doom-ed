@@ -57,7 +57,7 @@ mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
 //    int py = check_points[p][1];
     int px = x;
     int py = y;
-
+  
     for (int i = 0; i < map->num_sectors; i++) {
       if (point_in_sector(map, px, py, i)) {
         // If this is a higher sector than what we've found so far, remember it
@@ -143,21 +143,6 @@ void handle_game_input(float delta_time) {
     if (event.type == SDL_QUIT) {
       running = false;
     }
-    else if (event.type == SDL_JOYAXISMOTION) {
-      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
-      switch (event.jaxis.axis) {
-        case 3: mouse_x_rel = event.jaxis.value/1200.f; break;
-        case 4: mouse_y_rel = event.jaxis.value/1200.f; break;
-        case 0: strafe_move = event.jaxis.value/(float)0x8000; break;
-        case 1: forward_move = -event.jaxis.value/(float)0x8000; break;
-      }
-//    } else if (event.type == SDL_JOYBUTTONDOWN) {
-//      printf("Button %d pressed\n", event.jbutton.button);
-//    } else if (event.type == SDL_JOYBUTTONUP) {
-//      printf("Button %d released\n", event.jbutton.button);
-    } else if (event.type == SDL_JOYHATMOTION) {
-      printf("Hat %d moved to %d\n", event.jhat.hat, event.jhat.value);
-    }
     else if (event.type == SDL_MOUSEMOTION) {
       if (SDL_GetRelativeMouseMode()) {
         // Get relative mouse movement
@@ -205,8 +190,8 @@ void handle_game_input(float delta_time) {
     else if (event.type == SDL_KEYDOWN) {
       switch (event.key.keysym.scancode) {
         case SDL_SCANCODE_ESCAPE:
-          goto_intermisson();
-//          SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
+//          goto_intermisson();
+          SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
           break;
         case SDL_SCANCODE_Z:
           selected_texture--;
@@ -263,6 +248,32 @@ void handle_game_input(float delta_time) {
           break;
       }
     }
+    else if (event.type == SDL_JOYAXISMOTION) {
+      //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
+      switch (event.jaxis.axis) {
+        case 0: strafe_move = event.jaxis.value/(float)0x8000; break;
+        case 1: forward_move = -event.jaxis.value/(float)0x8000; break;
+        case 3: mouse_x_rel = event.jaxis.value/1200.f; break;
+        case 4: mouse_y_rel = event.jaxis.value/1200.f; break;
+      }
+    } else if (event.type == SDL_JOYBUTTONDOWN) {
+      if (event.jbutton.button == 8) {
+        toggle_editor_mode(&editor);
+      }
+      printf("Button %d pressed\n", event.jbutton.button);
+    } else if (event.type == SDL_JOYBUTTONUP) {
+      printf("Button %d released\n", event.jbutton.button);
+    } else if (event.type == SDL_JOYHATMOTION) {
+      
+      if (event.jhat.hat == 0) {
+        if (event.jhat.value & 4) selected_texture++;
+        if (event.jhat.value & 1) selected_texture--;
+        if (event.jhat.value & 8) selected_floor_texture--;
+        if (event.jhat.value & 2) selected_floor_texture++;
+      }
+      printf("Hat %d moved to %d\n", event.jhat.hat, event.jhat.value);
+    }
+
   }
   
   // Apply mouse rotation if relative mode is enabled

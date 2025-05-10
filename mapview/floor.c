@@ -229,7 +229,7 @@ void build_floor_vertex_buffer(map_data_t *map) {
     memcpy(&map->floors.vertices[map->floors.num_vertices], vertices, vertex_count * sizeof(wall_vertex_t));
     map->floors.num_vertices += vertex_count;
 
-    if (!strcmp(map->sectors[i].ceilingpic, "F_SKY1")) {
+    if (!strncmp(map->sectors[i].ceilingpic, "F_SKY", 5)) {
       continue;
     }
     
