@@ -122,7 +122,7 @@ bool init_sprites(void) {
 //  glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, sys->projection);
   screen_width = width/2;
   screen_height = height/2;
-  glm_ortho(0, width/2, height/2, 0, -1, 1, sys->projection);
+  glm_ortho(0, screen_width, screen_height, 0, -1, 1, sys->projection);
   
   // Find and preload weapon sprites (starting with SHT)
   sys->num_sprites = 0;
@@ -478,12 +478,11 @@ void draw_crosshair(void) {
   
   if (sprite) {
     // Use the existing crosshair sprite
-    float x = DOOM_WIDTH/2;
-    float y = DOOM_HEIGHT/2;
+    float x = screen_width/2;
+    float y = screen_height/2;
     float scale = 1.0f;
-    float alpha = 0.6f; // Slightly transparent for better visibility
     
-    draw_sprite("CROSA0", x, y, scale, alpha);
+    draw_sprite("CROSA0", x, y, scale, 1);
   } else {
     // No crosshair sprite found, generate one on demand
     if (sys->crosshair_texture == 0) {
@@ -510,43 +509,42 @@ void draw_crosshair(void) {
       }
     }
     
-    // Draw the generated crosshair
-    sprite = find_sprite("CROSSH");
-    if (sprite) {
-      float x = DOOM_WIDTH/2;
-      float y = DOOM_HEIGHT/2;
-      float scale = 2.0f; // Scale up the small texture
-      float alpha = 1.0f;
-      
-      // Enable blending for transparency
-      glEnable(GL_BLEND);
-      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-      
-      // Disable depth testing for UI elements
-      glDisable(GL_DEPTH_TEST);
-      
-      // Use sprite shader program
-      glUseProgram(sys->program);
-      
-      // Set uniforms
-      glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
-      glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
-      glUniform2f(glGetUniformLocation(sys->program, "scale"), sprite->width * scale, sprite->height * scale);
-      glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
-      
-      // Bind sprite texture
-      glActiveTexture(GL_TEXTURE0);
-      glBindTexture(GL_TEXTURE_2D, sprite->texture);
-      glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
-      
-      // Bind VAO and draw
-      glBindVertexArray(sys->vao);
-      glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-      
-      // Reset state
-      glEnable(GL_DEPTH_TEST);
-      glDisable(GL_BLEND);
-    }
+//    // Draw the generated crosshair
+//    sprite = find_sprite("CROSSH");
+//    if (sprite) {
+//      float x = SCREEN_WIDTH;
+//      float y = SCREEN_HEIGHT;
+//      float alpha = 1.0f;
+//      
+//      // Enable blending for transparency
+//      glEnable(GL_BLEND);
+//      glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//      
+//      // Disable depth testing for UI elements
+//      glDisable(GL_DEPTH_TEST);
+//      
+//      // Use sprite shader program
+//      glUseProgram(sys->program);
+//      
+//      // Set uniforms
+//      glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
+//      glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
+//      glUniform2f(glGetUniformLocation(sys->program, "scale"), sprite->width, sprite->height);
+//      glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
+//      
+//      // Bind sprite texture
+//      glActiveTexture(GL_TEXTURE0);
+//      glBindTexture(GL_TEXTURE_2D, sprite->texture);
+//      glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
+//      
+//      // Bind VAO and draw
+//      glBindVertexArray(sys->vao);
+//      glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+//      
+//      // Reset state
+//      glEnable(GL_DEPTH_TEST);
+//      glDisable(GL_BLEND);
+//    }
   }
 }
 
