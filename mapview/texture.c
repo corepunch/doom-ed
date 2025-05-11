@@ -575,7 +575,7 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
   extern texname_t selected_floor_texture;
   extern float black_bars;
   extern bool running;
-
+  
   extern float black_bars;
   float x = -black_bars, y = 0;
   
@@ -603,18 +603,18 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
         break;
       case SDL_MOUSEBUTTONUP:
         click = true;
-//        mouse_x = event.button.x;
-//        mouse_y = event.button.y;
+        //        mouse_x = event.button.x;
+        //        mouse_y = event.button.y;
         break;
     }
   }
-
-//  for (int i = 0; i < g_cache.num_textures; i++)
-//  {
-//    float angle = 2 * M_PI / g_cache.num_textures;
-//    draw_radial(g_cache.textures[i].texture, DOOM_WIDTH/2, DOOM_HEIGHT/2, 40, 20, i*angle, (i+0.9)*angle, 1, selected_texture==i);
-//  }
-
+  
+  //  for (int i = 0; i < g_cache.num_textures; i++)
+  //  {
+  //    float angle = 2 * M_PI / g_cache.num_textures;
+  //    draw_radial(g_cache.textures[i].texture, DOOM_WIDTH/2, DOOM_HEIGHT/2, 40, 20, i*angle, (i+0.9)*angle, 1, selected_texture==i);
+  //  }
+  
   draw_textures_interface(g_cache.textures,
                           g_cache.num_textures,
                           selected_texture,
@@ -624,6 +624,11 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
                           g_flat_cache.num_textures,
                           selected_floor_texture,
                           DOOM_WIDTH+black_bars-64, y, 64, click, -1);
+  
+  if (get_flat_texture("F_010")) {
+    draw_rect(get_flat_texture("F_010")->texture, 0, 64, 64, 8);
+    draw_text_gl3("Hello", 0, 64, 1);
+  }
 }
 
 // Load a sky texture and create an OpenGL texture

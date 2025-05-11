@@ -76,7 +76,7 @@ static const char* FONT_LUMPS_PREFIX = "STCFN";
 #endif
 
 // Forward declarations
-static void draw_text_gl3(const char* text, int x, int y, float alpha);
+void draw_text_gl3(const char* text, int x, int y, float alpha);
 static bool load_font_char(int font, int char_code);
 
 // Initialize console system
@@ -205,7 +205,7 @@ static void draw_char_gl3(char c, int x, int y, float alpha) {
 }
 
 // Draw text string using GL3
-static void draw_text_gl3(const char* text, int x, int y, float alpha) {
+void draw_text_gl3(const char* text, int x, int y, float alpha) {
   int cursor_x = x;
   
   // Set up GL state

@@ -308,6 +308,7 @@ void update_player_position_with_sliding(map_data_t const *map, player_t *player
 
 void draw_rect(int tex, float x, float y, float w, float h);
 void draw_rect_ex(int tex, float x, float y, float w, float h, int type);
+void draw_text_gl3(const char* text, int x, int y, float alpha);
 void draw_palette(map_data_t const *map, float x, float y);
 char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);
