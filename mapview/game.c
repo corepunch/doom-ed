@@ -13,6 +13,10 @@ const char *get_map_name(const char *name);
 extern GLuint world_prog, ui_prog;
 extern SDL_Window* window;
 
+bool win_perf(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_statbar(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_console(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
+
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
   memset(player, 0, sizeof(player_t));
@@ -27,6 +31,10 @@ void init_player(map_data_t const *map, player_t *player) {
       break;
     }
   }
+  
+  create_window(0, 0, 128, 64, "FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_perf, NULL);
+  create_window((screen_width-320)/2, (screen_height-200), 320, 200, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
+  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
 }
 
 void goto_map(const char *mapname) {

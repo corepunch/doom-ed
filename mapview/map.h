@@ -34,17 +34,15 @@ if ((map)->name) free((map)->name); \
 #define EYE_HEIGHT 48 // Typical eye height in Doom is 41 units above floor
 #define MAX_WALL_VERTICES 50000  // Adjust based on map complexity
 #define P_RADIUS 12.0f        // Player radius
-
 #define PALETTE_WIDTH 24
 #define NOTEX_SIZE 64
-
 #define SCROLL_SENSITIVITY 5
-
+#define SPRITE_SCALE 2
 #define SCALE_POINT(x) ((x)/2)
-
 #define HEXEN
-
 #define HIGHLIGHT(light) light//((light)+0.25)
+#define CONSOLE_PADDING 2
+#define LINE_HEIGHT 8
 
 enum {
   PIXEL_MID = 0 << 28,
@@ -297,19 +295,23 @@ typedef struct {
   player_t player;
 } game_t;
 
+#define WINDOW_NOTITLE 1
+#define WINDOW_TRANSPARENT 2
+
 struct window_s;
 typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
 
 typedef struct window_s {
   int x, y, w, h;
   int16_t scroll[2];
+  uint32_t flags;
   winproc_t proc;
   char title[64];
   void *userdata;
   struct window_s *next;
 } window_t;
 
-void create_window(int x, int y, int w, int h, char const *title, winproc_t proc, void *lparam);
+void create_window(int x, int y, int w, int h, char const *title, uint32_t flags, winproc_t proc, void *lparam);
 
 extern game_t game;
 

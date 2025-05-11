@@ -2,6 +2,7 @@
 #include <OpenGL/gl3.h>
 
 #include "map.h"
+#include "sprites.h"
 
 // Base UI Colors
 #define COLOR_PANEL_BG       0xff3c3c3c  // main panel or window background
@@ -35,7 +36,7 @@ void draw_panel(int x, int y, int w, int h) {
   fill_rect(COLOR_PANEL_BG, x, y, w, h);
 }
 
-void create_window(int x, int y, int w, int h, char const *title, winproc_t proc, void *lparam) {
+void create_window(int x, int y, int w, int h, char const *title, uint32_t flags, winproc_t proc, void *lparam) {
   window_t *win = malloc(sizeof(window_t));
   memset(win, 0, sizeof(window_t));
   win->x = x;
@@ -44,6 +45,7 @@ void create_window(int x, int y, int w, int h, char const *title, winproc_t proc
   win->h = h;
   win->proc = proc;
   win->next = windows;
+  win->flags = flags;
   strncpy(win->title, title, sizeof(win->title));
   windows = win;
   proc(win, MSG_CREATE, 0, lparam);
@@ -65,19 +67,35 @@ void set_viewport(window_t const *win) {
   glViewport(vp_x, vp_y, vp_w, vp_h);
 }
 
-void set_projection(int w, int h);
-
 #define CONTAINS(x, y, x1, y1, w1, h1) \
 ((x1) <= (x) && (y1) <= (y) && (x1) + (w1) > (x) && (y1) + (h1) > (y))
 
 window_t *find_window(int x, int y) {
+  window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
     if CONTAINS(x, y, win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT) {
-      return win;
+      last = win;
     }
   }
-  return NULL;
+  return last;
 }
+
+static void moveToTop(window_t** head, window_t* a) {
+  if (!a || !a->next) return;
+  
+  window_t *p = NULL, *n = *head;
+  while (n != a) { p = n; n = n->next; }
+  
+  if (p) p->next = a->next;
+  else *head = a->next;
+  
+  window_t* tail = *head;
+  while (tail->next) tail = tail->next;
+  
+  tail->next = a;
+  a->next = NULL;
+}
+
 
 static window_t *dragging=NULL;
 static int drag_anchor[2];
@@ -113,11 +131,14 @@ void handle_windows(void) {
         break;
       case SDL_MOUSEBUTTONDOWN:
         dragging = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y));
-        if (dragging && SCALE_POINT(event.button.y) >= dragging->y) {
-          dragging = NULL;
-        } else if (dragging) {
-          drag_anchor[0] = SCALE_POINT(event.button.x) - dragging->x;
-          drag_anchor[1] = SCALE_POINT(event.button.y) - dragging->y;
+        if (dragging) {
+          moveToTop(&windows, dragging);
+          if (SCALE_POINT(event.button.y) >= dragging->y) {
+            dragging = NULL;
+          } else {
+            drag_anchor[0] = SCALE_POINT(event.button.x) - dragging->x;
+            drag_anchor[1] = SCALE_POINT(event.button.y) - dragging->y;
+          }
         }
         break;
       case SDL_MOUSEBUTTONUP:
@@ -136,8 +157,13 @@ void handle_windows(void) {
 
 void draw_windows(void) {
   for (window_t *win = windows; win; win = win->next) {
-    draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
-    draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
+    if (!(win->flags&WINDOW_TRANSPARENT)) {
+      draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
+    }
+    if (!(win->flags&WINDOW_NOTITLE)) {
+      fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
+      draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
+    }
     set_viewport(win);
     set_projection(win->w, win->h);
     win->proc(win, MSG_DRAW, 0, NULL);

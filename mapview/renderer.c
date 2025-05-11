@@ -243,10 +243,6 @@ int run(void) {
         break;
     }
 
-    draw_fps();
-
-    draw_console();
-
     SDL_GL_SwapWindow(window);
     
     // Cap frame rate

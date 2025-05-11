@@ -159,16 +159,6 @@ bool init_sprites(void) {
 //  }
   
   
-#ifdef HEXEN
-  load_sprite("H2BAR");
-  load_sprite("H2TOP");
-  load_sprite("INVBAR");
-  load_sprite("STATBAR");
-  load_sprite("KEYBAR");
-#else
-  load_sprite("STBAR");
-#endif
-  
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
   
@@ -381,7 +371,7 @@ void draw_sprite(const char* name, float x, float y, float scale, float alpha) {
   glUseProgram(sys->program);
   
   // Set uniforms
-  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
+//  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
   glUniform2f(glGetUniformLocation(sys->program, "offset"), x-sprite->offsetx*scale, y-sprite->offsety*scale);
   glUniform2f(glGetUniformLocation(sys->program, "scale"), sprite->width * scale, sprite->height * scale);
   glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
@@ -418,6 +408,8 @@ void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
 void draw_weapon(void) {
   float hx = screen_width/2-160;
   float hy = screen_height-200;
+  
+  set_projection(screen_width, screen_height);
   
   // Find appropriate shotgun sprite frame (usually "SHTGA0")
 #ifdef HEXEN
@@ -457,19 +449,6 @@ void draw_weapon(void) {
     draw_sprite(shotgun_sprite, hx+x, hy+y, 1, 1.0f);
 
   }
-
-#ifdef HEXEN
-  sprite_t* STBAR = find_sprite("H2BAR");
-  if (STBAR) {
-    draw_sprite("H2BAR", hx+0, hy+134, 1, 1);
-//    draw_sprite("INVBAR", x+38, x+162, 1, 1);
-  }
-#else
-  sprite_t* STBAR = find_sprite("STBAR");
-  if (STBAR) {
-    draw_sprite("STBAR", 0, DOOM_HEIGHT-STBAR->height, 1, 1.0f);
-  }
-#endif
 }
 
 #define CROSSHAIR_SIZE 10

@@ -18,9 +18,6 @@ void conprintf(const char* format, ...);
 // Draw the console overlay
 void draw_console(void);
 
-// Add this to your console.h header file:
-void draw_fps(void);
-
 // Clean up console resources
 void shutdown_console(void);
 
