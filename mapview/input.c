@@ -8,9 +8,6 @@ extern SDL_Window* window;
 extern bool running;
 extern bool mode;
 
-texname_t selected_texture = {0};
-texname_t selected_floor_texture = {0};
-
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
   int inside = 0;
   for (int i = 0; i < map->num_linedefs; i++) {
@@ -181,37 +178,37 @@ void handle_game_input(float delta_time) {
         switch (pixel&PIXEL_MASK) {
           case PIXEL_MID:
             if (state[SDL_SCANCODE_LALT]) {
-              memcpy(selected_texture, map->sidedefs[pixel&~PIXEL_MASK].midtexture, sizeof(texname_t));
+              set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].midtexture);
             } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture, selected_texture, sizeof(texname_t));
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture, get_selected_texture(), sizeof(texname_t));
             }
             break;
           case PIXEL_BOTTOM:
             if (state[SDL_SCANCODE_LALT]) {
-              memcpy(selected_texture, map->sidedefs[pixel&~PIXEL_MASK].bottomtexture, sizeof(texname_t));
+              set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture);
             } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture, selected_texture, sizeof(texname_t));
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture, get_selected_texture(), sizeof(texname_t));
             }
             break;
           case PIXEL_TOP:
             if (state[SDL_SCANCODE_LALT]) {
-              memcpy(selected_texture, map->sidedefs[pixel&~PIXEL_MASK].toptexture, sizeof(texname_t));
+              set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].toptexture);
             } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture, selected_texture, sizeof(texname_t));
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture, get_selected_texture(), sizeof(texname_t));
             }
             break;
           case PIXEL_FLOOR:
             if (state[SDL_SCANCODE_LALT]) {
-              memcpy(selected_floor_texture, map->sectors[pixel&~PIXEL_MASK].floorpic, sizeof(texname_t));
+              set_selected_flat_texture(map->sectors[pixel&~PIXEL_MASK].floorpic);
             } else {
-              memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic, selected_floor_texture, sizeof(texname_t));
+              memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic, get_selected_flat_texture(), sizeof(texname_t));
             }
             break;
           case PIXEL_CEILING:
             if (state[SDL_SCANCODE_LALT]) {
-              memcpy(selected_floor_texture, map->sectors[pixel&~PIXEL_MASK].ceilingpic, sizeof(texname_t));
+              set_selected_flat_texture(map->sectors[pixel&~PIXEL_MASK].ceilingpic);
             } else {
-              memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic, selected_floor_texture, sizeof(texname_t));
+              memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic, get_selected_flat_texture(), sizeof(texname_t));
             }
             break;
         }

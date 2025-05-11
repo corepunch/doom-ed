@@ -125,10 +125,8 @@ uint16_t add_sidedef(map_data_t *map, uint16_t sector_index) {
   map->sidedefs[map->num_sidedefs].bottomtexture[0] = '-';
   map->sidedefs[map->num_sidedefs].bottomtexture[1] = '\0';
   
-  extern char const *selected_texture;
-  if (selected_texture) {
-    strncpy(map->sidedefs[map->num_sidedefs].midtexture, selected_texture, 8);
-  }
+  strncpy(map->sidedefs[map->num_sidedefs].midtexture, get_selected_texture(), 8);
+
   return map->num_sidedefs++;
 }
 
@@ -145,11 +143,10 @@ uint16_t add_sector(map_data_t *map) {
     .special = 0,
     .tag = 0
   };
-  extern texname_t selected_floor_texture;
   
   // Set default textures
-  strncpy(map->sectors[index].floorpic, selected_floor_texture, 8);
-  strncpy(map->sectors[index].ceilingpic, selected_floor_texture, 8);
+  strncpy(map->sectors[index].floorpic, get_selected_flat_texture(), 8);
+  strncpy(map->sectors[index].ceilingpic, get_selected_flat_texture(), 8);
   
   map->num_sectors++;
   return index;

@@ -225,8 +225,10 @@ int run(void) {
           handle_game_input(delta_time);
           draw_dungeon();
         } else {
+          handle_windows();
           draw_dungeon();
-          draw_palette(&game.map, 0, 0);
+//          draw_palette(&game.map);
+          draw_windows();
         }
         break;
       case GS_EDITOR:
@@ -260,19 +262,19 @@ int run(void) {
 void GetMouseInVirtualCoords(int* vx, int* vy) {
   extern SDL_Window* window;
   
-  const int target_width = DOOM_WIDTH;
-  const int target_height = DOOM_HEIGHT;
+//  const int target_width = DOOM_WIDTH;
+//  const int target_height = DOOM_HEIGHT;
   
-  int win_width, win_height;
+//  int win_width, win_height;
   int mouse_x, mouse_y;
   
-  SDL_GetWindowSize(window, &win_width, &win_height);
+//  SDL_GetWindowSize(window, &win_width, &win_height);
   SDL_GetMouseState(&mouse_x, &mouse_y);
   
   // Calculate uniform scale (based on height)
-  float scale = (float)win_height / target_height;
-  float render_width = target_width * scale;
-  float offset_x = (win_width - render_width) / 2.0f;
+//  float scale = (float)win_height / target_height;
+//  float render_width = target_width * scale;
+//  float offset_x = (win_width - render_width) / 2.0f;
   
   // Convert real mouse coordinates to virtual
   float virtual_x = mouse_x/2;//(mouse_x - offset_x) / scale;

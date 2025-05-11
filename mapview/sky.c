@@ -45,7 +45,7 @@ bool load_sky_texture(map_data_t const *map) {
   
   // If no sky texture found, try to find it in texture directories
   if (!sky_lump) {
-    mapside_texture_t* sky_tex = get_texture("SKY1");
+    mapside_texture_t const* sky_tex = get_texture("SKY1");
     if (sky_tex) {
       g_sky.texture_id = sky_tex->texture;
       g_sky.width = sky_tex->width;

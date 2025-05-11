@@ -38,8 +38,9 @@ if ((map)->name) free((map)->name); \
 #define PALETTE_WIDTH 24
 #define NOTEX_SIZE 64
 
-#define DOOM_WIDTH 320
-#define DOOM_HEIGHT 200
+#define SCROLL_SENSITIVITY 5
+
+#define SCALE_POINT(x) ((x)/2)
 
 #define HEXEN
 
@@ -69,6 +70,17 @@ enum {
 #define ACCELERATION 1000.0f
 #define FRICTION     1200.0f
 #define MAX_SPEED    300.0f
+
+#define LOWORD(l) ((uint16_t)(l & 0xFFFF))
+#define HIWORD(l) ((uint16_t)((l >> 16) & 0xFFFF))
+#define MAKEDWORD(low, high) ((uint32_t)(((uint16_t)(low)) | ((uint32_t)((uint16_t)(high))) << 16))
+
+enum {
+  MSG_CREATE,
+  MSG_DRAW,
+  MSG_WHEEL,
+  MSG_CLICK,
+};
 
 // Type definitions to better represent the WAD format
 typedef char wadid_t[4];     // "IWAD" or "PWAD"
@@ -264,6 +276,13 @@ typedef struct {
   bool nowalls;
 } viewdef_t;
 
+// Collection to store loaded textures
+typedef struct texture_cache_s {
+  int num_textures;
+  texname_t selected;
+  mapside_texture_t textures[1];
+} texture_cache_t;
+
 typedef enum {
   GS_DUNGEON,
   GS_EDITOR,
@@ -277,6 +296,20 @@ typedef struct {
   map_data_t map;
   player_t player;
 } game_t;
+
+struct window_s;
+typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
+
+typedef struct window_s {
+  int x, y, w, h;
+  int16_t scroll[2];
+  winproc_t proc;
+  char title[64];
+  void *userdata;
+  struct window_s *next;
+} window_t;
+
+void create_window(int x, int y, int w, int h, char const *title, winproc_t proc, void *lparam);
 
 extern game_t game;
 
@@ -306,10 +339,11 @@ void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mo
 void update_player_position_with_sliding(map_data_t const *map, player_t *player,
                                          float move_x, float move_y);
 
-void draw_rect(int tex, float x, float y, float w, float h);
-void draw_rect_ex(int tex, float x, float y, float w, float h, int type);
+void fill_rect(int color, int x, int y, int w, int h);
+void draw_rect(int tex, int x, int y, int w, int h);
+void draw_rect_ex(int tex, int x, int y, int w, int h, int type);
 void draw_text_gl3(const char* text, int x, int y, float alpha);
-void draw_palette(map_data_t const *map, float x, float y);
+void draw_palette(map_data_t const *map);
 char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);
 int get_texture_index(char const* name);
@@ -327,6 +361,15 @@ void goto_map(const char *mapname);
 bool init_wad(const char *filename);
 void shutdown_wad(void);
 
+void draw_panel(int x, int y, int w, int h);
+void draw_windows(void);
+void handle_windows(void);
+
 void GetMouseInVirtualCoords(int* vx, int* vy);
+
+const char *get_selected_texture(void);
+void set_selected_texture(const char *);
+const char *get_selected_flat_texture(void);
+void set_selected_flat_texture(const char *str);
 
 #endif

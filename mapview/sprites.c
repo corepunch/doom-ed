@@ -46,6 +46,7 @@ typedef struct {
   GLuint program;        // Shader program
   GLuint vao;            // Vertex array object
   GLuint vbo;            // Vertex buffer object
+  GLuint tmp;
   sprite_t sprites[MAX_SPRITES];
   int num_sprites;
   mat4 projection;       // Orthographic projection matrix
@@ -97,6 +98,10 @@ bool init_sprites(void) {
   glBindAttribLocation(sys->program, 0, "position");
   glBindAttribLocation(sys->program, 1, "texcoord");
   glLinkProgram(sys->program);
+  
+  glGenTextures(1, &sys->tmp);
+  glBindTexture(GL_TEXTURE_2D, sys->tmp);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0});
   
   // Create VAO, VBO, EBO
   glGenVertexArrays(1, &sys->vao);
@@ -566,9 +571,15 @@ void cleanup_sprites(void) {
   sys->num_sprites = 0;
 }
 
+void set_projection(int w, int h) {
+  mat4 projection;
+  glm_ortho(0, w, h, 0, -1, 1, projection);
+  glUseProgram(g_sprite_system.program);
+  glUniformMatrix4fv(glGetUniformLocation(g_sprite_system.program, "projection"), 1, GL_FALSE, projection[0]);
+}
 
 // Draw a sprite at the specified screen position
-void draw_rect_ex(int tex, float x, float y, float w, float h, int type) {
+void draw_rect_ex(int tex, int x, int y, int w, int h, int type) {
   sprite_system_t* sys = &g_sprite_system;
   
   // Enable blending for transparency
@@ -582,7 +593,7 @@ void draw_rect_ex(int tex, float x, float y, float w, float h, int type) {
   glUseProgram(sys->program);
   
   // Set uniforms
-  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
+//  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
   glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
   glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
   glUniform1f(glGetUniformLocation(sys->program, "alpha"), 1);
@@ -602,6 +613,12 @@ void draw_rect_ex(int tex, float x, float y, float w, float h, int type) {
 }
 
 // Draw a sprite at the specified screen position
-void draw_rect(int tex, float x, float y, float w, float h) {
+void draw_rect(int tex, int x, int y, int w, int h) {
   draw_rect_ex(tex, x, y, w, h, false);
+}
+
+void fill_rect(int color, int x, int y, int w, int h) {
+  glBindTexture(GL_TEXTURE_2D, g_sprite_system.tmp);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+  draw_rect_ex(g_sprite_system.tmp, x, y, w, h, false);
 }

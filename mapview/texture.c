@@ -46,24 +46,28 @@ typedef struct {
   uint32_t offsets[1];        // Array of offsets to maptexture_t
 } texture_directory_t;
 
-// Collection to store loaded flat textures
-typedef struct flat_cache_s {
-  mapside_texture_t textures[MAX_TEXTURES];
-  int num_textures;
-} flat_cache_t;
+texture_cache_t *flat_cache = NULL;
+texture_cache_t *texture_cache = NULL;
 
-// Collection to store loaded textures
-typedef struct texture_cache_s {
-  mapside_texture_t textures[MAX_TEXTURES];
-  int num_textures;
-} texture_cache_t;
+const char *get_selected_texture(void) {
+  return texture_cache->selected;
+}
 
-flat_cache_t g_flat_cache = {0};
-texture_cache_t g_cache = {0};
+void set_selected_texture(const char *str) {
+  memcpy(texture_cache->selected, str, sizeof(texname_t));
+}
+
+const char *get_selected_flat_texture(void) {
+  return flat_cache->selected;
+}
+
+void set_selected_flat_texture(const char *str) {
+  memcpy(flat_cache->selected, str, sizeof(texname_t));
+}
 
 // Convenience function to get flat texture
-mapside_texture_t const *
-get_flat_texture(const char* name);
+mapside_texture_t const *get_flat_texture(const char* name);
+bool win_textures(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 uint8_t* load_patch(void* patch_lump, int* width, int* height) {
   if (!patch_lump) return NULL;
@@ -278,7 +282,7 @@ static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
 
 // Main function to allocate textures for map sides
 int allocate_mapside_textures(map_data_t* map) {
-  texture_cache_t* cache = &g_cache;
+  texture_cache = malloc(sizeof(texture_cache_t) + sizeof(texture_cache_t) * MAX_TEXTURES);
   
   // Array of texture directories
   texture_directory_t *tex_dirs[MAX_TEXDIR]={0};
@@ -310,12 +314,14 @@ int allocate_mapside_textures(map_data_t* map) {
   for (int i = 0; i < map->num_sidedefs; i++) {
     mapsidedef_t* side = &map->sidedefs[i];
     
-    maybe_load_texture(cache, side->toptexture, tex_dirs, pnames);
-    maybe_load_texture(cache, side->midtexture, tex_dirs, pnames);
-    maybe_load_texture(cache, side->bottomtexture, tex_dirs, pnames);
+    maybe_load_texture(texture_cache, side->toptexture, tex_dirs, pnames);
+    maybe_load_texture(texture_cache, side->midtexture, tex_dirs, pnames);
+    maybe_load_texture(texture_cache, side->bottomtexture, tex_dirs, pnames);
   }
   
-  return cache->num_textures;
+  create_window(20, 20, 256, 256, "Textures", win_textures, texture_cache);
+
+  return texture_cache->num_textures;
 }
 
 // Free texture cache
@@ -344,7 +350,7 @@ mapside_texture_t *get_texture_from_cache(texture_cache_t* cache, const char* na
 
 // Convenience function to get texture
 mapside_texture_t const *get_texture(const char* name) {
-  return get_texture_from_cache(&g_cache, name);
+  return get_texture_from_cache(texture_cache, name);
 }
 
 /*
@@ -353,8 +359,7 @@ mapside_texture_t const *get_texture(const char* name) {
 
 // Load a single flat texture and create an OpenGL texture
 mapside_texture_t *
-load_flat_texture(
-                  texname_t const floorpic)
+load_flat_texture(texname_t const floorpic)
 {
   filelump_t *flat_lump = find_lump(floorpic);
   static mapside_texture_t tmp = {0};
@@ -415,8 +420,8 @@ load_flat_texture(
 
 // Main function to allocate flat textures for map
 int allocate_flat_textures(map_data_t* map) {
-  flat_cache_t* cache = &g_flat_cache;
-//  
+  flat_cache = malloc(sizeof(texture_cache_t) + MAX_TEXTURES * sizeof(mapside_texture_t));
+  
 //  // Find F_START and F_END markers
 //  int f_start = find_lump_num("F_START"), f_end = find_lump_num("F_END");
 //  int ff_start = find_lump_num("FF_START"), ff_end = find_lump_num("FF_END");
@@ -432,12 +437,12 @@ int allocate_flat_textures(map_data_t* map) {
 //    if (is_marker(get_lump_name(i))) continue;
 //    
 //    // Check if we're at capacity
-//    if (cache->num_textures >= MAX_TEXTURES) break;
+//    if (flat_cache->num_textures >= MAX_TEXTURES) break;
 //    
 //    // Check if flat is already in cache
 //    bool already_cached = false;
-//    for (int j = 0; j < cache->num_textures; j++) {
-//      if (strncmp(cache->textures[j].name, get_lump_name(i), 8) == 0) {
+//    for (int j = 0; j < flat_cache->num_textures; j++) {
+//      if (strncmp(flat_cache->textures[j].name, get_lump_name(i), 8) == 0) {
 //        already_cached = true;
 //        break;
 //      }
@@ -447,7 +452,7 @@ int allocate_flat_textures(map_data_t* map) {
 //    // Load the flat texture
 //    mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
 //    if (tex) {
-//      cache->textures[cache->num_textures++] = *tex;
+//      flat_cache->textures[flat_cache->num_textures++] = *tex;
 //    }
 //  }
 //  
@@ -458,12 +463,12 @@ int allocate_flat_textures(map_data_t* map) {
 //      if (is_marker(get_lump_name(i))) continue;
 //
 //      // Check if we're at capacity
-//      if (cache->num_textures >= MAX_TEXTURES) break;
+//      if (flat_cache->num_textures >= MAX_TEXTURES) break;
 //      
 //      // Check if flat is already in cache
 //      bool already_cached = false;
-//      for (int j = 0; j < cache->num_textures; j++) {
-//        if (strncmp(cache->textures[j].name, get_lump_name(i), 8) == 0) {
+//      for (int j = 0; j < flat_cache->num_textures; j++) {
+//        if (strncmp(flat_cache->textures[j].name, get_lump_name(i), 8) == 0) {
 //          already_cached = true;
 //          break;
 //        }
@@ -473,7 +478,7 @@ int allocate_flat_textures(map_data_t* map) {
 //      // Load the flat texture
 //      mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
 //      if (tex) {
-//        cache->textures[cache->num_textures++] = *tex;
+//        flat_cache->textures[flat_cache->num_textures++] = *tex;
 //      }
 //    }
 //  }
@@ -485,25 +490,28 @@ int allocate_flat_textures(map_data_t* map) {
     // If not loaded yet, try to find and load it
     if (!get_flat_texture(sector->floorpic)) {
       mapside_texture_t *tex = load_flat_texture(sector->floorpic);
-      if (tex && cache->num_textures < MAX_TEXTURES) {
-        cache->textures[cache->num_textures++] = *tex;
+      if (tex && flat_cache->num_textures < MAX_TEXTURES) {
+        flat_cache->textures[flat_cache->num_textures++] = *tex;
       }
     }
     
     // If not loaded yet, try to find and load it
     if (!get_flat_texture(sector->ceilingpic)) {
       mapside_texture_t *tex = load_flat_texture(sector->ceilingpic);
-      if (tex && cache->num_textures < MAX_TEXTURES) {
-        cache->textures[cache->num_textures++] = *tex;
+      if (tex && flat_cache->num_textures < MAX_TEXTURES) {
+        flat_cache->textures[flat_cache->num_textures++] = *tex;
       }
     }
   }
   
-  return cache->num_textures;
+  extern int screen_width;
+  create_window(screen_width-148, 20, 128, 256, "Flats", win_textures, flat_cache);
+  
+  return flat_cache->num_textures;
 }
 
 // Free flat texture cache
-void free_flat_texture_cache(flat_cache_t* cache) {
+void free_flat_texture_cache(texture_cache_t* cache) {
   if (!cache) return;
   
   for (int i = 0; i < cache->num_textures; i++) {
@@ -517,7 +525,7 @@ void free_flat_texture_cache(flat_cache_t* cache) {
 
 // Get flat texture from cache by name
 mapside_texture_t const *
-get_flat_texture_from_cache(flat_cache_t* cache, const char* name) {
+get_flat_texture_from_cache(texture_cache_t* cache, const char* name) {
   for (int i = 0; i < cache->num_textures; i++) {
     if (strncmp(cache->textures[i].name, name, 8) == 0) {
       return &cache->textures[i];
@@ -530,20 +538,20 @@ get_flat_texture_from_cache(flat_cache_t* cache, const char* name) {
 // Convenience function to get flat texture
 mapside_texture_t const *
 get_flat_texture(const char* name) {
-  return get_flat_texture_from_cache(&g_flat_cache, name);
+  return get_flat_texture_from_cache(flat_cache, name);
 }
 
 char const* get_texture_name(int i) {
-  return g_cache.textures[i%g_cache.num_textures].name;
+  return texture_cache->textures[i%texture_cache->num_textures].name;
 }
 
 char const* get_flat_texture_name(int i) {
-  return g_flat_cache.textures[i%g_flat_cache.num_textures].name;
+  return flat_cache->textures[i%flat_cache->num_textures].name;
 }
 
 int get_texture_index(char const* name) {
-  for (int i = 0; i < g_cache.num_textures; i++) {
-    if (!strncmp(name, g_cache.textures[i].name, sizeof(texname_t))) {
+  for (int i = 0; i < texture_cache->num_textures; i++) {
+    if (!strncmp(name, texture_cache->textures[i].name, sizeof(texname_t))) {
       return i;
     }
   }
@@ -551,84 +559,12 @@ int get_texture_index(char const* name) {
 }
 
 int get_flat_texture_index(char const* name) {
-  for (int i = 0; i < g_flat_cache.num_textures; i++) {
-    if (!strncmp(name, g_flat_cache.textures[i].name, sizeof(texname_t))) {
+  for (int i = 0; i < flat_cache->num_textures; i++) {
+    if (!strncmp(name, flat_cache->textures[i].name, sizeof(texname_t))) {
       return i;
     }
   }
   return -1;
-}
-
-#include "radial_menu.h"
-
-void
-draw_textures_interface(mapside_texture_t* textures,
-                        int num_textures,
-                        char *selected_texture,
-                        float x, float y, float width,
-                        bool click,
-                        int keydown);
-
-void draw_palette(map_data_t const *map, float _x, float _y) {
-  extern int pixel;
-  extern texname_t selected_texture;
-  extern texname_t selected_floor_texture;
-  extern bool running;
-  extern int screen_width;
-  
-  extern float black_bars;
-  float x = 0, y = 0;
-  
-  bool click=false;
-  int keydown=-1;
-  
-  SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-      case SDL_QUIT:
-        running = false;
-        break;
-      case SDL_KEYDOWN:
-        switch (event.key.keysym.scancode) {
-          case SDL_SCANCODE_ESCAPE:
-            SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
-            break;
-          case SDL_SCANCODE_LEFT: keydown = 0; break;
-          case SDL_SCANCODE_RIGHT: keydown = 1; break;
-          case SDL_SCANCODE_UP: keydown = 2; break;
-          case SDL_SCANCODE_DOWN: keydown = 3; break;
-          default:
-            break;
-        }
-        break;
-      case SDL_MOUSEBUTTONUP:
-        click = true;
-        //        mouse_x = event.button.x;
-        //        mouse_y = event.button.y;
-        break;
-    }
-  }
-  
-  //  for (int i = 0; i < g_cache.num_textures; i++)
-  //  {
-  //    float angle = 2 * M_PI / g_cache.num_textures;
-  //    draw_radial(g_cache.textures[i].texture, DOOM_WIDTH/2, DOOM_HEIGHT/2, 40, 20, i*angle, (i+0.9)*angle, 1, selected_texture==i);
-  //  }
-  
-  draw_textures_interface(g_cache.textures,
-                          g_cache.num_textures,
-                          selected_texture,
-                          x, y, 256, click, keydown);
-  
-  draw_textures_interface(g_flat_cache.textures,
-                          g_flat_cache.num_textures,
-                          selected_floor_texture,
-                          screen_width-128, y, 128, click, -1);
-  
-//  if (get_flat_texture("F_010")) {
-//    draw_rect(get_flat_texture("F_010")->texture, 0, 64, 64, 8);
-//    draw_text_gl3("Hello", 0, 64, 1);
-//  }
 }
 
 // Load a sky texture and create an OpenGL texture
@@ -717,8 +653,8 @@ int find_and_load_sky_textures(map_data_t* map)
     mapside_texture_t* sky = find_and_load_sky_texture(sky_names[i]);
     if (sky) {
       // Add to the texture cache
-      if (g_cache.num_textures < MAX_TEXTURES) {
-        g_cache.textures[g_cache.num_textures++] = *sky;
+      if (texture_cache->num_textures < MAX_TEXTURES) {
+        texture_cache->textures[texture_cache->num_textures++] = *sky;
         sky_count++;
       }
     }

@@ -120,7 +120,7 @@ int compare_textures_by_area(const void* a, const void* b) {
 
 // Generate a texture layout for display
 texture_layout_t*
-generate_texture_layout(mapside_texture_t* textures,
+layout(mapside_texture_t* textures,
                         int num_textures,
                         int DISPLAY_WIDTH)
 {
@@ -202,8 +202,8 @@ void draw_texture_layout(texture_layout_t* layout, mapside_texture_t* textures, 
 void draw_texture_layout_with_selection(texture_layout_t* layout,
                                         mapside_texture_t* textures,
                                         char const *selected_texture,
-                                        float scale,
-                                        float wx, float wy) {
+                                        int16_t const *scroll,
+                                        float scale) {
   extern int black_tex, selection_tex;
   
   for (int i = 0; i < layout->num_entries; i++) {
@@ -211,15 +211,15 @@ void draw_texture_layout_with_selection(texture_layout_t* layout,
     mapside_texture_t* tex = &textures[entry->texture_idx];
     
     // Draw the texture
-    draw_rect(tex->texture, entry->x * scale + wx, entry->y * scale, tex->width * scale, tex->height * scale);
-    draw_rect_ex(black_tex, entry->x * scale + wx, entry->y * scale, tex->width * scale, tex->height * scale, true);
+    draw_rect(tex->texture, entry->x * scale + scroll[0], entry->y * scale + scroll[1], tex->width * scale, tex->height * scale);
+    draw_rect_ex(black_tex, entry->x * scale + scroll[0], entry->y * scale + scroll[1], tex->width * scale, tex->height * scale, true);
   }
   
   for (int i = 0; i < layout->num_entries; i++) {
     texture_layout_entry_t* entry = &layout->entries[i];
     mapside_texture_t* tex = &textures[entry->texture_idx];
     if (!strncmp(tex->name, selected_texture, sizeof(texname_t))) {
-      draw_rect_ex(selection_tex, entry->x * scale + wx, entry->y * scale, tex->width * scale, tex->height * scale, true);
+      draw_rect_ex(selection_tex, entry->x * scale + scroll[0], entry->y * scale + scroll[1], tex->width * scale, tex->height * scale, true);
     }
   }
 }
@@ -307,36 +307,80 @@ int find_texture_in_direction(texture_layout_t* layout,
   return -1;
 }
 
-void
-draw_textures_interface(mapside_texture_t* textures,
-                        int num_textures,
-                        char *selected_texture,
-                        float x, float y, float width,
-                        bool mouse_clicked,
-                        int keydown)
-{
-  float scale = 0.5f;
-  
-  texture_layout_t* layout = generate_texture_layout(textures, num_textures, width / scale);
+//void
+//draw_textures_interface(mapside_texture_t* textures,
+//                        int num_textures,
+//                        char *selected_texture,
+//                        int width,
+//                        int16_t const *scroll,
+//                        bool mouse_clicked,
+//                        int keydown)
+//{
+//  float scale = 0.5f;
+//  
+//  texture_layout_t* layout = layout(textures, num_textures, width / scale);
+//
+//  // Draw the layout with selection highlight
+//  draw_texture_layout_with_selection(layout, textures, selected_texture, scroll, scale);
+//
+//  int mouse_x, mouse_y;
+//  GetMouseInVirtualCoords(&mouse_x, &mouse_y);
+//
+//  // Handle mouse click (in mouse event handler)
+//  if (mouse_clicked) {
+//    int texture_idx = get_texture_at_point(layout, (mouse_x - x) / scale, (mouse_y - y) / scale);
+//    if (texture_idx >= 0) {
+//      memcpy(selected_texture, textures[texture_idx].name, sizeof(texname_t));
+//    }
+//  } else {
+//    int n = find_texture_in_direction(layout, textures, selected_texture, keydown);
+//    if (n != -1) {
+//      memcpy(selected_texture, textures[n].name, sizeof(texname_t));
+//    }
+//  }
+//  
+//  free(layout);
+//}
 
-  // Draw the layout with selection highlight
-  draw_texture_layout_with_selection(layout, textures, selected_texture, scale, x, y);
+#define SCALE 0.5f
 
-  int mouse_x, mouse_y;
-  GetMouseInVirtualCoords(&mouse_x, &mouse_y);
+typedef struct {
+  texture_cache_t *cache;
+  texture_layout_t* layout;
+} window_udata_t;
 
-  // Handle mouse click (in mouse event handler)
-  if (mouse_clicked) {
-    int texture_idx = get_texture_at_point(layout, (mouse_x - x) / scale, (mouse_y - y) / scale);
-    if (texture_idx >= 0) {
-      memcpy(selected_texture, textures[texture_idx].name, sizeof(texname_t));
+bool win_textures(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  window_udata_t *udata = win->userdata;
+  switch (msg) {
+    case MSG_CREATE: {
+      window_udata_t *udata = malloc(sizeof(window_udata_t));
+      udata->cache = lparam;
+      udata->layout = layout(udata->cache->textures, udata->cache->num_textures, win->w / SCALE);
+      win->userdata = udata;
+      return true;
     }
-  } else {
-    int n = find_texture_in_direction(layout, textures, selected_texture, keydown);
-    if (n != -1) {
-      memcpy(selected_texture, textures[n].name, sizeof(texname_t));
+    case MSG_DRAW:
+      draw_texture_layout_with_selection(udata->layout,
+                                         udata->cache->textures,
+                                         udata->cache->selected,
+                                         win->scroll,
+                                         SCALE);
+      return true;
+    case MSG_WHEEL:
+      //      win->scroll[0] = MIN(0, win->scroll[0]+(int16_t)LOWORD(wparam));
+      win->scroll[1] = MIN(0, win->scroll[1]+(int16_t)HIWORD(wparam));
+      return true;
+    case MSG_CLICK: {
+      int texture_idx =
+      get_texture_at_point(udata->layout,
+                           (LOWORD(wparam) - win->scroll[0]) / SCALE,
+                           (HIWORD(wparam) - win->scroll[1]) / SCALE);
+      if (texture_idx >= 0) {
+        memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
+      }
+      return true;
     }
   }
-  
-  free(layout);
+  return false;
 }
+
