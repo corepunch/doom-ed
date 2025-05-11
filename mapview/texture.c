@@ -343,7 +343,7 @@ mapside_texture_t *get_texture_from_cache(texture_cache_t* cache, const char* na
 }
 
 // Convenience function to get texture
-mapside_texture_t *get_texture(const char* name) {
+mapside_texture_t const *get_texture(const char* name) {
   return get_texture_from_cache(&g_cache, name);
 }
 
@@ -565,16 +565,19 @@ void
 draw_textures_interface(mapside_texture_t* textures,
                         int num_textures,
                         char *selected_texture,
+                        float x, float y, float width,
                         bool click);
 
-void draw_palette(map_data_t const *map, float x, float y) {
+void draw_palette(map_data_t const *map, float _x, float _y) {
   extern int pixel;
   extern texname_t selected_texture;
-  extern uint32_t selected_floor_texture;
+  extern texname_t selected_floor_texture;
   extern float black_bars;
   extern bool running;
-  int amount = 4;
 
+  extern float black_bars;
+  float x = -black_bars, y = 0;
+  
   bool click=false;
   
   SDL_Event event;
@@ -599,9 +602,6 @@ void draw_palette(map_data_t const *map, float x, float y) {
     }
   }
 
-  
-  selected_floor_texture = selected_floor_texture%g_flat_cache.num_textures;
-
 //  for (int i = 0; i < g_cache.num_textures; i++)
 //  {
 //    float angle = 2 * M_PI / g_cache.num_textures;
@@ -611,39 +611,12 @@ void draw_palette(map_data_t const *map, float x, float y) {
   draw_textures_interface(g_cache.textures,
                           g_cache.num_textures,
                           selected_texture,
-                          click);
+                          x, y, 160, click);
   
-//#define PALETTE_W 4
-//  for (int i = 0; i < g_cache.num_textures; i++) {
-//    int x = -black_bars + (i%PALETTE_W)*PALETTE_WIDTH;
-//    int y = (i/PALETTE_W)*PALETTE_WIDTH;
-//    mapside_texture_t const *tex = &g_cache.textures[i];
-//    draw_rect(tex->texture, x, y, tex->width*0.25, tex->height*0.25);
-//  }
-  
-//
-//  
-//  for (int i = selected_texture - MIN(selected_texture, amount);
-//       i <= MIN(g_cache.num_textures, selected_texture + amount); i++)
-//  {
-//    int x = -black_bars-PALETTE_WIDTH/2;
-//    int y = (i-(int)selected_texture-0.5)*PALETTE_WIDTH+DOOM_HEIGHT/2;
-//    if (selected_texture == i) {
-//      x += PALETTE_WIDTH/2;
-//    }
-//    draw_rect(g_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
-//  }
-
-  for (int i = selected_floor_texture - MIN(selected_floor_texture, amount);
-       i <= MIN(g_flat_cache.num_textures, selected_floor_texture + amount); i++)
-  {
-    int x = DOOM_WIDTH + black_bars - PALETTE_WIDTH/2;
-    int y = (i-(int)selected_floor_texture-0.5)*PALETTE_WIDTH+DOOM_HEIGHT/2;
-    if (selected_floor_texture == i) {
-      x -= PALETTE_WIDTH/2;
-    }
-    draw_rect(g_flat_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
-  }
+  draw_textures_interface(g_flat_cache.textures,
+                          g_flat_cache.num_textures,
+                          selected_floor_texture,
+                          DOOM_WIDTH+black_bars-64, y, 64, click);
 }
 
 // Load a sky texture and create an OpenGL texture

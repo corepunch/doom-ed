@@ -145,12 +145,11 @@ uint16_t add_sector(map_data_t *map) {
     .special = 0,
     .tag = 0
   };
-  extern uint32_t selected_floor_texture;
+  extern texname_t selected_floor_texture;
   
-  const char *texture = get_flat_texture_name(selected_floor_texture);
   // Set default textures
-  strncpy(map->sectors[index].floorpic, texture, 8);
-  strncpy(map->sectors[index].ceilingpic, texture, 8);
+  strncpy(map->sectors[index].floorpic, selected_floor_texture, 8);
+  strncpy(map->sectors[index].ceilingpic, selected_floor_texture, 8);
   
   map->num_sectors++;
   return index;

@@ -1,7 +1,7 @@
 #include "map.h"
 
 #define CELL_SIZE 16       // Size of each cell in the mask buffer
-#define DISPLAY_WIDTH 640  // Width of the display area
+//#define DISPLAY_WIDTH 640  // Width of the display area
 #define DISPLAY_HEIGHT 2000 // Height of the display area
 
 // Cell availability: 0 = free, 1 = occupied
@@ -119,7 +119,11 @@ int compare_textures_by_area(const void* a, const void* b) {
 }
 
 // Generate a texture layout for display
-texture_layout_t* generate_texture_layout(mapside_texture_t* textures, int num_textures) {
+texture_layout_t*
+generate_texture_layout(mapside_texture_t* textures,
+                        int num_textures,
+                        int DISPLAY_WIDTH)
+{
   // Determine layout dimensions based on cell size
   int cells_w = DISPLAY_WIDTH / CELL_SIZE;
   int cells_h = DISPLAY_HEIGHT / CELL_SIZE;
@@ -200,20 +204,23 @@ void draw_texture_layout_with_selection(texture_layout_t* layout,
                                         char const *selected_texture,
                                         float scale,
                                         float wx, float wy) {
+  extern int black_tex, selection_tex;
+  
   for (int i = 0; i < layout->num_entries; i++) {
     texture_layout_entry_t* entry = &layout->entries[i];
     mapside_texture_t* tex = &textures[entry->texture_idx];
     
-    int x = entry->x;
-    int y = entry->y;
-    
-    extern int black_tex, white_tex;
-    
-    int bg = selected_texture && !strncmp(tex->name, selected_texture, sizeof(texname_t)) ? white_tex : black_tex;
-    
     // Draw the texture
-    draw_rect(bg, x * scale + wx, y * scale, tex->width * scale, tex->height * scale);
-    draw_rect(tex->texture, x * scale + wx + 0.5, y * scale + 0.5, tex->width * scale-1, tex->height * scale-1);
+    draw_rect(tex->texture, entry->x * scale + wx, entry->y * scale, tex->width * scale, tex->height * scale);
+    draw_rect_ex(black_tex, entry->x * scale + wx, entry->y * scale, tex->width * scale, tex->height * scale, true);
+  }
+  
+  for (int i = 0; i < layout->num_entries; i++) {
+    texture_layout_entry_t* entry = &layout->entries[i];
+    mapside_texture_t* tex = &textures[entry->texture_idx];
+    if (selected_texture && !strncmp(tex->name, selected_texture, sizeof(texname_t))) {
+      draw_rect_ex(selection_tex, entry->x * scale + wx, entry->y * scale, tex->width * scale, tex->height * scale, true);
+    }
   }
 }
 
@@ -236,14 +243,12 @@ void
 draw_textures_interface(mapside_texture_t* textures,
                         int num_textures,
                         char *selected_texture,
+                        float x, float y, float width,
                         bool mouse_clicked)
 {
-  extern float black_bars;
-  
-  texture_layout_t* layout = generate_texture_layout(textures, num_textures);
-
   float scale = 0.25f;
-  float x = -black_bars, y = 0;
+  
+  texture_layout_t* layout = generate_texture_layout(textures, num_textures, width / scale);
 
   // Draw the layout with selection highlight
   draw_texture_layout_with_selection(layout, textures, selected_texture, scale, x, y);

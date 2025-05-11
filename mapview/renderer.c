@@ -67,7 +67,7 @@ GLuint compile(GLenum type, const char* src) {
 
 // Global variables
 GLuint world_prog, ui_prog;
-GLuint white_tex, black_tex, no_tex;
+GLuint white_tex, black_tex, selection_tex, no_tex;
 
 editor_state_t editor = {0};
 SDL_Window* window = NULL;
@@ -166,6 +166,10 @@ bool init_sdl(void) {
   glGenTextures(1, &black_tex);
   glBindTexture(GL_TEXTURE_2D, black_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xff000000});
+  
+  glGenTextures(1, &selection_tex);
+  glBindTexture(GL_TEXTURE_2D, selection_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xff00ffff});
   
   glGenTextures(1, &no_tex);
   glBindTexture(GL_TEXTURE_2D, no_tex);
@@ -273,12 +277,6 @@ void GetMouseInVirtualCoords(int* vx, int* vy) {
   // Convert real mouse coordinates to virtual
   float virtual_x = (mouse_x - offset_x) / scale;
   float virtual_y = mouse_y / scale;
-  
-  // Optional: Clamp to virtual bounds (if you want to restrict)
-  if (virtual_x < 0) virtual_x = 0;
-  if (virtual_x > target_width) virtual_x = target_width;
-  if (virtual_y < 0) virtual_y = 0;
-  if (virtual_y > target_height) virtual_y = target_height;
   
   // Return as integers
   *vx = (int)virtual_x;

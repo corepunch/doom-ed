@@ -295,7 +295,8 @@ int allocate_flat_textures(map_data_t* map);
 uint8_t* load_patch(void* patch_lump, int* width, int* height);
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
-mapside_texture_t *get_texture(const char* name);
+mapside_texture_t const *get_texture(const char* name);
+mapside_texture_t const *get_flat_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
 void build_floor_vertex_buffer(map_data_t *map);
 void handle_game_input(float delta_time);
@@ -306,6 +307,7 @@ void update_player_position_with_sliding(map_data_t const *map, player_t *player
                                          float move_x, float move_y);
 
 void draw_rect(int tex, float x, float y, float w, float h);
+void draw_rect_ex(int tex, float x, float y, float w, float h, int type);
 void draw_palette(map_data_t const *map, float x, float y);
 char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);

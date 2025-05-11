@@ -9,7 +9,7 @@ extern bool running;
 extern bool mode;
 
 texname_t selected_texture = {0};
-uint32_t selected_floor_texture = 0;
+texname_t selected_floor_texture = {0};
 
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
   int inside = 0;
@@ -202,20 +202,16 @@ void handle_game_input(float delta_time) {
             break;
           case PIXEL_FLOOR:
             if (state[SDL_SCANCODE_LALT]) {
-              selected_floor_texture = get_flat_texture_index(map->sectors[pixel&~PIXEL_MASK].floorpic);
+              memcpy(selected_floor_texture, map->sectors[pixel&~PIXEL_MASK].floorpic, sizeof(texname_t));
             } else {
-              memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic,
-                     get_flat_texture_name(selected_floor_texture),
-                     sizeof(texname_t));
+              memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic, selected_floor_texture, sizeof(texname_t));
             }
             break;
           case PIXEL_CEILING:
             if (state[SDL_SCANCODE_LALT]) {
-              selected_floor_texture = get_flat_texture_index(map->sectors[pixel&~PIXEL_MASK].ceilingpic);
+              memcpy(selected_floor_texture, map->sectors[pixel&~PIXEL_MASK].ceilingpic, sizeof(texname_t));
             } else {
-              memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic,
-                     get_flat_texture_name(selected_floor_texture),
-                     sizeof(texname_t));
+              memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic, selected_floor_texture, sizeof(texname_t));
             }
             break;
         }
@@ -235,12 +231,12 @@ void handle_game_input(float delta_time) {
 //        case SDL_SCANCODE_X:
 //          selected_texture++;
 //          break;
-        case SDL_SCANCODE_C:
-          selected_floor_texture--;
-          break;
-        case SDL_SCANCODE_V:
-          selected_floor_texture++;
-          break;
+//        case SDL_SCANCODE_C:
+//          selected_floor_texture--;
+//          break;
+//        case SDL_SCANCODE_V:
+//          selected_floor_texture++;
+//          break;
         case SDL_SCANCODE_TAB:
           toggle_editor_mode(&editor);
           break;
@@ -304,8 +300,8 @@ void handle_game_input(float delta_time) {
       if (event.jhat.hat == 0) {
 //        if (event.jhat.value & 4) selected_texture++;
 //        if (event.jhat.value & 1) selected_texture--;
-        if (event.jhat.value & 8) selected_floor_texture--;
-        if (event.jhat.value & 2) selected_floor_texture++;
+//        if (event.jhat.value & 8) selected_floor_texture--;
+//        if (event.jhat.value & 2) selected_floor_texture++;
       }
       printf("Hat %d moved to %d\n", event.jhat.hat, event.jhat.value);
     }

@@ -567,7 +567,7 @@ void cleanup_sprites(void) {
 
 
 // Draw a sprite at the specified screen position
-void draw_rect(int tex, float x, float y, float w, float h) {
+void draw_rect_ex(int tex, float x, float y, float w, float h, int type) {
   sprite_system_t* sys = &g_sprite_system;
   
   // Enable blending for transparency
@@ -593,9 +593,14 @@ void draw_rect(int tex, float x, float y, float w, float h) {
   
   // Bind VAO and draw
   glBindVertexArray(sys->vao);
-  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  glDrawArrays(type?GL_LINE_LOOP:GL_TRIANGLE_FAN, 0, 4);
   
   // Reset state
   glEnable(GL_DEPTH_TEST);
   glDisable(GL_BLEND);
+}
+
+// Draw a sprite at the specified screen position
+void draw_rect(int tex, float x, float y, float w, float h) {
+  draw_rect_ex(tex, x, y, w, h, false);
 }
