@@ -241,7 +241,7 @@ int run(void) {
         break;
     }
 
-    draw_fps(5, 5);
+    draw_fps();
 
     draw_console();
 

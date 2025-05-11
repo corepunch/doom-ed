@@ -218,7 +218,7 @@ void draw_texture_layout_with_selection(texture_layout_t* layout,
   for (int i = 0; i < layout->num_entries; i++) {
     texture_layout_entry_t* entry = &layout->entries[i];
     mapside_texture_t* tex = &textures[entry->texture_idx];
-    if (selected_texture && !strncmp(tex->name, selected_texture, sizeof(texname_t))) {
+    if (!strncmp(tex->name, selected_texture, sizeof(texname_t))) {
       draw_rect_ex(selection_tex, entry->x * scale + wx, entry->y * scale, tex->width * scale, tex->height * scale, true);
     }
   }
@@ -239,12 +239,81 @@ int get_texture_at_point(texture_layout_t* layout, int point_x, int point_y) {
   return -1;  // No texture at this point
 }
 
+enum {
+  key_left, key_right, key_up, key_down
+};
+
+// Function to find the closest texture in a given direction from the current selection
+int find_texture_in_direction(texture_layout_t* layout,
+                              mapside_texture_t* textures,
+                              const char* current_texture_name,
+                              int direction) {
+  int current_idx = -1;
+  int current_x = 0, current_y = 0;
+  int current_width = 0, current_height = 0;
+  
+  // First, find the currently selected texture and its position
+  for (int i = 0; i < layout->num_entries; i++) {
+    texture_layout_entry_t* entry = &layout->entries[i];
+    mapside_texture_t* tex = &textures[entry->texture_idx];
+    
+    if (!strncmp(tex->name, current_texture_name, sizeof(texname_t))) {
+      current_idx = i;
+      current_x = entry->x + entry->width/2;  // Center point of texture
+      current_y = entry->y + entry->height/2;
+      current_width = entry->width;
+      current_height = entry->height;
+      break;
+    }
+  }
+  
+  if (current_idx == -1) {
+    return -1; // Current texture not found
+  }
+  
+  // Define direction vectors
+  int dir_x = 0, dir_y = 0;
+  switch (direction) {
+    case key_left:
+      dir_x = -1;
+      break;
+    case key_right:
+      dir_x = 1;
+      break;
+    case key_up:
+      dir_y = -1;
+      break;
+    case key_down:
+      dir_y = 1;
+      break;
+    default:
+      return -1;
+  }
+  
+  // Find best candidate in that direction
+  
+  int x = layout->entries[current_idx].x+1;
+  int y = layout->entries[current_idx].y+1;
+  
+  while (true) {
+    x += dir_x * 8;
+    y += dir_y * 8;
+    int n = get_texture_at_point(layout, x, y);
+    if (n != layout->entries[current_idx].texture_idx) {
+      return n;
+    }
+  }
+
+  return -1;
+}
+
 void
 draw_textures_interface(mapside_texture_t* textures,
                         int num_textures,
                         char *selected_texture,
                         float x, float y, float width,
-                        bool mouse_clicked)
+                        bool mouse_clicked,
+                        int keydown)
 {
   float scale = 0.25f;
   
@@ -257,13 +326,18 @@ draw_textures_interface(mapside_texture_t* textures,
   int mouse_x, mouse_y;
   GetMouseInVirtualCoords(&mouse_x, &mouse_y);
 
-   // Handle mouse click (in mouse event handler)
-   if (mouse_clicked) {
-     int texture_idx = get_texture_at_point(layout, (mouse_x - x) / scale, (mouse_y - y) / scale);
-     if (texture_idx >= 0) {
-         memcpy(selected_texture, textures[texture_idx].name, sizeof(texname_t));
-     }
-   }
+  // Handle mouse click (in mouse event handler)
+  if (mouse_clicked) {
+    int texture_idx = get_texture_at_point(layout, (mouse_x - x) / scale, (mouse_y - y) / scale);
+    if (texture_idx >= 0) {
+      memcpy(selected_texture, textures[texture_idx].name, sizeof(texname_t));
+    }
+  } else {
+    int n = find_texture_in_direction(layout, textures, selected_texture, keydown);
+    if (n != -1) {
+      memcpy(selected_texture, textures[n].name, sizeof(texname_t));
+    }
+  }
   
   free(layout);
 }

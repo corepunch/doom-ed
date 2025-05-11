@@ -566,7 +566,8 @@ draw_textures_interface(mapside_texture_t* textures,
                         int num_textures,
                         char *selected_texture,
                         float x, float y, float width,
-                        bool click);
+                        bool click,
+                        int keydown);
 
 void draw_palette(map_data_t const *map, float _x, float _y) {
   extern int pixel;
@@ -579,6 +580,7 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
   float x = -black_bars, y = 0;
   
   bool click=false;
+  int keydown=-1;
   
   SDL_Event event;
   while (SDL_PollEvent(&event)) {
@@ -591,9 +593,14 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
           case SDL_SCANCODE_ESCAPE:
             SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
             break;
+          case SDL_SCANCODE_LEFT: keydown = 0; break;
+          case SDL_SCANCODE_RIGHT: keydown = 1; break;
+          case SDL_SCANCODE_UP: keydown = 2; break;
+          case SDL_SCANCODE_DOWN: keydown = 3; break;
           default:
             break;
         }
+        break;
       case SDL_MOUSEBUTTONUP:
         click = true;
 //        mouse_x = event.button.x;
@@ -611,12 +618,12 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
   draw_textures_interface(g_cache.textures,
                           g_cache.num_textures,
                           selected_texture,
-                          x, y, 160, click);
+                          x, y, 160, click, keydown);
   
   draw_textures_interface(g_flat_cache.textures,
                           g_flat_cache.num_textures,
                           selected_floor_texture,
-                          DOOM_WIDTH+black_bars-64, y, 64, click);
+                          DOOM_WIDTH+black_bars-64, y, 64, click, -1);
 }
 
 // Load a sky texture and create an OpenGL texture
