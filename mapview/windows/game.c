@@ -3,9 +3,9 @@
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 
-#include "map.h"
-#include "sprites.h"
-#include "console.h"
+#include "../map.h"
+#include "../sprites.h"
+#include "../console.h"
 
 bool init_sky(map_data_t const*);
 const char *get_map_name(const char *name);
@@ -16,6 +16,7 @@ extern SDL_Window* window;
 bool win_perf(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_statbar(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_console(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_game(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -33,8 +34,9 @@ void init_player(map_data_t const *map, player_t *player) {
   }
   
   create_window(0, 0, 128, 64, "FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_perf, NULL);
-  create_window((screen_width-320)/2, (screen_height-200), 320, 200, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
-  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
+  create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
+//  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
+  create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
 }
 
 void goto_map(const char *mapname) {
@@ -145,7 +147,7 @@ void draw_dungeon(void) {
   
   if (game.map.num_vertices == 0)
     return;
-  
+
   map_data_t const *map = &game.map;
   mapsector_t const *sector = update_player_height(map, &game.player);
   player_t *player = &game.player;
@@ -161,9 +163,9 @@ void draw_dungeon(void) {
   
   glUseProgram(ui_prog);
   glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  
+
   draw_floor_ids(map, sector, &viewdef);
-  
+
   int fb_width, fb_height;
   int window_width, window_height;
   
@@ -211,4 +213,14 @@ void draw_dungeon(void) {
   if (mode) {
     draw_minimap(map, player);
   }
+}
+
+bool win_game(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  switch (msg) {
+    case MSG_DRAW: {
+      draw_dungeon();
+      return true;
+    }
+  }
+  return false;
 }

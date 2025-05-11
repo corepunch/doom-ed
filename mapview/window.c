@@ -64,7 +64,9 @@ void set_viewport(window_t const *win) {
   int vp_w = (int)(win->w * scale_x);
   int vp_h = (int)(win->h * scale_y);
   
+  glEnable(GL_SCISSOR_TEST);
   glViewport(vp_x, vp_y, vp_w, vp_h);
+  glScissor(vp_x, vp_y, vp_w, vp_h);
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
@@ -155,8 +157,13 @@ void handle_windows(void) {
   }
 }
 
-void draw_windows(void) {
+void draw_windows(bool rich) {
   for (window_t *win = windows; win; win = win->next) {
+    if ((win->flags & WINDOW_RICH) && !rich) {
+      continue;
+    }
+    set_viewport(&(window_t){0, 0, screen_width, screen_height});
+    set_projection(screen_width, screen_height);
     if (!(win->flags&WINDOW_TRANSPARENT)) {
       draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
     }
@@ -167,7 +174,7 @@ void draw_windows(void) {
     set_viewport(win);
     set_projection(win->w, win->h);
     win->proc(win, MSG_DRAW, 0, NULL);
-    set_viewport(&(window_t){0, 0, screen_width, screen_height});
-    set_projection(screen_width, screen_height);
   }
+  set_viewport(&(window_t){0, 0, screen_width, screen_height});
+  set_projection(screen_width, screen_height);
 }

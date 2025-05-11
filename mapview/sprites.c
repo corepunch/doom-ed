@@ -406,10 +406,9 @@ void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
 
 // Draw the shotgun at the bottom center of the screen
 void draw_weapon(void) {
-  float hx = screen_width/2-160;
-  float hy = screen_height-200;
+  float k = (float)screen_width / (float)screen_height;
   
-  set_projection(screen_width, screen_height);
+  set_projection(k * VGA_HEGHT, VGA_HEGHT);
   
   // Find appropriate shotgun sprite frame (usually "SHTGA0")
 #ifdef HEXEN
@@ -446,7 +445,7 @@ void draw_weapon(void) {
     y += 50;
 //#endif
     
-    draw_sprite(shotgun_sprite, hx+x, hy+y, 1, 1.0f);
+    draw_sprite(shotgun_sprite, (k * VGA_HEGHT - VGA_WIDTH) + x, y, 1, 1.0f);
 
   }
 }
@@ -456,14 +455,18 @@ void draw_weapon(void) {
 // Draw a crosshair in the center of the screen
 void draw_crosshair(void) {
   sprite_system_t* sys = &g_sprite_system;
+
+  float k = (float)screen_width / (float)screen_height;
   
+  set_projection(k * VGA_HEGHT, VGA_HEGHT);
+
   // First try to find a pre-existing crosshair sprite
   sprite_t* sprite = find_sprite("CROSA0");
   
   if (sprite) {
     // Use the existing crosshair sprite
-    float x = screen_width/2;
-    float y = screen_height/2;
+    float x = k * VGA_HEGHT/2;
+    float y = VGA_HEGHT/2;
     float scale = 1.0f;
     
     draw_sprite("CROSA0", x, y, scale, 1);

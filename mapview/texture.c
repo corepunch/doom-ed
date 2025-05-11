@@ -319,7 +319,7 @@ int allocate_mapside_textures(map_data_t* map) {
     maybe_load_texture(texture_cache, side->bottomtexture, tex_dirs, pnames);
   }
   
-  create_window(20, 20, 256, 256, "Textures", 0, win_textures, texture_cache);
+  create_window(20, 20, 256, 256, "Textures", WINDOW_RICH, win_textures, texture_cache);
 
   return texture_cache->num_textures;
 }
@@ -505,7 +505,7 @@ int allocate_flat_textures(map_data_t* map) {
   }
   
   extern int screen_width;
-  create_window(screen_width-148, 20, 128, 256, "Flats", 0, win_textures, flat_cache);
+  create_window(screen_width-148, 20, 128, 256, "Flats", WINDOW_RICH, win_textures, flat_cache);
   
   return flat_cache->num_textures;
 }

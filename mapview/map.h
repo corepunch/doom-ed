@@ -43,6 +43,8 @@ if ((map)->name) free((map)->name); \
 #define HIGHLIGHT(light) light//((light)+0.25)
 #define CONSOLE_PADDING 2
 #define LINE_HEIGHT 8
+#define VGA_WIDTH 320
+#define VGA_HEGHT 200
 
 enum {
   PIXEL_MID = 0 << 28,
@@ -297,6 +299,7 @@ typedef struct {
 
 #define WINDOW_NOTITLE 1
 #define WINDOW_TRANSPARENT 2
+#define WINDOW_RICH 4
 
 struct window_s;
 typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
@@ -364,7 +367,7 @@ bool init_wad(const char *filename);
 void shutdown_wad(void);
 
 void draw_panel(int x, int y, int w, int h);
-void draw_windows(void);
+void draw_windows(bool rich);
 void handle_windows(void);
 
 void GetMouseInVirtualCoords(int* vx, int* vy);
