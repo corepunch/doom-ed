@@ -15,8 +15,6 @@
 #define CONSOLE_FONT_HEIGHT 8     // Height of the Doom font character
 #define CONSOLE_FONT_WIDTH 8      // Width of each character
 
-extern float black_bars;
-
 // Console message structure
 typedef struct {
   char text[MAX_MESSAGE_LENGTH];
@@ -263,7 +261,7 @@ void draw_text_gl3(const char* text, int x, int y, float alpha) {
         }
         
         // Draw the message
-        draw_text_gl3(msg->text, CONSOLE_PADDING-black_bars, y, alpha);
+        draw_text_gl3(msg->text, CONSOLE_PADDING, y, alpha);
         
         // Move to next line
         y += LINE_HEIGHT;
@@ -321,7 +319,7 @@ void draw_text_gl3(const char* text, int x, int y, float alpha) {
     char sec[64]={0};
     snprintf(sec, sizeof(sec), "SECTORS: %d", sectors_drawn);
     
-    int x = CONSOLE_PADDING-black_bars;
+    int x = CONSOLE_PADDING;
     int y = CONSOLE_PADDING;
     
     // Draw the FPS text

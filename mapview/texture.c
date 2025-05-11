@@ -573,11 +573,11 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
   extern int pixel;
   extern texname_t selected_texture;
   extern texname_t selected_floor_texture;
-  extern float black_bars;
   extern bool running;
+  extern int screen_width;
   
   extern float black_bars;
-  float x = -black_bars, y = 0;
+  float x = 0, y = 0;
   
   bool click=false;
   int keydown=-1;
@@ -618,17 +618,17 @@ void draw_palette(map_data_t const *map, float _x, float _y) {
   draw_textures_interface(g_cache.textures,
                           g_cache.num_textures,
                           selected_texture,
-                          x, y, 160, click, keydown);
+                          x, y, 256, click, keydown);
   
   draw_textures_interface(g_flat_cache.textures,
                           g_flat_cache.num_textures,
                           selected_floor_texture,
-                          DOOM_WIDTH+black_bars-64, y, 64, click, -1);
+                          screen_width-128, y, 128, click, -1);
   
-  if (get_flat_texture("F_010")) {
-    draw_rect(get_flat_texture("F_010")->texture, 0, 64, 64, 8);
-    draw_text_gl3("Hello", 0, 64, 1);
-  }
+//  if (get_flat_texture("F_010")) {
+//    draw_rect(get_flat_texture("F_010")->texture, 0, 64, 64, 8);
+//    draw_text_gl3("Hello", 0, 64, 1);
+//  }
 }
 
 // Load a sky texture and create an OpenGL texture

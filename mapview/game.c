@@ -190,17 +190,16 @@ void draw_dungeon(void) {
 
   extern texname_t selected_texture;
   extern texname_t selected_floor_texture;
-  extern float black_bars;
 
   mapside_texture_t const *tex1 = get_texture(selected_texture);
   if (tex1) {
-    draw_rect(tex1->texture, -black_bars+8, 8, tex1->width*0.4f, tex1->height*0.4f);
+    draw_rect(tex1->texture, 8, 8, tex1->width*0.4f, tex1->height*0.4f);
   }
 
   mapside_texture_t const *tex2 = get_flat_texture(selected_floor_texture);
   if (tex2) {
     float w = tex2->width*0.4f, h = tex2->height*0.4f;
-    draw_rect(tex2->texture, DOOM_WIDTH+black_bars-8-w, 8, w, h);
+    draw_rect(tex2->texture, screen_width-8-w, 8, w, h);
   }
 
   extern bool mode;

@@ -52,14 +52,14 @@ typedef struct {
   GLuint crosshair_texture; // Custom crosshair texture (if needed)
 } sprite_system_t;
 
+int screen_width=640, screen_height=480;
+
 sprite_system_t g_sprite_system = {0};
 
 // Forward declarations
 GLuint compile_shader(GLenum type, const char* src);
 GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety);
 GLuint generate_crosshair_texture(int size);
-
-float black_bars = 0.f;
 
 int load_sprite(const char *name) {
   int width, height, offsetx, offsety;
@@ -115,11 +115,14 @@ bool init_sprites(void) {
   // Create orthographic projection matrix for screen-space rendering
   int width, height;
   SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &width, &height);
-  float scale = (float)height / DOOM_HEIGHT;
-  float render_width = DOOM_WIDTH * scale;
-  float offset_x = (width - render_width) / (2.0f * scale);
-  black_bars = offset_x;
-  glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, sys->projection);
+//  float scale = (float)height / DOOM_HEIGHT;
+//  float render_width = DOOM_WIDTH * scale;
+//  float offset_x = (width - render_width) / (2.0f * scale);
+//  black_bars = offset_x;
+//  glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, sys->projection);
+  screen_width = width/2;
+  screen_height = height/2;
+  glm_ortho(0, width/2, height/2, 0, -1, 1, sys->projection);
   
   // Find and preload weapon sprites (starting with SHT)
   sys->num_sprites = 0;
@@ -408,8 +411,8 @@ void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
 
 // Draw the shotgun at the bottom center of the screen
 void draw_weapon(void) {
-  int window_width, window_height;
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
+  float hx = screen_width/2-160;
+  float hy = screen_height-200;
   
   // Find appropriate shotgun sprite frame (usually "SHTGA0")
 #ifdef HEXEN
@@ -446,15 +449,15 @@ void draw_weapon(void) {
     y += 50;
 //#endif
     
-    draw_sprite(shotgun_sprite, x, y, 1, 1.0f);
+    draw_sprite(shotgun_sprite, hx+x, hy+y, 1, 1.0f);
 
   }
 
 #ifdef HEXEN
   sprite_t* STBAR = find_sprite("H2BAR");
   if (STBAR) {
-    draw_sprite("H2BAR", 0, 134, 1, 1);
-//    draw_sprite("INVBAR", 38, 162, 1, 1);
+    draw_sprite("H2BAR", hx+0, hy+134, 1, 1);
+//    draw_sprite("INVBAR", x+38, x+162, 1, 1);
   }
 #else
   sprite_t* STBAR = find_sprite("STBAR");

@@ -315,14 +315,13 @@ draw_textures_interface(mapside_texture_t* textures,
                         bool mouse_clicked,
                         int keydown)
 {
-  float scale = 0.25f;
+  float scale = 0.5f;
   
   texture_layout_t* layout = generate_texture_layout(textures, num_textures, width / scale);
 
   // Draw the layout with selection highlight
   draw_texture_layout_with_selection(layout, textures, selected_texture, scale, x, y);
 
-  extern float black_bars;
   int mouse_x, mouse_y;
   GetMouseInVirtualCoords(&mouse_x, &mouse_y);
 

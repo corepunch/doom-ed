@@ -275,8 +275,8 @@ void GetMouseInVirtualCoords(int* vx, int* vy) {
   float offset_x = (win_width - render_width) / 2.0f;
   
   // Convert real mouse coordinates to virtual
-  float virtual_x = (mouse_x - offset_x) / scale;
-  float virtual_y = mouse_y / scale;
+  float virtual_x = mouse_x/2;//(mouse_x - offset_x) / scale;
+  float virtual_y = mouse_y/2;// / scale;
   
   // Return as integers
   *vx = (int)virtual_x;
