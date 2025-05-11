@@ -541,6 +541,28 @@ char const* get_flat_texture_name(int i) {
   return g_flat_cache.textures[i%g_flat_cache.num_textures].name;
 }
 
+int get_texture_index(char const* name) {
+  for (int i = 0; i < g_cache.num_textures; i++) {
+    if (!strncmp(name, g_cache.textures[i].name, sizeof(texname_t))) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+int get_flat_texture_index(char const* name) {
+  for (int i = 0; i < g_flat_cache.num_textures; i++) {
+    if (!strncmp(name, g_flat_cache.textures[i].name, sizeof(texname_t))) {
+      return i;
+    }
+  }
+  return -1;
+}
+
+#include "radial_menu.h"
+
+void draw_textures_interface(mapside_texture_t* textures, int num_textures, int selected_texture);
+
 void draw_palette(map_data_t const *map, float x, float y) {
   extern int pixel;
   extern uint32_t selected_texture;
@@ -551,16 +573,35 @@ void draw_palette(map_data_t const *map, float x, float y) {
   selected_texture = selected_texture%g_cache.num_textures;
   selected_floor_texture = selected_floor_texture%g_flat_cache.num_textures;
 
-  for (int i = selected_texture - MIN(selected_texture, amount);
-       i <= MIN(g_cache.num_textures, selected_texture + amount); i++)
-  {
-    int x = -black_bars-PALETTE_WIDTH/2;
-    int y = (i-(int)selected_texture-0.5)*PALETTE_WIDTH+DOOM_HEIGHT/2;
-    if (selected_texture == i) {
-      x += PALETTE_WIDTH/2;
-    }
-    draw_rect(g_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
-  }
+
+//  for (int i = 0; i < g_cache.num_textures; i++)
+//  {
+//    float angle = 2 * M_PI / g_cache.num_textures;
+//    draw_radial(g_cache.textures[i].texture, DOOM_WIDTH/2, DOOM_HEIGHT/2, 40, 20, i*angle, (i+0.9)*angle, 1, selected_texture==i);
+//  }
+
+  draw_textures_interface(g_cache.textures, g_cache.num_textures, selected_texture);
+  
+//#define PALETTE_W 4
+//  for (int i = 0; i < g_cache.num_textures; i++) {
+//    int x = -black_bars + (i%PALETTE_W)*PALETTE_WIDTH;
+//    int y = (i/PALETTE_W)*PALETTE_WIDTH;
+//    mapside_texture_t const *tex = &g_cache.textures[i];
+//    draw_rect(tex->texture, x, y, tex->width*0.25, tex->height*0.25);
+//  }
+  
+//
+//  
+//  for (int i = selected_texture - MIN(selected_texture, amount);
+//       i <= MIN(g_cache.num_textures, selected_texture + amount); i++)
+//  {
+//    int x = -black_bars-PALETTE_WIDTH/2;
+//    int y = (i-(int)selected_texture-0.5)*PALETTE_WIDTH+DOOM_HEIGHT/2;
+//    if (selected_texture == i) {
+//      x += PALETTE_WIDTH/2;
+//    }
+//    draw_rect(g_cache.textures[i].texture, x, y, PALETTE_WIDTH, PALETTE_WIDTH);
+//  }
 
   for (int i = selected_floor_texture - MIN(selected_floor_texture, amount);
        i <= MIN(g_flat_cache.num_textures, selected_floor_texture + amount); i++)

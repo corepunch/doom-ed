@@ -83,6 +83,10 @@ typedef struct {
   float height;
   float vel_x, vel_y; // Player velocity
   int sector;
+  int mouse_x_rel;
+  int mouse_y_rel;
+  float forward_move;
+  float strafe_move;
 } player_t;
 
 // Vertex structure for our buffer (xyzuv)
@@ -305,6 +309,8 @@ void draw_rect(int tex, float x, float y, float w, float h);
 void draw_palette(map_data_t const *map, float x, float y);
 char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);
+int get_texture_index(char const* name);
+int get_flat_texture_index(char const* name);
 float dist_sq(float x1, float y1, float x2, float y2);
 
 map_data_t load_map(const char* map_name);

@@ -79,6 +79,10 @@ int load_sprite(const char *name) {
   }
 }
 
+float *get_sprite_matrix(void) {
+  return g_sprite_system.projection[0];
+}
+
 // Initialize the sprite system
 bool init_sprites(void) {
   sprite_system_t* sys = &g_sprite_system;

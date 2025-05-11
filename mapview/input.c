@@ -74,37 +74,64 @@ mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
 
 void handle_scroll(SDL_Event event, map_data_t *map) {
   extern int pixel;
-  static int buffer = 0;
-  buffer += event.wheel.y;
+  static int buffer_x = 0;
+  static int buffer_y = 0;
+  buffer_x += event.wheel.x;
+  buffer_y += event.wheel.y;
   
-  // Reset buffer if scroll direction changed
-  if ((buffer ^ event.wheel.y) < 0) {
-    buffer = event.wheel.y;
+  // Reset buffer_y if scroll direction changed
+  if ((buffer_y ^ event.wheel.y) < 0) {
+    buffer_y = event.wheel.y;
+  }
+  if ((buffer_x ^ event.wheel.x) < 0) {
+    buffer_x = event.wheel.x;
   }
   
-  int move;
+  int move_x, move_y;
   
   // Correct rounding for both positive and negative
-  if (buffer >= 0) {
-    move = (buffer & ~7); // positive side: floor down
+  if (buffer_y >= 0) {
+    move_y = (buffer_y & ~7); // positive side: floor down
   } else {
-    move = -((-buffer) & ~7); // negative side: floor up
+    move_y = -((-buffer_y) & ~7); // negative side: floor up
   }
   
-  if (move != 0) {
-    buffer -= move;
-    
+  // Correct rounding for both positive and negative
+  if (buffer_x >= 0) {
+    move_x = (buffer_x & ~7); // positive side: floor down
+  } else {
+    move_x = -((-buffer_x) & ~7); // negative side: floor up
+  }
+  
+  if (move_y != 0) {
+    buffer_y -= move_y;
     switch (pixel&PIXEL_MASK) {
       case PIXEL_FLOOR:
-        map->sectors[pixel&~PIXEL_MASK].floorheight -= move;
+        map->sectors[pixel&~PIXEL_MASK].floorheight -= move_y;
         break;
       case PIXEL_CEILING:
-        map->sectors[pixel&~PIXEL_MASK].ceilingheight -= move;
+        map->sectors[pixel&~PIXEL_MASK].ceilingheight -= move_y;
         break;
       case PIXEL_MID:
       case PIXEL_TOP:
       case PIXEL_BOTTOM:
-        map->sidedefs[pixel&~PIXEL_MASK].rowoffset -= move;
+        map->sidedefs[pixel&~PIXEL_MASK].rowoffset -= move_y;
+        break;
+      default:
+        break;
+    }
+    
+    build_wall_vertex_buffer(map);
+    build_floor_vertex_buffer(map);
+  }
+  
+  if (move_x != 0) {
+    buffer_x -= move_x;
+    switch (pixel&PIXEL_MASK) {
+      case PIXEL_MID:
+      case PIXEL_TOP:
+      case PIXEL_BOTTOM:
+        map->sidedefs[pixel&~PIXEL_MASK].textureoffset += move_x;
         break;
       default:
         break;
@@ -120,18 +147,12 @@ void handle_game_input(float delta_time) {
   SDL_Event event;
   const Uint8* keystates = SDL_GetKeyboardState(NULL);
   
-  // Variables for mouse movement
-  static int mouse_x_rel = 0;
-  static int mouse_y_rel = 0;
-  static float forward_move = 0;
-  static float strafe_move = 0;
-  
   map_data_t *map = &game.map;
   player_t *player = &game.player;
 
   if (SDL_GetRelativeMouseMode()) {
-    mouse_x_rel = 0;
-    mouse_y_rel = 0;
+    player->mouse_x_rel = 0;
+    player->mouse_y_rel = 0;
   }
   
   // Center position for relative mouse mode
@@ -146,8 +167,8 @@ void handle_game_input(float delta_time) {
     else if (event.type == SDL_MOUSEMOTION) {
       if (SDL_GetRelativeMouseMode()) {
         // Get relative mouse movement
-        mouse_x_rel = event.motion.xrel;
-        mouse_y_rel = event.motion.yrel;
+        player->mouse_x_rel = event.motion.xrel;
+        player->mouse_y_rel = event.motion.yrel;
       }
     }
     else if (event.type == SDL_MOUSEWHEEL) {
@@ -155,32 +176,53 @@ void handle_game_input(float delta_time) {
     }
     else if (event.type == SDL_MOUSEBUTTONUP || (event.type == SDL_JOYBUTTONDOWN && event.jbutton.button==0)) {
       extern int pixel;
+      const Uint8 *state = SDL_GetKeyboardState(NULL);
       if ((pixel&~PIXEL_MASK) < map->num_sidedefs) {
         switch (pixel&PIXEL_MASK) {
           case PIXEL_MID:
-            memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture,
-                   get_texture_name(selected_texture),
-                   sizeof(texname_t));
+            if (state[SDL_SCANCODE_LALT]) {
+              selected_texture = get_texture_index(map->sidedefs[pixel&~PIXEL_MASK].midtexture);
+            } else {
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture,
+                     get_texture_name(selected_texture),
+                     sizeof(texname_t));
+            }
             break;
           case PIXEL_BOTTOM:
-            memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture,
-                   get_texture_name(selected_texture),
-                   sizeof(texname_t));
+            if (state[SDL_SCANCODE_LALT]) {
+              selected_texture = get_texture_index(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture);
+            } else {
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture,
+                     get_texture_name(selected_texture),
+                     sizeof(texname_t));
+            }
             break;
           case PIXEL_TOP:
-            memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture,
-                   get_texture_name(selected_texture),
-                   sizeof(texname_t));
+            if (state[SDL_SCANCODE_LALT]) {
+              selected_texture = get_texture_index(map->sidedefs[pixel&~PIXEL_MASK].toptexture);
+            } else {
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture,
+                     get_texture_name(selected_texture),
+                     sizeof(texname_t));
+            }
             break;
           case PIXEL_FLOOR:
-            memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic,
-                   get_flat_texture_name(selected_floor_texture),
-                   sizeof(texname_t));
+            if (state[SDL_SCANCODE_LALT]) {
+              selected_floor_texture = get_flat_texture_index(map->sectors[pixel&~PIXEL_MASK].floorpic);
+            } else {
+              memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic,
+                     get_flat_texture_name(selected_floor_texture),
+                     sizeof(texname_t));
+            }
             break;
           case PIXEL_CEILING:
-            memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic,
-                   get_flat_texture_name(selected_floor_texture),
-                   sizeof(texname_t));
+            if (state[SDL_SCANCODE_LALT]) {
+              selected_floor_texture = get_flat_texture_index(map->sectors[pixel&~PIXEL_MASK].ceilingpic);
+            } else {
+              memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic,
+                     get_flat_texture_name(selected_floor_texture),
+                     sizeof(texname_t));
+            }
             break;
         }
         build_wall_vertex_buffer(map);
@@ -210,20 +252,20 @@ void handle_game_input(float delta_time) {
           break;
         case SDL_SCANCODE_W:
         case SDL_SCANCODE_UP:
-          forward_move = 1;
+          player->forward_move = 1;
           break;
         case SDL_SCANCODE_S:
         case SDL_SCANCODE_DOWN:
-          forward_move = -1;
+          player->forward_move = -1;
           break;
           // Calculate strafe direction vector (perpendicular to forward)
         case SDL_SCANCODE_D:
         case SDL_SCANCODE_RIGHT:
-          strafe_move = 1;
+          player->strafe_move = 1;
           break;
         case SDL_SCANCODE_A:
         case SDL_SCANCODE_LEFT:
-          strafe_move = -1;
+          player->strafe_move = -1;
           break;
         default:
           break;
@@ -235,14 +277,14 @@ void handle_game_input(float delta_time) {
         case SDL_SCANCODE_UP:
         case SDL_SCANCODE_S:
         case SDL_SCANCODE_DOWN:
-          forward_move = 0;
+          player->forward_move = 0;
           break;
           // Calculate strafe direction vector (perpendicular to forward)
         case SDL_SCANCODE_D:
         case SDL_SCANCODE_RIGHT:
         case SDL_SCANCODE_A:
         case SDL_SCANCODE_LEFT:
-          strafe_move = 0;
+          player->strafe_move = 0;
           break;
         default:
           break;
@@ -251,10 +293,10 @@ void handle_game_input(float delta_time) {
     else if (event.type == SDL_JOYAXISMOTION) {
       //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
       switch (event.jaxis.axis) {
-        case 0: strafe_move = event.jaxis.value/(float)0x8000; break;
-        case 1: forward_move = -event.jaxis.value/(float)0x8000; break;
-        case 3: mouse_x_rel = event.jaxis.value/1200.f; break;
-        case 4: mouse_y_rel = event.jaxis.value/1200.f; break;
+        case 0: player->strafe_move = event.jaxis.value/(float)0x8000; break;
+        case 1: player->forward_move = -event.jaxis.value/(float)0x8000; break;
+        case 3: player->mouse_x_rel = event.jaxis.value/1200.f; break;
+        case 4: player->mouse_y_rel = event.jaxis.value/1200.f; break;
       }
     } else if (event.type == SDL_JOYBUTTONDOWN) {
       if (event.jbutton.button == 8) {
@@ -280,7 +322,7 @@ void handle_game_input(float delta_time) {
   if (true) {
     // Horizontal mouse movement controls yaw (left/right rotation)
     float sensitivity_x = 0.15f; // Adjust sensitivity as needed
-    player->angle += mouse_x_rel * sensitivity_x;
+    player->angle += player->mouse_x_rel * sensitivity_x;
     
     // Keep angle within 0-360 range
     if (player->angle < 0) player->angle += 360;
@@ -288,7 +330,7 @@ void handle_game_input(float delta_time) {
     
     // Vertical mouse movement controls pitch (up/down looking)
     float sensitivity_y = 0.25f; // Adjust sensitivity as needed
-    player->pitch -= mouse_y_rel * sensitivity_y;
+    player->pitch -= player->mouse_y_rel * sensitivity_y;
     
     // Clamp pitch to prevent flipping over
     if (player->pitch > 89.0f) player->pitch = 89.0f;
@@ -315,8 +357,8 @@ void handle_game_input(float delta_time) {
 //    player->y += move_y * delta_time;
 //  }
 
-  float input_x = -forward_move * cos(angle_rad) + strafe_move * sin(angle_rad);
-  float input_y =  forward_move * sin(angle_rad) + strafe_move * cos(angle_rad);
+  float input_x = -player->forward_move * cos(angle_rad) + player->strafe_move * sin(angle_rad);
+  float input_y =  player->forward_move * sin(angle_rad) + player->strafe_move * cos(angle_rad);
   
   // Normalize input direction
   float input_len = sqrtf(input_x * input_x + input_y * input_y);

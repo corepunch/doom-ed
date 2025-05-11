@@ -15,10 +15,7 @@ extern SDL_Window* window;
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
-  // Default values
-  player->x = 0;
-  player->y = 0;
-  player->angle = 0;
+  memset(player, 0, sizeof(player_t));
   player->height = 41.0;  // Default DOOM player eye height
   
   // Find player start position (thing type 1)

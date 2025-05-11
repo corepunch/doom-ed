@@ -67,7 +67,7 @@ GLuint compile(GLenum type, const char* src) {
 
 // Global variables
 GLuint world_prog, ui_prog;
-GLuint white_tex, no_tex;
+GLuint white_tex, black_tex, no_tex;
 
 editor_state_t editor = {0};
 SDL_Window* window = NULL;
@@ -80,6 +80,7 @@ palette_entry_t *palette;
 
 void init_floor_shader(void);
 void init_sky_geometry(void);
+bool init_radial_menu(void);
 
 // Initialize SDL and create window/renderer
 bool init_sdl(void) {
@@ -161,6 +162,10 @@ bool init_sdl(void) {
   glGenTextures(1, &white_tex);
   glBindTexture(GL_TEXTURE_2D, white_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){-1});
+
+  glGenTextures(1, &black_tex);
+  glBindTexture(GL_TEXTURE_2D, black_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xff000000});
   
   glGenTextures(1, &no_tex);
   glBindTexture(GL_TEXTURE_2D, no_tex);
@@ -173,6 +178,8 @@ bool init_sdl(void) {
   init_things();
   
   init_sky_geometry();
+  
+  init_radial_menu();
   
   return true;
 }
