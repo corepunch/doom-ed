@@ -125,9 +125,10 @@ uint16_t add_sidedef(map_data_t *map, uint16_t sector_index) {
   map->sidedefs[map->num_sidedefs].bottomtexture[0] = '-';
   map->sidedefs[map->num_sidedefs].bottomtexture[1] = '\0';
   
-  extern uint32_t selected_texture;
-  const char *texture = get_texture_name(selected_texture);
-  strncpy(map->sidedefs[map->num_sidedefs].midtexture, texture, 8);
+  extern char const *selected_texture;
+  if (selected_texture) {
+    strncpy(map->sidedefs[map->num_sidedefs].midtexture, selected_texture, 8);
+  }
   return map->num_sidedefs++;
 }
 

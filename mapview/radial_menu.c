@@ -65,7 +65,7 @@ static radial_menu_t g_radial_menu = {0};
 
 // Forward declarations
 static GLuint compile_radial_shader(GLenum type, const char* src);
-static void generate_mesh();
+static void generate_mesh(void);
 
 // Initialize the radial menu system
 bool init_radial_menu(void) {

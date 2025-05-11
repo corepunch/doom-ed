@@ -217,8 +217,13 @@ int run(void) {
 
     switch (game.state) {
       case GS_DUNGEON:
-        handle_game_input(delta_time);
-        draw_dungeon();
+        if (SDL_GetRelativeMouseMode()) {
+          handle_game_input(delta_time);
+          draw_dungeon();
+        } else {
+          draw_dungeon();
+          draw_palette(&game.map, 0, 0);
+        }
         break;
       case GS_EDITOR:
         handle_editor_input(&game.map, &editor, &game.player, delta_time);

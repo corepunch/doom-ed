@@ -195,8 +195,11 @@ void draw_texture_layout(texture_layout_t* layout, mapside_texture_t* textures, 
 }
 
 // Function to draw the layout with a specific texture highlighted
-void draw_texture_layout_with_selection(texture_layout_t* layout, mapside_texture_t* textures,
-                                        int selected_texture_idx, float scale) {
+void draw_texture_layout_with_selection(texture_layout_t* layout,
+                                        mapside_texture_t* textures,
+                                        char const *selected_texture,
+                                        float scale,
+                                        float wx, float wy) {
   for (int i = 0; i < layout->num_entries; i++) {
     texture_layout_entry_t* entry = &layout->entries[i];
     mapside_texture_t* tex = &textures[entry->texture_idx];
@@ -204,14 +207,13 @@ void draw_texture_layout_with_selection(texture_layout_t* layout, mapside_textur
     int x = entry->x;
     int y = entry->y;
     
-    extern float black_bars;
     extern int black_tex, white_tex;
     
-    int bg = entry->texture_idx == selected_texture_idx ? white_tex : black_tex;
+    int bg = selected_texture && !strncmp(tex->name, selected_texture, sizeof(texname_t)) ? white_tex : black_tex;
     
     // Draw the texture
-    draw_rect(bg, x * scale - black_bars, y * scale, tex->width * scale, tex->height * scale);
-    draw_rect(tex->texture, x * scale - black_bars + 0.5, y * scale + 0.5, tex->width * scale-1, tex->height * scale-1);
+    draw_rect(bg, x * scale + wx, y * scale, tex->width * scale, tex->height * scale);
+    draw_rect(tex->texture, x * scale + wx + 0.5, y * scale + 0.5, tex->width * scale-1, tex->height * scale-1);
   }
 }
 
@@ -230,19 +232,33 @@ int get_texture_at_point(texture_layout_t* layout, int point_x, int point_y) {
   return -1;  // No texture at this point
 }
 
-void draw_textures_interface(mapside_texture_t* textures, int num_textures, int selected_texture) {
+void
+draw_textures_interface(mapside_texture_t* textures,
+                        int num_textures,
+                        char *selected_texture,
+                        bool mouse_clicked)
+{
+  extern float black_bars;
+  
   texture_layout_t* layout = generate_texture_layout(textures, num_textures);
 
+  float scale = 0.25f;
+  float x = -black_bars, y = 0;
+
   // Draw the layout with selection highlight
-  draw_texture_layout_with_selection(layout, textures, selected_texture, 0.25f);
+  draw_texture_layout_with_selection(layout, textures, selected_texture, scale, x, y);
+
+  extern float black_bars;
+  int mouse_x, mouse_y;
+  GetMouseInVirtualCoords(&mouse_x, &mouse_y);
 
    // Handle mouse click (in mouse event handler)
-//   if (mouse_clicked) {
-//       int texture_idx = get_texture_at_point(layout, mouse_x, mouse_y);
-//       if (texture_idx >= 0) {
-//           selected_texture = texture_idx;
-//       }
-//   }
+   if (mouse_clicked) {
+     int texture_idx = get_texture_at_point(layout, (mouse_x - x) / scale, (mouse_y - y) / scale);
+     if (texture_idx >= 0) {
+         memcpy(selected_texture, textures[texture_idx].name, sizeof(texname_t));
+     }
+   }
   
   free(layout);
 }

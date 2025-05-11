@@ -182,7 +182,7 @@ void handle_editor_input(map_data_t *map,
   }
   
   // If in editor mode, handle keyboard movement
-  const Uint8* keystates = SDL_GetKeyboardState(NULL);
+//  const Uint8* keystates = SDL_GetKeyboardState(NULL);
   float move_speed = 1000 * delta_time;
 
   player->y += forward_move * move_speed;

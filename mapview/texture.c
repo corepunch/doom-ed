@@ -561,18 +561,46 @@ int get_flat_texture_index(char const* name) {
 
 #include "radial_menu.h"
 
-void draw_textures_interface(mapside_texture_t* textures, int num_textures, int selected_texture);
+void
+draw_textures_interface(mapside_texture_t* textures,
+                        int num_textures,
+                        char *selected_texture,
+                        bool click);
 
 void draw_palette(map_data_t const *map, float x, float y) {
   extern int pixel;
-  extern uint32_t selected_texture;
+  extern texname_t selected_texture;
   extern uint32_t selected_floor_texture;
   extern float black_bars;
+  extern bool running;
   int amount = 4;
-  
-  selected_texture = selected_texture%g_cache.num_textures;
-  selected_floor_texture = selected_floor_texture%g_flat_cache.num_textures;
 
+  bool click=false;
+  
+  SDL_Event event;
+  while (SDL_PollEvent(&event)) {
+    switch (event.type) {
+      case SDL_QUIT:
+        running = false;
+        break;
+      case SDL_KEYDOWN:
+        switch (event.key.keysym.scancode) {
+          case SDL_SCANCODE_ESCAPE:
+            SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
+            break;
+          default:
+            break;
+        }
+      case SDL_MOUSEBUTTONUP:
+        click = true;
+//        mouse_x = event.button.x;
+//        mouse_y = event.button.y;
+        break;
+    }
+  }
+
+  
+  selected_floor_texture = selected_floor_texture%g_flat_cache.num_textures;
 
 //  for (int i = 0; i < g_cache.num_textures; i++)
 //  {
@@ -580,7 +608,10 @@ void draw_palette(map_data_t const *map, float x, float y) {
 //    draw_radial(g_cache.textures[i].texture, DOOM_WIDTH/2, DOOM_HEIGHT/2, 40, 20, i*angle, (i+0.9)*angle, 1, selected_texture==i);
 //  }
 
-  draw_textures_interface(g_cache.textures, g_cache.num_textures, selected_texture);
+  draw_textures_interface(g_cache.textures,
+                          g_cache.num_textures,
+                          selected_texture,
+                          click);
   
 //#define PALETTE_W 4
 //  for (int i = 0; i < g_cache.num_textures; i++) {

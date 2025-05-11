@@ -8,7 +8,7 @@ extern SDL_Window* window;
 extern bool running;
 extern bool mode;
 
-uint32_t selected_texture = 0;
+texname_t selected_texture = {0};
 uint32_t selected_floor_texture = 0;
 
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
@@ -181,29 +181,23 @@ void handle_game_input(float delta_time) {
         switch (pixel&PIXEL_MASK) {
           case PIXEL_MID:
             if (state[SDL_SCANCODE_LALT]) {
-              selected_texture = get_texture_index(map->sidedefs[pixel&~PIXEL_MASK].midtexture);
+              memcpy(selected_texture, map->sidedefs[pixel&~PIXEL_MASK].midtexture, sizeof(texname_t));
             } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture,
-                     get_texture_name(selected_texture),
-                     sizeof(texname_t));
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture, selected_texture, sizeof(texname_t));
             }
             break;
           case PIXEL_BOTTOM:
             if (state[SDL_SCANCODE_LALT]) {
-              selected_texture = get_texture_index(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture);
+              memcpy(selected_texture, map->sidedefs[pixel&~PIXEL_MASK].bottomtexture, sizeof(texname_t));
             } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture,
-                     get_texture_name(selected_texture),
-                     sizeof(texname_t));
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture, selected_texture, sizeof(texname_t));
             }
             break;
           case PIXEL_TOP:
             if (state[SDL_SCANCODE_LALT]) {
-              selected_texture = get_texture_index(map->sidedefs[pixel&~PIXEL_MASK].toptexture);
+              memcpy(selected_texture, map->sidedefs[pixel&~PIXEL_MASK].toptexture, sizeof(texname_t));
             } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture,
-                     get_texture_name(selected_texture),
-                     sizeof(texname_t));
+              memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture, selected_texture, sizeof(texname_t));
             }
             break;
           case PIXEL_FLOOR:
@@ -235,12 +229,12 @@ void handle_game_input(float delta_time) {
 //          goto_intermisson();
           SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
           break;
-        case SDL_SCANCODE_Z:
-          selected_texture--;
-          break;
-        case SDL_SCANCODE_X:
-          selected_texture++;
-          break;
+//        case SDL_SCANCODE_Z:
+//          selected_texture--;
+//          break;
+//        case SDL_SCANCODE_X:
+//          selected_texture++;
+//          break;
         case SDL_SCANCODE_C:
           selected_floor_texture--;
           break;
@@ -308,8 +302,8 @@ void handle_game_input(float delta_time) {
     } else if (event.type == SDL_JOYHATMOTION) {
       
       if (event.jhat.hat == 0) {
-        if (event.jhat.value & 4) selected_texture++;
-        if (event.jhat.value & 1) selected_texture--;
+//        if (event.jhat.value & 4) selected_texture++;
+//        if (event.jhat.value & 1) selected_texture--;
         if (event.jhat.value & 8) selected_floor_texture--;
         if (event.jhat.value & 2) selected_floor_texture++;
       }
