@@ -136,30 +136,32 @@ void handle_windows(void) {
           if (new_w > 0) resizing->w = new_w;
           if (new_h > 0) resizing->h = new_h;
           resizing->proc(resizing, MSG_RESIZE, 0, NULL);
+        } else if ((win = find_window(SCALE_POINT(event.motion.x), SCALE_POINT(event.motion.y)))) {
+          win->proc(win, MSG_MOUSEMOVE, MAKEDWORD(SCALE_POINT(event.motion.x)-win->x, SCALE_POINT(event.motion.y)-win->y), NULL);
         }
         break;
         
       case SDL_MOUSEWHEEL:
-        win = find_window(SCALE_POINT(event.wheel.mouseX), SCALE_POINT(event.wheel.mouseY));
-        if (win) {
+        if ((win = find_window(SCALE_POINT(event.wheel.mouseX), SCALE_POINT(event.wheel.mouseY)))) {
           win->proc(win, MSG_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
         }
         break;
         
       case SDL_MOUSEBUTTONDOWN:
-        win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y));
-        if (win) {
+        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
           moveToTop(&windows, win);
-          int local_x = SCALE_POINT(event.button.x) - win->x;
-          int local_y = SCALE_POINT(event.button.y) - win->y;
-          
+          int x = SCALE_POINT(event.button.x) - win->x;
+          int y = SCALE_POINT(event.button.y) - win->y;
           // Check if click is within bottom-right resize area
-          if (local_x >= win->w - RESIZE_HANDLE && local_y >= win->h - RESIZE_HANDLE) {
+          if (x >= win->w - RESIZE_HANDLE && y >= win->h - RESIZE_HANDLE) {
             resizing = win;
           } else if (SCALE_POINT(event.button.y) < win->y) {
             dragging = win;
             drag_anchor[0] = SCALE_POINT(event.button.x) - win->x;
             drag_anchor[1] = SCALE_POINT(event.button.y) - win->y;
+          } else switch (event.button.button) {
+            case 1: win->proc(win, MSG_LBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+            case 3: win->proc(win, MSG_RBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
           }
         }
         break;
@@ -169,10 +171,14 @@ void handle_windows(void) {
           dragging = NULL;
         } else if (resizing) {
           resizing = NULL;
-        } else {
-          win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y));
-          if (win && SCALE_POINT(event.button.y) >= win->y) {
-            win->proc(win, MSG_CLICK, MAKEDWORD(SCALE_POINT(event.button.x) - win->x, SCALE_POINT(event.button.y) - win->y), NULL);
+        } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
+          if (SCALE_POINT(event.button.y) >= win->y) {
+            int x = SCALE_POINT(event.button.x) - win->x;
+            int y = SCALE_POINT(event.button.y) - win->y;
+            switch (event.button.button) {
+              case 1: win->proc(win, MSG_LBUTTONUP, MAKEDWORD(x, y), NULL); break;
+              case 3: win->proc(win, MSG_RBUTTONUP, MAKEDWORD(x, y), NULL); break;
+            }
           }
         }
         break;

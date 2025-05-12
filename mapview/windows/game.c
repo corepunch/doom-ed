@@ -6,6 +6,7 @@
 #include "../map.h"
 #include "../sprites.h"
 #include "../console.h"
+#include "../editor.h"
 
 bool init_sky(map_data_t const*);
 const char *get_map_name(const char *name);
@@ -17,6 +18,7 @@ bool win_perf(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam)
 bool win_statbar(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_console(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_game(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_editor(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -35,7 +37,9 @@ void init_player(map_data_t const *map, player_t *player) {
   
   create_window(0, 0, 128, 64, "FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_perf, NULL);
   create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
-//  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
+  //  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
+  extern editor_state_t editor;
+  create_window(32, 32, 512, 256, "Editor", 0, win_editor, &editor);
   create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
 }
 

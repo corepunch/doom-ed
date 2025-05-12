@@ -118,62 +118,8 @@ void handle_editor_input(map_data_t *map,
 //      }
     }
     else if (event.type == SDL_MOUSEBUTTONUP && editor->dragging) {
-      extern mapvertex_t sn;
-      editor->dragging = false;
-      map->vertices[editor->current_point] = sn;
-      // Rebuild vertex buffers
-      build_wall_vertex_buffer(map);
-      build_floor_vertex_buffer(map);
     }
     else if (event.type == SDL_MOUSEBUTTONDOWN) {
-      extern mapvertex_t sn;
-      extern int splitting_line;
-      int point = -1;
-      int old_point = editor->current_point;
-      if (event.button.button == SDL_BUTTON_LEFT) {
-        if (point_exists(sn, map, &point)) {
-          editor->current_point = point;
-        } else if (splitting_line>=0) {
-          editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
-        } else {
-          editor->current_point = add_vertex(map, sn);
-        }
-        if (editor->drawing) {
-          mapvertex_t a = map->vertices[old_point];
-          mapvertex_t b = map->vertices[editor->current_point];
-          uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
-          uint16_t line = -1;
-          if (sec != 0xFFFF) {
-            line = add_linedef(map, old_point, editor->current_point, add_sidedef(map, sec), add_sidedef(map, sec));
-          } else {
-            line = add_linedef(map, old_point, editor->current_point, 0xFFFF, 0xFFFF);
-          }
-          uint16_t vertices[256];
-          int num_vertices = check_closed_loop(map, line, vertices);
-          if (num_vertices) {
-            uint16_t sector = add_sector(map);
-            set_loop_sector(map, sector, vertices, num_vertices);
-            editor->drawing = false;
-          }
-        } else {
-          editor->drawing = true;
-        }
-      } else if (event.button.button == SDL_BUTTON_RIGHT) {
-        extern int splitting_line;
-        if (editor->drawing) {
-          // Cancel current drawing
-          editor->drawing = false;
-          editor->num_draw_points = 0;
-        } else if (editor->dragging) {
-          editor->dragging = false;
-          editor->current_point = -1;
-        } else if (splitting_line>=0) {
-          split_linedef(map, splitting_line, sn.x, sn.y);
-        } else if (point_exists(sn, map, &point)) {
-          editor->dragging = true;
-          editor->current_point = point;
-        }
-      }
     }
     else if (event.type == SDL_MOUSEWHEEL) {
       // Zoom in/out by adjusting view size
@@ -212,17 +158,12 @@ get_mouse_position(editor_state_t const *editor,
 {
   float z_plane = 0;
   
-  int mouse_x, mouse_y;
-  // Get mouse position
-  SDL_GetMouseState(&mouse_x, &mouse_y);
-  
   // Convert to world coordinates
-  int win_width, win_height;
-  SDL_GetWindowSize(window, &win_width, &win_height);
+  int win_width = editor->window->w, win_height = editor->window->h;
   
   // Convert to normalized device coordinates (-1 to 1)
-  float ndc_x = (2.0f * mouse_x) / win_width - 1.0f;
-  float ndc_y = 1.0f - (2.0f * mouse_y) / win_height;
+  float ndc_x = (2.0f * editor->cursor[0]) / win_width - 1.0f;
+  float ndc_y = 1.0f - (2.0f * editor->cursor[1]) / win_height;
   
   vec4 clip_near = { ndc_x, ndc_y, -1.0f, 1.0f };
   vec4 clip_far  = { ndc_x, ndc_y,  1.0f, 1.0f };
@@ -267,4 +208,82 @@ snap_mouse_position(editor_state_t const *editor,
   // Snap to grid
   snapped->x = floorf(world_x / editor->grid_size) * editor->grid_size;
   snapped->y = ceilf(world_y / editor->grid_size) * editor->grid_size;
+}
+
+bool win_editor(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  extern mapvertex_t sn;
+  extern int splitting_line;
+  editor_state_t *editor = win->userdata;
+  map_data_t *map = &game.map;
+  int point = -1;
+  int old_point = editor ? editor->current_point : -1;
+  switch (msg) {
+    case MSG_CREATE:
+      win->userdata = lparam;
+      ((editor_state_t *)lparam)->window = win;
+      return true;
+    case MSG_DRAW:
+      draw_editor(&game.map, win->userdata, &game.player);
+      return true;
+    case MSG_MOUSEMOVE:
+      editor->cursor[0] = LOWORD(wparam);
+      editor->cursor[1] = HIWORD(wparam);
+      return true;
+    case MSG_LBUTTONUP:
+      if (editor->dragging) {
+        extern mapvertex_t sn;
+        editor->dragging = false;
+        map->vertices[editor->current_point] = sn;
+        // Rebuild vertex buffers
+        build_wall_vertex_buffer(map);
+        build_floor_vertex_buffer(map);
+        return true;
+      }
+      return true;
+    case MSG_LBUTTONDOWN:
+      if (point_exists(sn, map, &point)) {
+        editor->current_point = point;
+      } else if (splitting_line>=0) {
+        editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
+      } else {
+        editor->current_point = add_vertex(map, sn);
+      }
+      if (editor->drawing) {
+        mapvertex_t a = map->vertices[old_point];
+        mapvertex_t b = map->vertices[editor->current_point];
+        uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
+        uint16_t line = -1;
+        if (sec != 0xFFFF) {
+          line = add_linedef(map, old_point, editor->current_point, add_sidedef(map, sec), add_sidedef(map, sec));
+        } else {
+          line = add_linedef(map, old_point, editor->current_point, 0xFFFF, 0xFFFF);
+        }
+        uint16_t vertices[256];
+        int num_vertices = check_closed_loop(map, line, vertices);
+        if (num_vertices) {
+          uint16_t sector = add_sector(map);
+          set_loop_sector(map, sector, vertices, num_vertices);
+          editor->drawing = false;
+        }
+      } else {
+        editor->drawing = true;
+      }
+      return true;
+    case MSG_RBUTTONDOWN:
+      if (editor->drawing) {
+        // Cancel current drawing
+        editor->drawing = false;
+        editor->num_draw_points = 0;
+      } else if (editor->dragging) {
+        editor->dragging = false;
+        editor->current_point = -1;
+      } else if (splitting_line>=0) {
+        split_linedef(map, splitting_line, sn.x, sn.y);
+      } else if (point_exists(sn, map, &point)) {
+        editor->dragging = true;
+        editor->current_point = point;
+      }
+      return true;
+  }
+  return false;
 }

@@ -374,7 +374,7 @@ bool win_textures(struct window_s *win, uint32_t msg, uint32_t wparam, void *lpa
       //      win->scroll[0] = MIN(0, win->scroll[0]+(int16_t)LOWORD(wparam));
       win->scroll[1] = MIN(0, win->scroll[1]+(int16_t)HIWORD(wparam));
       return true;
-    case MSG_CLICK: {
+    case MSG_LBUTTONUP: {
       int texture_idx =
       get_texture_at_point(udata->layout,
                            (LOWORD(wparam) - win->scroll[0]) / SCALE,

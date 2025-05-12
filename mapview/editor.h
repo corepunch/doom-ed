@@ -14,6 +14,8 @@
 #define MAX_DRAW_POINTS 64
 
 typedef struct {
+  window_t const *window;
+  int16_t cursor[2];
   int grid_size;         // Grid size (8 units by default)
   bool drawing;          // Currently drawing a sector?
   bool dragging;          // Currently dragging a vertex?
