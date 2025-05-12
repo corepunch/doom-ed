@@ -215,19 +215,15 @@ int run(void) {
 //    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+    void game_tick(float);
     void draw_intermission(void);
     void handle_intermission_input(float delta_time);
 
     switch (game.state) {
       case GS_DUNGEON:
-        if (SDL_GetRelativeMouseMode()) {
-          handle_game_input(delta_time);
-          draw_windows(false);
-        } else {
-          handle_windows();
-//          draw_palette(&game.map);
-          draw_windows(true);
-        }
+        game_tick(delta_time);
+        handle_windows();
+        draw_windows(!SDL_GetRelativeMouseMode());
         break;
       case GS_EDITOR:
         handle_editor_input(&game.map, &editor, &game.player, delta_time);

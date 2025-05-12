@@ -67,7 +67,7 @@ void set_selected_flat_texture(const char *str) {
 
 // Convenience function to get flat texture
 mapside_texture_t const *get_flat_texture(const char* name);
-bool win_textures(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 uint8_t* load_patch(void* patch_lump, int* width, int* height) {
   if (!patch_lump) return NULL;

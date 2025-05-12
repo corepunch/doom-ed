@@ -8,6 +8,7 @@
 #define COLOR_PANEL_BG       0xff3c3c3c  // main panel or window background
 #define COLOR_LIGHT_EDGE     0xff7f7f7f  // top-left edge for beveled elements
 #define COLOR_DARK_EDGE      0xff1a1a1a  // bottom-right edge for bevel
+#define COLOR_FOCUSED        0xff5EC4F3
 
 // Additional UI Colors
 #define COLOR_BUTTON_BG      0xff404040  // button background (unpressed)
@@ -31,6 +32,7 @@
 extern int screen_width, screen_height;
 
 window_t *windows = NULL;
+window_t *active = NULL;
 
 void draw_panel(int x, int y, int w, int h) {
   fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
@@ -51,6 +53,7 @@ void create_window(int x, int y, int w, int h, char const *title, uint32_t flags
   win->flags = flags;
   strncpy(win->title, title, sizeof(win->title));
   windows = win;
+  active = win;
   proc(win, MSG_CREATE, 0, lparam);
 }
 
@@ -86,6 +89,8 @@ window_t *find_window(int x, int y) {
 }
 
 static void moveToTop(window_t** head, window_t* a) {
+  active = a ? a : active;
+ 
   if (!a || !a->next) return;
   
   window_t *p = NULL, *n = *head;
@@ -111,21 +116,25 @@ void handle_windows(void) {
   window_t *win;
   
   while (SDL_PollEvent(&event)) {
+    switch (active?event.type:SDL_FIRSTEVENT) {
+      case SDL_KEYDOWN:
+        active->proc(active, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
+        break;
+      case SDL_KEYUP:
+        active->proc(active, MSG_KEYUP, event.key.keysym.scancode, NULL);
+        break;
+      case SDL_JOYAXISMOTION:
+        active->proc(active, MSG_JOYAXISMOTION, MAKEDWORD(event.jaxis.axis, event.jaxis.value), NULL);
+        break;
+      case SDL_JOYBUTTONDOWN:
+        active->proc(active, MSG_JOYBUTTONDOWN, event.jbutton.button, NULL);
+        break;
+    }
+
     switch (event.type) {
       case SDL_QUIT:
         running = false;
         break;
-        
-      case SDL_KEYDOWN:
-        switch (event.key.keysym.scancode) {
-          case SDL_SCANCODE_ESCAPE:
-            SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
-            break;
-          default:
-            break;
-        }
-        break;
-        
       case SDL_MOUSEMOTION:
         if (dragging) {
           dragging->x = SCALE_POINT(event.motion.x) - drag_anchor[0];
@@ -136,8 +145,14 @@ void handle_windows(void) {
           if (new_w > 0) resizing->w = new_w;
           if (new_h > 0) resizing->h = new_h;
           resizing->proc(resizing, MSG_RESIZE, 0, NULL);
-        } else if ((win = find_window(SCALE_POINT(event.motion.x), SCALE_POINT(event.motion.y)))) {
-          win->proc(win, MSG_MOUSEMOVE, MAKEDWORD(SCALE_POINT(event.motion.x)-win->x, SCALE_POINT(event.motion.y)-win->y), NULL);
+        } else if ((SDL_GetRelativeMouseMode() && (win = active))||
+                   (win = find_window(SCALE_POINT(event.motion.x), SCALE_POINT(event.motion.y))))
+        {
+          int16_t x = SCALE_POINT(event.motion.x) - win->x;
+          int16_t y = SCALE_POINT(event.motion.y) - win->y;
+          int16_t dx = event.motion.xrel;
+          int16_t dy = event.motion.yrel;
+          win->proc(win, MSG_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
         }
         break;
         
@@ -149,30 +164,34 @@ void handle_windows(void) {
         
       case SDL_MOUSEBUTTONDOWN:
         if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
-          moveToTop(&windows, win);
           int x = SCALE_POINT(event.button.x) - win->x;
           int y = SCALE_POINT(event.button.y) - win->y;
-          // Check if click is within bottom-right resize area
           if (x >= win->w - RESIZE_HANDLE && y >= win->h - RESIZE_HANDLE) {
             resizing = win;
           } else if (SCALE_POINT(event.button.y) < win->y) {
             dragging = win;
             drag_anchor[0] = SCALE_POINT(event.button.x) - win->x;
             drag_anchor[1] = SCALE_POINT(event.button.y) - win->y;
-          } else switch (event.button.button) {
-            case 1: win->proc(win, MSG_LBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
-            case 3: win->proc(win, MSG_RBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+          } else if (win == active) {
+            switch (event.button.button) {
+              case 1: win->proc(win, MSG_LBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+              case 3: win->proc(win, MSG_RBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+            }
           }
         }
         break;
         
       case SDL_MOUSEBUTTONUP:
         if (dragging) {
+          moveToTop(&windows, dragging);
           dragging = NULL;
         } else if (resizing) {
+          moveToTop(&windows, resizing);
           resizing = NULL;
         } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
-          if (SCALE_POINT(event.button.y) >= win->y) {
+          if (win != active) {
+            moveToTop(&windows, win);
+          } else if (SCALE_POINT(event.button.y) >= win->y) {
             int x = SCALE_POINT(event.button.x) - win->x;
             int y = SCALE_POINT(event.button.y) - win->y;
             switch (event.button.button) {
@@ -194,6 +213,9 @@ void draw_windows(bool rich) {
     set_viewport(&(window_t){0, 0, screen_width, screen_height});
     set_projection(screen_width, screen_height);
     if (!(win->flags&WINDOW_TRANSPARENT)) {
+      if (active == win) {
+        fill_rect(COLOR_FOCUSED, win->x-2, win->y-TITLEBAR_HEIGHT-2, win->w+4, win->h+TITLEBAR_HEIGHT+4);
+      }
       draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
     }
     if (!(win->flags&WINDOW_NOTITLE)) {

@@ -142,11 +142,9 @@ void handle_scroll(SDL_Event event, map_data_t *map) {
 void handle_game_input(float delta_time) {
   extern editor_state_t editor;
   SDL_Event event;
-  const Uint8* keystates = SDL_GetKeyboardState(NULL);
-  
   map_data_t *map = &game.map;
   player_t *player = &game.player;
-
+  
   if (SDL_GetRelativeMouseMode()) {
     player->mouse_x_rel = 0;
     player->mouse_y_rel = 0;
@@ -164,127 +162,13 @@ void handle_game_input(float delta_time) {
     else if (event.type == SDL_MOUSEMOTION) {
       if (SDL_GetRelativeMouseMode()) {
         // Get relative mouse movement
-        player->mouse_x_rel = event.motion.xrel;
-        player->mouse_y_rel = event.motion.yrel;
       }
     }
     else if (event.type == SDL_MOUSEWHEEL) {
       handle_scroll(event, map);
     }
-    else if (event.type == SDL_MOUSEBUTTONUP || (event.type == SDL_JOYBUTTONDOWN && event.jbutton.button==0)) {
-      extern int pixel;
-      const Uint8 *state = SDL_GetKeyboardState(NULL);
-      if ((pixel&~PIXEL_MASK) < map->num_sidedefs) {
-        switch (pixel&PIXEL_MASK) {
-          case PIXEL_MID:
-            if (state[SDL_SCANCODE_LALT]) {
-              set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].midtexture);
-            } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture, get_selected_texture(), sizeof(texname_t));
-            }
-            break;
-          case PIXEL_BOTTOM:
-            if (state[SDL_SCANCODE_LALT]) {
-              set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture);
-            } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture, get_selected_texture(), sizeof(texname_t));
-            }
-            break;
-          case PIXEL_TOP:
-            if (state[SDL_SCANCODE_LALT]) {
-              set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].toptexture);
-            } else {
-              memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture, get_selected_texture(), sizeof(texname_t));
-            }
-            break;
-          case PIXEL_FLOOR:
-            if (state[SDL_SCANCODE_LALT]) {
-              set_selected_flat_texture(map->sectors[pixel&~PIXEL_MASK].floorpic);
-            } else {
-              memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic, get_selected_flat_texture(), sizeof(texname_t));
-            }
-            break;
-          case PIXEL_CEILING:
-            if (state[SDL_SCANCODE_LALT]) {
-              set_selected_flat_texture(map->sectors[pixel&~PIXEL_MASK].ceilingpic);
-            } else {
-              memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic, get_selected_flat_texture(), sizeof(texname_t));
-            }
-            break;
-        }
-        build_wall_vertex_buffer(map);
-        build_floor_vertex_buffer(map);
-      }
-    }
-    else if (event.type == SDL_KEYDOWN) {
-      switch (event.key.keysym.scancode) {
-        case SDL_SCANCODE_ESCAPE:
-//          goto_intermisson();
-          SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
-          break;
-//        case SDL_SCANCODE_Z:
-//          selected_texture--;
-//          break;
-//        case SDL_SCANCODE_X:
-//          selected_texture++;
-//          break;
-//        case SDL_SCANCODE_C:
-//          selected_floor_texture--;
-//          break;
-//        case SDL_SCANCODE_V:
-//          selected_floor_texture++;
-//          break;
-        case SDL_SCANCODE_TAB:
-          toggle_editor_mode(&editor);
-          break;
-        case SDL_SCANCODE_W:
-        case SDL_SCANCODE_UP:
-          player->forward_move = 1;
-          break;
-        case SDL_SCANCODE_S:
-        case SDL_SCANCODE_DOWN:
-          player->forward_move = -1;
-          break;
-          // Calculate strafe direction vector (perpendicular to forward)
-        case SDL_SCANCODE_D:
-        case SDL_SCANCODE_RIGHT:
-          player->strafe_move = 1;
-          break;
-        case SDL_SCANCODE_A:
-        case SDL_SCANCODE_LEFT:
-          player->strafe_move = -1;
-          break;
-        default:
-          break;
-      }
-    }
-    else if (event.type == SDL_KEYUP) {
-      switch (event.key.keysym.scancode) {
-        case SDL_SCANCODE_W:
-        case SDL_SCANCODE_UP:
-        case SDL_SCANCODE_S:
-        case SDL_SCANCODE_DOWN:
-          player->forward_move = 0;
-          break;
-          // Calculate strafe direction vector (perpendicular to forward)
-        case SDL_SCANCODE_D:
-        case SDL_SCANCODE_RIGHT:
-        case SDL_SCANCODE_A:
-        case SDL_SCANCODE_LEFT:
-          player->strafe_move = 0;
-          break;
-        default:
-          break;
-      }
-    }
     else if (event.type == SDL_JOYAXISMOTION) {
       //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
-      switch (event.jaxis.axis) {
-        case 0: player->strafe_move = event.jaxis.value/(float)0x8000; break;
-        case 1: player->forward_move = -event.jaxis.value/(float)0x8000; break;
-        case 3: player->mouse_x_rel = event.jaxis.value/1200.f; break;
-        case 4: player->mouse_y_rel = event.jaxis.value/1200.f; break;
-      }
     } else if (event.type == SDL_JOYBUTTONDOWN) {
       if (event.jbutton.button == 8) {
         toggle_editor_mode(&editor);
@@ -295,20 +179,23 @@ void handle_game_input(float delta_time) {
     } else if (event.type == SDL_JOYHATMOTION) {
       
       if (event.jhat.hat == 0) {
-//        if (event.jhat.value & 4) selected_texture++;
-//        if (event.jhat.value & 1) selected_texture--;
-//        if (event.jhat.value & 8) selected_floor_texture--;
-//        if (event.jhat.value & 2) selected_floor_texture++;
+        //        if (event.jhat.value & 4) selected_texture++;
+        //        if (event.jhat.value & 1) selected_texture--;
+        //        if (event.jhat.value & 8) selected_floor_texture--;
+        //        if (event.jhat.value & 2) selected_floor_texture++;
       }
       printf("Hat %d moved to %d\n", event.jhat.hat, event.jhat.value);
     }
-
+    
   }
   
+}
+
+void game_tick(float delta_time) {
+  player_t *player = &game.player;
   // Apply mouse rotation if relative mode is enabled
   if (true) {
     // Horizontal mouse movement controls yaw (left/right rotation)
-    float sensitivity_x = 0.15f; // Adjust sensitivity as needed
     player->angle += player->mouse_x_rel * sensitivity_x;
     
     // Keep angle within 0-360 range
@@ -316,7 +203,6 @@ void handle_game_input(float delta_time) {
     if (player->angle >= 360) player->angle -= 360;
     
     // Vertical mouse movement controls pitch (up/down looking)
-    float sensitivity_y = 0.25f; // Adjust sensitivity as needed
     player->pitch -= player->mouse_y_rel * sensitivity_y;
     
     // Clamp pitch to prevent flipping over
@@ -380,19 +266,4 @@ void handle_game_input(float delta_time) {
   player->x += player->vel_x * delta_time;
   player->y += player->vel_y * delta_time;
   
-  
-  
-  
-  // Additional vertical movement if needed (flying up/down)
-  if (keystates[SDL_SCANCODE_E]) {
-    //    player->z += MOVEMENT_SPEED; // Move up
-  }
-  if (keystates[SDL_SCANCODE_Q]) {
-    //    player->z -= MOVEMENT_SPEED; // Move down
-  }
-  
-  // Toggle mode with Shift
-  if (keystates[SDL_SCANCODE_LSHIFT]) {
-    mode = true;
-  }
 }

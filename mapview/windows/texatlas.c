@@ -349,7 +349,7 @@ typedef struct {
   texture_layout_t* layout;
 } window_udata_t;
 
-bool win_textures(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
+bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   window_udata_t *udata = win->userdata;
   switch (msg) {
     case MSG_CREATE: {

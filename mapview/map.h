@@ -46,6 +46,10 @@ if ((map)->name) free((map)->name); \
 #define VGA_WIDTH 320
 #define VGA_HEGHT 200
 
+#define sensitivity_x 0.075f // Adjust sensitivity as needed
+#define sensitivity_y 0.125f // Adjust sensitivity as needed
+
+
 enum {
   PIXEL_MID = 0 << 28,
   PIXEL_BOTTOM = 1 << 28,
@@ -85,6 +89,11 @@ enum {
   MSG_RBUTTONDOWN,
   MSG_RBUTTONUP,
   MSG_RESIZE,
+  MSG_KEYDOWN,
+  MSG_KEYUP,
+  MSG_JOYBUTTONDOWN,
+  MSG_JOYBUTTONUP,
+  MSG_JOYAXISMOTION,
 };
 
 // Type definitions to better represent the WAD format

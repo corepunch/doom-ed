@@ -12,7 +12,7 @@ static struct {
   Uint32 counter;
 } fps_state = {0};
 
-bool win_perf(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
+bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_DRAW: {
       Uint32 ticks = SDL_GetTicks();

@@ -54,24 +54,9 @@ void handle_editor_input(map_data_t *map,
     }
     else if (event.type == SDL_KEYDOWN) {
       switch (event.key.keysym.scancode) {
-        case SDL_SCANCODE_TAB:
-          toggle_editor_mode(editor);
-          break;
-        case SDL_SCANCODE_ESCAPE:
-          if (editor->drawing) {
-            // Cancel current drawing
-            editor->drawing = false;
-            editor->num_draw_points = 0;
-          } else if (game.state == GS_EDITOR) {
-            // Exit editor mode
-            toggle_editor_mode(editor);
-          }
-          break;
-        case SDL_SCANCODE_G:
-          // Toggle grid size (8, 16, 32, 64, 128)
-          editor->grid_size *= 2;
-          if (editor->grid_size > 128) editor->grid_size = 8;
-          break;
+//        case SDL_SCANCODE_TAB:
+//          toggle_editor_mode(editor);
+//          break;
         case SDL_SCANCODE_W:
         case SDL_SCANCODE_UP:
           forward_move = 1;
@@ -210,7 +195,7 @@ snap_mouse_position(editor_state_t const *editor,
   snapped->y = ceilf(world_y / editor->grid_size) * editor->grid_size;
 }
 
-bool win_editor(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
+bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mapvertex_t sn;
   extern int splitting_line;
   editor_state_t *editor = win->userdata;
@@ -284,6 +269,26 @@ bool win_editor(struct window_s *win, uint32_t msg, uint32_t wparam, void *lpara
         editor->current_point = point;
       }
       return true;
+      
+    case MSG_KEYDOWN:
+      switch (wparam) {
+        case SDL_SCANCODE_ESCAPE:
+          if (editor->drawing) {
+            // Cancel current drawing
+            editor->drawing = false;
+            editor->num_draw_points = 0;
+          } else if (game.state == GS_EDITOR) {
+            // Exit editor mode
+            toggle_editor_mode(editor);
+          }
+          return true;
+        case SDL_SCANCODE_G:
+          // Toggle grid size (8, 16, 32, 64, 128)
+          editor->grid_size *= 2;
+          if (editor->grid_size > 128) editor->grid_size = 8;
+          return true;
+      }
+      return false;
   }
   return false;
 }

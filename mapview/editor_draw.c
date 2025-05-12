@@ -219,8 +219,8 @@ void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
 // Draw the editor UI
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player) {
   // Set up orthographic projection for 2D view
-  float w = SCREEN_WIDTH * editor->scale;
-  float h = SCREEN_HEIGHT * editor->scale;
+  float w = editor->window->w * editor->scale;
+  float h = editor->window->h * editor->scale;
   
   // Create projection and view matrices
   mat4 mvp, proj, view;
@@ -272,7 +272,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   glDisable(GL_DEPTH_TEST);
   
   // Draw grid
-  draw_grid(editor->grid_size, player, 64);
+//  draw_grid(editor->grid_size, player, 64);
   
   // Draw existing walls
   draw_walls_editor(map);

@@ -263,7 +263,7 @@ void toggle_console(void) {
   console.show_console = !console.show_console;
 }
 
-bool win_console(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
+bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_DRAW:
       draw_console();

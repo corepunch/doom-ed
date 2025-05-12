@@ -14,11 +14,11 @@ const char *get_map_name(const char *name);
 extern GLuint world_prog, ui_prog;
 extern SDL_Window* window;
 
-bool win_perf(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_statbar(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_console(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_game(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_editor(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -39,7 +39,7 @@ void init_player(map_data_t const *map, player_t *player) {
   create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
   //  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
   extern editor_state_t editor;
-  create_window(32, 32, 512, 256, "Editor", 0, win_editor, &editor);
+  create_window(64, 64, 320, 320, "Editor", 0, win_editor, &editor);
   create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
 }
 
@@ -56,8 +56,6 @@ void goto_map(const char *mapname) {
     build_floor_vertex_buffer(&game.map);
     
     game.state = GS_DUNGEON;
-
-    SDL_SetRelativeMouseMode(SDL_TRUE);
     
     conprintf("Successfully loaded map %s", get_map_name(mapname));
   } else {
@@ -190,7 +188,7 @@ void draw_dungeon(window_t const *win) {
   glm_frustum_planes(mvp, viewdef.frustum);
   
   read_center_pixel(win, map, sector, &viewdef);
-  
+  return;
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   draw_sky(map, player, mvp);
@@ -228,11 +226,156 @@ void draw_dungeon(window_t const *win) {
   }
 }
 
-bool win_game(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  switch (msg) {
-    case MSG_DRAW: {
-      draw_dungeon(win);
-      return true;
+extern editor_state_t editor;
+extern bool mode;
+
+void paint_face(map_data_t *map, bool eyedropper) {
+  extern int pixel;
+  if ((pixel&~PIXEL_MASK) < map->num_sidedefs) {
+    switch (pixel&PIXEL_MASK) {
+      case PIXEL_MID:
+        if (eyedropper) {
+          set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].midtexture);
+        } else {
+          memcpy(map->sidedefs[pixel&~PIXEL_MASK].midtexture, get_selected_texture(), sizeof(texname_t));
+        }
+        break;
+      case PIXEL_BOTTOM:
+        if (eyedropper) {
+          set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture);
+        } else {
+          memcpy(map->sidedefs[pixel&~PIXEL_MASK].bottomtexture, get_selected_texture(), sizeof(texname_t));
+        }
+        break;
+      case PIXEL_TOP:
+        if (eyedropper) {
+          set_selected_texture(map->sidedefs[pixel&~PIXEL_MASK].toptexture);
+        } else {
+          memcpy(map->sidedefs[pixel&~PIXEL_MASK].toptexture, get_selected_texture(), sizeof(texname_t));
+        }
+        break;
+      case PIXEL_FLOOR:
+        if (eyedropper) {
+          set_selected_flat_texture(map->sectors[pixel&~PIXEL_MASK].floorpic);
+        } else {
+          memcpy(map->sectors[pixel&~PIXEL_MASK].floorpic, get_selected_flat_texture(), sizeof(texname_t));
+        }
+        break;
+      case PIXEL_CEILING:
+        if (eyedropper) {
+          set_selected_flat_texture(map->sectors[pixel&~PIXEL_MASK].ceilingpic);
+        } else {
+          memcpy(map->sectors[pixel&~PIXEL_MASK].ceilingpic, get_selected_flat_texture(), sizeof(texname_t));
+        }
+        break;
+    }
+    build_wall_vertex_buffer(map);
+    build_floor_vertex_buffer(map);
+  }
+
+}
+
+bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  if (SDL_GetRelativeMouseMode()) {
+    switch (msg) {
+      case MSG_DRAW:
+        draw_dungeon(win);
+        return true;
+      case MSG_KEYDOWN:
+        switch (wparam) {
+          case SDL_SCANCODE_ESCAPE:
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            break;
+          case SDL_SCANCODE_W:
+          case SDL_SCANCODE_UP:
+            game.player.forward_move = 1;
+            break;
+          case SDL_SCANCODE_S:
+          case SDL_SCANCODE_DOWN:
+            game.player.forward_move = -1;
+            break;
+            // Calculate strafe direction vector (perpendicular to forward)
+          case SDL_SCANCODE_D:
+          case SDL_SCANCODE_RIGHT:
+            game.player.strafe_move = 1;
+            break;
+          case SDL_SCANCODE_A:
+          case SDL_SCANCODE_LEFT:
+            game.player.strafe_move = -1;
+            break;
+          case SDL_SCANCODE_LSHIFT:
+            mode = true;
+            break;
+        }
+        return true;
+      case MSG_KEYUP:
+        switch (wparam) {
+          case SDL_SCANCODE_W:
+          case SDL_SCANCODE_UP:
+          case SDL_SCANCODE_S:
+          case SDL_SCANCODE_DOWN:
+            game.player.forward_move = 0;
+            break;
+            // Calculate strafe direction vector (perpendicular to forward)
+          case SDL_SCANCODE_D:
+          case SDL_SCANCODE_RIGHT:
+          case SDL_SCANCODE_A:
+          case SDL_SCANCODE_LEFT:
+            game.player.strafe_move = 0;
+            break;
+          case SDL_SCANCODE_LSHIFT:
+            mode = false;
+            break;
+          default:
+            break;
+        }
+        return true;
+      case MSG_MOUSEMOVE:
+        game.player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
+        game.player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
+        // Keep angle within 0-360 range
+        if (game.player.angle < 0) game.player.angle += 360;
+        if (game.player.angle >= 360) game.player.angle -= 360;
+        // Clamp pitch to prevent flipping over
+        if (game.player.pitch > 89.0f) game.player.pitch = 89.0f;
+        if (game.player.pitch < -89.0f) game.player.pitch = -89.0f;
+        return true;
+      case MSG_LBUTTONUP:
+        paint_face(&game.map, SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LALT]);
+        return true;
+      case MSG_JOYBUTTONDOWN:
+        if (wparam == 0) {
+          paint_face(&game.map, false);
+        } else if (wparam == 1) {
+          paint_face(&game.map, true);
+        }
+        return true;
+      case MSG_JOYAXISMOTION:
+        switch (LOWORD(wparam)) {
+          case 0: game.player.strafe_move = ((int16_t)HIWORD(wparam))/(float)0x8000; break;
+          case 1: game.player.forward_move = -((int16_t)HIWORD(wparam))/(float)0x8000; break;
+          case 3: game.player.mouse_x_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
+          case 4: game.player.mouse_y_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
+        }
+        return true;
+    }
+  } else {
+    switch (msg) {
+      case MSG_DRAW:
+        draw_dungeon(win);
+        return true;
+      case MSG_LBUTTONUP:
+        if (!SDL_GetRelativeMouseMode()) {
+          SDL_SetRelativeMouseMode(SDL_TRUE);
+        }
+        return true;
+//      case MSG_KEYDOWN:
+//        switch (wparam) {
+//          case SDL_SCANCODE_ESCAPE:
+//            SDL_SetRelativeMouseMode(SDL_FALSE);
+//            //SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
+//            break;
+//        }
     }
   }
   return false;
