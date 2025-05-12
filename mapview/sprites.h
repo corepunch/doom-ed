@@ -25,13 +25,13 @@ void init_intermission(void);
 void draw_sprite(const char* name, float x, float y, float scale, float alpha);
 
 // Draw the weapon sprite at the bottom center of screen
-void draw_weapon(void);
+void draw_weapon(float aspect);
 
 // Clean up sprite system resources
 void cleanup_sprites(void);
 
 // Draw a crosshair in the center of the screen
-void draw_crosshair(void);
+void draw_crosshair(float aspect);
 
 // Helper function to find a lump directly from file
 int find_lump_from_file(FILE* wad_file, const char* name);

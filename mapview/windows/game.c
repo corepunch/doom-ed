@@ -63,7 +63,7 @@ void goto_map(const char *mapname) {
 
 //#define ISOMETRIC
 
-void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
+void get_view_matrix(map_data_t const *map, player_t const *player, float aspect, mat4 out) {
   // Convert angle to radians for direction calculation
 #ifdef ISOMETRIC
   float angle_rad = (player->angle + 45*3) * M_PI / 180.0f + 0.001f;
@@ -93,7 +93,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out) {
   
   // Create projection matrix
   mat4 proj;
-  glm_perspective(glm_rad(90.0f), (float)SCREEN_WIDTH/(float)SCREEN_HEIGHT, 1.0f, 2000.0f, proj);
+  glm_perspective(glm_rad(90.0f), aspect, 1.0f, 2000.0f, proj);
   
   // Create view matrix
   mat4 view;
@@ -138,10 +138,34 @@ mapsector_t const *update_player_height(map_data_t const *map, player_t *player)
   return sector;
 }
 
-void draw_dungeon(void) {
+void draw_floor_ids(map_data_t const *, mapsector_t const *, viewdef_t const *);
+
+static void
+read_center_pixel(window_t const *win,
+                  map_data_t const *map,
+                  mapsector_t const *sector,
+                  viewdef_t const *viewdef)
+{
+  glUseProgram(ui_prog);
+  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
+  
+  draw_floor_ids(map, sector, viewdef);
+  
+  int fb_width, fb_height;
+  int window_width, window_height;
+  
+  SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
+  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
+
+  int x = (win->x + win->w / 2) * fb_width / screen_width;
+  int y = fb_height - (win->y + win->h / 2) * fb_height / screen_height;
+
+  glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+}
+
+void draw_dungeon(window_t const *win) {
   static unsigned frame = 0;
   
-  void draw_floor_ids(map_data_t const *, mapsector_t const *, viewdef_t const *);
   void draw_minimap(map_data_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
   
@@ -153,7 +177,7 @@ void draw_dungeon(void) {
   player_t *player = &game.player;
   mat4 mvp;
   
-  get_view_matrix(map, player, mvp);
+  get_view_matrix(map, player, (float)win->w/(float)win->h, mvp);
   
   viewdef_t viewdef={0};
   memcpy(viewdef.mvp, mvp, sizeof(mat4));
@@ -161,22 +185,7 @@ void draw_dungeon(void) {
   viewdef.frame = frame++;
   glm_frustum_planes(mvp, viewdef.frustum);
   
-  glUseProgram(ui_prog);
-  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-
-  draw_floor_ids(map, sector, &viewdef);
-
-  int fb_width, fb_height;
-  int window_width, window_height;
-  
-  SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
-  
-  glReadPixels(fb_width / 2, fb_height / 2, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
-  
-  //      static int p=0;
-  //      if (p!=pixel)printf("%08x\n", pixel);
-  //      p = pixel;
+  read_center_pixel(win, map, sector, &viewdef);
   
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
@@ -194,9 +203,9 @@ void draw_dungeon(void) {
   
   draw_things(map, &viewdef, true);
   
-  draw_weapon();
+  draw_weapon((float)win->w/(float)win->h);
   
-  draw_crosshair();
+  draw_crosshair((float)win->w/(float)win->h);
 
   mapside_texture_t const *tex1 = get_texture(get_selected_texture());
   if (tex1) {
@@ -218,7 +227,7 @@ void draw_dungeon(void) {
 bool win_game(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_DRAW: {
-      draw_dungeon();
+      draw_dungeon(win);
       return true;
     }
   }

@@ -98,18 +98,23 @@ static void moveToTop(window_t** head, window_t* a) {
   a->next = NULL;
 }
 
+#define RESIZE_HANDLE 8
 
-static window_t *dragging=NULL;
+static window_t *dragging = NULL;
+static window_t *resizing = NULL;
 static int drag_anchor[2];
+
 void handle_windows(void) {
   extern bool running;
   SDL_Event event;
   window_t *win;
+  
   while (SDL_PollEvent(&event)) {
     switch (event.type) {
       case SDL_QUIT:
         running = false;
         break;
+        
       case SDL_KEYDOWN:
         switch (event.key.keysym.scancode) {
           case SDL_SCANCODE_ESCAPE:
@@ -119,37 +124,53 @@ void handle_windows(void) {
             break;
         }
         break;
+        
       case SDL_MOUSEMOTION:
         if (dragging) {
           dragging->x = SCALE_POINT(event.motion.x) - drag_anchor[0];
           dragging->y = SCALE_POINT(event.motion.y) - drag_anchor[1];
+        } else if (resizing) {
+          int new_w = SCALE_POINT(event.motion.x) - resizing->x;
+          int new_h = SCALE_POINT(event.motion.y) - resizing->y;
+          if (new_w > 0) resizing->w = new_w;
+          if (new_h > 0) resizing->h = new_h;
         }
         break;
+        
       case SDL_MOUSEWHEEL:
         win = find_window(SCALE_POINT(event.wheel.mouseX), SCALE_POINT(event.wheel.mouseY));
         if (win) {
-          win->proc(win, MSG_WHEEL, MAKEDWORD(-event.wheel.x*SCROLL_SENSITIVITY, event.wheel.y*SCROLL_SENSITIVITY), NULL);
+          win->proc(win, MSG_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
         }
         break;
+        
       case SDL_MOUSEBUTTONDOWN:
-        dragging = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y));
-        if (dragging) {
-          moveToTop(&windows, dragging);
-          if (SCALE_POINT(event.button.y) >= dragging->y) {
-            dragging = NULL;
-          } else {
-            drag_anchor[0] = SCALE_POINT(event.button.x) - dragging->x;
-            drag_anchor[1] = SCALE_POINT(event.button.y) - dragging->y;
+        win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y));
+        if (win) {
+          moveToTop(&windows, win);
+          int local_x = SCALE_POINT(event.button.x) - win->x;
+          int local_y = SCALE_POINT(event.button.y) - win->y;
+          
+          // Check if click is within bottom-right resize area
+          if (local_x >= win->w - RESIZE_HANDLE && local_y >= win->h - RESIZE_HANDLE) {
+            resizing = win;
+          } else if (SCALE_POINT(event.button.y) < win->y) {
+            dragging = win;
+            drag_anchor[0] = SCALE_POINT(event.button.x) - win->x;
+            drag_anchor[1] = SCALE_POINT(event.button.y) - win->y;
           }
         }
         break;
+        
       case SDL_MOUSEBUTTONUP:
         if (dragging) {
           dragging = NULL;
+        } else if (resizing) {
+          resizing = NULL;
         } else {
           win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y));
           if (win && SCALE_POINT(event.button.y) >= win->y) {
-            win->proc(win, MSG_CLICK, MAKEDWORD(SCALE_POINT(event.button.x)-win->x, SCALE_POINT(event.button.y)-win->y), NULL);
+            win->proc(win, MSG_CLICK, MAKEDWORD(SCALE_POINT(event.button.x) - win->x, SCALE_POINT(event.button.y) - win->y), NULL);
           }
         }
         break;
