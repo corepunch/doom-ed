@@ -26,6 +26,8 @@
 #define MAX_WINDOWS 64
 #define TITLEBAR_HEIGHT 12
 
+#define RESIZE_HANDLE 8
+
 extern int screen_width, screen_height;
 
 window_t *windows = NULL;
@@ -33,6 +35,7 @@ window_t *windows = NULL;
 void draw_panel(int x, int y, int w, int h) {
   fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
   fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
+  fill_rect(COLOR_LIGHT_EDGE, x+w-RESIZE_HANDLE+1, y+h-RESIZE_HANDLE+1, RESIZE_HANDLE, RESIZE_HANDLE);
   fill_rect(COLOR_PANEL_BG, x, y, w, h);
 }
 
@@ -98,8 +101,6 @@ static void moveToTop(window_t** head, window_t* a) {
   a->next = NULL;
 }
 
-#define RESIZE_HANDLE 8
-
 static window_t *dragging = NULL;
 static window_t *resizing = NULL;
 static int drag_anchor[2];
@@ -134,6 +135,7 @@ void handle_windows(void) {
           int new_h = SCALE_POINT(event.motion.y) - resizing->y;
           if (new_w > 0) resizing->w = new_w;
           if (new_h > 0) resizing->h = new_h;
+          resizing->proc(resizing, MSG_RESIZE, 0, NULL);
         }
         break;
         
@@ -190,6 +192,7 @@ void draw_windows(bool rich) {
     }
     if (!(win->flags&WINDOW_NOTITLE)) {
       fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
+//      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
       draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
     }
     set_viewport(win);

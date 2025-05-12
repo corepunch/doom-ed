@@ -80,6 +80,7 @@ enum {
   MSG_DRAW,
   MSG_WHEEL,
   MSG_CLICK,
+  MSG_RESIZE,
 };
 
 // Type definitions to better represent the WAD format

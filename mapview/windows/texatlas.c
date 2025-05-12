@@ -136,7 +136,7 @@ layout(mapside_texture_t* textures,
   };
   
   // Allocate result structure
-  texture_layout_t* layout = (texture_layout_t*)malloc(sizeof(texture_layout_t)+num_textures * sizeof(texture_layout_entry_t));
+  texture_layout_t* layout = malloc(sizeof(texture_layout_t)+num_textures * sizeof(texture_layout_entry_t));
   layout->num_entries = 0;
   layout->display_width = DISPLAY_WIDTH;
   layout->display_height = DISPLAY_HEIGHT;
@@ -359,6 +359,10 @@ bool win_textures(struct window_s *win, uint32_t msg, uint32_t wparam, void *lpa
       win->userdata = udata;
       return true;
     }
+    case MSG_RESIZE:
+      free(udata->layout);
+      udata->layout = layout(udata->cache->textures, udata->cache->num_textures, win->w / SCALE);
+      return true;
     case MSG_DRAW:
       draw_texture_layout_with_selection(udata->layout,
                                          udata->cache->textures,
