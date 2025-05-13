@@ -72,6 +72,8 @@ void create_window(int x, int y, int w, int h, char const *title, uint32_t flags
   }
   active = win;
   proc(win, MSG_CREATE, 0, lparam);
+  post_message(win, MSG_NCPAINT, 0, NULL);
+  post_message(win, MSG_PAINT, 0, NULL);
 }
 
 void set_viewport(window_t const *win) {
@@ -127,6 +129,21 @@ static window_t *dragging = NULL;
 static window_t *resizing = NULL;
 static int drag_anchor[2];
 
+void move_window(window_t *win, int x, int y) {
+  win->x = x;
+  win->y = y;
+  post_message(win, MSG_NCPAINT, 0, NULL);
+  post_message(win, MSG_PAINT, 0, NULL);
+}
+
+void resize_window(window_t *win, int new_w, int new_h) {
+  if (new_w > 0) resizing->w = new_w;
+  if (new_h > 0) resizing->h = new_h;
+  post_message(win, MSG_NCPAINT, 0, NULL);
+  post_message(win, MSG_PAINT, 0, NULL);
+  post_message(win, MSG_RESIZE, 0, NULL);
+}
+
 void handle_windows(void) {
   extern bool running;
   SDL_Event event;
@@ -151,14 +168,11 @@ void handle_windows(void) {
         break;
       case SDL_MOUSEMOTION:
         if (dragging) {
-          dragging->x = SCALE_POINT(event.motion.x) - drag_anchor[0];
-          dragging->y = SCALE_POINT(event.motion.y) - drag_anchor[1];
+          move_window(dragging, SCALE_POINT(event.motion.x) - drag_anchor[0], SCALE_POINT(event.motion.y) - drag_anchor[1]);
         } else if (resizing) {
           int new_w = SCALE_POINT(event.motion.x) - resizing->x;
           int new_h = SCALE_POINT(event.motion.y) - resizing->y;
-          if (new_w > 0) resizing->w = new_w;
-          if (new_h > 0) resizing->h = new_h;
-          send_message(resizing, MSG_RESIZE, 0, NULL);
+          resize_window(resizing, new_w, new_h);
         } else if ((SDL_GetRelativeMouseMode() && (win = active))||
                    (win = find_window(SCALE_POINT(event.motion.x), SCALE_POINT(event.motion.y))))
         {
@@ -217,8 +231,8 @@ void handle_windows(void) {
         break;
     }
   }
-  while (queue.read != queue.write) {
-    msg_t *m = &queue.messages[queue.read++];
+  for (uint8_t write = queue.write; queue.read != write; queue.read++) {
+    msg_t *m = &queue.messages[queue.read];
     send_message(m->target, m->msg, m->wparam, m->lparam);
   }
 }
@@ -228,22 +242,10 @@ void draw_windows(bool rich) {
     if ((win->flags & WINDOW_RICH) && !rich) {
       continue;
     }
-    set_viewport(&(window_t){0, 0, screen_width, screen_height});
-    set_projection(screen_width, screen_height);
-    if (!(win->flags&WINDOW_TRANSPARENT)) {
-      if (active == win) {
-        fill_rect(COLOR_FOCUSED, win->x-2, win->y-TITLEBAR_HEIGHT-2, win->w+4, win->h+TITLEBAR_HEIGHT+4);
-      }
-      draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
-    }
-    if (!(win->flags&WINDOW_NOTITLE)) {
-      fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
-//      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
-      draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
-    }
-    set_viewport(win);
-    set_projection(win->w, win->h);
-    send_message(win, MSG_DRAW, 0, NULL);
+//    handle_ncpaint(win);
+//    set_viewport(win);
+//    set_projection(win->w, win->h);
+//    send_message(win, MSG_PAINT, 0, NULL);
   }
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(screen_width, screen_height);
@@ -251,7 +253,33 @@ void draw_windows(bool rich) {
 
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (win) {
-    win->proc(win, msg, wparam, lparam);
+    switch (msg) {
+      case MSG_NCPAINT:
+        set_viewport(&(window_t){0, 0, screen_width, screen_height});
+        set_projection(screen_width, screen_height);
+        break;
+      case MSG_PAINT:
+        set_viewport(win);
+        set_projection(win->w, win->h);
+        break;
+    }
+    if (!win->proc(win, msg, wparam, lparam)) {
+      switch (msg) {
+        case MSG_NCPAINT:
+          if (!(win->flags&WINDOW_TRANSPARENT)) {
+            if (active == win) {
+              fill_rect(COLOR_FOCUSED, win->x-2, win->y-TITLEBAR_HEIGHT-2, win->w+4, win->h+TITLEBAR_HEIGHT+4);
+            }
+            draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
+          }
+          if (!(win->flags&WINDOW_NOTITLE)) {
+            fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
+            //      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
+            draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
+          }
+          break;
+      }
+    }
   }
 }
 

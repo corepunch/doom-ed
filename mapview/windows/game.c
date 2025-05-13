@@ -277,7 +277,7 @@ void paint_face(map_data_t *map, bool eyedropper) {
 bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (SDL_GetRelativeMouseMode()) {
     switch (msg) {
-      case MSG_DRAW:
+      case MSG_PAINT:
         draw_dungeon(win);
         return true;
       case MSG_KEYDOWN:
@@ -360,7 +360,7 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     }
   } else {
     switch (msg) {
-      case MSG_DRAW:
+      case MSG_PAINT:
         draw_dungeon(win);
         return true;
       case MSG_LBUTTONUP:

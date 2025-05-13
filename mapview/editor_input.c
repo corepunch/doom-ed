@@ -207,7 +207,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->userdata = lparam;
       ((editor_state_t *)lparam)->window = win;
       return true;
-    case MSG_DRAW:
+    case MSG_PAINT:
       draw_editor(&game.map, win->userdata, &game.player);
       return true;
     case MSG_MOUSEMOVE:

@@ -14,7 +14,7 @@ static struct {
 
 bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
-    case MSG_DRAW: {
+    case MSG_PAINT: {
       Uint32 ticks = SDL_GetTicks();
       fps_state.ticks[fps_state.counter++&63] = ticks - fps_state.last_fps_update;
       fps_state.last_fps_update = ticks;

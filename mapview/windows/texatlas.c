@@ -357,7 +357,7 @@ bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       free(udata->layout);
       udata->layout = layout(udata->cache->textures, udata->cache->num_textures, win->w / SCALE);
       return true;
-    case MSG_DRAW:
+    case MSG_PAINT:
       draw_texture_layout_with_selection(udata->layout,
                                          udata->cache->textures,
                                          udata->cache->selected,
