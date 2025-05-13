@@ -437,4 +437,16 @@ void set_selected_texture(const char *);
 const char *get_selected_flat_texture(void);
 void set_selected_flat_texture(const char *str);
 
+extern int world_prog_mvp;
+extern int world_prog_viewPos;
+extern int world_prog_tex0_size;
+extern int world_prog_tex0;
+extern int world_prog_light;
+
+extern int ui_prog_mvp;
+extern int ui_prog_tex0_size;
+extern int ui_prog_tex0;
+extern int ui_prog_color;
+
+
 #endif

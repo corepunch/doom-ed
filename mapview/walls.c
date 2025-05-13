@@ -213,13 +213,13 @@ void build_wall_vertex_buffer(map_data_t *map) {
 void draw_textured_surface(wall_section_t const *surface, float light, int mode) {
   if (surface->texture) {
     glBindTexture(GL_TEXTURE_2D, surface->texture->texture);
-    glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), surface->texture->width, surface->texture->height);
+    glUniform2f(world_prog_tex0_size, surface->texture->width, surface->texture->height);
   } else {
     glBindTexture(GL_TEXTURE_2D, no_tex);
-    glUniform2f(glGetUniformLocation(world_prog, "tex0_size"), 1, 1);
+    glUniform2f(world_prog_tex0_size, 1, 1);
   }
-  glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
-  glUniform1f(glGetUniformLocation(world_prog, "light"), light);
+  glUniform1i(world_prog_tex0, 0);
+  glUniform1f(world_prog_light, light);
   
   // Draw 4 vertices starting at vertex_start
   glDrawArrays(mode, surface->vertex_start, surface->vertex_count);
@@ -233,8 +233,8 @@ void draw_walls(map_data_t const *map,
   // Bind the wall VAO
   glBindVertexArray(map->walls.vao);
   
-  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
-  glUniform3fv(glGetUniformLocation(world_prog, "viewPos"), 1, viewdef->viewpos);
+  glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, viewdef->mvp[0]);
+  glUniform3fv(world_prog_viewPos, 1, viewdef->viewpos);
   
   // Draw linedefs
   for (int i = 0; i < map->num_linedefs; i++) {
@@ -289,9 +289,9 @@ void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mo
   uint8_t *c = (uint8_t *)&id;
 
   glBindTexture(GL_TEXTURE_2D, white_tex);
-  glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
-  glUniform2f(glGetUniformLocation(ui_prog, "tex0_size"), 1, 1);
-  glUniform4f(glGetUniformLocation(ui_prog, "color"), c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
+  glUniform1i(ui_prog_tex0, 0);
+  glUniform2f(ui_prog_tex0_size, 1, 1);
+  glUniform4f(ui_prog_color, c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
   
   // Draw 4 vertices starting at vertex_start
   glDrawArrays(mode, surface->vertex_start, surface->vertex_count);
@@ -375,8 +375,8 @@ void draw_minimap(map_data_t const *map, player_t const *player) {
   
   glUseProgram(ui_prog);
   glBindTexture(GL_TEXTURE_2D, no_tex);
-  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 0.25f);
+  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, (const float*)mvp);
+  glUniform4f(ui_prog_color, 1.0f, 1.0f, 1.0f, 0.25f);
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE);
   glBindVertexArray(map->walls.vao);

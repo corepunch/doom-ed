@@ -322,8 +322,8 @@ void draw_floors(map_data_t const *map,
   glBindVertexArray(map->floors.vao);
   
   // Set MVP matrix uniform
-  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
-  glUniform3fv(glGetUniformLocation(world_prog, "viewPos"), 1, viewdef->viewpos);
+  glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, viewdef->mvp[0]);
+  glUniform3fv(world_prog_viewPos, 1, viewdef->viewpos);
 
   mapsector2_t *sec = &map->floors.sectors[sector-map->sectors];
   sec->frame = viewdef->frame;

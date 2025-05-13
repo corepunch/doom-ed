@@ -69,6 +69,17 @@ GLuint compile(GLenum type, const char* src) {
 GLuint world_prog, ui_prog;
 GLuint white_tex, black_tex, selection_tex, no_tex;
 
+int world_prog_mvp;
+int world_prog_viewPos;
+int world_prog_tex0_size;
+int world_prog_tex0;
+int world_prog_light;
+
+int ui_prog_mvp;
+int ui_prog_tex0_size;
+int ui_prog_tex0;
+int ui_prog_color;
+
 editor_state_t editor = {0};
 SDL_Window* window = NULL;
 SDL_GLContext ctx;
@@ -134,11 +145,16 @@ bool init_sdl(void) {
   glBindAttribLocation(world_prog, 3, "color");
   glLinkProgram(world_prog);
   glUseProgram(world_prog);
-  glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
+  glUniform1i(world_prog_tex0, 0);
   glDeleteShader(vs);
   glDeleteShader(fs);
-
   
+  world_prog_mvp = glGetUniformLocation(world_prog, "mvp");
+  world_prog_viewPos = glGetUniformLocation(world_prog, "viewPos");
+  world_prog_tex0_size = glGetUniformLocation(world_prog, "tex0_size");
+  world_prog_tex0 = glGetUniformLocation(world_prog, "tex0");
+  world_prog_light = glGetUniformLocation(world_prog, "light");
+
   vs = compile(GL_VERTEX_SHADER, vs_src);
   fs = compile(GL_FRAGMENT_SHADER, fs_unlit_src);
   ui_prog = glCreateProgram();
@@ -150,9 +166,15 @@ bool init_sdl(void) {
   glBindAttribLocation(ui_prog, 3, "color");
   glLinkProgram(ui_prog);
   glUseProgram(ui_prog);
-  glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
+  glUniform1i(ui_prog_tex0, 0);
   glDeleteShader(vs);
   glDeleteShader(fs);
+  
+  ui_prog_mvp = glGetUniformLocation(ui_prog, "mvp");
+  ui_prog_tex0_size = glGetUniformLocation(ui_prog, "tex0_size");
+  ui_prog_tex0 = glGetUniformLocation(ui_prog, "tex0");
+  ui_prog_color = glGetUniformLocation(ui_prog, "color");
+
 
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);

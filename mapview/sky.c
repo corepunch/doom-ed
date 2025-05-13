@@ -237,18 +237,18 @@ void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp) {
   skyboxView[3][3] = 1.0f;
   
   // Set uniforms
-  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (float*)skyboxView);
+  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, (float*)skyboxView);
   
   // Bind texture
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, g_sky.texture_id);
-  glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
+  glUniform1i(ui_prog_tex0, 0);
 
-  glUniform2f(glGetUniformLocation(ui_prog, "tex0_size"), g_sky.width, g_sky.height);
+  glUniform2f(ui_prog_tex0_size, g_sky.width, g_sky.height);
 
   // Set color to white (full brightness)
   float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
-  glUniform4fv(glGetUniformLocation(ui_prog, "color"), 1, color);
+  glUniform4fv(ui_prog_color, 1, color);
 
   // Bind VAO and draw
   glBindVertexArray(sky_vao);

@@ -124,6 +124,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, float aspect
 
 void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);
 void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp);
+void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);
 
 int pixel = 0;
 
@@ -150,7 +151,7 @@ read_center_pixel(window_t const *win,
                   viewdef_t const *viewdef)
 {
   glUseProgram(ui_prog);
-  glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
+  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, viewdef->mvp[0]);
   
   draw_floor_ids(map, sector, viewdef);
   
@@ -193,12 +194,14 @@ void draw_dungeon(window_t const *win) {
   draw_sky(map, player, mvp);
   
   glUseProgram(world_prog);
-  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
+  glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, (const float*)mvp);
   
   extern int sectors_drawn;
   sectors_drawn = 0;
   
   viewdef.frame = frame++;
+  
+//  draw_bsp(&game.map, &viewdef);
   
   draw_floors(map, sector, &viewdef);
   
