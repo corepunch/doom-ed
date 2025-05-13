@@ -223,7 +223,7 @@ int run(void) {
       case GS_DUNGEON:
         game_tick(delta_time);
         handle_windows();
-//        draw_windows(!SDL_GetRelativeMouseMode());
+        draw_windows(!SDL_GetRelativeMouseMode());
         break;
       case GS_EDITOR:
         handle_editor_input(&game.map, &editor, &game.player, delta_time);

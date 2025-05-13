@@ -77,12 +77,12 @@ void *cache_lump(const char* name) {
 }
 
 // Function to read data from a file at a specific offset
-void* read_lump_data(FILE* file, int offset, int size) {
-  void* data = malloc(size);
+void* read_lump_data(FILE* file, filelump_t const *lump) {
+  void* data = malloc(lump->size);
   if (!data) return NULL;
   
-  fseek(file, offset, SEEK_SET);
-  fread(data, 1, size, file);
+  fseek(file, lump->filepos, SEEK_SET);
+  fread(data, 1, lump->size, file);
   return data;
 }
 
@@ -120,29 +120,32 @@ map_data_t load_map(const char* map_name) {
   // Map lumps follow a specific order after the map marker
   if (map_index + 10 <= wad.num_lumps) {
     // THINGS
-    int things_idx = map_index + 1;
-    map.num_things = wad.directory[things_idx].size / sizeof(mapthing_t);
-    map.things = (mapthing_t*)read_lump_data(wad.file, wad.directory[things_idx].filepos, wad.directory[things_idx].size);
+    map.num_things = wad.directory[map_index + ML_THINGS].size / sizeof(mapthing_t);
+    map.things = read_lump_data(wad.file, &wad.directory[map_index + ML_THINGS]);
     
     // LINEDEFS
-    int linedefs_idx = map_index + 2;
-    map.num_linedefs = wad.directory[linedefs_idx].size / sizeof(maplinedef_t);
-    map.linedefs = (maplinedef_t*)read_lump_data(wad.file, wad.directory[linedefs_idx].filepos, wad.directory[linedefs_idx].size);
+    map.num_linedefs = wad.directory[map_index + ML_LINEDEFS].size / sizeof(maplinedef_t);
+    map.linedefs = read_lump_data(wad.file, &wad.directory[map_index + ML_LINEDEFS]);
     
     // SIDEDEFS
-    int sidedefs_idx = map_index + 3;
-    map.num_sidedefs = wad.directory[sidedefs_idx].size / sizeof(mapsidedef_t);
-    map.sidedefs = (mapsidedef_t*)read_lump_data(wad.file, wad.directory[sidedefs_idx].filepos, wad.directory[sidedefs_idx].size);
+    map.num_sidedefs = wad.directory[map_index + ML_SIDEDEFS].size / sizeof(mapsidedef_t);
+    map.sidedefs = read_lump_data(wad.file, &wad.directory[map_index + ML_SIDEDEFS]);
     
     // VERTEXES
-    int vertices_idx = map_index + 4;
-    map.num_vertices = wad.directory[vertices_idx].size / sizeof(mapvertex_t);
-    map.vertices = (mapvertex_t*)read_lump_data(wad.file, wad.directory[vertices_idx].filepos, wad.directory[vertices_idx].size);
-    
+    map.num_vertices = wad.directory[map_index + ML_VERTEXES].size / sizeof(mapvertex_t);
+    map.vertices = read_lump_data(wad.file, &wad.directory[map_index + ML_VERTEXES]);
+
+    // NODES
+    map.num_nodes = wad.directory[map_index + ML_NODES].size / sizeof(mapnode_t);
+    map.nodes = read_lump_data(wad.file, &wad.directory[map_index + ML_NODES]);
+
+    // SSECTORS
+    map.num_subsectors = wad.directory[map_index + ML_SSECTORS].size / sizeof(mapsubsector_t);
+    map.subsectors = read_lump_data(wad.file, &wad.directory[map_index + ML_SSECTORS]);
+
     // SECTORS
-    int sectors_idx = map_index + 8;
-    map.num_sectors = wad.directory[sectors_idx].size / sizeof(mapsector_t);
-    map.sectors = (mapsector_t*)read_lump_data(wad.file, wad.directory[sectors_idx].filepos, wad.directory[sectors_idx].size);
+    map.num_sectors = wad.directory[map_index + ML_SECTORS].size / sizeof(mapsector_t);
+    map.sectors = read_lump_data(wad.file, &wad.directory[map_index + ML_SECTORS]);
   }
   
   for (int i = 0; i < map.num_things; i++) {

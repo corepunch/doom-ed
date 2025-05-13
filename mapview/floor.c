@@ -263,6 +263,14 @@ void build_floor_vertex_buffer(map_data_t *map) {
 
 int sectors_drawn = 0;
 
+void draw_walls(map_data_t const *map,
+                mapsector_t const *sector,
+                viewdef_t const *viewdef);
+
+void draw_wall_ids(map_data_t const *map,
+                   mapsector_t const *sector,
+                   viewdef_t const *viewdef);
+
 void draw_portals(map_data_t const *map,
                   mapsector_t const *sector,
                   viewdef_t const *viewdef,
@@ -291,14 +299,6 @@ void draw_portals(map_data_t const *map,
     }
   }
 }
-
-void draw_walls(map_data_t const *map,
-                mapsector_t const *sector,
-                viewdef_t const *viewdef);
-
-void draw_wall_ids(map_data_t const *map,
-                   mapsector_t const *sector,
-                   viewdef_t const *viewdef);
 
 // Main function to draw floors and ceilings
 void draw_floors(map_data_t const *map,
