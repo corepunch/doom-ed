@@ -58,6 +58,8 @@ void invalidate_window(window_t *win) {
   post_message(win, MSG_PAINT, 0, NULL);
 }
 
+static uint8_t _id;
+
 void create_window(int x, int y, int w, int h, char const *title, uint32_t flags, winproc_t proc, void *lparam) {
   window_t *win = malloc(sizeof(window_t));
   memset(win, 0, sizeof(window_t));
@@ -67,6 +69,7 @@ void create_window(int x, int y, int w, int h, char const *title, uint32_t flags
   win->h = h;
   win->proc = proc;
   win->flags = flags;
+  win->id = ++_id;
   strncpy(win->title, title, sizeof(win->title));
   if (!windows) {
     windows = win;
@@ -271,17 +274,16 @@ void handle_windows(void) {
   }
 }
 
-void draw_windows(bool rich) {
-  for (window_t *win = windows; win; win = win->next) {
-    if ((win->flags & WINDOW_RICH) && !rich) {
-      continue;
-    }
-//    send_message(win, MSG_PAINT, 0, NULL);
-    invalidate_window(win);
-  }
-  set_viewport(&(window_t){0, 0, screen_width, screen_height});
-  set_projection(screen_width, screen_height);
-}
+//void draw_windows(bool rich) {
+//  for (window_t *win = windows; win; win = win->next) {
+//    if ((win->flags & WINDOW_RICH) && !rich) {
+//      continue;
+//    }
+//    invalidate_window(win);
+//  }
+//  set_viewport(&(window_t){0, 0, screen_width, screen_height});
+//  set_projection(screen_width, screen_height);
+//}
 
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (win) {
@@ -291,31 +293,64 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         set_projection(screen_width, screen_height);
         break;
       case MSG_PAINT:
+        set_viewport(&(window_t){0, 0, screen_width, screen_height});
+        set_projection(screen_width, screen_height);
+
+        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+        
+        // Enable stencil
+        glEnable(GL_STENCIL_TEST);
+        
+        // Each window writes a unique value (window ID) into stencil
+        // In this case: draw all windows before #14 and including #14
+        // Start with bottom-most (e.g., window #1 to window #14)
+        for (window_t const *w = windows; w; w = w->next) {
+          glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
+          glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
+          int p = active == w ? 2 : 1;
+          int t = TITLEBAR_HEIGHT;
+          draw_rect(1, w->x-p, w->y-t-p, w->w+p*2, w->h+t+p*2); // Just draw shape geometry
+        }
+        
+        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+        
+        // Only draw where stencil == id
+        glStencilFunc(GL_EQUAL, win->id, 0xFF);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // Don't modify stencil
+        
         set_viewport(win);
         set_projection(win->w, win->h);
         break;
     }
-    if (win->proc(win, msg, wparam, lparam))
-      return;
-    switch (msg) {
-      case MSG_NCPAINT:
-        if (!(win->flags&WINDOW_TRANSPARENT)) {
-          if (active == win) {
-            fill_rect(COLOR_FOCUSED, win->x-2, win->y-TITLEBAR_HEIGHT-2, win->w+4, win->h+TITLEBAR_HEIGHT+4);
+    if (!win->proc(win, msg, wparam, lparam)) {
+      switch (msg) {
+        case MSG_NCPAINT:
+          if (!(win->flags&WINDOW_TRANSPARENT)) {
+            if (active == win) {
+              fill_rect(COLOR_FOCUSED, win->x-2, win->y-TITLEBAR_HEIGHT-2, win->w+4, win->h+TITLEBAR_HEIGHT+4);
+            }
+            draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
           }
-          draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
-        }
-        if (!(win->flags&WINDOW_NOTITLE)) {
-          fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
-          //      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
-          draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
-        }
-        break;
+          if (!(win->flags&WINDOW_NOTITLE)) {
+            fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
+            //      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
+            draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
+          }
+          break;
+      }
     }
   }
+  glDisable(GL_STENCIL_TEST);
 }
 
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  for (uint8_t w = queue.write, r = queue.read + 1; r != w; r++) {
+    if (queue.messages[r].target == win && queue.messages[r].msg == msg) {
+      queue.messages[r].wparam = wparam;
+      queue.messages[r].lparam = lparam;
+      return;
+    }
+  }
   queue.messages[queue.write++] = (msg_t) {
     .target = win,
     .msg = msg,

@@ -125,6 +125,8 @@ bool init_sdl(void) {
     printf("No game controller found\n");
   }
   
+  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -245,7 +247,7 @@ int run(void) {
       case GS_DUNGEON:
         game_tick(delta_time);
         handle_windows();
-        draw_windows(!SDL_GetRelativeMouseMode());
+//        draw_windows(!SDL_GetRelativeMouseMode());
         break;
       case GS_EDITOR:
         handle_editor_input(&game.map, &editor, &game.player, delta_time);

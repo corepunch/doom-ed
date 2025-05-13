@@ -189,7 +189,7 @@ void draw_dungeon(window_t const *win) {
   
   read_center_pixel(win, map, sector, &viewdef);
   
-  glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+  glClear(/*GL_COLOR_BUFFER_BIT|*/GL_DEPTH_BUFFER_BIT);
   
   draw_sky(map, player, mvp);
   
@@ -282,6 +282,7 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     switch (msg) {
       case MSG_PAINT:
         draw_dungeon(win);
+        post_message(win, MSG_PAINT, wparam, lparam);
         return true;
       case MSG_KEYDOWN:
         switch (wparam) {
@@ -365,6 +366,7 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     switch (msg) {
       case MSG_PAINT:
         draw_dungeon(win);
+        post_message(win, MSG_PAINT, wparam, lparam);
         return true;
       case MSG_LBUTTONUP:
         if (!SDL_GetRelativeMouseMode()) {

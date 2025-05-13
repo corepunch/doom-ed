@@ -364,6 +364,7 @@ typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
 
 typedef struct window_s {
   int x, y, w, h;
+  uint8_t id;
   int16_t scroll[2];
   uint32_t flags;
   winproc_t proc;

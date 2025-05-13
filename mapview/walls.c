@@ -338,7 +338,6 @@ draw_wall_ids(map_data_t const *map,
 }
 
 #define MINIMAP_SCALE 2
-
 #define ROTATE_MAP
 
 void minimap_matrix(player_t const *player, mat4 mvp) {
