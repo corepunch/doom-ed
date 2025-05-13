@@ -249,8 +249,6 @@ int find_texture_in_direction(texture_layout_t* layout,
                               const char* current_texture_name,
                               int direction) {
   int current_idx = -1;
-  int current_x = 0, current_y = 0;
-  int current_width = 0, current_height = 0;
   
   // First, find the currently selected texture and its position
   for (int i = 0; i < layout->num_entries; i++) {
@@ -259,10 +257,6 @@ int find_texture_in_direction(texture_layout_t* layout,
     
     if (!strncmp(tex->name, current_texture_name, sizeof(texname_t))) {
       current_idx = i;
-      current_x = entry->x + entry->width/2;  // Center point of texture
-      current_y = entry->y + entry->height/2;
-      current_width = entry->width;
-      current_height = entry->height;
       break;
     }
   }

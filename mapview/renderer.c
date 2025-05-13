@@ -55,7 +55,7 @@ const char* fs_unlit_src = "#version 150 core\n"
 "uniform vec4 color;\n"
 "uniform sampler2D tex0;\n"
 "void main() {\n"
-"  outColor = texture(tex0, tex) * color/* * col*/;\n"
+"  outColor = texture(tex0, tex) * color * col;\n"
 "}";
 
 GLuint compile(GLenum type, const char* src) {
@@ -75,6 +75,7 @@ SDL_GLContext ctx;
 SDL_Joystick* joystick = NULL;
 bool running = true;
 bool mode = false;
+unsigned frame = 0;
 
 palette_entry_t *palette;
 
@@ -113,6 +114,7 @@ bool init_sdl(void) {
     printf("No game controller found\n");
   }
   
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -212,8 +214,6 @@ int run(void) {
 
     glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-//    glPolygonMode(GL_FRONT_AND_BACK, mode ? GL_LINE : GL_FILL);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
     void game_tick(float);
     void draw_intermission(void);
@@ -237,7 +237,9 @@ int run(void) {
         break;
     }
 
-    SDL_GL_SwapWindow(window);
+//    SDL_GL_SwapWindow(window);
+    
+    glFlush();
     
     // Cap frame rate
 //    SDL_Delay(16);  // ~60 FPS

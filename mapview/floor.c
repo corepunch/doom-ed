@@ -315,7 +315,9 @@ void draw_floors(map_data_t const *map,
   if (map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
     return;
   
-  sectors_drawn++;
+  if (!viewdef->nowalls) {
+    sectors_drawn++;
+  }
   
   glBindVertexArray(map->floors.vao);
   

@@ -13,6 +13,7 @@ const char *get_map_name(const char *name);
 
 extern GLuint world_prog, ui_prog;
 extern SDL_Window* window;
+extern unsigned frame;
 
 bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
@@ -39,8 +40,8 @@ void init_player(map_data_t const *map, player_t *player) {
   create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
   //  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
   extern editor_state_t editor;
+//  create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
   create_window(64, 64, 320, 320, "Editor", 0, win_editor, &editor);
-  create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
 }
 
 void goto_map(const char *mapname) {
@@ -166,8 +167,6 @@ read_center_pixel(window_t const *win,
 }
 
 void draw_dungeon(window_t const *win) {
-  static unsigned frame = 0;
-  
   void draw_minimap(map_data_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
   
@@ -188,7 +187,7 @@ void draw_dungeon(window_t const *win) {
   glm_frustum_planes(mvp, viewdef.frustum);
   
   read_center_pixel(win, map, sector, &viewdef);
-  return;
+  
   glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
   
   draw_sky(map, player, mvp);

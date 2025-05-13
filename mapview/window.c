@@ -34,6 +34,18 @@ extern int screen_width, screen_height;
 window_t *windows = NULL;
 window_t *active = NULL;
 
+typedef struct {
+  window_t *target;
+  int32_t msg;
+  int32_t wparam;
+  void *lparam;
+} msg_t;
+
+struct {
+  uint8_t read, write;
+  msg_t messages[0x100];
+} queue = {0};
+
 void draw_panel(int x, int y, int w, int h) {
   fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
   fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
@@ -49,10 +61,15 @@ void create_window(int x, int y, int w, int h, char const *title, uint32_t flags
   win->w = w;
   win->h = h;
   win->proc = proc;
-  win->next = windows;
   win->flags = flags;
   strncpy(win->title, title, sizeof(win->title));
-  windows = win;
+  if (!windows) {
+    windows = win;
+  } else {
+    window_t *p= windows;
+    while (p->next) p = p->next;
+    p->next = win;
+  }
   active = win;
   proc(win, MSG_CREATE, 0, lparam);
 }
@@ -116,24 +133,21 @@ void handle_windows(void) {
   window_t *win;
   
   while (SDL_PollEvent(&event)) {
-    switch (active?event.type:SDL_FIRSTEVENT) {
-      case SDL_KEYDOWN:
-        active->proc(active, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
-        break;
-      case SDL_KEYUP:
-        active->proc(active, MSG_KEYUP, event.key.keysym.scancode, NULL);
-        break;
-      case SDL_JOYAXISMOTION:
-        active->proc(active, MSG_JOYAXISMOTION, MAKEDWORD(event.jaxis.axis, event.jaxis.value), NULL);
-        break;
-      case SDL_JOYBUTTONDOWN:
-        active->proc(active, MSG_JOYBUTTONDOWN, event.jbutton.button, NULL);
-        break;
-    }
-
     switch (event.type) {
       case SDL_QUIT:
         running = false;
+        break;
+      case SDL_KEYDOWN:
+        send_message(active, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
+        break;
+      case SDL_KEYUP:
+        send_message(active, MSG_KEYUP, event.key.keysym.scancode, NULL);
+        break;
+      case SDL_JOYAXISMOTION:
+        send_message(active, MSG_JOYAXISMOTION, MAKEDWORD(event.jaxis.axis, event.jaxis.value), NULL);
+        break;
+      case SDL_JOYBUTTONDOWN:
+        send_message(active, MSG_JOYBUTTONDOWN, event.jbutton.button, NULL);
         break;
       case SDL_MOUSEMOTION:
         if (dragging) {
@@ -144,7 +158,7 @@ void handle_windows(void) {
           int new_h = SCALE_POINT(event.motion.y) - resizing->y;
           if (new_w > 0) resizing->w = new_w;
           if (new_h > 0) resizing->h = new_h;
-          resizing->proc(resizing, MSG_RESIZE, 0, NULL);
+          send_message(resizing, MSG_RESIZE, 0, NULL);
         } else if ((SDL_GetRelativeMouseMode() && (win = active))||
                    (win = find_window(SCALE_POINT(event.motion.x), SCALE_POINT(event.motion.y))))
         {
@@ -152,13 +166,13 @@ void handle_windows(void) {
           int16_t y = SCALE_POINT(event.motion.y) - win->y;
           int16_t dx = event.motion.xrel;
           int16_t dy = event.motion.yrel;
-          win->proc(win, MSG_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
+          send_message(win, MSG_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
         }
         break;
         
       case SDL_MOUSEWHEEL:
         if ((win = find_window(SCALE_POINT(event.wheel.mouseX), SCALE_POINT(event.wheel.mouseY)))) {
-          win->proc(win, MSG_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
+          send_message(win, MSG_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
         }
         break;
         
@@ -174,8 +188,8 @@ void handle_windows(void) {
             drag_anchor[1] = SCALE_POINT(event.button.y) - win->y;
           } else if (win == active) {
             switch (event.button.button) {
-              case 1: win->proc(win, MSG_LBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
-              case 3: win->proc(win, MSG_RBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+              case 1: send_message(win, MSG_LBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+              case 3: send_message(win, MSG_RBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
             }
           }
         }
@@ -195,13 +209,17 @@ void handle_windows(void) {
             int x = SCALE_POINT(event.button.x) - win->x;
             int y = SCALE_POINT(event.button.y) - win->y;
             switch (event.button.button) {
-              case 1: win->proc(win, MSG_LBUTTONUP, MAKEDWORD(x, y), NULL); break;
-              case 3: win->proc(win, MSG_RBUTTONUP, MAKEDWORD(x, y), NULL); break;
+              case 1: send_message(win, MSG_LBUTTONUP, MAKEDWORD(x, y), NULL); break;
+              case 3: send_message(win, MSG_RBUTTONUP, MAKEDWORD(x, y), NULL); break;
             }
           }
         }
         break;
     }
+  }
+  while (queue.read != queue.write) {
+    msg_t *m = &queue.messages[queue.read++];
+    send_message(m->target, m->msg, m->wparam, m->lparam);
   }
 }
 
@@ -225,8 +243,23 @@ void draw_windows(bool rich) {
     }
     set_viewport(win);
     set_projection(win->w, win->h);
-    win->proc(win, MSG_DRAW, 0, NULL);
+    send_message(win, MSG_DRAW, 0, NULL);
   }
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(screen_width, screen_height);
+}
+
+void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  if (win) {
+    win->proc(win, msg, wparam, lparam);
+  }
+}
+
+void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  queue.messages[queue.write++] = (msg_t) {
+    .target = win,
+    .msg = msg,
+    .wparam = wparam,
+    .lparam = lparam,
+  };
 }

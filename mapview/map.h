@@ -329,6 +329,8 @@ typedef struct window_s {
 } window_t;
 
 void create_window(int x, int y, int w, int h, char const *title, uint32_t flags, winproc_t proc, void *lparam);
+void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 extern game_t game;
 

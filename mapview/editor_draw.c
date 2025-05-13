@@ -8,6 +8,7 @@
 // Globals
 extern GLuint ui_prog;
 extern GLuint white_tex;
+extern unsigned frame;
 
 // Initialize editor state
 void init_editor(editor_state_t *editor) {
@@ -126,21 +127,38 @@ static void draw_current_sector(editor_state_t const *editor) {
   glPointSize(1.0f);
 }
 
+extern GLuint no_tex;
+
+static void draw_floors_editor(map_data_t const *map) {
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+  glBindVertexArray(map->floors.vao);
+  
+  for (int i = 0; i < map->num_sectors; i++) {
+    if (map->floors.sectors[i].floor.texture) {
+      mapside_texture_t const *tex = map->floors.sectors[i].floor.texture;
+      glBindTexture(GL_TEXTURE_2D, tex->texture);
+      glUniform2f(glGetUniformLocation(ui_prog, "tex0_size"), tex->width, tex->height);
+    } else {
+      glBindTexture(GL_TEXTURE_2D, no_tex);
+    }
+    glDrawArrays(GL_TRIANGLES,
+                 map->floors.sectors[i].floor.vertex_start,
+                 map->floors.sectors[i].floor.vertex_count);
+  }
+}
+
 // Draw walls with different colors based on whether they're one-sided or two-sided
 static void draw_walls_editor(map_data_t const *map) {
-//  
-//  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
-//  glBindVertexArray(map->walls.vao);
-//  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
-//  
-////  glDisableVertexAttribArray(3);
-//  glPointSize(3.0f);
-//  glDrawArrays(GL_POINTS, 0, map->walls.num_vertices);
-//  glPointSize(1.0f);
-//  glEnableVertexAttribArray(3);
-//
-//  return;
+#if 1
+  glBindTexture(GL_TEXTURE_2D, white_tex); // Use default 1x1 white texture
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
+  glBindVertexArray(map->walls.vao);
+  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
   
+  glPointSize(3.0f);
+  glDrawArrays(GL_POINTS, 0, map->walls.num_vertices);
+  glPointSize(1.0f);
+#else
   // Draw each linedef
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t const *linedef = &map->linedefs[i];
@@ -183,6 +201,7 @@ static void draw_walls_editor(map_data_t const *map) {
     glDrawArrays(GL_POINTS, 0, 1);
     glPointSize(1.0f);
   }
+#endif
 }
 
 // Draw cursor position
@@ -238,7 +257,6 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   // Clear the screen to black
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
 //  void draw_minimap(map_data_t const *map, player_t const *player);
 //  draw_minimap(map, player);
 //  glBindVertexArray(map->walls.vao);
@@ -253,34 +271,38 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
   void draw_floors(map_data_t const *map, mapsector_t const *sector, viewdef_t const *viewdef);
   void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate);
 
-  static int frame = 0;
   viewdef_t viewdef={.nowalls=true,.frame=frame++};
   memcpy(viewdef.mvp, mvp, sizeof(mat4));
   memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
   viewdef.viewpos[2] = -100000;
   glm_frustum_planes(mvp, viewdef.frustum);
   
-  draw_floors(map, find_player_sector(map, player->x, player->y), &viewdef);
-  
   // Set up rendering
   glUseProgram(ui_prog);
   glUniformMatrix4fv(glGetUniformLocation(ui_prog, "mvp"), 1, GL_FALSE, (const float*)mvp);
-  glBindTexture(GL_TEXTURE_2D, white_tex); // Use default 1x1 white texture
   
-  glBindVertexArray(editor->vao);
-  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
   glDisable(GL_DEPTH_TEST);
   
   // Draw grid
 //  draw_grid(editor->grid_size, player, 64);
-  
+
+  draw_floors_editor(map);
+
   // Draw existing walls
   draw_walls_editor(map);
-  
+
+  glBindVertexArray(editor->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
+
   // Draw sector being created
-  draw_current_sector(editor);
+//  draw_current_sector(editor);
 
   draw_things(map, &viewdef, false);
+  
+  extern window_t *active;
+  if (editor->window != active) {
+    return;
+  }
 
   glUseProgram(ui_prog);
   glBindVertexArray(editor->vao);
@@ -331,13 +353,27 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     draw_cursor(sn.x, sn.y);
   }
   
+  glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
+  glBindTexture(GL_TEXTURE_2D, white_tex);
+
+  if (splitting_line != -1) {
+    wall_vertex_t verts[2] = {
+      { map->vertices[map->linedefs[splitting_line].start].x,
+        map->vertices[map->linedefs[splitting_line].start].y },
+      { map->vertices[map->linedefs[splitting_line].end].x,
+        map->vertices[map->linedefs[splitting_line].end].y },
+    };
+    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
+    glDrawArrays(GL_LINES, 0, 2);
+  }
+  
   // If currently drawing, show line from last point to cursor
   if (editor->dragging || editor->drawing) {
-    glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
     float x = map->vertices[editor->current_point].x;
     float y = map->vertices[editor->current_point].y;
     wall_vertex_t verts[2] = { { x, y}, { sn.x, sn.y } };
-    glBindTexture(GL_TEXTURE_2D, white_tex);
     glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
     glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
     glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
