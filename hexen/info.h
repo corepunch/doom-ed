@@ -3186,6 +3186,7 @@ typedef struct
   void      (*action) (void);
   statenum_t    nextstate;
   long      misc1, misc2;
+  void      *cache;
 } state_t;
 
 extern state_t  states[NUMSTATES];

@@ -40,7 +40,7 @@ void init_player(map_data_t const *map, player_t *player) {
   create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
   //  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
   extern editor_state_t editor;
-//  create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
+  create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
   create_window(64, 64, 320, 320, "Editor", 0, win_editor, &editor);
 }
 
@@ -210,13 +210,13 @@ void draw_dungeon(window_t const *win) {
 
   mapside_texture_t const *tex1 = get_texture(get_selected_texture());
   if (tex1) {
-    draw_rect(tex1->texture, 8, 8, tex1->width, tex1->height);
+    draw_rect(tex1->texture, 8, 8, tex1->width/2, tex1->height/2);
   }
 
   mapside_texture_t const *tex2 = get_flat_texture(get_selected_flat_texture());
   if (tex2) {
-    float w = tex2->width, h = tex2->height;
-    draw_rect(tex2->texture, screen_width-8-w, 8, w, h);
+    float w = tex2->width/2, h = tex2->height/2;
+    draw_rect(tex2->texture, win->w*0.75-8-w, 8, w, h);
   }
 
   extern bool mode;

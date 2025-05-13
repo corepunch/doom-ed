@@ -130,6 +130,8 @@ static void draw_current_sector(editor_state_t const *editor) {
 extern GLuint no_tex;
 
 static void draw_floors_editor(map_data_t const *map) {
+  GLuint tex0_size = glGetUniformLocation(ui_prog, "tex0_size");
+  
   glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 1.0f, 1.0f);
   glBindVertexArray(map->floors.vao);
   
@@ -137,7 +139,7 @@ static void draw_floors_editor(map_data_t const *map) {
     if (map->floors.sectors[i].floor.texture) {
       mapside_texture_t const *tex = map->floors.sectors[i].floor.texture;
       glBindTexture(GL_TEXTURE_2D, tex->texture);
-      glUniform2f(glGetUniformLocation(ui_prog, "tex0_size"), tex->width, tex->height);
+      glUniform2f(tex0_size, tex->width, tex->height);
     } else {
       glBindTexture(GL_TEXTURE_2D, no_tex);
     }
@@ -299,15 +301,16 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
 
   draw_things(map, &viewdef, false);
   
-  extern window_t *active;
-  if (editor->window != active) {
-    return;
-  }
-
   glUseProgram(ui_prog);
   glBindVertexArray(editor->vao);
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
   glDisable(GL_DEPTH_TEST);
+  
+  extern window_t *active;
+
+  if (editor->window != active) {
+    goto draw_player;
+  }
 
   vec2 world;
   get_mouse_position(editor, player, mvp, world);
@@ -380,7 +383,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     glDrawArrays(GL_LINES, 0, 2);
   }
   
-  
+draw_player:
   
   glUniform4f(glGetUniformLocation(ui_prog, "color"), 1.0f, 1.0f, 0.0f, 0.5f);
   

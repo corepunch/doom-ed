@@ -128,37 +128,47 @@ GLuint compile_thing_shader(GLenum type, const char* src) {
 sprite_t *get_thing_sprite_name(int thing_type, int angle) {
   static char sprite_name[9] = {0}; // e.g., "TROO_A0"
   const char* prefix = "UNKN";
+  state_t *s = NULL;
   
   for (int i = 0; i < NUMMOBJTYPES; i++) {
     if (mobjinfo[i].doomednum == thing_type) {
-      state_t const *s = &states[mobjinfo[i].spawnstate];
+      s = &states[mobjinfo[i].spawnstate];
+      if (s->cache) {
+        return s->cache;
+      }
       prefix = sprnames[s->sprite];
       break;
     }
   }
   
-  // Determine angle frame (A-H based on 45-degree increments)
-  // Doom uses 8 angle sprites, with 0 being east, 45 northeast, etc.
-  char angle_char;
-  int angle_index = ((angle + 22) % 360) / 45;
-  angle_char = 'A' + angle_index;
-  
-  // Format sprite name (typically PREFIX + ANGLE + FRAME, e.g., "TROOA1")
-  snprintf(sprite_name, sizeof(sprite_name), "%s%c1", prefix, angle_char);
-  
-  extern sprite_t* find_sprite(const char* name);
-  sprite_t* sprite = find_sprite(sprite_name);
-  if(sprite) return sprite;
-
-  snprintf(sprite_name, sizeof(sprite_name), "%sA0", prefix);
-  sprite = find_sprite(sprite_name);
-  if(sprite) return sprite;
+  if (s) {
+    // Determine angle frame (A-H based on 45-degree increments)
+    // Doom uses 8 angle sprites, with 0 being east, 45 northeast, etc.
+    char angle_char;
+    int angle_index = ((angle + 22) % 360) / 45;
+    angle_char = 'A' + angle_index;
+    
+    // Format sprite name (typically PREFIX + ANGLE + FRAME, e.g., "TROOA1")
+    snprintf(sprite_name, sizeof(sprite_name), "%s%c1", prefix, angle_char);
+    
+    extern sprite_t* find_sprite(const char* name);
+    sprite_t* sprite = find_sprite(sprite_name);
+    s->cache = sprite;
+    if(sprite) return sprite;
+    
+    snprintf(sprite_name, sizeof(sprite_name), "%sA0", prefix);
+    sprite = find_sprite(sprite_name);
+    s->cache = sprite;
+    if(sprite) return sprite;
+  }
   
   static sprite_t emtpy = {
     .width = 8,
     .height = 8,
     .texture = 1,
   };
+  
+  if (s) s->cache = &emtpy;
 
   return &emtpy;
 }
