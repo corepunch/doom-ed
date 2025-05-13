@@ -427,7 +427,7 @@ void goto_map(const char *mapname);
 bool init_wad(const char *filename);
 void shutdown_wad(void);
 
-void draw_panel(int x, int y, int w, int h);
+void draw_panel(int x, int y, int w, int h, bool active);
 void draw_windows(bool rich);
 void handle_windows(void);
 

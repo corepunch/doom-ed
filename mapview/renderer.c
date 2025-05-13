@@ -67,7 +67,7 @@ GLuint compile(GLenum type, const char* src) {
 
 // Global variables
 GLuint world_prog, ui_prog;
-GLuint white_tex, black_tex, selection_tex, no_tex;
+GLuint white_tex, black_tex, selection_tex, no_tex, wallpaper_tex;
 
 int world_prog_mvp;
 int world_prog_viewPos;
@@ -93,6 +93,19 @@ palette_entry_t *palette;
 void init_floor_shader(void);
 void init_sky_geometry(void);
 bool init_radial_menu(void);
+
+#define TEX_W 64
+#define TEX_H 64
+
+unsigned char* generate_xor_pattern(void) {
+  unsigned char* data = malloc(TEX_W * TEX_H);
+  for (int y = 0; y < TEX_H; ++y) {
+    for (int x = 0; x < TEX_W; ++x) {
+      data[y * TEX_W + x] = (x ^ y) & 0xFF;  // 0–255 pattern
+    }
+  }
+  return data;
+}
 
 // Initialize SDL and create window/renderer
 bool init_sdl(void) {
@@ -201,6 +214,26 @@ bool init_sdl(void) {
   glBindTexture(GL_TEXTURE_2D, no_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xffffff00});
 
+  unsigned char* texdata = generate_xor_pattern();
+  
+  glGenTextures(1, &wallpaper_tex);
+  glBindTexture(GL_TEXTURE_2D, wallpaper_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, TEX_W, TEX_H, 0, GL_RED, GL_UNSIGNED_BYTE, texdata);
+  
+  // Swizzle red to all channels
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
+  
+  // Filtering + wrap
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  
+  free(texdata);
+  
   init_floor_shader();
     
   init_editor(&editor);
@@ -223,11 +256,42 @@ void cleanup(void) {
   SDL_Quit();
 }
 
+void draw_wallpaper(void) {
+  void set_projection(int w, int h);
+  
+  glDepthMask(GL_FALSE);
+
+  mat4 projection;
+  wall_vertex_t verts[4] = {
+    { screen_width, 0, 0, screen_width, 0, 0, 0, 0, -1 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, -1 },
+    { 0, screen_height, 0, 0, screen_height, 0, 0, 0, -1 },
+    { screen_width, screen_height, 0, screen_width, screen_height, 0, 0, 0, -1 },
+  };
+  glm_ortho(0, screen_width, screen_height, 0, -1, 1, projection);
+
+  glUseProgram(ui_prog);
+  glBindTexture(GL_TEXTURE_2D, wallpaper_tex);
+  glUniform1i(ui_prog_tex0, 0);
+  glUniform2f(ui_prog_tex0_size, TEX_W, TEX_H);
+  glUniform4f(ui_prog_color, 1, 1, 1, 1);
+  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, projection[0]);
+  glBindVertexArray(editor.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor.vbo);
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+//  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Color
+  glDisableVertexAttribArray(3);
+  glVertexAttrib4f(3, 0, 0, 0, 0);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
 // Main function
 int run(void) {
-  
   // Main game loop
   Uint32 last_time = SDL_GetTicks();
+
+  draw_wallpaper();
   
   while (running) {
     mode = false;

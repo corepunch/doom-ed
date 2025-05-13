@@ -46,9 +46,15 @@ struct {
   msg_t messages[0x100];
 } queue = {0};
 
-void draw_panel(int x, int y, int w, int h) {
-  fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
-  fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
+void draw_wallpaper(void);
+
+void draw_panel(int x, int y, int w, int h, bool active) {
+  if (active) {
+    fill_rect(COLOR_FOCUSED, x-1, y-1, w+2, h+2);
+  } else {
+    fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
+    fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
+  }
   fill_rect(COLOR_LIGHT_EDGE, x+w-RESIZE_HANDLE+1, y+h-RESIZE_HANDLE+1, RESIZE_HANDLE, RESIZE_HANDLE);
   fill_rect(COLOR_PANEL_BG, x, y, w, h);
 }
@@ -56,6 +62,44 @@ void draw_panel(int x, int y, int w, int h) {
 void invalidate_window(window_t *win) {
   post_message(win, MSG_NCPAINT, 0, NULL);
   post_message(win, MSG_PAINT, 0, NULL);
+}
+
+void set_viewport(window_t const *win) {
+  extern SDL_Window *window;
+  int w, h;
+  SDL_GL_GetDrawableSize(window, &w, &h);
+  
+  float scale_x = (float)w / screen_width;
+  float scale_y = (float)h / screen_height;
+  
+  int vp_x = (int)(win->x * scale_x);
+  int vp_y = (int)((screen_height - win->y - win->h) * scale_y); // flip Y
+  int vp_w = (int)(win->w * scale_x);
+  int vp_h = (int)(win->h * scale_y);
+  
+  glEnable(GL_SCISSOR_TEST);
+  glViewport(vp_x, vp_y, vp_w, vp_h);
+  glScissor(vp_x, vp_y, vp_w, vp_h);
+}
+
+static void paint_stencil(uint8_t id) {
+  set_viewport(&(window_t){0, 0, screen_width, screen_height});
+  set_projection(screen_width, screen_height);
+  
+  glClearStencil(0);
+  glClear(GL_STENCIL_BUFFER_BIT);
+  glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+  glEnable(GL_STENCIL_TEST);
+  for (window_t const *w = windows; w; w = w->next) {
+    glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
+    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
+    int p = 1;
+    int t = TITLEBAR_HEIGHT;
+    draw_rect(1, w->x-p, w->y-t-p, w->w+p*2, w->h+t+p*2); // Just draw shape geometry
+  }
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  glStencilFunc(GL_EQUAL, id, 0xFF);
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 }
 
 static uint8_t _id;
@@ -81,24 +125,6 @@ void create_window(int x, int y, int w, int h, char const *title, uint32_t flags
   active = win;
   proc(win, MSG_CREATE, 0, lparam);
   invalidate_window(win);
-}
-
-void set_viewport(window_t const *win) {
-  extern SDL_Window *window;
-  int w, h;
-  SDL_GL_GetDrawableSize(window, &w, &h);
-
-  float scale_x = (float)w / screen_width;
-  float scale_y = (float)h / screen_height;
-  
-  int vp_x = (int)(win->x * scale_x);
-  int vp_y = (int)((screen_height - win->y - win->h) * scale_y); // flip Y
-  int vp_w = (int)(win->w * scale_x);
-  int vp_h = (int)(win->h * scale_y);
-  
-  glEnable(GL_SCISSOR_TEST);
-  glViewport(vp_x, vp_y, vp_w, vp_h);
-  glScissor(vp_x, vp_y, vp_w, vp_h);
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
@@ -161,6 +187,10 @@ bool do_windows_overlap(const window_t *a, const window_t *b) {
 void move_window(window_t *win, int x, int y) {
   win->x = x;
   win->y = y;
+  
+  paint_stencil(0);
+  draw_wallpaper();
+  glDisable(GL_STENCIL_TEST);
   
   for (window_t *t = windows; t; t = t->next) {
     if (t != win && do_windows_overlap(t, win)) {
@@ -289,35 +319,12 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (win) {
     switch (msg) {
       case MSG_NCPAINT:
-        set_viewport(&(window_t){0, 0, screen_width, screen_height});
-        set_projection(screen_width, screen_height);
+        paint_stencil(win->id);
+//        set_viewport(&(window_t){0, 0, screen_width, screen_height});
+//        set_projection(screen_width, screen_height);
         break;
       case MSG_PAINT:
-        set_viewport(&(window_t){0, 0, screen_width, screen_height});
-        set_projection(screen_width, screen_height);
-
-        glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-        
-        // Enable stencil
-        glEnable(GL_STENCIL_TEST);
-        
-        // Each window writes a unique value (window ID) into stencil
-        // In this case: draw all windows before #14 and including #14
-        // Start with bottom-most (e.g., window #1 to window #14)
-        for (window_t const *w = windows; w; w = w->next) {
-          glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
-          glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
-          int p = active == w ? 2 : 1;
-          int t = TITLEBAR_HEIGHT;
-          draw_rect(1, w->x-p, w->y-t-p, w->w+p*2, w->h+t+p*2); // Just draw shape geometry
-        }
-        
-        glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-        
-        // Only draw where stencil == id
-        glStencilFunc(GL_EQUAL, win->id, 0xFF);
-        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP); // Don't modify stencil
-        
+        paint_stencil(win->id);
         set_viewport(win);
         set_projection(win->w, win->h);
         break;
@@ -326,10 +333,7 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       switch (msg) {
         case MSG_NCPAINT:
           if (!(win->flags&WINDOW_TRANSPARENT)) {
-            if (active == win) {
-              fill_rect(COLOR_FOCUSED, win->x-2, win->y-TITLEBAR_HEIGHT-2, win->w+4, win->h+TITLEBAR_HEIGHT+4);
-            }
-            draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT);
+            draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT, active == win);
           }
           if (!(win->flags&WINDOW_NOTITLE)) {
             fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);

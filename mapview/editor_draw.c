@@ -257,8 +257,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
 //  get_view_matrix(map, player, mvp);
   
   // Clear the screen to black
-  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+//  glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+//  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 //  void draw_minimap(map_data_t const *map, player_t const *player);
 //  draw_minimap(map, player);
 //  glBindVertexArray(map->walls.vao);
