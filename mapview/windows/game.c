@@ -37,7 +37,7 @@ void init_player(map_data_t const *map, player_t *player) {
   }
   
   create_window(0, 0, 128, 64, "FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_perf, NULL);
-  create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
+//  create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
   //  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
   extern editor_state_t editor;
   create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
@@ -96,7 +96,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, float aspect
   
   // Create projection matrix
   mat4 proj;
-  glm_perspective(glm_rad(90.0f), aspect, 1.0f, 2000.0f, proj);
+  glm_perspective(glm_rad(PLAYER_FOV), aspect, 1.0f, 2000.0f, proj);
   
   // Create view matrix
   mat4 view;
@@ -167,6 +167,12 @@ read_center_pixel(window_t const *win,
   glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
 }
 
+//float verticalToHorizontalFOV(float verticalFOV_deg, float aspectRatio) {
+//  float verticalFOV_rad = verticalFOV_deg * (M_PI / 180.0f); // degrees to radians
+//  float horizontalFOV_rad = 2.0f * atanf(tanf(verticalFOV_rad / 2.0f) * aspectRatio);
+//  return horizontalFOV_rad * (180.0f / M_PI); // radians to degrees
+//}
+
 void draw_dungeon(window_t const *win) {
   void draw_minimap(map_data_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
@@ -187,8 +193,10 @@ void draw_dungeon(window_t const *win) {
   viewdef.frame = frame++;
   glm_frustum_planes(mvp, viewdef.frustum);
   
-  read_center_pixel(win, map, sector, &viewdef);
+//  read_center_pixel(win, map, sector, &viewdef);
   
+  glDepthMask(GL_TRUE);
+  glEnable(GL_DEPTH_TEST);
   glClear(/*GL_COLOR_BUFFER_BIT|*/GL_DEPTH_BUFFER_BIT);
   
   draw_sky(map, player, mvp);
@@ -198,7 +206,18 @@ void draw_dungeon(window_t const *win) {
   
   extern int sectors_drawn;
   sectors_drawn = 0;
-  
+//  
+//  float angle_rad1 = glm_rad(player->angle - verticalToHorizontalFOV(PLAYER_FOV,(float)win->w/(float)win->h)/2);
+//  float angle_rad2 = glm_rad(player->angle + verticalToHorizontalFOV(PLAYER_FOV,(float)win->w/(float)win->h)/2);
+//
+//  player->points[0][0] = -100 * cos(angle_rad1);
+//  player->points[0][1] =  100 * sin(angle_rad1);
+//  player->points[1][0] = -100 * cos(angle_rad2);
+//  player->points[1][1] =  100 * sin(angle_rad2);
+//  
+//  memcpy(player->points2, player->points, sizeof(player->points));
+
+  viewdef.player = *player;
   viewdef.frame = frame++;
   
 //  draw_bsp(&game.map, &viewdef);

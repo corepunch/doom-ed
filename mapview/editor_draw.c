@@ -272,7 +272,7 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
 
   void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate);
 
-  viewdef_t viewdef={.nowalls=true,.frame=frame++};
+  viewdef_t viewdef={.frame=frame++};
   memcpy(viewdef.mvp, mvp, sizeof(mat4));
   memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
   viewdef.viewpos[2] = -100000;
@@ -332,6 +332,12 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
       splitting_line = i;
     }
   }
+  
+  static int s = -1;
+  if (s!=splitting_line) {
+    printf("%d\n", splitting_line);
+    s =splitting_line;
+  }
 
   for (int i = 0; i < map->num_vertices; i++) {
     float dx = world[0] - map->vertices[i].x;
@@ -386,16 +392,23 @@ draw_player:
   
   glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 0.5f);
   
-  float angle_rad = player->angle * M_PI / 180.0;
+  float angle_rad = glm_rad(player->angle);
   float input_x = -50 * cos(angle_rad);
   float input_y =  50 * sin(angle_rad);
 
   wall_vertex_t verts[2] = { { player->x, player->y }, { player->x+input_x, player->y+input_y } };
+
+//  wall_vertex_t verts[3] = {
+//    { player->x + player->points[1][0], player->y + player->points[1][1] },
+//    { player->x, player->y },
+//    { player->x + player->points[0][0], player->y + player->points[0][1] },
+//  };
+
   glBindTexture(GL_TEXTURE_2D, white_tex);
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
   glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
-  glDrawArrays(GL_LINES, 0, 2);
+  glDrawArrays(GL_LINE_STRIP, 0, 2);
   glPointSize(4);
-  glDrawArrays(GL_POINTS, 0, 1);
+  glDrawArrays(GL_POINTS, 1, 1);
 }

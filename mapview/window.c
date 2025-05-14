@@ -48,6 +48,12 @@ struct {
 
 void draw_wallpaper(void);
 
+void draw_button(int x, int y, int w, int h, bool pressed) {
+  fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
+  fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
+  fill_rect(COLOR_PANEL_BG, x, y, w, h);
+}
+
 void draw_panel(int x, int y, int w, int h, bool active) {
   if (active) {
     fill_rect(COLOR_FOCUSED, x-1, y-1, w+2, h+2);
@@ -140,12 +146,15 @@ window_t *find_window(int x, int y) {
   return last;
 }
 
-static void move_to_top(window_t* win) {
+static void active_window(window_t* win) {
   if (active) {
     invalidate_window(active);
   }
-
   active = win;
+  invalidate_window(win);
+}
+
+static void move_to_top(window_t* win) {
   invalidate_window(win);
   
   window_t **head = &windows, *p = NULL, *n = *head;
@@ -185,19 +194,18 @@ bool do_windows_overlap(const window_t *a, const window_t *b) {
 }
 
 void move_window(window_t *win, int x, int y) {
+  for (window_t *t = windows; t; t = t->next) {
+    if (t != win && do_windows_overlap(t, win)) {
+      invalidate_window(t);
+    }
+  }
   win->x = x;
   win->y = y;
   
   paint_stencil(0);
   draw_wallpaper();
   glDisable(GL_STENCIL_TEST);
-  
-  for (window_t *t = windows; t; t = t->next) {
-    if (t != win && do_windows_overlap(t, win)) {
-      invalidate_window(t);
-    }
-  }
-  
+
   invalidate_window(win);
 }
 
@@ -259,6 +267,7 @@ void handle_windows(void) {
         
       case SDL_MOUSEBUTTONDOWN:
         if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
+          move_to_top(win);
           int x = SCALE_POINT(event.button.x) - win->x;
           int y = SCALE_POINT(event.button.y) - win->y;
           if (x >= win->w - RESIZE_HANDLE && y >= win->h - RESIZE_HANDLE) {
@@ -278,14 +287,14 @@ void handle_windows(void) {
         
       case SDL_MOUSEBUTTONUP:
         if (dragging) {
-          move_to_top(dragging);
+          active_window(dragging);
           dragging = NULL;
         } else if (resizing) {
-          move_to_top(resizing);
+          active_window(resizing);
           resizing = NULL;
         } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
           if (win != active) {
-            move_to_top(win);
+            active_window(win);
           } else if (SCALE_POINT(event.button.y) >= win->y) {
             int x = SCALE_POINT(event.button.x) - win->x;
             int y = SCALE_POINT(event.button.y) - win->y;
@@ -304,16 +313,16 @@ void handle_windows(void) {
   }
 }
 
-//void draw_windows(bool rich) {
-//  for (window_t *win = windows; win; win = win->next) {
-//    if ((win->flags & WINDOW_RICH) && !rich) {
-//      continue;
-//    }
-//    invalidate_window(win);
-//  }
-//  set_viewport(&(window_t){0, 0, screen_width, screen_height});
-//  set_projection(screen_width, screen_height);
-//}
+void draw_windows(bool rich) {
+  for (window_t *win = windows; win; win = win->next) {
+    if ((win->flags & WINDOW_RICH) && !rich) {
+      continue;
+    }
+    invalidate_window(win);
+  }
+  set_viewport(&(window_t){0, 0, screen_width, screen_height});
+  set_projection(screen_width, screen_height);
+}
 
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (win) {
@@ -338,8 +347,18 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           if (!(win->flags&WINDOW_NOTITLE)) {
             fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
             //      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
-            draw_text_gl3(win->title, win->x+4, win->y+1-TITLEBAR_HEIGHT, 1);
+            draw_text_gl3(win->title, win->x+4+10, win->y+1-TITLEBAR_HEIGHT, 1);
           }
+        {
+                  set_viewport(&(window_t){0, 0, screen_width, screen_height});
+                  set_projection(screen_width, screen_height);
+          extern int icon_tex, icon2_tex, icon3_tex;
+//          draw_button(win->x+win->w-11, win->y-TITLEBAR_HEIGHT+1, 10, 10, false);
+//          draw_button(win->x+win->w-11-12, win->y-TITLEBAR_HEIGHT+1, 10, 10, false);
+          draw_rect(icon3_tex, win->x+2, win->y+2-TITLEBAR_HEIGHT, 8, 8);
+          draw_rect(icon_tex, win->x+win->w-9, win->y+2-TITLEBAR_HEIGHT, 8, 8);
+          draw_rect(icon2_tex, win->x+win->w-9-12, win->y+2-TITLEBAR_HEIGHT, 8, 8);
+        }
           break;
       }
     }

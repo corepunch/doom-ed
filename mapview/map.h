@@ -46,6 +46,8 @@ if ((map)->name) free((map)->name); \
 #define VGA_WIDTH 320
 #define VGA_HEGHT 200
 
+#define PLAYER_FOV 90
+
 #define sensitivity_x 0.075f // Adjust sensitivity as needed
 #define sensitivity_y 0.125f // Adjust sensitivity as needed
 
@@ -148,6 +150,8 @@ typedef struct {
   int mouse_y_rel;
   float forward_move;
   float strafe_move;
+//  float points[2][2];
+//  float points2[2][2];
 } player_t;
 
 // Vertex structure for our buffer (xyzuv)
@@ -276,6 +280,7 @@ typedef struct {
   wall_section_t upper_section;
   wall_section_t lower_section;
   wall_section_t mid_section;
+//  uint32_t frame;
 } mapsidedef2_t;
 
 typedef struct {
@@ -330,8 +335,9 @@ typedef struct {
   mat4 mvp;
   vec4 frustum[6];
   vec3 viewpos;
+  player_t player;
   uint32_t frame;
-  bool nowalls;
+  uint16_t portal;
 } viewdef_t;
 
 // Collection to store loaded textures

@@ -9,6 +9,8 @@
 #include "console.h"
 #include "editor.h"
 
+#define WALLPAPER_SIZE 64
+
 const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
 "in vec2 uv;\n"
@@ -65,9 +67,11 @@ GLuint compile(GLenum type, const char* src) {
   return s;
 }
 
+GLuint make_1bit_tex(void *data, int width, int height);
+
 // Global variables
 GLuint world_prog, ui_prog;
-GLuint white_tex, black_tex, selection_tex, no_tex, wallpaper_tex;
+GLuint white_tex, black_tex, selection_tex, no_tex, wallpaper_tex, icon_tex, icon2_tex, icon3_tex;
 
 int world_prog_mvp;
 int world_prog_viewPos;
@@ -94,14 +98,11 @@ void init_floor_shader(void);
 void init_sky_geometry(void);
 bool init_radial_menu(void);
 
-#define TEX_W 64
-#define TEX_H 64
-
 unsigned char* generate_xor_pattern(void) {
-  unsigned char* data = malloc(TEX_W * TEX_H);
-  for (int y = 0; y < TEX_H; ++y) {
-    for (int x = 0; x < TEX_W; ++x) {
-      data[y * TEX_W + x] = (x ^ y) & 0xFF;  // 0–255 pattern
+  unsigned char* data = malloc(WALLPAPER_SIZE * WALLPAPER_SIZE);
+  for (int y = 0; y < WALLPAPER_SIZE; ++y) {
+    for (int x = 0; x < WALLPAPER_SIZE; ++x) {
+      data[y * WALLPAPER_SIZE + x] = (x ^ y) & 0xFF;  // 0–255 pattern
     }
   }
   return data;
@@ -218,7 +219,7 @@ bool init_sdl(void) {
   
   glGenTextures(1, &wallpaper_tex);
   glBindTexture(GL_TEXTURE_2D, wallpaper_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, TEX_W, TEX_H, 0, GL_RED, GL_UNSIGNED_BYTE, texdata);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WALLPAPER_SIZE, WALLPAPER_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, texdata);
   
   // Swizzle red to all channels
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
@@ -233,7 +234,41 @@ bool init_sdl(void) {
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
   
   free(texdata);
-  
+
+  uint8_t icon2a[8] = {
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b01111110,
+    0b01111110,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+  };
+  uint8_t icon[8] = {
+    0b00000000,
+    0b00000000,
+    0b00010000,
+    0b00111000,
+    0b01111100,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+  };
+  uint8_t icon2[8] = {
+    0b00000000,
+    0b00000000,
+    0b01111100,
+    0b00111000,
+    0b00010000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+  };
+  icon_tex = make_1bit_tex(icon, 8, 8);
+  icon2_tex = make_1bit_tex(icon2, 8, 8);
+  icon3_tex = make_1bit_tex(icon2a, 8, 8);
+
   init_floor_shader();
     
   init_editor(&editor);
@@ -273,14 +308,13 @@ void draw_wallpaper(void) {
   glUseProgram(ui_prog);
   glBindTexture(GL_TEXTURE_2D, wallpaper_tex);
   glUniform1i(ui_prog_tex0, 0);
-  glUniform2f(ui_prog_tex0_size, TEX_W, TEX_H);
+  glUniform2f(ui_prog_tex0_size, WALLPAPER_SIZE, WALLPAPER_SIZE);
   glUniform4f(ui_prog_color, 1, 1, 1, 1);
   glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, projection[0]);
   glBindVertexArray(editor.vao);
   glBindBuffer(GL_ARRAY_BUFFER, editor.vbo);
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-//  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Color
   glDisableVertexAttribArray(3);
   glVertexAttrib4f(3, 0, 0, 0, 0);
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
@@ -300,8 +334,8 @@ int run(void) {
     float delta_time = (current_time - last_time) / 1000.0f;
     last_time = current_time;
 
-//    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     void game_tick(float);
     void draw_intermission(void);
@@ -311,7 +345,7 @@ int run(void) {
       case GS_DUNGEON:
         game_tick(delta_time);
         handle_windows();
-//        draw_windows(!SDL_GetRelativeMouseMode());
+        draw_windows(!SDL_GetRelativeMouseMode());
         break;
       case GS_EDITOR:
         handle_editor_input(&game.map, &editor, &game.player, delta_time);
