@@ -200,8 +200,6 @@ void build_floor_vertex_buffer(map_data_t *map) {
   }
     
   for (int i = 0; i < map->num_sectors; i++) {
-    
-    
     // Collect all vertices for this sector
     mapvertex_t sector_vertices[MAX_VERTICES]; // Assuming max MAX_VERTICES vertices per sector
     int num_vertices = get_sector_vertices(map, i, sector_vertices);
@@ -263,6 +261,14 @@ void build_floor_vertex_buffer(map_data_t *map) {
 
 int sectors_drawn = 0;
 
+void draw_walls(map_data_t const *map,
+                mapsector_t const *sector,
+                viewdef_t const *viewdef);
+
+void draw_wall_ids(map_data_t const *map,
+                   mapsector_t const *sector,
+                   viewdef_t const *viewdef);
+
 void draw_portals(map_data_t const *map,
                   mapsector_t const *sector,
                   viewdef_t const *viewdef,
@@ -270,6 +276,7 @@ void draw_portals(map_data_t const *map,
                               mapsector_t const *,
                               viewdef_t const *))
 {
+  
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t const *linedef = &map->linedefs[i];
     mapvertex_t const *a = &map->vertices[linedef->start];
@@ -278,8 +285,7 @@ void draw_portals(map_data_t const *map,
       continue;
     for (int j = 0; j < 2; j++) {
       if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors &&
-          (viewdef->nowalls ||
-           linedef_in_frustum_2d(viewdef->frustum,
+          (linedef_in_frustum_2d(viewdef->frustum,
                                 (vec3){a->x,a->y,sector->floorheight},
                                 (vec3){b->x,b->y,sector->floorheight}) ||
            linedef_in_frustum_2d(viewdef->frustum,
@@ -292,13 +298,88 @@ void draw_portals(map_data_t const *map,
   }
 }
 
-void draw_walls(map_data_t const *map,
-                mapsector_t const *sector,
-                viewdef_t const *viewdef);
+#if 0
 
-void draw_wall_ids(map_data_t const *map,
-                   mapsector_t const *sector,
-                   viewdef_t const *viewdef);
+void draw_portals(map_data_t const *map,
+                  mapsector_t const *sector,
+                  viewdef_t const *viewdef,
+                  void(*func)(map_data_t const *,
+                              mapsector_t const *,
+                              viewdef_t const *))
+{
+  vec2 eye = { viewdef->player.x, viewdef->player.y };
+//  vec2 dir, forward;
+  vec2 left = { viewdef->player.points[0][0], viewdef->player.points[0][1] };
+  vec2 right = { viewdef->player.points[1][0], viewdef->player.points[1][1] };
+  
+  vec2 left2 = { viewdef->player.points2[0][0], viewdef->player.points2[0][1] };
+  vec2 right2 = { viewdef->player.points2[1][0], viewdef->player.points2[1][1] };
+
+//  glm_vec2_add(left, right, dir);
+//  glm_vec2_scale(dir, 0.5f, dir);
+//  glm_vec2_sub(dir, eye, dir);
+//  if (glm_vec2_norm(dir) == 0.0f)
+//    return;
+//  glm_vec2_normalize_to(dir, forward);
+
+  for (int i = 0; i < map->num_linedefs; i++) {
+    maplinedef_t const *ld = &map->linedefs[i];
+    if (ld->sidenum[0] == 0xFFFF || ld->sidenum[1] == 0xFFFF)
+      continue;
+    
+    for (int j = 0; j < 2; j++) {
+      if (map->sidedefs[ld->sidenum[j]].sector != (int)(sector - map->sectors))
+        continue;
+      if (map->walls.sections[ld->sidenum[!j]].frame == viewdef->frame)
+        continue;
+      vec2 a = { map->vertices[ld->start].x, map->vertices[ld->start].y };
+      vec2 b = { map->vertices[ld->end].x,   map->vertices[ld->end].y };
+      vec2 ab, lr, new_left, new_right;
+
+      glm_vec2_sub(a, b, ab);
+      glm_vec2_sub(left, right, lr);
+
+      if (glm_vec2_dot(ab, lr) < 0) {
+        vec2 tmp;
+        glm_vec2_copy(a, tmp);
+        glm_vec2_copy(b, a);
+        glm_vec2_copy(tmp, b);
+      }
+
+      // Frustum clipping: calculate intersection points (if any)
+      glm_vec2_sub(a, eye, new_left);
+      glm_vec2_sub(b, eye, new_right);
+
+      // Check if linedef is in front of eye using signed area (triangle winding)
+      if (glm_vec2_cross(new_left, right) > 0 ||
+          glm_vec2_cross(new_right, left) < 0)
+        continue;
+      
+      if (glm_vec2_cross(new_left, left2) < 0) {
+        glm_vec2_copy(left2, new_left);
+      }
+      
+      if (glm_vec2_cross(new_right, right2) > 0) {
+        glm_vec2_copy(right2, new_right);
+      }
+      
+      if (glm_vec2_eqv_eps(new_left, new_right)) {
+        continue;
+      }
+      
+      // Prepare recursive view
+      viewdef_t subview = *viewdef;
+      subview.portal = i;
+      glm_vec2_copy(new_left, subview.player.points[0]);
+      glm_vec2_copy(new_right, subview.player.points[1]);
+      
+      map->walls.sections[ld->sidenum[!j]].frame = viewdef->frame;
+
+      func(map, &map->sectors[map->sidedefs[ld->sidenum[!j]].sector], &subview);
+    }
+  }
+}
+#endif
 
 // Main function to draw floors and ceilings
 void draw_floors(map_data_t const *map,
@@ -314,17 +395,15 @@ void draw_floors(map_data_t const *map,
   }
   if (map->floors.sectors[sector-map->sectors].frame == viewdef->frame)
     return;
-  
-  if (!viewdef->nowalls) {
-    sectors_drawn++;
-  }
-  
+
+  sectors_drawn++;
+    
   glBindVertexArray(map->floors.vao);
   
   // Set MVP matrix uniform
-  glUniformMatrix4fv(glGetUniformLocation(world_prog, "mvp"), 1, GL_FALSE, viewdef->mvp[0]);
-  glUniform3fv(glGetUniformLocation(world_prog, "viewPos"), 1, viewdef->viewpos);
-
+  glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, viewdef->mvp[0]);
+  glUniform3fv(world_prog_viewPos, 1, viewdef->viewpos);
+  
   mapsector2_t *sec = &map->floors.sectors[sector-map->sectors];
   sec->frame = viewdef->frame;
   
@@ -333,23 +412,21 @@ void draw_floors(map_data_t const *map,
   
   extern int pixel;
   glCullFace(GL_BACK);
-//  if (CHECK_PIXEL(pixel, FLOOR, sector - map->sectors)) {
-//    draw_textured_surface(&sec->floor, HIGHLIGHT(light), GL_TRIANGLES);
-//  } else {
-    draw_textured_surface(&sec->floor, light, GL_TRIANGLES);
-//  }
+  //  if (CHECK_PIXEL(pixel, FLOOR, sector - map->sectors)) {
+  //    draw_textured_surface(&sec->floor, HIGHLIGHT(light), GL_TRIANGLES);
+  //  } else {
+  draw_textured_surface(&sec->floor, light, GL_TRIANGLES);
+  //  }
   glCullFace(GL_FRONT);
-//  if (CHECK_PIXEL(pixel, CEILING, sector - map->sectors)) {
-//    draw_textured_surface(&sec->ceiling, HIGHLIGHT(light), GL_TRIANGLES);
-//  } else {
-    draw_textured_surface(&sec->ceiling, light, GL_TRIANGLES);
-//  }
+  //  if (CHECK_PIXEL(pixel, CEILING, sector - map->sectors)) {
+  //    draw_textured_surface(&sec->ceiling, HIGHLIGHT(light), GL_TRIANGLES);
+  //  } else {
+  draw_textured_surface(&sec->ceiling, light, GL_TRIANGLES);
+  //  }
   glCullFace(GL_BACK);
-
-  if (!viewdef->nowalls) {
-    draw_walls(map, sector, viewdef);
-  }
   
+  draw_walls(map, sector, viewdef);
+
   draw_portals(map, sector, viewdef, draw_floors);
 }
 
@@ -371,19 +448,19 @@ draw_floor_ids(map_data_t const *map,
   uint32_t i = (uint32_t)(sector - map->sectors);
   mapsector2_t *sec = &map->floors.sectors[sector-map->sectors];
   sec->frame = viewdef->frame;
-
+  
   glBindVertexArray(map->floors.vao);
-
+  
   glCullFace(GL_BACK);
   draw_textured_surface_id(&sec->floor, i | PIXEL_FLOOR, GL_TRIANGLES);
-
+  
   glCullFace(GL_FRONT);
   draw_textured_surface_id(&sec->ceiling, i | PIXEL_CEILING, GL_TRIANGLES);
   
   // Reset texture binding
   glCullFace(GL_BACK);
   glBindTexture(GL_TEXTURE_2D, 0);
-
+  
   draw_wall_ids(map, sector, viewdef);
 
   draw_portals(map, sector, viewdef, draw_floor_ids);

@@ -9,6 +9,8 @@
 #include "console.h"
 #include "editor.h"
 
+#define WALLPAPER_SIZE 64
+
 const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
 "in vec2 uv;\n"
@@ -65,9 +67,22 @@ GLuint compile(GLenum type, const char* src) {
   return s;
 }
 
+GLuint make_1bit_tex(void *data, int width, int height);
+
 // Global variables
 GLuint world_prog, ui_prog;
-GLuint white_tex, black_tex, selection_tex, no_tex;
+GLuint white_tex, black_tex, selection_tex, no_tex, wallpaper_tex, icon_tex, icon2_tex, icon3_tex;
+
+int world_prog_mvp;
+int world_prog_viewPos;
+int world_prog_tex0_size;
+int world_prog_tex0;
+int world_prog_light;
+
+int ui_prog_mvp;
+int ui_prog_tex0_size;
+int ui_prog_tex0;
+int ui_prog_color;
 
 editor_state_t editor = {0};
 SDL_Window* window = NULL;
@@ -82,6 +97,16 @@ palette_entry_t *palette;
 void init_floor_shader(void);
 void init_sky_geometry(void);
 bool init_radial_menu(void);
+
+unsigned char* generate_xor_pattern(void) {
+  unsigned char* data = malloc(WALLPAPER_SIZE * WALLPAPER_SIZE);
+  for (int y = 0; y < WALLPAPER_SIZE; ++y) {
+    for (int x = 0; x < WALLPAPER_SIZE; ++x) {
+      data[y * WALLPAPER_SIZE + x] = (x ^ y) & 0xFF;  // 0–255 pattern
+    }
+  }
+  return data;
+}
 
 // Initialize SDL and create window/renderer
 bool init_sdl(void) {
@@ -114,6 +139,8 @@ bool init_sdl(void) {
     printf("No game controller found\n");
   }
   
+  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
   SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
   SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
@@ -134,11 +161,16 @@ bool init_sdl(void) {
   glBindAttribLocation(world_prog, 3, "color");
   glLinkProgram(world_prog);
   glUseProgram(world_prog);
-  glUniform1i(glGetUniformLocation(world_prog, "tex0"), 0);
+  glUniform1i(world_prog_tex0, 0);
   glDeleteShader(vs);
   glDeleteShader(fs);
-
   
+  world_prog_mvp = glGetUniformLocation(world_prog, "mvp");
+  world_prog_viewPos = glGetUniformLocation(world_prog, "viewPos");
+  world_prog_tex0_size = glGetUniformLocation(world_prog, "tex0_size");
+  world_prog_tex0 = glGetUniformLocation(world_prog, "tex0");
+  world_prog_light = glGetUniformLocation(world_prog, "light");
+
   vs = compile(GL_VERTEX_SHADER, vs_src);
   fs = compile(GL_FRAGMENT_SHADER, fs_unlit_src);
   ui_prog = glCreateProgram();
@@ -150,9 +182,15 @@ bool init_sdl(void) {
   glBindAttribLocation(ui_prog, 3, "color");
   glLinkProgram(ui_prog);
   glUseProgram(ui_prog);
-  glUniform1i(glGetUniformLocation(ui_prog, "tex0"), 0);
+  glUniform1i(ui_prog_tex0, 0);
   glDeleteShader(vs);
   glDeleteShader(fs);
+  
+  ui_prog_mvp = glGetUniformLocation(ui_prog, "mvp");
+  ui_prog_tex0_size = glGetUniformLocation(ui_prog, "tex0_size");
+  ui_prog_tex0 = glGetUniformLocation(ui_prog, "tex0");
+  ui_prog_color = glGetUniformLocation(ui_prog, "color");
+
 
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);
@@ -177,6 +215,60 @@ bool init_sdl(void) {
   glBindTexture(GL_TEXTURE_2D, no_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xffffff00});
 
+  unsigned char* texdata = generate_xor_pattern();
+  
+  glGenTextures(1, &wallpaper_tex);
+  glBindTexture(GL_TEXTURE_2D, wallpaper_tex);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WALLPAPER_SIZE, WALLPAPER_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, texdata);
+  
+  // Swizzle red to all channels
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
+  
+  // Filtering + wrap
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+  
+  free(texdata);
+
+  uint8_t icon2a[8] = {
+    0b00000000,
+    0b00000000,
+    0b00000000,
+    0b01111110,
+    0b01111110,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+  };
+  uint8_t icon[8] = {
+    0b00000000,
+    0b00000000,
+    0b00010000,
+    0b00111000,
+    0b01111100,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+  };
+  uint8_t icon2[8] = {
+    0b00000000,
+    0b00000000,
+    0b01111100,
+    0b00111000,
+    0b00010000,
+    0b00000000,
+    0b00000000,
+    0b00000000,
+  };
+  icon_tex = make_1bit_tex(icon, 8, 8);
+  icon2_tex = make_1bit_tex(icon2, 8, 8);
+  icon3_tex = make_1bit_tex(icon2a, 8, 8);
+
   init_floor_shader();
     
   init_editor(&editor);
@@ -199,11 +291,41 @@ void cleanup(void) {
   SDL_Quit();
 }
 
+void draw_wallpaper(void) {
+  void set_projection(int w, int h);
+  
+  glDepthMask(GL_FALSE);
+
+  mat4 projection;
+  wall_vertex_t verts[4] = {
+    { screen_width, 0, 0, screen_width, 0, 0, 0, 0, -1 },
+    { 0, 0, 0, 0, 0, 0, 0, 0, -1 },
+    { 0, screen_height, 0, 0, screen_height, 0, 0, 0, -1 },
+    { screen_width, screen_height, 0, screen_width, screen_height, 0, 0, 0, -1 },
+  };
+  glm_ortho(0, screen_width, screen_height, 0, -1, 1, projection);
+
+  glUseProgram(ui_prog);
+  glBindTexture(GL_TEXTURE_2D, wallpaper_tex);
+  glUniform1i(ui_prog_tex0, 0);
+  glUniform2f(ui_prog_tex0_size, WALLPAPER_SIZE, WALLPAPER_SIZE);
+  glUniform4f(ui_prog_color, 1, 1, 1, 1);
+  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, projection[0]);
+  glBindVertexArray(editor.vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor.vbo);
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+  glDisableVertexAttribArray(3);
+  glVertexAttrib4f(3, 0, 0, 0, 0);
+  glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+}
+
 // Main function
 int run(void) {
-  
   // Main game loop
   Uint32 last_time = SDL_GetTicks();
+
+  draw_wallpaper();
   
   while (running) {
     mode = false;
@@ -212,8 +334,8 @@ int run(void) {
     float delta_time = (current_time - last_time) / 1000.0f;
     last_time = current_time;
 
-    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+//    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
+//    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     void game_tick(float);
     void draw_intermission(void);
@@ -223,7 +345,7 @@ int run(void) {
       case GS_DUNGEON:
         game_tick(delta_time);
         handle_windows();
-        draw_windows(!SDL_GetRelativeMouseMode());
+//        draw_windows(!SDL_GetRelativeMouseMode());
         break;
       case GS_EDITOR:
         handle_editor_input(&game.map, &editor, &game.player, delta_time);
