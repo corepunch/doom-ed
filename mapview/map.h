@@ -382,6 +382,7 @@ typedef struct window_s {
 void create_window(int x, int y, int w, int h, char const *title, uint32_t flags, winproc_t proc, void *lparam);
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+void invalidate_window(window_t *win);
 
 extern game_t game;
 

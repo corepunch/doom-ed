@@ -36,7 +36,7 @@ void init_player(map_data_t const *map, player_t *player) {
     }
   }
   
-  create_window(0, 0, 128, 64, "FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_perf, NULL);
+//  create_window(0, 0, 128, 64, "FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_perf, NULL);
 //  create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
   //  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
   extern editor_state_t editor;
@@ -193,7 +193,7 @@ void draw_dungeon(window_t const *win) {
   viewdef.frame = frame++;
   glm_frustum_planes(mvp, viewdef.frustum);
   
-//  read_center_pixel(win, map, sector, &viewdef);
+  read_center_pixel(win, map, sector, &viewdef);
   
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);

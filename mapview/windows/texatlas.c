@@ -376,6 +376,7 @@ bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       if (texture_idx >= 0) {
         memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
       }
+      invalidate_window(win);
       return true;
     }
   }

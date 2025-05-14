@@ -334,8 +334,8 @@ int run(void) {
     float delta_time = (current_time - last_time) / 1000.0f;
     last_time = current_time;
 
-    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
-    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+//    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
+//    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
     void game_tick(float);
     void draw_intermission(void);
@@ -345,7 +345,7 @@ int run(void) {
       case GS_DUNGEON:
         game_tick(delta_time);
         handle_windows();
-        draw_windows(!SDL_GetRelativeMouseMode());
+//        draw_windows(!SDL_GetRelativeMouseMode());
         break;
       case GS_EDITOR:
         handle_editor_input(&game.map, &editor, &game.player, delta_time);
