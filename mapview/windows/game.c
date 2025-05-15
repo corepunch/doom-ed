@@ -20,6 +20,7 @@ bool win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -42,6 +43,7 @@ void init_player(map_data_t const *map, player_t *player) {
   extern editor_state_t editor;
   create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
   create_window(64, 64, 320, 320, "Editor", 0, win_editor, &editor);
+  create_window(96, 96, 128, 256, "Things", 0, win_things, NULL);
 }
 
 void goto_map(const char *mapname) {
@@ -220,7 +222,11 @@ void draw_dungeon(window_t const *win) {
   viewdef.player = *player;
   viewdef.frame = frame++;
   
-//  draw_bsp(&game.map, &viewdef);
+//  void R_ClearClipSegs (int width);
+//  void R_RenderBSPNode (map_data_t *map, int bspnum, viewdef_t *viewdef);
+//  R_ClearClipSegs(screen_width);
+//  
+//  R_RenderBSPNode(&game.map, game.map.num_nodes-1, &viewdef);
   
   draw_floors(map, sector, &viewdef);
   

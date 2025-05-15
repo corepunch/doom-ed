@@ -2,7 +2,7 @@
 
 #define CELL_SIZE 16       // Size of each cell in the mask buffer
 //#define DISPLAY_WIDTH 640  // Width of the display area
-#define DISPLAY_HEIGHT 2000 // Height of the display area
+#define DISPLAY_HEIGHT (4096*2) // Height of the display area
 
 // Cell availability: 0 = free, 1 = occupied
 typedef struct {
@@ -23,7 +23,7 @@ typedef struct {
 } texture_layout_entry_t;
 
 // Result of layout generation
-typedef struct {
+typedef struct texture_layout_s {
   int num_entries;                   // Number of entries
   int display_width;                 // Display width
   int display_height;                // Display height
@@ -118,14 +118,20 @@ int compare_textures_by_area(const void* a, const void* b) {
   return tex_b->area - tex_a->area;
 }
 
+int get_texture_size(int index, void *_texture) {
+  mapside_texture_t* texture = _texture;
+  return MAKEDWORD(texture[index].width, texture[index].height);
+}
+
 // Generate a texture layout for display
 texture_layout_t*
-layout(mapside_texture_t* textures,
-                        int num_textures,
-                        int DISPLAY_WIDTH)
+layout(int num_textures,
+       int layout_width,
+       int (*get_size)(int, void *),
+       void *param)
 {
   // Determine layout dimensions based on cell size
-  int cells_w = DISPLAY_WIDTH / CELL_SIZE;
+  int cells_w = layout_width / CELL_SIZE;
   int cells_h = DISPLAY_HEIGHT / CELL_SIZE;
   
   // Create mask buffer
@@ -138,16 +144,17 @@ layout(mapside_texture_t* textures,
   // Allocate result structure
   texture_layout_t* layout = malloc(sizeof(texture_layout_t)+num_textures * sizeof(texture_layout_entry_t));
   layout->num_entries = 0;
-  layout->display_width = DISPLAY_WIDTH;
+  layout->display_width = layout_width;
   layout->display_height = DISPLAY_HEIGHT;
   
   // Create sorted indices array
   texture_sort_entry_t* sorted_textures = (texture_sort_entry_t*)malloc(num_textures * sizeof(texture_sort_entry_t));
   for (int i = 0; i < num_textures; i++) {
+    int size = get_size(i, param);
     sorted_textures[i].index = i;
-    sorted_textures[i].width = textures[i].width;
-    sorted_textures[i].height = textures[i].height;
-    sorted_textures[i].area = textures[i].width * textures[i].height * textures[i].height;
+    sorted_textures[i].width = LOWORD(size);
+    sorted_textures[i].height = HIWORD(size);
+    sorted_textures[i].area = LOWORD(size) * HIWORD(size) * HIWORD(size);
   }
   
   // Sort textures by width (descending)
@@ -156,20 +163,20 @@ layout(mapside_texture_t* textures,
   // Place each texture in the layout (in sorted order)
   for (int i = 0; i < num_textures; i++) {
     int original_idx = sorted_textures[i].index;
-    mapside_texture_t* tex = &textures[original_idx];
+    int size = get_size(original_idx, param);
     int pos_x, pos_y;
     
     // Try to find space for this texture
-    int cell_w = (tex->width + CELL_SIZE - 1) / CELL_SIZE;
-    int cell_h = (tex->height + CELL_SIZE - 1) / CELL_SIZE;
+    int cell_w = (LOWORD(size)+ CELL_SIZE - 1) / CELL_SIZE;
+    int cell_h = (HIWORD(size) + CELL_SIZE - 1) / CELL_SIZE;
     
-    if (find_texture_position(&mask, tex->width, tex->height, &pos_x, &pos_y)) {
+    if (find_texture_position(&mask, LOWORD(size), HIWORD(size), &pos_x, &pos_y)) {
       // Store entry information
       texture_layout_entry_t* entry = &layout->entries[layout->num_entries++];
       entry->x = pos_x;
       entry->y = pos_y;
-      entry->width = tex->width;
-      entry->height = tex->height;
+      entry->width = LOWORD(size);
+      entry->height = HIWORD(size);
       entry->cell_w = cell_w;
       entry->cell_h = cell_h;
       entry->texture_idx = original_idx;
@@ -198,6 +205,16 @@ void draw_texture_layout(texture_layout_t* layout, mapside_texture_t* textures, 
   }
 }
 
+int get_layout_item(texture_layout_t* layout, int index, int *texutre_index) {
+  if (index >= layout->num_entries) {
+    *texutre_index = -1;
+    return 0;
+  }
+  texture_layout_entry_t* entry = &layout->entries[index];
+  *texutre_index = entry->texture_idx;
+  return MAKEDWORD(entry->x, entry->y);
+}
+
 // Function to draw the layout with a specific texture highlighted
 void draw_texture_layout_with_selection(texture_layout_t* layout,
                                         mapside_texture_t* textures,
@@ -209,7 +226,6 @@ void draw_texture_layout_with_selection(texture_layout_t* layout,
   for (int i = 0; i < layout->num_entries; i++) {
     texture_layout_entry_t* entry = &layout->entries[i];
     mapside_texture_t* tex = &textures[entry->texture_idx];
-    
     // Draw the texture
     draw_rect(tex->texture, entry->x * scale + scroll[0], entry->y * scale + scroll[1], tex->width * scale, tex->height * scale);
     draw_rect_ex(black_tex, entry->x * scale + scroll[0], entry->y * scale + scroll[1], tex->width * scale, tex->height * scale, true);
@@ -349,24 +365,21 @@ bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case MSG_CREATE: {
       window_udata_t *udata = malloc(sizeof(window_udata_t));
       udata->cache = lparam;
-      udata->layout = layout(udata->cache->textures, udata->cache->num_textures, win->w / SCALE);
+      udata->layout = layout(udata->cache->num_textures, win->w / SCALE, get_texture_size, udata->cache->textures);
       win->userdata = udata;
       return true;
     }
     case MSG_RESIZE:
       free(udata->layout);
-      udata->layout = layout(udata->cache->textures, udata->cache->num_textures, win->w / SCALE);
+      udata->layout = layout(udata->cache->num_textures, win->w / SCALE, get_texture_size, udata->cache->textures);
       return true;
     case MSG_PAINT:
-      draw_texture_layout_with_selection(udata->layout,
-                                         udata->cache->textures,
-                                         udata->cache->selected,
-                                         win->scroll,
-                                         SCALE);
+      draw_texture_layout_with_selection(udata->layout, udata->cache->textures, udata->cache->selected, win->scroll, SCALE);
       return true;
     case MSG_WHEEL:
       //      win->scroll[0] = MIN(0, win->scroll[0]+(int16_t)LOWORD(wparam));
       win->scroll[1] = MIN(0, win->scroll[1]+(int16_t)HIWORD(wparam));
+      invalidate_window(win);
       return true;
     case MSG_LBUTTONUP: {
       int texture_idx =

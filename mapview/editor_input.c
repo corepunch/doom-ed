@@ -213,6 +213,11 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case MSG_MOUSEMOVE:
       editor->cursor[0] = LOWORD(wparam);
       editor->cursor[1] = HIWORD(wparam);
+      invalidate_window(win);
+      return true;
+    case MSG_WHEEL:
+      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
+      invalidate_window(win);
       return true;
     case MSG_LBUTTONUP:
       if (editor->dragging) {

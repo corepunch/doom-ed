@@ -198,12 +198,11 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
     
     // Skip player
 #ifdef HEXEN
-    if (thing->type == MT_MAPSPOT) {
+    if (thing->type == MT_MAPSPOT)
 #else
-    if (thing->type == MT_PLAYER) {
+    if (thing->type == MT_PLAYER)
 #endif
       continue;
-    }
     
     // Find the sector this thing is in to get light level
     if (thing->flags == -1) {
@@ -249,6 +248,7 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
       continue;
 
     glm_mat4_mul(viewdef->mvp, model, mv);
+
     glUniformMatrix4fv(glGetUniformLocation(renderer->program, "mvp"), 1, GL_FALSE, (const float*)mv);
     
     // Set scale uniform
@@ -273,6 +273,36 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
   glEnable(GL_CULL_FACE);
 }
 
+sprite_t const *get_thing_sprite(int index, mobjinfo_t const *mobjinfo) {
+  mobjinfo_t const *mobj = &mobjinfo[index];
+  state_t const *state = &states[mobj->spawnstate];
+  const char *name = sprnames[state->sprite];
+  return find_sprite(name);
+}
+
+int get_mobj_size(int index, void *_things) {
+  mobjinfo_t const *mobj = &((mobjinfo_t const *)_things)[index];
+  sprite_t const *sptr = get_thing_sprite(index, _things);
+  if (sptr) {
+    return MAKEDWORD(sptr->width, sptr->height);
+  } else {
+    return 0;
+  }
+}
+
+struct texture_layout_s*
+layout(int num_textures,
+       int layout_width,
+       int (*get_size)(int, void *),
+       void *param);
+
+int
+get_layout_item(struct texture_layout_s* layout,
+                int index,
+                int *texutre_index);
+
+int get_texture_at_point(struct texture_layout_s* layout, int x, int y);
+
 // Cleanup thing rendering resources
 void cleanup_things(void) {
   thing_renderer_t* renderer = &g_thing_renderer;
@@ -280,4 +310,59 @@ void cleanup_things(void) {
   glDeleteProgram(renderer->program);
   glDeleteVertexArrays(1, &renderer->vao);
   glDeleteBuffers(1, &renderer->vbo);
+}
+
+static int num_items = 0;
+static mobjinfo_t ed_objs[NUMMOBJTYPES];
+
+bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  extern mobjinfo_t mobjinfo[NUMMOBJTYPES];
+  extern state_t states[NUMSTATES];
+  extern char *sprnames[NUMSPRITES];
+  switch (msg) {
+    case MSG_CREATE:
+      num_items = 0;
+      for (int i = 0; i < NUMMOBJTYPES; i++) {
+        if (mobjinfo[i].doomednum == -1)
+          continue;
+        ed_objs[num_items++] = mobjinfo[i];
+      }
+      win->userdata = layout(num_items, win->w, get_mobj_size, ed_objs);
+      break;
+    case MSG_PAINT:
+      for (int i = 0; i < num_items; i++) {
+        int mobjindex;
+        int pos = get_layout_item(win->userdata, i, &mobjindex);
+        if (mobjindex == -1) continue;
+        sprite_t const *sptr = get_thing_sprite(mobjindex, ed_objs);
+        if (sptr) {
+          int x = sptr->offsetx + LOWORD(pos) + win->scroll[0];
+          int y = sptr->offsety + HIWORD(pos) + win->scroll[1];
+          draw_sprite(sptr->name, x, y, 1, 1);
+        }
+      }
+      break;
+    case MSG_WHEEL:
+      //      win->scroll[0] = MIN(0, win->scroll[0]+(int16_t)LOWORD(wparam));
+      win->scroll[1] = MIN(0, win->scroll[1]+(int16_t)HIWORD(wparam));
+      invalidate_window(win);
+      return true;
+    case MSG_RESIZE:
+      free(win->userdata);
+      win->userdata = layout(num_items, win->w, get_mobj_size, ed_objs);
+      return true;
+    case MSG_LBUTTONUP: {
+      int texture_idx =
+      get_texture_at_point(win->userdata,
+                           (LOWORD(wparam) - win->scroll[0]),
+                           (HIWORD(wparam) - win->scroll[1]));
+      if (texture_idx >= 0) {
+        printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
+//        memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
+      }
+//      invalidate_window(win);
+      return true;
+    }
+  }
+  return false;
 }

@@ -304,6 +304,15 @@ typedef struct {
   uint8_t b;
 } palette_entry_t;
 
+typedef struct {
+  uint16_t v1;
+  uint16_t v2;
+  uint16_t angle;
+  uint16_t linedef;
+  uint16_t side;
+  uint16_t offset;
+} mapseg_t;
+
 extern palette_entry_t *palette;
 
 // Map data structure using the collection macro
@@ -315,6 +324,7 @@ typedef struct {
   DEFINE_COLLECTION(mapsector_t, sectors);
   DEFINE_COLLECTION(mapnode_t, nodes);
   DEFINE_COLLECTION(mapsubsector_t, subsectors);
+  DEFINE_COLLECTION(mapseg_t, segs);
 
   struct {
     mapsidedef2_t *sections;

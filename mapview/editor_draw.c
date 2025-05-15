@@ -333,11 +333,11 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     }
   }
   
-  static int s = -1;
-  if (s!=splitting_line) {
-    printf("%d\n", splitting_line);
-    s =splitting_line;
-  }
+//  static int s = -1;
+//  if (s!=splitting_line) {
+//    printf("%d\n", splitting_line);
+//    s =splitting_line;
+//  }
 
   for (int i = 0; i < map->num_vertices; i++) {
     float dx = world[0] - map->vertices[i].x;

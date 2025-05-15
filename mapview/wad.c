@@ -146,6 +146,10 @@ map_data_t load_map(const char* map_name) {
     // SECTORS
     map.num_sectors = wad.directory[map_index + ML_SECTORS].size / sizeof(mapsector_t);
     map.sectors = read_lump_data(wad.file, &wad.directory[map_index + ML_SECTORS]);
+    
+    // SEGS
+    map.num_segs = wad.directory[map_index + ML_SEGS].size / sizeof(mapseg_t);
+    map.segs = read_lump_data(wad.file, &wad.directory[map_index + ML_SEGS]);
   }
   
   for (int i = 0; i < map.num_things; i++) {
