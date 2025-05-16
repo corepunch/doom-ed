@@ -156,6 +156,12 @@ typedef struct {
 //  float points2[2][2];
 } player_t;
 
+typedef struct {
+  uint16_t x, y, w, h;
+} rect_t;
+
+#define MAKERECT(X, Y, W, H) (rect_t){X, Y, W, H}
+
 // Vertex structure for our buffer (xyzuv)
 typedef struct {
   int16_t x, y, z;    // Position
@@ -379,9 +385,10 @@ typedef struct {
 
 struct window_s;
 typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
+typedef uint32_t flags_t;
 
 typedef struct window_s {
-  int x, y, w, h;
+  rect_t frame;
   uint8_t id;
   int16_t scroll[2];
   uint32_t flags;
@@ -389,9 +396,10 @@ typedef struct window_s {
   char title[64];
   void *userdata;
   struct window_s *next;
+  struct window_s *children;
 } window_t;
 
-void create_window(int x, int y, int w, int h, char const *title, uint32_t flags, winproc_t proc, void *lparam);
+void create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);

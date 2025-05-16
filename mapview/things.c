@@ -281,7 +281,7 @@ sprite_t const *get_thing_sprite(int index, mobjinfo_t const *mobjinfo) {
 }
 
 int get_mobj_size(int index, void *_things) {
-  mobjinfo_t const *mobj = &((mobjinfo_t const *)_things)[index];
+//  mobjinfo_t const *mobj = &((mobjinfo_t const *)_things)[index];
   sprite_t const *sptr = get_thing_sprite(index, _things);
   if (sptr) {
     return MAKEDWORD(sptr->width, sptr->height);
@@ -327,7 +327,7 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           continue;
         ed_objs[num_items++] = mobjinfo[i];
       }
-      win->userdata = layout(num_items, win->w, get_mobj_size, ed_objs);
+      win->userdata = layout(num_items, win->frame.w, get_mobj_size, ed_objs);
       break;
     case MSG_PAINT:
       for (int i = 0; i < num_items; i++) {
@@ -349,7 +349,7 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return true;
     case MSG_RESIZE:
       free(win->userdata);
-      win->userdata = layout(num_items, win->w, get_mobj_size, ed_objs);
+      win->userdata = layout(num_items, win->frame.w, get_mobj_size, ed_objs);
       return true;
     case MSG_LBUTTONUP: {
       int texture_idx =

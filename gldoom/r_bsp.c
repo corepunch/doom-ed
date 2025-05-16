@@ -277,7 +277,7 @@ int R_PointOnSide(float x, float y, mapnode_t* node) {
 //
 void R_Subsector (map_data_t *map, int num, viewdef_t *viewdef)
 {
-  int count, sector;
+  int count/*, sector*/;
   mapseg_t* line;
   
 #ifdef RANGECHECK

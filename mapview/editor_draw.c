@@ -243,8 +243,8 @@ void get_mouse_position(editor_state_t const *, int16_t const *screen, mat4 cons
 void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
 void get_editor_mvp(editor_state_t const *editor, mat4 mvp) {
   // Set up orthographic projection for 2D view
-  float w = editor->window->w * editor->scale;
-  float h = editor->window->h * editor->scale;
+  float w = editor->window->frame.w * editor->scale;
+  float h = editor->window->frame.h * editor->scale;
   
   // Create projection and view matrices
   mat4 proj, view;

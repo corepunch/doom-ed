@@ -78,10 +78,10 @@ void set_viewport(window_t const *win) {
   float scale_x = (float)w / screen_width;
   float scale_y = (float)h / screen_height;
   
-  int vp_x = (int)(win->x * scale_x);
-  int vp_y = (int)((screen_height - win->y - win->h) * scale_y); // flip Y
-  int vp_w = (int)(win->w * scale_x);
-  int vp_h = (int)(win->h * scale_y);
+  int vp_x = (int)(win->frame.x * scale_x);
+  int vp_y = (int)((screen_height - win->frame.y - win->frame.h) * scale_y); // flip Y
+  int vp_w = (int)(win->frame.w * scale_x);
+  int vp_h = (int)(win->frame.h * scale_y);
   
   glEnable(GL_SCISSOR_TEST);
   glViewport(vp_x, vp_y, vp_w, vp_h);
@@ -101,7 +101,7 @@ static void paint_stencil(uint8_t id) {
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
     int p = 1;
     int t = TITLEBAR_HEIGHT;
-    draw_rect(1, w->x-p, w->y-t-p, w->w+p*2, w->h+t+p*2); // Just draw shape geometry
+    draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
   }
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glStencilFunc(GL_EQUAL, id, 0xFF);
@@ -110,25 +110,32 @@ static void paint_stencil(uint8_t id) {
 
 static uint8_t _id;
 
-void create_window(int x, int y, int w, int h, char const *title, uint32_t flags, winproc_t proc, void *lparam) {
+void push_window(window_t *win, window_t **windows)  {
+  if (!*windows) {
+    *windows = win;
+  } else {
+    window_t *p = *windows;
+    while (p->next) p = p->next;
+    p->next = win;
+  }
+}
+
+void create_window(char const *title,
+                   flags_t flags,
+                   const rect_t *frame,
+                   window_t *parent,
+                   winproc_t proc,
+                   void *lparam)
+{
   window_t *win = malloc(sizeof(window_t));
   memset(win, 0, sizeof(window_t));
-  win->x = x;
-  win->y = y;
-  win->w = w;
-  win->h = h;
+  win->frame = *frame;
   win->proc = proc;
   win->flags = flags;
   win->id = ++_id;
   strncpy(win->title, title, sizeof(win->title));
-  if (!windows) {
-    windows = win;
-  } else {
-    window_t *p= windows;
-    while (p->next) p = p->next;
-    p->next = win;
-  }
   active = win;
+  push_window(win, parent ? &parent->children : &windows);
   proc(win, MSG_CREATE, 0, lparam);
   invalidate_window(win);
 }
@@ -139,7 +146,7 @@ void create_window(int x, int y, int w, int h, char const *title, uint32_t flags
 window_t *find_window(int x, int y) {
   window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
-    if CONTAINS(x, y, win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT) {
+    if CONTAINS(x, y, win->frame.x, win->frame.y-TITLEBAR_HEIGHT, win->frame.w, win->frame.h+TITLEBAR_HEIGHT) {
       last = win;
     }
   }
@@ -193,8 +200,8 @@ static int drag_anchor[2];
 
 bool do_windows_overlap(const window_t *a, const window_t *b) {
   return a && b &&
-  a->x < b->x + b->w && a->x + a->w > b->x &&
-  a->y < b->y + b->h && a->y + a->h > b->y;
+  a->frame.x < b->frame.x + b->frame.w && a->frame.x + a->frame.w > b->frame.x &&
+  a->frame.y < b->frame.y + b->frame.h && a->frame.y + a->frame.h > b->frame.y;
 }
 
 void move_window(window_t *win, int x, int y) {
@@ -203,8 +210,8 @@ void move_window(window_t *win, int x, int y) {
       invalidate_window(t);
     }
   }
-  win->x = x;
-  win->y = y;
+  win->frame.x = x;
+  win->frame.y = y;
   
   paint_stencil(0);
   draw_wallpaper();
@@ -219,8 +226,8 @@ void resize_window(window_t *win, int new_w, int new_h) {
       invalidate_window(t);
     }
   }
-  if (new_w > 0) resizing->w = new_w;
-  if (new_h > 0) resizing->h = new_h;
+  if (new_w > 0) resizing->frame.w = new_w;
+  if (new_h > 0) resizing->frame.h = new_h;
 
   paint_stencil(0);
   draw_wallpaper();
@@ -259,15 +266,15 @@ void handle_windows(void) {
                       SCALE_POINT(event.motion.x) - drag_anchor[0],
                       SCALE_POINT(event.motion.y) - drag_anchor[1]);
         } else if (resizing) {
-          int new_w = SCALE_POINT(event.motion.x) - resizing->x;
-          int new_h = SCALE_POINT(event.motion.y) - resizing->y;
+          int new_w = SCALE_POINT(event.motion.x) - resizing->frame.x;
+          int new_h = SCALE_POINT(event.motion.y) - resizing->frame.y;
           resize_window(resizing, new_w, new_h);
         } else if ((SDL_GetRelativeMouseMode() && (win = active))||
                    (win = find_window(SCALE_POINT(event.motion.x),
                                       SCALE_POINT(event.motion.y))))
         {
-          int16_t x = SCALE_POINT(event.motion.x) - win->x;
-          int16_t y = SCALE_POINT(event.motion.y) - win->y;
+          int16_t x = SCALE_POINT(event.motion.x) - win->frame.x;
+          int16_t y = SCALE_POINT(event.motion.y) - win->frame.y;
           int16_t dx = event.motion.xrel;
           int16_t dy = event.motion.yrel;
           send_message(win, MSG_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
@@ -286,14 +293,14 @@ void handle_windows(void) {
                                  SCALE_POINT(event.button.y)))) {
 //        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
           move_to_top(win);
-          int x = SCALE_POINT(event.button.x) - win->x;
-          int y = SCALE_POINT(event.button.y) - win->y;
-          if (x >= win->w - RESIZE_HANDLE && y >= win->h - RESIZE_HANDLE) {
+          int x = SCALE_POINT(event.button.x) - win->frame.x;
+          int y = SCALE_POINT(event.button.y) - win->frame.y;
+          if (x >= win->frame.w - RESIZE_HANDLE && y >= win->frame.h - RESIZE_HANDLE) {
             resizing = win;
-          } else if (SCALE_POINT(event.button.y) < win->y) {
+          } else if (SCALE_POINT(event.button.y) < win->frame.y) {
             dragging = win;
-            drag_anchor[0] = SCALE_POINT(event.button.x) - win->x;
-            drag_anchor[1] = SCALE_POINT(event.button.y) - win->y;
+            drag_anchor[0] = SCALE_POINT(event.button.x) - win->frame.x;
+            drag_anchor[1] = SCALE_POINT(event.button.y) - win->frame.y;
           } else if (win == active) {
             switch (event.button.button) {
               case 1: send_message(win, MSG_LBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
@@ -316,9 +323,9 @@ void handle_windows(void) {
 //        } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
           if (win != active) {
             active_window(win);
-          } else if (SCALE_POINT(event.button.y) >= win->y) {
-            int x = SCALE_POINT(event.button.x) - win->x;
-            int y = SCALE_POINT(event.button.y) - win->y;
+          } else if (SCALE_POINT(event.button.y) >= win->frame.y) {
+            int x = SCALE_POINT(event.button.x) - win->frame.x;
+            int y = SCALE_POINT(event.button.y) - win->frame.y;
             switch (event.button.button) {
               case 1: send_message(win, MSG_LBUTTONUP, MAKEDWORD(x, y), NULL); break;
               case 3: send_message(win, MSG_RBUTTONUP, MAKEDWORD(x, y), NULL); break;
@@ -346,6 +353,7 @@ void draw_windows(bool rich) {
 }
 
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  rect_t const *frame = &win->frame;
   if (win) {
     switch (msg) {
       case MSG_NCPAINT:
@@ -356,31 +364,36 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       case MSG_PAINT:
         paint_stencil(win->id);
         set_viewport(win);
-        set_projection(win->w, win->h);
+        set_projection(frame->w, frame->h);
         break;
     }
     if (!win->proc(win, msg, wparam, lparam)) {
       switch (msg) {
+        case MSG_PAINT:
+          for (window_t *sub = win->children; sub; sub = sub->next) {
+            sub->proc(sub, MSG_PAINT, wparam, lparam);
+          }
+          break;
         case MSG_NCPAINT:
           if (!(win->flags&WINDOW_TRANSPARENT)) {
-            draw_panel(win->x, win->y-TITLEBAR_HEIGHT, win->w, win->h+TITLEBAR_HEIGHT, active == win);
+            draw_panel(frame->x, frame->y-TITLEBAR_HEIGHT, frame->w, frame->h+TITLEBAR_HEIGHT, active == win);
           }
           if (!(win->flags&WINDOW_NOTITLE)) {
-            fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
-            //      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
-            draw_text_gl3(win->title, win->x+2, win->y+1-TITLEBAR_HEIGHT, 1);
+            fill_rect(0x40000000, frame->x, frame->y-TITLEBAR_HEIGHT, frame->w, TITLEBAR_HEIGHT);
+            //      fill_rect(0x40ffffff, frame->x+frame->w-TITLEBAR_HEIGHT, frame->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
+            draw_text_gl3(win->title, frame->x+2, frame->y+1-TITLEBAR_HEIGHT, 1);
           }
         {
-                  set_viewport(&(window_t){0, 0, screen_width, screen_height});
-                  set_projection(screen_width, screen_height);
+          set_viewport(&(window_t){0, 0, screen_width, screen_height});
+          set_projection(screen_width, screen_height);
           extern int icon_tex, icon2_tex, icon3_tex;
-//          draw_button(win->x+win->w-11, win->y-TITLEBAR_HEIGHT+1, 10, 10, false);
-//          draw_button(win->x+win->w-11-12, win->y-TITLEBAR_HEIGHT+1, 10, 10, false);
-//          draw_rect(icon3_tex, win->x+2, win->y+2-TITLEBAR_HEIGHT, 8, 8);
-          draw_rect(icon_tex, win->x+win->w-9, win->y+2-TITLEBAR_HEIGHT, 8, 8);
-          draw_rect(icon2_tex, win->x+win->w-9-12, win->y+2-TITLEBAR_HEIGHT, 8, 8);
+//          draw_button(frame->x+frame->w-11, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
+//          draw_button(frame->x+frame->w-11-12, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
+//          draw_rect(icon3_tex, frame->x+2, frame->y+2-TITLEBAR_HEIGHT, 8, 8);
+          draw_rect(icon_tex, frame->x+frame->w-9, frame->y+2-TITLEBAR_HEIGHT, 8, 8);
+          draw_rect(icon2_tex, frame->x+frame->w-9-12, frame->y+2-TITLEBAR_HEIGHT, 8, 8);
         }
-          break;
+        break;
       }
     }
   }

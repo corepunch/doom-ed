@@ -3,7 +3,7 @@
 
 // Assuming you have the 1-bit data in '1bit_image' and its dimensions are width, height
 unsigned char *expand_to_8bit(unsigned char *data, int width, int height) {
-  int size = (width * height + 7) / 8;  // Number of bytes for the 1-bit image
+//  int size = (width * height + 7) / 8;  // Number of bytes for the 1-bit image
   unsigned char *expanded_data = malloc(width * height);  // The expanded 8-bit data
   
   for (int y = 0; y < height; ++y) {

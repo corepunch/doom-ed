@@ -359,25 +359,36 @@ typedef struct {
   texture_layout_t* layout;
 } window_udata_t;
 
+bool win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  mapside_texture_t *tex = win->userdata;
+  switch (msg) {
+    case MSG_CREATE:
+      return true;
+    case MSG_PAINT:
+      draw_rect(tex->texture, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
+      return true;
+  }
+  return false;
+}
+
 bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   window_udata_t *udata = win->userdata;
   switch (msg) {
-    case MSG_CREATE: {
-      window_udata_t *udata = malloc(sizeof(window_udata_t));
+    case MSG_CREATE:
+      udata = malloc(sizeof(window_udata_t));
       udata->cache = lparam;
-      udata->layout = layout(udata->cache->num_textures, win->w / SCALE, get_texture_size, udata->cache->textures);
+      udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       win->userdata = udata;
       return true;
-    }
     case MSG_RESIZE:
       free(udata->layout);
-      udata->layout = layout(udata->cache->num_textures, win->w / SCALE, get_texture_size, udata->cache->textures);
+      udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       return true;
     case MSG_PAINT:
       draw_texture_layout_with_selection(udata->layout, udata->cache->textures, udata->cache->selected, win->scroll, SCALE);
       return true;
     case MSG_WHEEL:
-      //      win->scroll[0] = MIN(0, win->scroll[0]+(int16_t)LOWORD(wparam));
+      // win->scroll[0] = MIN(0, win->scroll[0]+(int16_t)LOWORD(wparam));
       win->scroll[1] = MIN(0, win->scroll[1]+(int16_t)HIWORD(wparam));
       invalidate_window(win);
       return true;

@@ -118,7 +118,8 @@ get_mouse_position(editor_state_t const *editor,
   float z_plane = 0;
   
   // Convert to world coordinates
-  int win_width = editor->window->w, win_height = editor->window->h;
+  int win_width = editor->window->frame.w;
+  int win_height = editor->window->frame.h;
   
   // Convert to normalized device coordinates (-1 to 1)
   float ndc_x = (2.0f * screen[0]) / win_width - 1.0f;
