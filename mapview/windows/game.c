@@ -33,6 +33,9 @@ void init_player(map_data_t const *map, player_t *player) {
       player->x = map->things[i].x;
       player->y = map->things[i].y;
       player->angle = map->things[i].angle;
+      
+      extern editor_state_t editor;
+      set_editor_camera(&editor, map->things[i].x, map->things[i].y);
       break;
     }
   }
@@ -41,9 +44,9 @@ void init_player(map_data_t const *map, player_t *player) {
 //  create_window((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT, "Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, win_statbar, NULL);
   //  create_window(32, 32, 512, 256, "Console", 0, win_console, NULL);
   extern editor_state_t editor;
-  create_window(32, 32, 512, 256, "Game", 0, win_game, NULL);
-  create_window(64, 64, 320, 320, "Editor", 0, win_editor, &editor);
-  create_window(96, 96, 128, 256, "Things", 0, win_things, NULL);
+  create_window(380, 128, 320, 320, "Game", 0, win_game, NULL);
+  create_window(32, 128, 320, 320, "Editor", 0, win_editor, &editor);
+//  create_window(96, 96, 128, 256, "Things", 0, win_things, NULL);
 }
 
 void goto_map(const char *mapname) {
@@ -152,6 +155,7 @@ read_center_pixel(window_t const *win,
                   mapsector_t const *sector,
                   viewdef_t const *viewdef)
 {
+  glClear(GL_DEPTH_BUFFER_BIT);
   glUseProgram(ui_prog);
   glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, viewdef->mvp[0]);
   
@@ -195,12 +199,13 @@ void draw_dungeon(window_t const *win) {
   viewdef.frame = frame++;
   glm_frustum_planes(mvp, viewdef.frustum);
   
-  read_center_pixel(win, map, sector, &viewdef);
-  
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
-  glClear(/*GL_COLOR_BUFFER_BIT|*/GL_DEPTH_BUFFER_BIT);
+
+  read_center_pixel(win, map, sector, &viewdef);
   
+  glClear(/*GL_COLOR_BUFFER_BIT|*/GL_DEPTH_BUFFER_BIT);
+#if 1
   draw_sky(map, player, mvp);
   
   glUseProgram(world_prog);
@@ -229,23 +234,28 @@ void draw_dungeon(window_t const *win) {
 //  R_RenderBSPNode(&game.map, game.map.num_nodes-1, &viewdef);
   
   draw_floors(map, sector, &viewdef);
-  
+#endif
   draw_things(map, &viewdef, true);
   
   draw_weapon((float)win->w/(float)win->h);
   
   draw_crosshair((float)win->w/(float)win->h);
 
-  mapside_texture_t const *tex1 = get_texture(get_selected_texture());
-  if (tex1) {
-    draw_rect(tex1->texture, 8, 8, tex1->width/2, tex1->height/2);
-  }
-
-  mapside_texture_t const *tex2 = get_flat_texture(get_selected_flat_texture());
-  if (tex2) {
-    float w = tex2->width/2, h = tex2->height/2;
-    draw_rect(tex2->texture, win->w*0.75-8-w, 8, w, h);
-  }
+  void set_projection(int w, int h);
+  set_projection(win->w, win->h);
+  
+  bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+  win_perf((window_t*)win, MSG_PAINT, 0, NULL);
+  
+//  mapside_texture_t const *tex1 = get_texture(get_selected_texture());
+//  mapside_texture_t const *tex2 = get_flat_texture(get_selected_flat_texture());
+//  if (tex1) {
+//    draw_rect(tex1->texture, 8, 8, tex1->width/2, tex1->height/2);
+//  }
+//  if (tex2) {
+//    float w = tex2->width, h = tex2->height;
+//    draw_rect(tex2->texture, win->w-w-8, 8, w, h);
+//  }
 
   extern bool mode;
   if (mode) {
@@ -308,6 +318,11 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       case MSG_PAINT:
         draw_dungeon(win);
         post_message(win, MSG_PAINT, wparam, lparam);
+        return true;
+      case MSG_KILLFOCUS:
+        if (SDL_GetRelativeMouseMode()) {
+          SDL_SetRelativeMouseMode(false);
+        }
         return true;
       case MSG_KEYDOWN:
         switch (wparam) {

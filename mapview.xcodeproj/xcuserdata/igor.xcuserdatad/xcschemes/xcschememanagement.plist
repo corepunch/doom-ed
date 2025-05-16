@@ -12,6 +12,11 @@
 		<key>doom.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
+			<integer>2</integer>
+		</dict>
+		<key>hexen.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
 			<integer>1</integer>
 		</dict>
 		<key>mapview.xcscheme_^#shared#^_</key>

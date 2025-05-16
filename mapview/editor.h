@@ -13,12 +13,16 @@
 // Add to map.h at the end before the closing #endif
 #define MAX_DRAW_POINTS 64
 
+#define ED_SCROLL 16
+
 typedef struct {
   window_t const *window;
   int16_t cursor[2];
+  vec2 camera;
   int grid_size;         // Grid size (8 units by default)
   bool drawing;          // Currently drawing a sector?
   bool dragging;          // Currently dragging a vertex?
+  int move_camera;
   mapvertex_t draw_points[MAX_DRAW_POINTS]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
   int current_point;    // Number of point
@@ -27,6 +31,7 @@ typedef struct {
 } editor_state_t;
 
 void init_editor(editor_state_t *editor);
+void set_editor_camera(editor_state_t *editor, int16_t x, int16_t y);
 void toggle_editor_mode(editor_state_t *editor);
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player);
 void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *player, float delta_time);

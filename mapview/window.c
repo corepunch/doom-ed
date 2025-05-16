@@ -148,10 +148,14 @@ window_t *find_window(int x, int y) {
 
 static void active_window(window_t* win) {
   if (active) {
+    post_message(active, MSG_KILLFOCUS, 0, win);
     invalidate_window(active);
   }
+  if (win) {
+    post_message(active, MSG_SETFOCUS, 0, active);
+    invalidate_window(win);
+  }
   active = win;
-  invalidate_window(win);
 }
 
 static void move_to_top(window_t* win) {
@@ -210,9 +214,20 @@ void move_window(window_t *win, int x, int y) {
 }
 
 void resize_window(window_t *win, int new_w, int new_h) {
+  for (window_t *t = windows; t; t = t->next) {
+    if (t != win && do_windows_overlap(t, win)) {
+      invalidate_window(t);
+    }
+  }
   if (new_w > 0) resizing->w = new_w;
   if (new_h > 0) resizing->h = new_h;
+
+  paint_stencil(0);
+  draw_wallpaper();
+  glDisable(GL_STENCIL_TEST);
+  
   invalidate_window(win);
+
   post_message(win, MSG_RESIZE, 0, NULL);
 }
 
@@ -266,7 +281,10 @@ void handle_windows(void) {
         break;
         
       case SDL_MOUSEBUTTONDOWN:
-        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
+          if ((SDL_GetRelativeMouseMode() && (win = active))||
+              (win = find_window(SCALE_POINT(event.button.x),
+                                 SCALE_POINT(event.button.y)))) {
+//        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
           move_to_top(win);
           int x = SCALE_POINT(event.button.x) - win->x;
           int y = SCALE_POINT(event.button.y) - win->y;
@@ -292,7 +310,10 @@ void handle_windows(void) {
         } else if (resizing) {
           active_window(resizing);
           resizing = NULL;
-        } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
+        } else if ((SDL_GetRelativeMouseMode() && (win = active))||
+                   (win = find_window(SCALE_POINT(event.button.x),
+                                      SCALE_POINT(event.button.y)))) {
+//        } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
           if (win != active) {
             active_window(win);
           } else if (SCALE_POINT(event.button.y) >= win->y) {
@@ -347,7 +368,7 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           if (!(win->flags&WINDOW_NOTITLE)) {
             fill_rect(0x40000000, win->x, win->y-TITLEBAR_HEIGHT, win->w, TITLEBAR_HEIGHT);
             //      fill_rect(0x40ffffff, win->x+win->w-TITLEBAR_HEIGHT, win->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
-            draw_text_gl3(win->title, win->x+4+10, win->y+1-TITLEBAR_HEIGHT, 1);
+            draw_text_gl3(win->title, win->x+2, win->y+1-TITLEBAR_HEIGHT, 1);
           }
         {
                   set_viewport(&(window_t){0, 0, screen_width, screen_height});
@@ -355,7 +376,7 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           extern int icon_tex, icon2_tex, icon3_tex;
 //          draw_button(win->x+win->w-11, win->y-TITLEBAR_HEIGHT+1, 10, 10, false);
 //          draw_button(win->x+win->w-11-12, win->y-TITLEBAR_HEIGHT+1, 10, 10, false);
-          draw_rect(icon3_tex, win->x+2, win->y+2-TITLEBAR_HEIGHT, 8, 8);
+//          draw_rect(icon3_tex, win->x+2, win->y+2-TITLEBAR_HEIGHT, 8, 8);
           draw_rect(icon_tex, win->x+win->w-9, win->y+2-TITLEBAR_HEIGHT, 8, 8);
           draw_rect(icon2_tex, win->x+win->w-9-12, win->y+2-TITLEBAR_HEIGHT, 8, 8);
         }

@@ -35,6 +35,11 @@ void init_editor(editor_state_t *editor) {
   glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void set_editor_camera(editor_state_t *editor, int16_t x, int16_t y) {
+  editor->camera[0] = x;
+  editor->camera[1] = y;
+}
+
 // Draw the grid
 static void draw_grid(int grid_size, player_t const *player, int view_size) {
   int start_x = ((int)player->x / grid_size - view_size) * grid_size;
@@ -234,24 +239,36 @@ static void draw_cursor(int x, int y) {
 int splitting_line = 0;
 mapvertex_t sn;
 
-void get_mouse_position(editor_state_t const *, player_t const *, mat4 const, vec2);
+void get_mouse_position(editor_state_t const *, int16_t const *screen, mat4 const, vec3);
 void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
-
-// Draw the editor UI
-void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player) {
+void get_editor_mvp(editor_state_t const *editor, mat4 mvp) {
   // Set up orthographic projection for 2D view
   float w = editor->window->w * editor->scale;
   float h = editor->window->h * editor->scale;
   
   // Create projection and view matrices
-  mat4 mvp, proj, view;
+  mat4 proj, view;
   glm_ortho(-w, w, -h, h, -1000, 1000, proj);
   
   // Center view on player
-  glm_translate_make(view, (vec3){ -player->x, -player->y, 0.0f });
+  glm_translate_make(view, (vec3) {
+    -editor->camera[0],
+    -editor->camera[1],
+    0.0f
+  });
   
   // Combine matrices
   glm_mat4_mul(proj, view, mvp);
+}
+
+// Draw the editor UI
+void
+draw_editor(map_data_t const *map,
+            editor_state_t const *editor,
+            player_t const *player)
+{
+  mat4 mvp;
+  get_editor_mvp(editor, mvp);
 
 //  void get_view_matrix(map_data_t const *map, player_t const *player, mat4 out);
 //  get_view_matrix(map, player, mvp);
@@ -311,8 +328,8 @@ void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t c
     goto draw_player;
   }
 
-  vec2 world;
-  get_mouse_position(editor, player, mvp, world);
+  vec3 world;
+  get_mouse_position(editor, editor->cursor, mvp, world);
   
   sn.x = world[0];
   sn.y = world[1];
@@ -410,5 +427,5 @@ draw_player:
   glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
   glDrawArrays(GL_LINE_STRIP, 0, 2);
   glPointSize(4);
-  glDrawArrays(GL_POINTS, 1, 1);
+  glDrawArrays(GL_POINTS, 0, 1);
 }
