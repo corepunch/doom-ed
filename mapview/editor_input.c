@@ -375,6 +375,7 @@ uint32_t colors[] = {
   0xFF7A4C88,
 };
 
+bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
@@ -384,7 +385,8 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_CREATE:
       win->userdata = lparam;
-      create_window("Button", 0, MAKERECT(4, 4, 0, 0), win, win_button, NULL);
+      create_window("Sample button", 0, MAKERECT(4, 4, 0, 0), win, win_label, NULL);
+      create_window("Button", 0, MAKERECT(4, 16, 0, 0), win, win_button, NULL);
       return true;
 //    case MSG_PAINT:
 //      for (int i = 0; i < num; i++) {

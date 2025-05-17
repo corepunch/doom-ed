@@ -49,7 +49,8 @@ void init_player(map_data_t const *map, player_t *player) {
   create_window("Game", 0, MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
   create_window("Editor", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
 //  create_window("Things", 0, MAKERECT(96, 96, 128, 256), NULL, win_things, NULL);
-  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
+//  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
+  create_window("Mode", 0, MAKERECT(200, 20, 150, 300), NULL, win_editmode, &editor);
 }
 
 void goto_map(const char *mapname) {

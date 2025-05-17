@@ -489,11 +489,11 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_CREATE:
       win->frame.w = MAX(win->frame.w, get_text_width(win->title)+4);
-      win->frame.h = MAX(win->frame.h, 14);
+      win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, *pressed);
-      draw_text_gl3(win->title, win->frame.x+(*pressed?3:2), win->frame.y+(*pressed?4:3), 1);
+      draw_text_gl3(win->title, win->frame.x+(*pressed?3:2), win->frame.y+(*pressed?3:2), 1);
       return true;
     case MSG_LBUTTONDOWN:
       *pressed = true;
@@ -502,6 +502,15 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case MSG_LBUTTONUP:
       *pressed = false;
       invalidate_window(win);
+      return true;
+  }
+  return false;
+}
+
+bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  switch (msg) {
+    case MSG_PAINT:
+      draw_text_gl3(win->title, win->frame.x, win->frame.y, 1);
       return true;
   }
   return false;
