@@ -319,7 +319,7 @@ int allocate_mapside_textures(map_data_t* map) {
     maybe_load_texture(texture_cache, side->bottomtexture, tex_dirs, pnames);
   }
   
-  create_window("Textures", WINDOW_RICH, &MAKERECT(20, 20, 256, 256), NULL, win_textures, texture_cache);
+  create_window("Textures", WINDOW_VSCROLL, MAKERECT(20, 20, 256, 256), NULL, win_textures, texture_cache);
   
   if (texture_cache->num_textures) {
     memcpy(texture_cache->selected, texture_cache->textures->name, sizeof(texname_t));
@@ -509,7 +509,7 @@ int allocate_flat_textures(map_data_t* map) {
   }
   
   extern int screen_width;
-  create_window("Flats", WINDOW_RICH, &MAKERECT(screen_width-148, 20, 128, 256), NULL, win_textures, flat_cache);
+  create_window("Flats", WINDOW_VSCROLL, MAKERECT(screen_width-148, 20, 128, 256), NULL, win_textures, flat_cache);
   
   if (flat_cache->num_textures) {
     memcpy(flat_cache->selected, flat_cache->textures->name, sizeof(texname_t));

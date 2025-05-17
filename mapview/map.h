@@ -84,6 +84,7 @@ enum {
 enum {
   MSG_CREATE,
   MSG_NCPAINT,
+  MSG_NCLBUTTONUP,
   MSG_PAINT,
   MSG_SETFOCUS,
   MSG_KILLFOCUS,
@@ -157,10 +158,10 @@ typedef struct {
 } player_t;
 
 typedef struct {
-  uint16_t x, y, w, h;
+  int16_t x, y, w, h;
 } rect_t;
 
-#define MAKERECT(X, Y, W, H) (rect_t){X, Y, W, H}
+#define MAKERECT(X, Y, W, H) &(rect_t){X, Y, W, H}
 
 // Vertex structure for our buffer (xyzuv)
 typedef struct {
@@ -219,19 +220,15 @@ typedef struct {
   int16_t type;
   int16_t options;
   int8_t special;
-  int8_t arg1;
-  int8_t arg2;
-  int8_t arg3;
-  int8_t arg4;
-  int8_t arg5;
+  int8_t args[5];
 } mapthing_t;
 // Linedef structure
 typedef struct {
   uint16_t start;             // Start vertex
   uint16_t end;               // End vertex
   uint16_t flags;             // Flags
-  uint8_t special;           // Special type
-  uint8_t args[5];           // Arguments for special (e.g., script number, delay)
+  uint8_t special;            // Special type
+  uint8_t args[5];            // Arguments for special (e.g., script number, delay)
   uint16_t sidenum[2];        // Sidedef numbers
 } maplinedef_t;
 #else
@@ -381,7 +378,11 @@ typedef struct {
 
 #define WINDOW_NOTITLE 1
 #define WINDOW_TRANSPARENT 2
-#define WINDOW_RICH 4
+#define WINDOW_VSCROLL 4
+#define WINDOW_HSCROLL 8
+
+
+#define TITLEBAR_HEIGHT 12
 
 struct window_s;
 typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
@@ -389,20 +390,24 @@ typedef uint32_t flags_t;
 
 typedef struct window_s {
   rect_t frame;
-  uint8_t id;
-  int16_t scroll[2];
+  uint32_t id;
+  uint16_t scroll[2];
   uint32_t flags;
   winproc_t proc;
+  uint32_t child_id;
+  bool hovered;
   char title[64];
   void *userdata;
   struct window_s *next;
   struct window_s *children;
+  struct window_s *parent;
 } window_t;
 
 void create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);
+int window_title_bar_y(window_t const *win);
 
 extern game_t game;
 
@@ -434,8 +439,9 @@ void update_player_position_with_sliding(map_data_t const *map, player_t *player
 
 void fill_rect(int color, int x, int y, int w, int h);
 void draw_rect(int tex, int x, int y, int w, int h);
-void draw_rect_ex(int tex, int x, int y, int w, int h, int type);
+void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 void draw_text_gl3(const char* text, int x, int y, float alpha);
+void draw_icon(int icon, int x, int y, float alpha);
 void draw_palette(map_data_t const *map);
 char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);

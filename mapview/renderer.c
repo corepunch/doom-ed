@@ -71,7 +71,7 @@ GLuint make_1bit_tex(void *data, int width, int height);
 
 // Global variables
 GLuint world_prog, ui_prog;
-GLuint white_tex, black_tex, selection_tex, no_tex, wallpaper_tex, icon_tex, icon2_tex, icon3_tex;
+GLuint white_tex, black_tex, selection_tex, no_tex, wallpaper_tex;
 
 int world_prog_mvp;
 int world_prog_viewPos;
@@ -235,40 +235,6 @@ bool init_sdl(void) {
   
   free(texdata);
 
-  uint8_t icon2a[8] = {
-    0b00000000,
-    0b00000000,
-    0b00000000,
-    0b01111110,
-    0b01111110,
-    0b00000000,
-    0b00000000,
-    0b00000000,
-  };
-  uint8_t icon[8] = {
-    0b00000000,
-    0b00000000,
-    0b00010000,
-    0b00111000,
-    0b01111100,
-    0b00000000,
-    0b00000000,
-    0b00000000,
-  };
-  uint8_t icon2[8] = {
-    0b00000000,
-    0b00000000,
-    0b01111100,
-    0b00111000,
-    0b00010000,
-    0b00000000,
-    0b00000000,
-    0b00000000,
-  };
-  icon_tex = make_1bit_tex(icon, 8, 8);
-  icon2_tex = make_1bit_tex(icon2, 8, 8);
-  icon3_tex = make_1bit_tex(icon2a, 8, 8);
-
   init_floor_shader();
     
   init_editor(&editor);
@@ -292,7 +258,7 @@ void cleanup(void) {
 }
 
 void draw_wallpaper(void) {
-  void set_projection(int w, int h);
+  void set_projection(int x, int y, int w, int h);
   
   glDepthMask(GL_FALSE);
 

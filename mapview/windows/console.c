@@ -212,6 +212,31 @@ void draw_text_gl3(const char* text, int x, int y, float alpha) {
   glDisable(GL_BLEND);
 }
 
+int get_text_width(const char* text) {
+  int cursor_x = 0;
+  // Draw each character
+#ifdef HEXEN
+  // Hexen font is already uppercase
+  for (int i = 0; text[i] != '\0'; i++) {
+    char c = text[i];
+#else
+    // Doom font is uppercase only, convert lowercase to uppercase
+    //    for (int i = 0; text[i] != '\0'; i++) {
+    //      char c = toupper(text[i]);
+#endif
+    
+    // Advance cursor
+    if (c >= 32 && c > 0) {
+      // Use character width if available, otherwise use default
+      int char_width = console.font[c].width;
+      cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH);
+    } else {
+      cursor_x += CONSOLE_FONT_WIDTH;  // Default width for unsupported chars
+    }
+  }
+  return cursor_x;
+}
+
 // Draw the console
 void draw_console(void) {
   if (!console.show_console) return;

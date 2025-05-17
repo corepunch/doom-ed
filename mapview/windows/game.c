@@ -21,6 +21,8 @@ bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -40,13 +42,14 @@ void init_player(map_data_t const *map, player_t *player) {
     }
   }
   
-//  create_window("FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, &MAKERECT(0, 0, 128, 64), NULL, win_perf, NULL);
-//  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, &MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);
-  //  create_window("Console", 0, &MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
+//  create_window("FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT(0, 0, 128, 64), NULL, win_perf, NULL);
+//  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);
+  //  create_window("Console", 0, MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
   extern editor_state_t editor;
-  create_window("Game", 0, &MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
-  create_window("Editor", 0, &MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
-//  create_window("Things", 0, &MAKERECT(96, 96, 128, 256), NULL, win_things, NULL);
+  create_window("Game", 0, MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
+  create_window("Editor", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
+//  create_window("Things", 0, MAKERECT(96, 96, 128, 256), NULL, win_things, NULL);
+  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
 }
 
 void goto_map(const char *mapname) {
@@ -241,8 +244,8 @@ void draw_dungeon(window_t const *win) {
   
   draw_crosshair((float)win->frame.w/(float)win->frame.h);
 
-  void set_projection(int w, int h);
-  set_projection(win->frame.w, win->frame.h);
+  void set_projection(int x, int y, int w, int h);
+  set_projection(0, 0, win->frame.w, win->frame.h);
   
 //  bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 //  win_perf((window_t*)win, MSG_PAINT, 0, NULL);
@@ -315,7 +318,7 @@ void paint_face(map_data_t *map, bool eyedropper) {
 bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_CREATE:
-      create_window("FPS", 0, &MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
+      create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
       return true;
     case MSG_PAINT:
       draw_dungeon(win);

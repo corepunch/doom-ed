@@ -33,6 +33,13 @@ void init_editor(editor_state_t *editor) {
   // Reset bindings
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
+  
+  GLuint make_1bit_tex(void *data, int width, int height);
+  extern uint8_t ed_icons[icon_count][8];
+  for (int i = 0; i < icon_count; i++) {
+    editor->icons[i] = make_1bit_tex(ed_icons[i], 8, 8);
+  }
+
 }
 
 void set_editor_camera(editor_state_t *editor, int16_t x, int16_t y) {
@@ -215,7 +222,13 @@ static void draw_walls_editor(map_data_t const *map) {
 static void draw_cursor(int x, int y) {
   // Set cursor color (green)
   glUniform4f(ui_prog_color, 0.0f, 1.0f, 0.0f, 1.0f);
-  
+
+//  wall_vertex_t verts = { x, y, 0, 0, 0, 0, 0, 0 };
+//  glPointSize(3.0f);
+//  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts.x);
+//  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts.u);
+//  glDrawArrays(GL_POINTS, 0, 1);
+
   // Draw crosshair
   int size = 16;
   wall_vertex_t verts[4] = {
@@ -229,11 +242,7 @@ static void draw_cursor(int x, int y) {
   
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-  glDrawArrays(GL_LINES, 0, 2);
-  
-  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[2].x);
-  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[2].u);
-  glDrawArrays(GL_LINES, 0, 2);
+  glDrawArrays(GL_LINES, 0, 4);
 }
 
 int splitting_line = 0;
@@ -356,53 +365,61 @@ draw_editor(map_data_t const *map,
 //    s =splitting_line;
 //  }
 
-  for (int i = 0; i < map->num_vertices; i++) {
-    float dx = world[0] - map->vertices[i].x;
-    float dy = world[1] - map->vertices[i].y;
-    float d = dx*dx + dy*dy;
-    if (editor->grid_size * 8.0f > d) {
-      sn.x = map->vertices[i].x;
-      sn.y = map->vertices[i].y;
-      dist = d;
-      splitting_line = -1;
+  if (editor->sel_mode == edit_vertices) {
+    for (int i = 0; i < map->num_vertices; i++) {
+      float dx = world[0] - map->vertices[i].x;
+      float dy = world[1] - map->vertices[i].y;
+      float d = dx*dx + dy*dy;
+      if (editor->grid_size * 8.0f > d) {
+        sn.x = map->vertices[i].x;
+        sn.y = map->vertices[i].y;
+        dist = d;
+        splitting_line = -1;
+      }
     }
   }
 
   if (dist < editor->grid_size * 8.0f) {
-    draw_cursor(sn.x, sn.y);
+    if (editor->sel_mode == edit_vertices) {
+      draw_cursor(sn.x, sn.y);
+    }
   } else {
     splitting_line = -1;
-    // Snap to grid
-    snap_mouse_position(editor, world, &sn);
-    // Draw cursor at the snapped position
-    draw_cursor(sn.x, sn.y);
+    if (editor->sel_mode == edit_vertices) {
+      // Snap to grid
+      snap_mouse_position(editor, world, &sn);
+      // Draw cursor at the snapped position
+      draw_cursor(sn.x, sn.y);
+    }
   }
   
   glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 0.5f);
   glBindTexture(GL_TEXTURE_2D, white_tex);
 
-  if (splitting_line != -1) {
-    wall_vertex_t verts[2] = {
-      { map->vertices[map->linedefs[splitting_line].start].x,
-        map->vertices[map->linedefs[splitting_line].start].y },
-      { map->vertices[map->linedefs[splitting_line].end].x,
-        map->vertices[map->linedefs[splitting_line].end].y },
-    };
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
-    glDrawArrays(GL_LINES, 0, 2);
-  }
-  
-  // If currently drawing, show line from last point to cursor
-  if (editor->dragging || editor->drawing) {
-    float x = map->vertices[editor->current_point].x;
-    float y = map->vertices[editor->current_point].y;
-    wall_vertex_t verts[2] = { { x, y}, { sn.x, sn.y } };
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-    glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
-    glDrawArrays(GL_LINES, 0, 2);
+  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
+    if (splitting_line != -1) {
+      wall_vertex_t verts[2] = {
+        { map->vertices[map->linedefs[splitting_line].start].x,
+          map->vertices[map->linedefs[splitting_line].start].y },
+        { map->vertices[map->linedefs[splitting_line].end].x,
+          map->vertices[map->linedefs[splitting_line].end].y },
+      };
+      glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+      glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+      glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
+      glDrawArrays(GL_LINES, 0, 2);
+    }
+    
+    // If currently drawing, show line from last point to cursor
+    if (editor->dragging || editor->drawing) {
+      float x = map->vertices[editor->current_point].x;
+      float y = map->vertices[editor->current_point].y;
+      wall_vertex_t verts[2] = { { x, y}, { sn.x, sn.y } };
+      glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+      glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+      glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
+      glDrawArrays(GL_LINES, 0, 2);
+    }
   }
   
 draw_player:

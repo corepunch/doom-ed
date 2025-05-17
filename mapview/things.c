@@ -342,11 +342,6 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
       }
       break;
-    case MSG_WHEEL:
-      //      win->scroll[0] = MIN(0, win->scroll[0]+(int16_t)LOWORD(wparam));
-      win->scroll[1] = MIN(0, win->scroll[1]+(int16_t)HIWORD(wparam));
-      invalidate_window(win);
-      return true;
     case MSG_RESIZE:
       free(win->userdata);
       win->userdata = layout(num_items, win->frame.w, get_mobj_size, ed_objs);

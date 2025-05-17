@@ -15,6 +15,26 @@
 
 #define ED_SCROLL 16
 
+typedef enum {
+  icon_minus,
+  icon_collapse,
+  icon_maximize,
+  icon_points,
+  icon_lines,
+  icon_sectors,
+  icon_things,
+  icon_sounds,
+  icon_count,
+} ed_icon_t;
+
+enum {
+  edit_vertices,
+  edit_lines,
+  edit_sectors,
+  edit_things,
+  edit_sounds,
+};
+
 typedef struct {
   window_t const *window;
   int16_t cursor[2];
@@ -26,8 +46,10 @@ typedef struct {
   mapvertex_t draw_points[MAX_DRAW_POINTS]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
   int current_point;    // Number of point
+  int sel_mode;
   float scale;
   uint32_t vao, vbo;
+  int icons[icon_count];
 } editor_state_t;
 
 void init_editor(editor_state_t *editor);

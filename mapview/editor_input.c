@@ -169,15 +169,36 @@ snap_mouse_position(editor_state_t const *editor,
   snapped->x = floorf(world_x / editor->grid_size) * editor->grid_size;
   snapped->y = ceilf(world_y / editor->grid_size) * editor->grid_size;
 }
+
+void draw_window_controls(window_t *win);
 void get_editor_mvp(editor_state_t const *, mat4);
+
+#define ICON_STEP 12
+
+static int icon_x(window_t const *win, int i) {
+  return win->frame.x + 4 + i * ICON_STEP;
+}
+
 bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mapvertex_t sn;
   extern int splitting_line;
   editor_state_t *editor = win->userdata;
   map_data_t *map = &game.map;
   int point = -1;
-  int old_point = editor ? editor->current_point : -1;
+//  int old_point = editor ? editor->current_point : -1;
   switch (msg) {
+    case MSG_NCPAINT:
+      for (int i = 0; i < 5; i++) {
+        draw_icon(icon_points + i, icon_x(win, i), window_title_bar_y(win),
+                  editor->sel_mode == i ? 1.0f : 0.5f);
+      }
+      return true;
+    case MSG_NCLBUTTONUP:
+      if ((LOWORD(wparam) - icon_x(win, 0)) / ICON_STEP < 5 && LOWORD(wparam) >= icon_x(win, 0)) {
+        editor->sel_mode = (LOWORD(wparam) - icon_x(win, 0)) / ICON_STEP;
+        post_message(win, MSG_NCPAINT, 0, NULL);
+      }
+      return true;
     case MSG_CREATE:
       win->userdata = lparam;
       ((editor_state_t *)lparam)->window = win;
@@ -203,10 +224,10 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
       invalidate_window(win);
       return true;
-//    case MSG_WHEEL:
-//      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
-//      invalidate_window(win);
-//      return true;
+      //    case MSG_WHEEL:
+      //      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
+      //      invalidate_window(win);
+      //      return true;
     case MSG_WHEEL: {
       mat4 mvp;
       vec3 world_before, world_after, delta;
@@ -223,63 +244,56 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case MSG_LBUTTONUP:
       if (editor->move_camera == 2) {
         editor->move_camera = 1;
-      } else if (editor->dragging) {
-        extern mapvertex_t sn;
-        editor->dragging = false;
-        map->vertices[editor->current_point] = sn;
-        // Rebuild vertex buffers
-        build_wall_vertex_buffer(map);
-        build_floor_vertex_buffer(map);
-        return true;
+      } switch (editor->sel_mode) {
+        case edit_vertices:
+          if (editor->dragging) {
+            extern mapvertex_t sn;
+            editor->dragging = false;
+            map->vertices[editor->current_point] = sn;
+            // Rebuild vertex buffers
+            build_wall_vertex_buffer(map);
+            build_floor_vertex_buffer(map);
+          }
+          return true;
       }
       return true;
     case MSG_LBUTTONDOWN:
-      if (editor->drawing) {
-        // Cancel current drawing
-        editor->drawing = false;
-        editor->num_draw_points = 0;
-      } else if (editor->move_camera > 0) {
+      if (editor->move_camera > 0) {
         editor->move_camera = 2;
         return true;
-      } else if (splitting_line>=0) {
-        editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
-      } else if (point_exists(sn, map, &point)) {
-        editor->current_point = point;
-        editor->dragging = true;
-//      } else {
-//        editor->current_point = add_vertex(map, sn);
+      } else switch (editor->sel_mode) {
+        case edit_vertices:
+          if (editor->drawing) {
+            // Cancel current drawing
+            editor->drawing = false;
+            editor->num_draw_points = 0;
+          } else if (splitting_line >= 0) {
+            editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
+          } else if (point_exists(sn, map, &point)) {
+            editor->current_point = point;
+            editor->dragging = true;
+          }
+          break;
       }
       return true;
     case MSG_RBUTTONDOWN:
-      if (editor->dragging) {
-        editor->dragging = false;
-        editor->current_point = -1;
-      } else if (point_exists(sn, map, &point)) {
-        editor->current_point = point;
-      } else if (splitting_line>=0) {
-        editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
-      } else {
-        editor->current_point = add_vertex(map, sn);
-      }
-      if (editor->drawing) {
-        mapvertex_t a = map->vertices[old_point];
-        mapvertex_t b = map->vertices[editor->current_point];
-        uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
-        uint16_t line = -1;
-        if (sec != 0xFFFF) {
-          line = add_linedef(map, old_point, editor->current_point, add_sidedef(map, sec), add_sidedef(map, sec));
-        } else {
-          line = add_linedef(map, old_point, editor->current_point, 0xFFFF, 0xFFFF);
-        }
-        uint16_t vertices[256];
-        int num_vertices = check_closed_loop(map, line, vertices);
-        if (num_vertices) {
-          uint16_t sector = add_sector(map);
-          set_loop_sector(map, sector, vertices, num_vertices);
-          editor->drawing = false;
-        }
-      } else {
-        editor->drawing = true;
+      switch (editor->sel_mode) {
+        case edit_vertices:
+          if (editor->dragging) {
+            editor->dragging = false;
+            editor->current_point = -1;
+          } else if (point_exists(sn, map, &point)) {
+            editor->current_point = point;
+          } else if (splitting_line >= 0) {
+            editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
+          } else {
+            editor->current_point = add_vertex(map, sn);
+          }
+          if (editor->drawing) {
+          } else {
+            editor->drawing = true;
+          }
+          break;
       }
       return true;
     case MSG_RBUTTONUP:
@@ -347,6 +361,43 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         editor->move_camera = 0;
       }
       return false;
+  }
+  return false;
+}
+
+const char *modes[] = { "vertices", "things", "lines", "sectors" };
+
+uint32_t colors[] = {
+  0xFF3C3C90,
+  0xFF4D9944,
+  0xFF8870AA,
+  0xFF88AA66,
+  0xFF7A4C88,
+};
+
+bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
+bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  int num = sizeof(modes)/sizeof(*modes);
+  int tab_width = win->frame.w / num;
+  editor_state_t *editor = win->userdata;
+  switch (msg) {
+    case MSG_CREATE:
+      win->userdata = lparam;
+      create_window("Button", 0, MAKERECT(4, 4, 0, 0), win, win_button, NULL);
+      return true;
+//    case MSG_PAINT:
+//      for (int i = 0; i < num; i++) {
+//        if (editor->sel_mode == i) {
+//          fill_rect(colors[i], i*tab_width, 0, tab_width, win->frame.h);
+//        }
+//        draw_text_gl3(modes[i], i*tab_width+4, 0, 1);
+//      }
+//      return true;
+    case MSG_LBUTTONUP:
+      editor->sel_mode = LOWORD(wparam) / tab_width;
+      invalidate_window(win);
+      return true;
   }
   return false;
 }

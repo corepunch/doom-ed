@@ -406,7 +406,7 @@ void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
 
 // Draw the shotgun at the bottom center of the screen
 void draw_weapon(float k) {
-  set_projection(k * VGA_HEGHT, VGA_HEGHT);
+  set_projection(0, 0, k * VGA_HEGHT, VGA_HEGHT);
   
   // Find appropriate shotgun sprite frame (usually "SHTGA0")
 #ifdef HEXEN
@@ -454,7 +454,7 @@ void draw_weapon(float k) {
 void draw_crosshair(float k) {
   sprite_system_t* sys = &g_sprite_system;
 
-  set_projection(k * VGA_HEGHT, VGA_HEGHT);
+  set_projection(0, 0, k * VGA_HEGHT, VGA_HEGHT);
 
   // First try to find a pre-existing crosshair sprite
   sprite_t* sprite = find_sprite("CROSA0");
@@ -549,15 +549,15 @@ void cleanup_sprites(void) {
   sys->num_sprites = 0;
 }
 
-void set_projection(int w, int h) {
+void set_projection(int x, int y, int w, int h) {
   mat4 projection;
-  glm_ortho(0, w, h, 0, -1, 1, projection);
+  glm_ortho(x, w, h, y, -1, 1, projection);
   glUseProgram(g_sprite_system.program);
   glUniformMatrix4fv(glGetUniformLocation(g_sprite_system.program, "projection"), 1, GL_FALSE, projection[0]);
 }
 
 // Draw a sprite at the specified screen position
-void draw_rect_ex(int tex, int x, int y, int w, int h, int type) {
+void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
   sprite_system_t* sys = &g_sprite_system;
   
   // Enable blending for transparency
@@ -574,7 +574,7 @@ void draw_rect_ex(int tex, int x, int y, int w, int h, int type) {
 //  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
   glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
   glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
-  glUniform1f(glGetUniformLocation(sys->program, "alpha"), 1);
+  glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
   
   // Bind sprite texture
   glActiveTexture(GL_TEXTURE0);
@@ -592,11 +592,18 @@ void draw_rect_ex(int tex, int x, int y, int w, int h, int type) {
 
 // Draw a sprite at the specified screen position
 void draw_rect(int tex, int x, int y, int w, int h) {
-  draw_rect_ex(tex, x, y, w, h, false);
+  draw_rect_ex(tex, x, y, w, h, false, 1);
+}
+
+#include "editor.h"
+
+void draw_icon(int icon, int x, int y, float alpha) {
+  extern editor_state_t editor;
+  draw_rect_ex(editor.icons[icon], x, y, 8, 8, false, alpha);
 }
 
 void fill_rect(int color, int x, int y, int w, int h) {
   glBindTexture(GL_TEXTURE_2D, g_sprite_system.tmp);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &color);
-  draw_rect_ex(g_sprite_system.tmp, x, y, w, h, false);
+  draw_rect_ex(g_sprite_system.tmp, x, y, w, h, false, 1);
 }
