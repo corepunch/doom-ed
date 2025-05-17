@@ -283,7 +283,8 @@ static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
 // Main function to allocate textures for map sides
 int allocate_mapside_textures(map_data_t* map) {
   texture_cache = malloc(sizeof(texture_cache_t) + sizeof(texture_cache_t) * MAX_TEXTURES);
-  
+  memset(texture_cache, 0, sizeof(texture_cache_t));
+
   // Array of texture directories
   texture_directory_t *tex_dirs[MAX_TEXDIR]={0};
   int dir_count = 0;
@@ -425,6 +426,7 @@ load_flat_texture(texname_t const floorpic)
 // Main function to allocate flat textures for map
 int allocate_flat_textures(map_data_t* map) {
   flat_cache = malloc(sizeof(texture_cache_t) + MAX_TEXTURES * sizeof(mapside_texture_t));
+  memset(flat_cache, 0, sizeof(texture_cache_t));
   
 //  // Find F_START and F_END markers
 //  int f_start = find_lump_num("F_START"), f_end = find_lump_num("F_END");
