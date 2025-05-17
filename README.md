@@ -1,6 +1,6 @@
 # DOOM-ED
 
-![DOOM-ED Screenshot](https://github.com/corepunch/doom-ed/raw/master/screenshots/editor.png)
+![DOOM-ED Screenshot](https://github.com/corepunch/doom-ed/raw/main/screenshots/editor.png)
 
 A modern open-source level editor for classic DOOM games, built with SDL2.
 
