@@ -147,6 +147,7 @@ static GLuint compile_radial_shader(GLenum type, const char* src) {
 
 // Generate a 16x16 grid mesh for the radial segment using triangle strips
 static void generate_mesh(void) {
+  return;
   radial_menu_t* menu = &g_radial_menu;
   float* ptr = menu->mesh_data;
   

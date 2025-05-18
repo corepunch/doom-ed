@@ -221,6 +221,20 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       } else {
         editor->cursor[0] = LOWORD(wparam);
         editor->cursor[1] = HIWORD(wparam);
+        
+        if (editor->sel_mode == edit_sectors) {
+          vec3 world_1;
+          mat4 mvp;
+          get_editor_mvp(editor, mvp);
+          get_mouse_position(editor, editor->cursor, mvp, world_1);
+          
+          mapsector_t const *sec = find_player_sector(&game.map, world_1[0], world_1[1]);
+          if (sec) {
+            editor->current_sector = (int)(sec - game.map.sectors);
+          } else {
+            editor->current_sector = -1;
+          }
+        }
       }
       invalidate_window(win);
       return true;

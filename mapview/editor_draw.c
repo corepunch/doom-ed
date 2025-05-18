@@ -140,6 +140,21 @@ static void draw_current_sector(editor_state_t const *editor) {
 }
 
 extern GLuint no_tex;
+//
+//static void draw_floors_ids_editor(map_data_t const *map) {
+//  glBindTexture(GL_TEXTURE_2D, white_tex);
+//  glBindTexture(GL_TEXTURE_2D, white_tex);
+//  glUniform1i(ui_prog_tex0, 0);
+//  glUniform2f(ui_prog_tex0_size, 1, 1);
+//  for (int i = 0; i < map->num_sectors; i++) {
+//    int id = i;// | PIXEL_FLOOR;
+//    uint8_t *c = (uint8_t *)&id;
+//    glUniform4f(ui_prog_color, c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
+//    glDrawArrays(GL_TRIANGLES,
+//                 map->floors.sectors[i].floor.vertex_start,
+//                 map->floors.sectors[i].floor.vertex_count);
+//  }
+//}
 
 static void draw_floors_editor(map_data_t const *map) {
   GLuint tex0_size = glGetUniformLocation(ui_prog, "tex0_size");
@@ -270,6 +285,22 @@ void get_editor_mvp(editor_state_t const *editor, mat4 mvp) {
   glm_mat4_mul(proj, view, mvp);
 }
 
+void draw_line_ex(editor_state_t const *editor, map_data_t const *map, int x1, int y1, int x2, int y2) {
+  wall_vertex_t verts[2] = { {x1,y1}, {x2,y2} };
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
+  glDrawArrays(GL_LINES, 0, 2);
+}
+
+void draw_line(editor_state_t const *editor, map_data_t const *map, int i) {
+  draw_line_ex(editor, map,
+    map->vertices[map->linedefs[i].start].x,
+    map->vertices[map->linedefs[i].start].y,
+    map->vertices[map->linedefs[i].end].x,
+    map->vertices[map->linedefs[i].end].y);
+}
+
 // Draw the editor UI
 void
 draw_editor(map_data_t const *map,
@@ -336,7 +367,7 @@ draw_editor(map_data_t const *map,
   if (editor->window != active) {
     goto draw_player;
   }
-
+  
   vec3 world;
   get_mouse_position(editor, editor->cursor, mvp, world);
   
@@ -392,34 +423,36 @@ draw_editor(map_data_t const *map,
       draw_cursor(sn.x, sn.y);
     }
   }
-  
+
   glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 0.5f);
   glBindTexture(GL_TEXTURE_2D, white_tex);
-
-  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
-    if (splitting_line != -1) {
-      wall_vertex_t verts[2] = {
-        { map->vertices[map->linedefs[splitting_line].start].x,
-          map->vertices[map->linedefs[splitting_line].start].y },
-        { map->vertices[map->linedefs[splitting_line].end].x,
-          map->vertices[map->linedefs[splitting_line].end].y },
-      };
-      glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-      glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-      glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
-      glDrawArrays(GL_LINES, 0, 2);
-    }
-    
-    // If currently drawing, show line from last point to cursor
-    if (editor->dragging || editor->drawing) {
-      float x = map->vertices[editor->current_point].x;
-      float y = map->vertices[editor->current_point].y;
-      wall_vertex_t verts[2] = { { x, y}, { sn.x, sn.y } };
-      glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-      glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-      glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
-      glDrawArrays(GL_LINES, 0, 2);
-    }
+  
+  switch (editor->sel_mode) {
+    case edit_vertices:
+    case edit_lines:
+      if (splitting_line != -1) {
+        draw_line(editor, map, splitting_line);
+      }
+      
+      // If currently drawing, show line from last point to cursor
+      if (editor->dragging || editor->drawing) {
+        float x = map->vertices[editor->current_point].x;
+        float y = map->vertices[editor->current_point].y;
+        draw_line_ex(editor, map, x, y, sn.x, sn.y);
+      }
+      break;
+    case edit_sectors:
+      if (editor->current_sector != -1) {
+        for (int i = 0; i < map->num_linedefs; i++) {
+          maplinedef_t const *ld = &map->linedefs[i];
+          if ((ld->sidenum[0] != 0xFFFF && map->sidedefs[ld->sidenum[0]].sector == editor->current_sector) ||
+              (ld->sidenum[1] != 0xFFFF && map->sidedefs[ld->sidenum[1]].sector == editor->current_sector))
+          {
+            draw_line(editor, map, i);
+          }
+        }
+      }
+      break;
   }
   
 draw_player:

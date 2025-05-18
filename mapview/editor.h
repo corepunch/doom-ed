@@ -47,6 +47,7 @@ typedef struct {
   int num_draw_points;   // Number of points in current sector
   int current_point;    // Number of point
   int sel_mode;
+  int current_sector;
   float scale;
   uint32_t vao, vbo;
   int icons[icon_count];
