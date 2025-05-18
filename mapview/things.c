@@ -230,7 +230,7 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
     glm_mat4_identity(model);
     
     // Translate to thing position
-    glm_translate(model, (vec3){thing->x, thing->y, z_pos+sprite->height/2});
+    glm_translate(model, (vec3){thing->x, thing->y, z_pos+sprite->offsety-sprite->height/2});
     
     // Rotate to face the defined angle
 //    float angle_rad = glm_rad(thing->angle);
@@ -252,8 +252,7 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
     glUniformMatrix4fv(glGetUniformLocation(renderer->program, "mvp"), 1, GL_FALSE, (const float*)mv);
     
     // Set scale uniform
-    glUniform2f(glGetUniformLocation(renderer->program, "scale"),
-                sprite->width, sprite->height);
+    glUniform2f(glGetUniformLocation(renderer->program, "scale"), sprite->width, sprite->height);
     
     // Set light level
     float light = sector->lightlevel / 255.0f;

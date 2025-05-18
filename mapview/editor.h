@@ -45,9 +45,10 @@ typedef struct {
   int move_camera;
   mapvertex_t draw_points[MAX_DRAW_POINTS]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
-  int current_point;    // Number of point
+  struct {
+    int point, linedef, sector, thing;
+  } current;
   int sel_mode;
-  int current_sector;
   float scale;
   uint32_t vao, vbo;
   int icons[icon_count];

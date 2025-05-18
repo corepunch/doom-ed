@@ -2,6 +2,7 @@
 #include <cglm/struct.h>
 
 #include "editor.h"
+#include "sprites.h"
 
 extern SDL_Window* window;
 
@@ -181,11 +182,10 @@ static int icon_x(window_t const *win, int i) {
 
 bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mapvertex_t sn;
-  extern int splitting_line;
   editor_state_t *editor = win->userdata;
   map_data_t *map = &game.map;
   int point = -1;
-  int old_point = editor ? editor->current_point : -1;
+  int old_point = editor ? editor->current.point : -1;
   switch (msg) {
     case MSG_NCPAINT:
       for (int i = 0; i < 5; i++) {
@@ -221,18 +221,31 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       } else {
         editor->cursor[0] = LOWORD(wparam);
         editor->cursor[1] = HIWORD(wparam);
-        
+        vec3 world_1;
+        mat4 mvp;
+        get_editor_mvp(editor, mvp);
+        get_mouse_position(editor, editor->cursor, mvp, world_1);
         if (editor->sel_mode == edit_sectors) {
-          vec3 world_1;
-          mat4 mvp;
-          get_editor_mvp(editor, mvp);
-          get_mouse_position(editor, editor->cursor, mvp, world_1);
-          
           mapsector_t const *sec = find_player_sector(&game.map, world_1[0], world_1[1]);
-          if (sec) {
-            editor->current_sector = (int)(sec - game.map.sectors);
-          } else {
-            editor->current_sector = -1;
+          editor->current.sector = sec ? (int)(sec - game.map.sectors) : -1;
+        } else if (editor->sel_mode == edit_things) {
+          editor->current.thing = -1;
+          for (int i = 0; i < game.map.num_things; i++) {
+            mapthing_t const *th = &game.map.things[i];
+            sprite_t *get_thing_sprite_name(int thing_type, int angle);
+            sprite_t *spr = get_thing_sprite_name(th->type, 0);
+            if (!spr) continue;
+//            if (world_1[0] >= th->x - spr->offsetx &&
+//                world_1[1] >= th->y - spr->offsety &&
+//                world_1[0] < th->x - spr->offsetx + spr->width &&
+//                world_1[1] < th->y - spr->offsety + spr->height)
+            if (world_1[0] >= th->x - spr->width/2 &&
+                world_1[1] >= th->y - spr->height/2 &&
+                world_1[0] < th->x + spr->width/2 &&
+                world_1[1] < th->y + spr->height/2)
+            {
+              editor->current.thing = i;
+            }
           }
         }
       }
@@ -263,7 +276,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           if (editor->dragging) {
             extern mapvertex_t sn;
             editor->dragging = false;
-            map->vertices[editor->current_point] = sn;
+            map->vertices[editor->current.point] = sn;
             // Rebuild vertex buffers
             build_wall_vertex_buffer(map);
             build_floor_vertex_buffer(map);
@@ -281,10 +294,10 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
-          } else if (splitting_line >= 0) {
-            editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
+          } else if (editor->current.linedef >= 0) {
+            editor->current.point = split_linedef(map, editor->current.linedef, sn.x, sn.y);
           } else if (point_exists(sn, map, &point)) {
-            editor->current_point = point;
+            editor->current.point = point;
             editor->dragging = true;
           }
           break;
@@ -295,23 +308,23 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         case edit_vertices:
           if (editor->dragging) {
             editor->dragging = false;
-            editor->current_point = -1;
+            editor->current.point = -1;
           } else if (point_exists(sn, map, &point)) {
-            editor->current_point = point;
-          } else if (splitting_line >= 0) {
-            editor->current_point = split_linedef(map, splitting_line, sn.x, sn.y);
+            editor->current.point = point;
+          } else if (editor->current.linedef >= 0) {
+            editor->current.point = split_linedef(map, editor->current.linedef, sn.x, sn.y);
           } else {
-            editor->current_point = add_vertex(map, sn);
+            editor->current.point = add_vertex(map, sn);
           }
           if (editor->drawing) {
             mapvertex_t a = map->vertices[old_point];
-            mapvertex_t b = map->vertices[editor->current_point];
+            mapvertex_t b = map->vertices[editor->current.point];
             uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
             uint16_t line = -1;
             if (sec != 0xFFFF) {
-              line = add_linedef(map, old_point, editor->current_point, add_sidedef(map, sec), add_sidedef(map, sec));
+              line = add_linedef(map, old_point, editor->current.point, add_sidedef(map, sec), add_sidedef(map, sec));
             } else {
-              line = add_linedef(map, old_point, editor->current_point, 0xFFFF, 0xFFFF);
+              line = add_linedef(map, old_point, editor->current.point, 0xFFFF, 0xFFFF);
             }
             uint16_t vertices[256];
             int num_vertices = check_closed_loop(map, line, vertices);

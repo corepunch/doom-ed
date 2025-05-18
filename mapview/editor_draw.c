@@ -196,9 +196,8 @@ static void draw_walls_editor(map_data_t const *map) {
     
     // Determine if this is a one-sided or two-sided wall
     bool two_sided = linedef->sidenum[1] != 0xFFFF;
-    extern int splitting_line;
     // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
-    if (splitting_line == i) {
+    if (editor->current.linedef == i) {
       glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 1.0f);
     } else if (!two_sided) {
       glUniform4f(ui_prog_color, 1.0f, 1.0f, 1.0f, 1.0f);
@@ -260,7 +259,6 @@ static void draw_cursor(int x, int y) {
   glDrawArrays(GL_LINES, 0, 4);
 }
 
-int splitting_line = 0;
 mapvertex_t sn;
 
 void get_mouse_position(editor_state_t const *, int16_t const *screen, mat4 const, vec3);
@@ -386,14 +384,14 @@ draw_editor(map_data_t const *map,
       sn.x = x;
       sn.y = y;
       dist = d;
-      splitting_line = i;
+      ((editor_state_t*)editor)->current.linedef = i;
     }
   }
   
 //  static int s = -1;
-//  if (s!=splitting_line) {
-//    printf("%d\n", splitting_line);
-//    s =splitting_line;
+//  if (s!=editor->current.linedef) {
+//    printf("%d\n", editor->current.linedef);
+//    s =editor->current.linedef;
 //  }
 
   if (editor->sel_mode == edit_vertices) {
@@ -405,7 +403,7 @@ draw_editor(map_data_t const *map,
         sn.x = map->vertices[i].x;
         sn.y = map->vertices[i].y;
         dist = d;
-        splitting_line = -1;
+        ((editor_state_t*)editor)->current.linedef = -1;
       }
     }
   }
@@ -415,7 +413,7 @@ draw_editor(map_data_t const *map,
       draw_cursor(sn.x, sn.y);
     }
   } else {
-    splitting_line = -1;
+    ((editor_state_t*)editor)->current.linedef = -1;
     if (editor->sel_mode == edit_vertices) {
       // Snap to grid
       snap_mouse_position(editor, world, &sn);
@@ -430,27 +428,41 @@ draw_editor(map_data_t const *map,
   switch (editor->sel_mode) {
     case edit_vertices:
     case edit_lines:
-      if (splitting_line != -1) {
-        draw_line(editor, map, splitting_line);
+      if (editor->current.linedef != -1) {
+        draw_line(editor, map, editor->current.linedef);
       }
       
       // If currently drawing, show line from last point to cursor
       if (editor->dragging || editor->drawing) {
-        float x = map->vertices[editor->current_point].x;
-        float y = map->vertices[editor->current_point].y;
+        float x = map->vertices[editor->current.point].x;
+        float y = map->vertices[editor->current.point].y;
         draw_line_ex(editor, map, x, y, sn.x, sn.y);
       }
       break;
     case edit_sectors:
-      if (editor->current_sector != -1) {
+      if (editor->current.sector != -1) {
         for (int i = 0; i < map->num_linedefs; i++) {
           maplinedef_t const *ld = &map->linedefs[i];
-          if ((ld->sidenum[0] != 0xFFFF && map->sidedefs[ld->sidenum[0]].sector == editor->current_sector) ||
-              (ld->sidenum[1] != 0xFFFF && map->sidedefs[ld->sidenum[1]].sector == editor->current_sector))
+          if ((ld->sidenum[0] != 0xFFFF && map->sidedefs[ld->sidenum[0]].sector == editor->current.sector) ||
+              (ld->sidenum[1] != 0xFFFF && map->sidedefs[ld->sidenum[1]].sector == editor->current.sector))
           {
             draw_line(editor, map, i);
           }
         }
+      }
+      break;
+    case edit_things:
+      if (editor->current.thing != -1) {
+        mapthing_t const *thing = &map->things[editor->current.thing];
+        sprite_t *get_thing_sprite_name(int thing_type, int angle);
+        sprite_t *spr = get_thing_sprite_name(thing->type, 0);
+        if (!spr) break;
+        int x = thing->x;// - spr->offsetx;
+        int y = thing->y;// - spr->offsety;
+        draw_line_ex(editor, map, x - spr->width/2, y - spr->height/2, x + spr->width/2, y - spr->height/2);
+        draw_line_ex(editor, map, x + spr->width/2, y - spr->height/2, x + spr->width/2, y + spr->height/2);
+        draw_line_ex(editor, map, x - spr->width/2, y + spr->height/2, x + spr->width/2, y + spr->height/2);
+        draw_line_ex(editor, map, x - spr->width/2, y - spr->height/2, x - spr->width/2, y + spr->height/2);
       }
       break;
   }
