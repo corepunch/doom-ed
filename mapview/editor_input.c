@@ -185,7 +185,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = win->userdata;
   map_data_t *map = &game.map;
   int point = -1;
-  int old_point = editor ? editor->current.point : -1;
+  int old_point = editor ? editor->hover.point : -1;
   switch (msg) {
     case MSG_NCPAINT:
       for (int i = 0; i < 5; i++) {
@@ -227,9 +227,9 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         get_mouse_position(editor, editor->cursor, mvp, world_1);
         if (editor->sel_mode == edit_sectors) {
           mapsector_t const *sec = find_player_sector(&game.map, world_1[0], world_1[1]);
-          editor->current.sector = sec ? (int)(sec - game.map.sectors) : -1;
+          editor->hover.sector = sec ? (int)(sec - game.map.sectors) : -1;
         } else if (editor->sel_mode == edit_things) {
-          editor->current.thing = -1;
+          editor->hover.thing = -1;
           for (int i = 0; i < game.map.num_things; i++) {
             mapthing_t const *th = &game.map.things[i];
             sprite_t *get_thing_sprite_name(int thing_type, int angle);
@@ -244,12 +244,13 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
                 world_1[0] < th->x + spr->width/2 &&
                 world_1[1] < th->y + spr->height/2)
             {
-              editor->current.thing = i;
+              editor->hover.thing = i;
             }
           }
         }
       }
-      invalidate_window(win);
+      invalidate_window(editor->window);
+      invalidate_window(editor->inspector);
       return true;
       //    case MSG_WHEEL:
       //      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
@@ -276,7 +277,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           if (editor->dragging) {
             extern mapvertex_t sn;
             editor->dragging = false;
-            map->vertices[editor->current.point] = sn;
+            map->vertices[editor->hover.point] = sn;
             // Rebuild vertex buffers
             build_wall_vertex_buffer(map);
             build_floor_vertex_buffer(map);
@@ -294,12 +295,20 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
-          } else if (editor->current.linedef >= 0) {
-            editor->current.point = split_linedef(map, editor->current.linedef, sn.x, sn.y);
+          } else if (editor->hover.linedef >= 0) {
+            editor->hover.point = split_linedef(map, editor->hover.linedef, sn.x, sn.y);
           } else if (point_exists(sn, map, &point)) {
-            editor->current.point = point;
+            editor->hover.point = point;
             editor->dragging = true;
           }
+          break;
+        case edit_things:
+          editor->selected.thing = editor->hover.thing;
+          invalidate_window(win);
+          break;
+        case edit_sectors:
+          editor->selected.sector = editor->hover.sector;
+          invalidate_window(win);
           break;
       }
       return true;
@@ -308,23 +317,23 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         case edit_vertices:
           if (editor->dragging) {
             editor->dragging = false;
-            editor->current.point = -1;
+            editor->hover.point = -1;
           } else if (point_exists(sn, map, &point)) {
-            editor->current.point = point;
-          } else if (editor->current.linedef >= 0) {
-            editor->current.point = split_linedef(map, editor->current.linedef, sn.x, sn.y);
+            editor->hover.point = point;
+          } else if (editor->hover.linedef >= 0) {
+            editor->hover.point = split_linedef(map, editor->hover.linedef, sn.x, sn.y);
           } else {
-            editor->current.point = add_vertex(map, sn);
+            editor->hover.point = add_vertex(map, sn);
           }
           if (editor->drawing) {
             mapvertex_t a = map->vertices[old_point];
-            mapvertex_t b = map->vertices[editor->current.point];
+            mapvertex_t b = map->vertices[editor->hover.point];
             uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
             uint16_t line = -1;
             if (sec != 0xFFFF) {
-              line = add_linedef(map, old_point, editor->current.point, add_sidedef(map, sec), add_sidedef(map, sec));
+              line = add_linedef(map, old_point, editor->hover.point, add_sidedef(map, sec), add_sidedef(map, sec));
             } else {
-              line = add_linedef(map, old_point, editor->current.point, 0xFFFF, 0xFFFF);
+              line = add_linedef(map, old_point, editor->hover.point, 0xFFFF, 0xFFFF);
             }
             uint16_t vertices[256];
             int num_vertices = check_closed_loop(map, line, vertices);
@@ -428,17 +437,30 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_CREATE:
       win->userdata = lparam;
+      ((editor_state_t*)lparam)->inspector = win;
       create_window("Sample button", 0, MAKERECT(4, 4, 0, 0), win, win_label, NULL);
-      create_window("Button", 0, MAKERECT(4, 16, 0, 0), win, win_button, NULL);
+//      create_window("Button", 0, MAKERECT(4, 16, 0, 0), win, win_button, NULL);
       return true;
-//    case MSG_PAINT:
+    case MSG_PAINT:
 //      for (int i = 0; i < num; i++) {
 //        if (editor->sel_mode == i) {
 //          fill_rect(colors[i], i*tab_width, 0, tab_width, win->frame.h);
 //        }
 //        draw_text_gl3(modes[i], i*tab_width+4, 0, 1);
 //      }
-//      return true;
+      if (editor->sel_mode == edit_things) {
+        uint16_t index = editor->selected.thing;
+        if (editor->hover.thing != 0xFFFF) {
+          index = editor->hover.thing;
+        }
+        if (index != 0xFFFF) {
+          mapthing_t const *thing = &game.map.things[index];
+          sprite_t *get_thing_sprite_name(int thing_type, int angle);
+          sprite_t *spr = get_thing_sprite_name(thing->type, 0);
+          draw_rect(spr->texture, 4, 4, spr->width, spr->height);
+        }
+      }
+      return false;
     case MSG_LBUTTONUP:
       editor->sel_mode = LOWORD(wparam) / tab_width;
       invalidate_window(win);

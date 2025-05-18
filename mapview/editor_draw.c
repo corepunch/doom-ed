@@ -10,6 +10,15 @@ extern GLuint ui_prog;
 extern GLuint white_tex;
 extern unsigned frame;
 
+#define COLOR_HOVER 0xff00ffff
+#define COLOR_SELECTED 0xffffff00
+#define COLOR_SELECTED_HOVER 0xffffffff
+
+void glUniform4ub(int prog, uint32_t value) {
+  uint8_t const *c = (uint8_t*)&value;
+  glUniform4f(ui_prog_color, c[0]/255.f, c[1]/255.f, c[2]/255.f, c[3]/255.f);
+}
+
 // Initialize editor state
 void init_editor(editor_state_t *editor) {
   editor->grid_size = 32;
@@ -197,7 +206,7 @@ static void draw_walls_editor(map_data_t const *map) {
     // Determine if this is a one-sided or two-sided wall
     bool two_sided = linedef->sidenum[1] != 0xFFFF;
     // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
-    if (editor->current.linedef == i) {
+    if (editor->hover.linedef == i) {
       glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 1.0f);
     } else if (!two_sided) {
       glUniform4f(ui_prog_color, 1.0f, 1.0f, 1.0f, 1.0f);
@@ -283,7 +292,7 @@ void get_editor_mvp(editor_state_t const *editor, mat4 mvp) {
   glm_mat4_mul(proj, view, mvp);
 }
 
-void draw_line_ex(editor_state_t const *editor, map_data_t const *map, int x1, int y1, int x2, int y2) {
+void draw_line_ex(map_data_t const *map, int x1, int y1, int x2, int y2) {
   wall_vertex_t verts[2] = { {x1,y1}, {x2,y2} };
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
@@ -291,12 +300,40 @@ void draw_line_ex(editor_state_t const *editor, map_data_t const *map, int x1, i
   glDrawArrays(GL_LINES, 0, 2);
 }
 
-void draw_line(editor_state_t const *editor, map_data_t const *map, int i) {
-  draw_line_ex(editor, map,
+void draw_line(map_data_t const *map, uint16_t i) {
+  if (i >= map->num_linedefs) return;
+  draw_line_ex(map,
     map->vertices[map->linedefs[i].start].x,
     map->vertices[map->linedefs[i].start].y,
     map->vertices[map->linedefs[i].end].x,
     map->vertices[map->linedefs[i].end].y);
+}
+
+void draw_thing_outline(map_data_t const *map, uint16_t index) {
+  if (index >= map->num_things) return;
+  mapthing_t const *thing = &map->things[index];
+  sprite_t *get_thing_sprite_name(int thing_type, int angle);
+  sprite_t *spr = get_thing_sprite_name(thing->type, 0);
+  if (!spr) return;
+  int x = thing->x;// - spr->offsetx;
+  int y = thing->y;// - spr->offsety;
+  int w = spr->width/2;
+  int h = spr->height/2;
+  draw_line_ex(map, x - w, y - h, x + w, y - h);
+  draw_line_ex(map, x + w, y - h, x + w, y + h);
+  draw_line_ex(map, x - w, y + h, x + w, y + h);
+  draw_line_ex(map, x - w, y - h, x - w, y + h);
+}
+
+void draw_sector_outline(map_data_t const *map, uint16_t index) {
+  for (int i = 0; i < map->num_linedefs; i++) {
+    maplinedef_t const *ld = &map->linedefs[i];
+    if ((ld->sidenum[0] != 0xFFFF && map->sidedefs[ld->sidenum[0]].sector == index) ||
+        (ld->sidenum[1] != 0xFFFF && map->sidedefs[ld->sidenum[1]].sector == index))
+    {
+      draw_line(map, i);
+    }
+  }
 }
 
 // Draw the editor UI
@@ -384,14 +421,14 @@ draw_editor(map_data_t const *map,
       sn.x = x;
       sn.y = y;
       dist = d;
-      ((editor_state_t*)editor)->current.linedef = i;
+      ((editor_state_t*)editor)->hover.linedef = i;
     }
   }
   
 //  static int s = -1;
-//  if (s!=editor->current.linedef) {
-//    printf("%d\n", editor->current.linedef);
-//    s =editor->current.linedef;
+//  if (s!=editor->hover.linedef) {
+//    printf("%d\n", editor->hover.linedef);
+//    s =editor->hover.linedef;
 //  }
 
   if (editor->sel_mode == edit_vertices) {
@@ -403,7 +440,7 @@ draw_editor(map_data_t const *map,
         sn.x = map->vertices[i].x;
         sn.y = map->vertices[i].y;
         dist = d;
-        ((editor_state_t*)editor)->current.linedef = -1;
+        ((editor_state_t*)editor)->hover.linedef = -1;
       }
     }
   }
@@ -413,7 +450,7 @@ draw_editor(map_data_t const *map,
       draw_cursor(sn.x, sn.y);
     }
   } else {
-    ((editor_state_t*)editor)->current.linedef = -1;
+    ((editor_state_t*)editor)->hover.linedef = -1;
     if (editor->sel_mode == edit_vertices) {
       // Snap to grid
       snap_mouse_position(editor, world, &sn);
@@ -422,48 +459,39 @@ draw_editor(map_data_t const *map,
     }
   }
 
-  glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 0.5f);
+  glUniform4ub(ui_prog_color, COLOR_HOVER);
   glBindTexture(GL_TEXTURE_2D, white_tex);
   
   switch (editor->sel_mode) {
     case edit_vertices:
     case edit_lines:
-      if (editor->current.linedef != -1) {
-        draw_line(editor, map, editor->current.linedef);
-      }
-      
+      draw_line(map, editor->hover.linedef);
       // If currently drawing, show line from last point to cursor
       if (editor->dragging || editor->drawing) {
-        float x = map->vertices[editor->current.point].x;
-        float y = map->vertices[editor->current.point].y;
-        draw_line_ex(editor, map, x, y, sn.x, sn.y);
+        float x = map->vertices[editor->hover.point].x;
+        float y = map->vertices[editor->hover.point].y;
+        draw_line_ex(map, x, y, sn.x, sn.y);
       }
       break;
     case edit_sectors:
-      if (editor->current.sector != -1) {
-        for (int i = 0; i < map->num_linedefs; i++) {
-          maplinedef_t const *ld = &map->linedefs[i];
-          if ((ld->sidenum[0] != 0xFFFF && map->sidedefs[ld->sidenum[0]].sector == editor->current.sector) ||
-              (ld->sidenum[1] != 0xFFFF && map->sidedefs[ld->sidenum[1]].sector == editor->current.sector))
-          {
-            draw_line(editor, map, i);
-          }
-        }
+      glUniform4ub(ui_prog_color, COLOR_SELECTED);
+      draw_sector_outline(map, editor->selected.sector);
+      if (editor->selected.sector == editor->hover.sector) {
+        glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
+      } else {
+        glUniform4ub(ui_prog_color, COLOR_HOVER);
       }
+      draw_sector_outline(map, editor->hover.sector);
       break;
     case edit_things:
-      if (editor->current.thing != -1) {
-        mapthing_t const *thing = &map->things[editor->current.thing];
-        sprite_t *get_thing_sprite_name(int thing_type, int angle);
-        sprite_t *spr = get_thing_sprite_name(thing->type, 0);
-        if (!spr) break;
-        int x = thing->x;// - spr->offsetx;
-        int y = thing->y;// - spr->offsety;
-        draw_line_ex(editor, map, x - spr->width/2, y - spr->height/2, x + spr->width/2, y - spr->height/2);
-        draw_line_ex(editor, map, x + spr->width/2, y - spr->height/2, x + spr->width/2, y + spr->height/2);
-        draw_line_ex(editor, map, x - spr->width/2, y + spr->height/2, x + spr->width/2, y + spr->height/2);
-        draw_line_ex(editor, map, x - spr->width/2, y - spr->height/2, x - spr->width/2, y + spr->height/2);
+      glUniform4ub(ui_prog_color, COLOR_SELECTED);
+      draw_thing_outline(map, editor->selected.thing);
+      if (editor->selected.thing == editor->hover.thing) {
+        glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
+      } else {
+        glUniform4ub(ui_prog_color, COLOR_HOVER);
       }
+      draw_thing_outline(map, editor->hover.thing);
       break;
   }
   

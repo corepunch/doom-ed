@@ -23,7 +23,6 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
-
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
   memset(player, 0, sizeof(player_t));

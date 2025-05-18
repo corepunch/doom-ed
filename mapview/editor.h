@@ -36,7 +36,12 @@ enum {
 };
 
 typedef struct {
-  window_t const *window;
+  uint16_t point, linedef, sector, thing;
+} editor_selection_t;
+
+typedef struct {
+  window_t *window;
+  window_t *inspector;
   int16_t cursor[2];
   vec2 camera;
   int grid_size;         // Grid size (8 units by default)
@@ -45,9 +50,7 @@ typedef struct {
   int move_camera;
   mapvertex_t draw_points[MAX_DRAW_POINTS]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
-  struct {
-    int point, linedef, sector, thing;
-  } current;
+  editor_selection_t hover, selected;
   int sel_mode;
   float scale;
   uint32_t vao, vbo;

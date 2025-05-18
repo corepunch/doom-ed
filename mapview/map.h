@@ -403,7 +403,7 @@ typedef struct window_s {
   struct window_s *parent;
 } window_t;
 
-void create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
+window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);

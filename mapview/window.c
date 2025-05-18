@@ -122,12 +122,13 @@ void push_window(window_t *win, window_t **windows)  {
   }
 }
 
-void create_window(char const *title,
-                   flags_t flags,
-                   const rect_t *frame,
-                   window_t *parent,
-                   winproc_t proc,
-                   void *lparam)
+window_t*
+create_window(char const *title,
+              flags_t flags,
+              const rect_t *frame,
+              window_t *parent,
+              winproc_t proc,
+              void *lparam)
 {
   window_t *win = malloc(sizeof(window_t));
   memset(win, 0, sizeof(window_t));
@@ -141,6 +142,7 @@ void create_window(char const *title,
   push_window(win, parent ? &parent->children : &windows);
   proc(win, MSG_CREATE, 0, lparam);
   invalidate_window(win);
+  return win;
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
