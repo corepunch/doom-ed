@@ -6,6 +6,7 @@
 #include <math.h>
 #include "map.h"
 #include "sprites.h"
+#include "editor.h"
 
 #ifdef HEXEN
 #include "../hexen/info.h"
@@ -318,6 +319,7 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mobjinfo_t mobjinfo[NUMMOBJTYPES];
   extern state_t states[NUMSTATES];
   extern char *sprnames[NUMSPRITES];
+  editor_state_t *editor = win->userdata2;
   switch (msg) {
     case MSG_CREATE:
       num_items = 0;
@@ -326,6 +328,7 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           continue;
         ed_objs[num_items++] = mobjinfo[i];
       }
+      win->userdata2 = lparam;
       win->userdata = layout(num_items, win->frame.w, get_mobj_size, ed_objs);
       break;
     case MSG_PAINT:
@@ -333,11 +336,9 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         int mobjindex;
         int pos = get_layout_item(win->userdata, i, &mobjindex);
         if (mobjindex == -1) continue;
-        sprite_t const *sptr = get_thing_sprite(mobjindex, ed_objs);
-        if (sptr) {
-          int x = sptr->offsetx + LOWORD(pos) + win->scroll[0];
-          int y = sptr->offsety + HIWORD(pos) + win->scroll[1];
-          draw_sprite(sptr->name, x, y, 1, 1);
+        sprite_t const *spr = get_thing_sprite(mobjindex, ed_objs);
+        if (spr) {
+          draw_rect(spr->texture, LOWORD(pos), HIWORD(pos), spr->width, spr->height);
         }
       }
       break;
@@ -347,11 +348,14 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return true;
     case MSG_LBUTTONUP: {
       int texture_idx =
-      get_texture_at_point(win->userdata,
-                           (LOWORD(wparam) - win->scroll[0]),
-                           (HIWORD(wparam) - win->scroll[1]));
+      get_texture_at_point(win->userdata, LOWORD(wparam), HIWORD(wparam));
       if (texture_idx >= 0) {
-        printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
+//        printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
+        if (editor->selected.thing != 0xFFFF) {
+          mobjinfo_t const *mobj = &ed_objs[texture_idx];
+          game.map.things[editor->selected.thing].type = mobj->doomednum;
+          invalidate_window(editor->window);
+        }
 //        memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
       }
 //      invalidate_window(win);

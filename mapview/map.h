@@ -398,6 +398,7 @@ typedef struct window_s {
   bool hovered;
   char title[64];
   void *userdata;
+  void *userdata2;
   struct window_s *next;
   struct window_s *children;
   struct window_s *parent;

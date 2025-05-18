@@ -399,9 +399,9 @@ draw_editor(map_data_t const *map,
   
   extern window_t *active;
 
-  if (editor->window != active) {
-    goto draw_player;
-  }
+//  if (editor->window != active) {
+//    goto draw_player;
+//  }
   
   vec3 world;
   get_mouse_position(editor, editor->cursor, mvp, world);
