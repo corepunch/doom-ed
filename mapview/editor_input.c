@@ -185,7 +185,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = win->userdata;
   map_data_t *map = &game.map;
   int point = -1;
-//  int old_point = editor ? editor->current_point : -1;
+  int old_point = editor ? editor->current_point : -1;
   switch (msg) {
     case MSG_NCPAINT:
       for (int i = 0; i < 5; i++) {
@@ -290,6 +290,22 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             editor->current_point = add_vertex(map, sn);
           }
           if (editor->drawing) {
+            mapvertex_t a = map->vertices[old_point];
+            mapvertex_t b = map->vertices[editor->current_point];
+            uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
+            uint16_t line = -1;
+            if (sec != 0xFFFF) {
+              line = add_linedef(map, old_point, editor->current_point, add_sidedef(map, sec), add_sidedef(map, sec));
+            } else {
+              line = add_linedef(map, old_point, editor->current_point, 0xFFFF, 0xFFFF);
+            }
+            uint16_t vertices[256];
+            int num_vertices = check_closed_loop(map, line, vertices);
+            if (num_vertices) {
+              uint16_t sector = add_sector(map);
+              set_loop_sector(map, sector, vertices, num_vertices);
+              editor->drawing = false;
+            }
           } else {
             editor->drawing = true;
           }
