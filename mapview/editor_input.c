@@ -295,7 +295,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
-          } else if (editor->hover.linedef >= 0) {
+          } else if (editor->hover.linedef != 0xFFFF) {
             editor->hover.point = split_linedef(map, editor->hover.linedef, sn.x, sn.y);
           } else if (point_exists(sn, map, &point)) {
             editor->hover.point = point;
@@ -320,7 +320,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             editor->hover.point = -1;
           } else if (point_exists(sn, map, &point)) {
             editor->hover.point = point;
-          } else if (editor->hover.linedef >= 0) {
+          } else if (editor->hover.linedef != 0xFFFF) {
             editor->hover.point = split_linedef(map, editor->hover.linedef, sn.x, sn.y);
           } else {
             editor->hover.point = add_vertex(map, sn);
@@ -429,6 +429,19 @@ uint32_t colors[] = {
 
 bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
+enum {
+  ID_POS_X = 1000, ID_POS_Y,
+};
+
+windef_t edit_mode[] = {
+  { "TEXT", "Button:", -1, 4, 13, 50, 10 },
+  { "TEXT", "Text edit:", -1, 4, 33, 50, 10 },
+  { "BUTTON", "Click me", ID_POS_X, 60, 10, 50, 10 },
+  { "EDITTEXT", "1235", ID_POS_Y, 60, 30, 50, 10 },
+  { NULL }
+};
 
 bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   int num = sizeof(modes)/sizeof(*modes);
@@ -438,8 +451,12 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case MSG_CREATE:
       win->userdata = lparam;
       ((editor_state_t*)lparam)->inspector = win;
-      create_window("Sample button", 0, MAKERECT(4, 4, 0, 0), win, win_label, NULL);
+//      create_window("Sample button", 0, MAKERECT(4, 4, 0, 0), win, win_label, NULL);
 //      create_window("Button", 0, MAKERECT(4, 16, 0, 0), win, win_button, NULL);
+//      create_window("Text edit", 0, MAKERECT(4, 36, 0, 0), win, win_textedit, NULL);
+      load_window_children(win, edit_mode);
+      set_window_item_text(win, ID_POS_X, "Item 1");
+      set_window_item_text(win, ID_POS_Y, "Item 2");
       return true;
     case MSG_PAINT:
 //      for (int i = 0; i < num; i++) {
@@ -457,7 +474,18 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           mapthing_t const *thing = &game.map.things[index];
           sprite_t *get_thing_sprite_name(int thing_type, int angle);
           sprite_t *spr = get_thing_sprite_name(thing->type, 0);
-          draw_rect(spr->texture, 4, 4, spr->width, spr->height);
+          float scale = fminf(1, fminf(((float)THUMBNAIL_SIZE) / spr->width,
+                                       ((float)THUMBNAIL_SIZE) / spr->height));
+          draw_rect(spr->texture,
+                    4+(THUMBNAIL_SIZE-spr->width*scale)/2,
+                    4+(THUMBNAIL_SIZE-spr->height*scale)/2,
+                    spr->width * scale,
+                    spr->height * scale);
+          char buf[256]={0};
+          sprintf(buf, "Thing type: %d", thing->type);
+          draw_text_small(buf, 4, 80, -1);
+          sprintf(buf, "Thing coord: %d, %d", thing->x, thing->y);
+          draw_text_small(buf, 4, 90, -1);
         }
       }
       return false;

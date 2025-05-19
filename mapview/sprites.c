@@ -11,34 +11,38 @@
 
 // Sprite shader sources
 const char* sprite_vs_src = "#version 150 core\n"
-"in vec2 position; in vec2 texcoord;\n"
+"in vec2 position;\n"
+"in vec2 texcoord;\n"
+"in vec4 color;\n"
 "out vec2 tex;\n"
+"out vec4 col;\n"
 "uniform mat4 projection;\n"
 "uniform vec2 offset;\n"
 "uniform vec2 scale;\n"
 "void main() {\n"
+"  col = color;\n"
 "  tex = texcoord;\n"
 "  gl_Position = projection * vec4(position * scale + offset, 0.0, 1.0);\n"
 "}";
 
 const char* sprite_fs_src = "#version 150 core\n"
 "in vec2 tex;\n"
+"in vec4 col;\n"
 "out vec4 outColor;\n"
 "uniform sampler2D tex0;\n"
 "uniform float alpha;\n"
 "void main() {\n"
-"  outColor = texture(tex0, tex);\n"
+"  outColor = texture(tex0, tex) * col;\n"
 "  outColor.a *= alpha;\n"
 "  if(outColor.a < 0.1) discard;\n"
 "}";
 
 // Sprite vertices (quad)
-float sprite_verts[] = {
-  // pos.x  pos.y    tex.x tex.y
-  0,   0,    0.0f, 0.0f, // bottom left
-  0,   1,    0.0f, 1.0f,  // top left
-  1,   1,    1.0f, 1.0f, // top right
-  1,   0,    1.0f, 0.0f, // bottom right
+wall_vertex_t sprite_verts[] = {
+  {0, 0, 0, 0, 0, 0, 0, 0, -1}, // bottom left
+  {0, 1, 0, 0, 1, 0, 0, 0, -1},  // top left
+  {1, 1, 0, 1, 1, 0, 0, 0, -1}, // top right
+  {1, 0, 0, 1, 0, 0, 0, 0, -1}, // bottom right
 };
 
 // Sprite system state
@@ -84,6 +88,11 @@ float *get_sprite_matrix(void) {
   return g_sprite_system.projection[0];
 }
 
+int get_sprite_prog(void) {
+  return g_sprite_system.program;
+}
+
+
 // Initialize the sprite system
 bool init_sprites(void) {
   sprite_system_t* sys = &g_sprite_system;
@@ -97,6 +106,7 @@ bool init_sprites(void) {
   glAttachShader(sys->program, fragment_shader);
   glBindAttribLocation(sys->program, 0, "position");
   glBindAttribLocation(sys->program, 1, "texcoord");
+  glBindAttribLocation(sys->program, 2, "color");
   glLinkProgram(sys->program);
   
   glGenTextures(1, &sys->tmp);
@@ -112,10 +122,17 @@ bool init_sprites(void) {
   glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_verts), sprite_verts, GL_STATIC_DRAW);
   
   // Set up vertex attributes
+//  glEnableVertexAttribArray(0);
+//  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
+//  glEnableVertexAttribArray(1);
+//  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+
   glEnableVertexAttribArray(0);
-  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
   glEnableVertexAttribArray(1);
-  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, x)); // Position
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, u)); // UV
+  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Color
   
   // Create orthographic projection matrix for screen-space rendering
   int width, height;
@@ -556,6 +573,19 @@ void set_projection(int x, int y, int w, int h) {
   glUniformMatrix4fv(glGetUniformLocation(g_sprite_system.program, "projection"), 1, GL_FALSE, projection[0]);
 }
 
+void push_sprite_args(int tex, int x, int y, int w, int h, float alpha) {
+  sprite_system_t* sys = &g_sprite_system;
+  
+  // Bind sprite texture
+  glUseProgram(sys->program);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, tex);
+  glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
+  glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
+  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
+  glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
+}
+
 // Draw a sprite at the specified screen position
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
   sprite_system_t* sys = &g_sprite_system;
@@ -567,19 +597,7 @@ void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
   // Disable depth testing for UI elements
   glDisable(GL_DEPTH_TEST);
   
-  // Use sprite shader program
-  glUseProgram(sys->program);
-  
-  // Set uniforms
-//  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
-  glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
-  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
-  glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
-  
-  // Bind sprite texture
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, tex);
-  glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
+  push_sprite_args(tex, x, y, w, h, alpha);
   
   // Bind VAO and draw
   glBindVertexArray(sys->vao);

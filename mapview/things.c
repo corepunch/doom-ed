@@ -282,9 +282,11 @@ sprite_t const *get_thing_sprite(int index, mobjinfo_t const *mobjinfo) {
 
 int get_mobj_size(int index, void *_things) {
 //  mobjinfo_t const *mobj = &((mobjinfo_t const *)_things)[index];
-  sprite_t const *sptr = get_thing_sprite(index, _things);
-  if (sptr) {
-    return MAKEDWORD(sptr->width, sptr->height);
+  sprite_t const *spr = get_thing_sprite(index, _things);
+  if (spr) {
+    float scale = fminf(1,fminf(((float)THUMBNAIL_SIZE) / spr->width,
+                                ((float)THUMBNAIL_SIZE) / spr->height));
+    return MAKEDWORD(spr->width * scale, spr->height * scale);
   } else {
     return 0;
   }
@@ -338,7 +340,9 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         if (mobjindex == -1) continue;
         sprite_t const *spr = get_thing_sprite(mobjindex, ed_objs);
         if (spr) {
-          draw_rect(spr->texture, LOWORD(pos), HIWORD(pos), spr->width, spr->height);
+          float scale = fminf(1,fminf(((float)THUMBNAIL_SIZE) / spr->width,
+                                      ((float)THUMBNAIL_SIZE) / spr->height));
+          draw_rect(spr->texture,LOWORD(pos),HIWORD(pos),spr->width * scale,spr->height * scale);
         }
       }
       break;

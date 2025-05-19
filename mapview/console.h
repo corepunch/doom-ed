@@ -27,6 +27,8 @@ void toggle_console(void);
 // Set console text color
 void set_console_color(uint8_t r, uint8_t g, uint8_t b);
 
+void draw_text_small(const char* text, int x, int y, uint32_t col);
+
 int get_text_width(const char* text);
 
 #endif // __CONSOLE_H__

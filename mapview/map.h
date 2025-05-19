@@ -48,6 +48,8 @@ if ((map)->name) free((map)->name); \
 
 #define PLAYER_FOV 90
 
+#define THUMBNAIL_SIZE 64
+
 #define sensitivity_x 0.075f // Adjust sensitivity as needed
 #define sensitivity_y 0.125f // Adjust sensitivity as needed
 
@@ -388,6 +390,14 @@ struct window_s;
 typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
 typedef uint32_t flags_t;
 
+typedef struct {
+  const char *classname;
+  const char *text;
+  uint32_t id;
+  int x, y, w, h;
+  uint32_t flags;
+} windef_t;
+
 typedef struct window_s {
   rect_t frame;
   uint32_t id;
@@ -405,9 +415,11 @@ typedef struct window_s {
 } window_t;
 
 window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
+void load_window_children(window_t *win, windef_t const *def);
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);
+void set_window_item_text(window_t *win, uint32_t id, const char *text);
 int window_title_bar_y(window_t const *win);
 
 extern game_t game;
@@ -442,6 +454,8 @@ void fill_rect(int color, int x, int y, int w, int h);
 void draw_rect(int tex, int x, int y, int w, int h);
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 void draw_text_gl3(const char* text, int x, int y, float alpha);
+void draw_text_small(const char* text, int x, int y, uint32_t col);
+int get_small_text_width(const char* text);
 void draw_icon(int icon, int x, int y, float alpha);
 void draw_palette(map_data_t const *map);
 char const* get_texture_name(int i);

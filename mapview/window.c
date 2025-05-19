@@ -7,6 +7,7 @@
 
 // Base UI Colors
 #define COLOR_PANEL_BG       0xff3c3c3c  // main panel or window background
+#define COLOR_PANEL_DARK_BG  0xff2c2c2c  // main panel or window background
 #define COLOR_LIGHT_EDGE     0xff7f7f7f  // top-left edge for beveled elements
 #define COLOR_DARK_EDGE      0xff1a1a1a  // bottom-right edge for bevel
 #define COLOR_FOCUSED        0xff5EC4F3
@@ -51,7 +52,7 @@ void draw_wallpaper(void);
 void draw_button(int x, int y, int w, int h, bool pressed) {
   fill_rect(pressed?COLOR_DARK_EDGE:COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
   fill_rect(pressed?COLOR_LIGHT_EDGE:COLOR_DARK_EDGE, x, y, w+1, h+1);
-  fill_rect(COLOR_PANEL_BG, x, y, w, h);
+  fill_rect(pressed?COLOR_PANEL_DARK_BG:COLOR_PANEL_BG, x, y, w, h);
 }
 
 void draw_panel(int x, int y, int w, int h, bool active) {
@@ -490,12 +491,12 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   bool *pressed = (void *)&win->userdata;
   switch (msg) {
     case MSG_CREATE:
-      win->frame.w = MAX(win->frame.w, get_text_width(win->title)+4);
+      win->frame.w = MAX(win->frame.w, get_small_text_width(win->title)+6);
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, *pressed);
-      draw_text_gl3(win->title, win->frame.x+(*pressed?3:2), win->frame.y+(*pressed?3:2), 1);
+      draw_text_small(win->title, win->frame.x+(*pressed?4:3), win->frame.y+(*pressed?4:3), COLOR_TEXT_NORMAL);
       return true;
     case MSG_LBUTTONDOWN:
       *pressed = true;
@@ -509,12 +510,68 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
+bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+//  bool *pressed = (void *)&win->userdata;
+  switch (msg) {
+    case MSG_CREATE:
+      win->frame.w = MAX(win->frame.w, get_small_text_width(win->title)+6);
+      win->frame.h = MAX(win->frame.h, 13);
+      return true;
+    case MSG_PAINT:
+      draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, true);
+      draw_text_small(win->title, win->frame.x+3, win->frame.y+3, COLOR_TEXT_NORMAL);
+      return true;
+//    case MSG_LBUTTONDOWN:
+//      *pressed = true;
+//      invalidate_window(win);
+//      return true;
+//    case MSG_LBUTTONUP:
+//      *pressed = false;
+//      invalidate_window(win);
+//      return true;
+  }
+  return false;
+}
+
 bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_PAINT:
-      draw_text_gl3(win->title, win->frame.x, win->frame.y, 1);
+//      draw_text_gl3(win->title, win->frame.x, win->frame.y, 1);
+      draw_text_small(win->title, win->frame.x, win->frame.y, COLOR_TEXT_NORMAL);
       return true;
   }
   return false;
 }
 
+window_t *create_window2(windef_t const *def, window_t *parent) {
+  bool (*proc)(window_t *, uint32_t, uint32_t, void *);
+  if (!strcmp(def->classname, "TEXT")) {
+    proc = win_label;
+  } else if (!strcmp(def->classname, "BUTTON")) {
+    proc = win_button;
+  } else if (!strcmp(def->classname, "EDITTEXT")) {
+    proc = win_textedit;
+  } else {
+    return NULL;
+  }
+  window_t *win = create_window(def->text,
+                                def->flags,
+                                MAKERECT(def->x, def->y, def->w, def->h),
+                                parent, proc, NULL);
+  win->id = def->id;
+  return NULL;
+}
+
+void set_window_item_text(window_t *win, uint32_t id, const char *text) {
+  for (window_t *c = win->children; c; c = c->next) {
+    if (c->id == id) {
+      strncpy(c->title, text, sizeof(c->title));
+    }
+  }
+}
+
+void load_window_children(window_t *win, windef_t const *def) {
+  for (; def->classname; def++) {
+    create_window2(def, win);
+  }
+}
