@@ -24,6 +24,7 @@ typedef enum {
   icon_sectors,
   icon_things,
   icon_sounds,
+  icon_checkbox,
   icon_count,
 } ed_icon_t;
 

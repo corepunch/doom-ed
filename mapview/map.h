@@ -419,7 +419,7 @@ void load_window_children(window_t *win, windef_t const *def);
 void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);
-void set_window_item_text(window_t *win, uint32_t id, const char *text);
+void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
 int window_title_bar_y(window_t const *win);
 
 extern game_t game;

@@ -188,7 +188,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   int old_point = editor ? editor->hover.point : -1;
   switch (msg) {
     case MSG_NCPAINT:
-      for (int i = 0; i < 5; i++) {
+      for (int i = 0; i < 6; i++) {
         draw_icon(icon_points + i, icon_x(win, i), window_title_bar_y(win),
                   editor->sel_mode == i ? 1.0f : 0.5f);
       }
@@ -432,14 +432,21 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 enum {
-  ID_POS_X = 1000, ID_POS_Y,
+  ID_THING_TYPE = 1000,
+  ID_THING_POS_X,
+  ID_THING_POS_Y,
+  ID_THING_SPRITE,
 };
 
 windef_t edit_mode[] = {
-  { "TEXT", "Button:", -1, 4, 13, 50, 10 },
-  { "TEXT", "Text edit:", -1, 4, 33, 50, 10 },
-  { "BUTTON", "Click me", ID_POS_X, 60, 10, 50, 10 },
-  { "EDITTEXT", "1235", ID_POS_Y, 60, 30, 50, 10 },
+  { "TEXT", "Type:", -1, 4, 13, 50, 10 },
+  { "TEXT", "Position X:", -1, 4, 33, 50, 10 },
+  { "TEXT", "Position Y:", -1, 4, 53, 50, 10 },
+  { "BUTTON", "Click me", ID_THING_TYPE, 60, 10, 50, 10 },
+  { "EDITTEXT", "", ID_THING_POS_X, 60, 30, 50, 10 },
+  { "EDITTEXT", "", ID_THING_POS_Y, 60, 50, 50, 10 },
+  { "SPRITE", "", ID_THING_SPRITE, 4, 70, 64, 64 },
+  { "CHECKBOX", "", ID_THING_SPRITE, 4, 140, 20, 10 },
   { NULL }
 };
 
@@ -455,8 +462,6 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 //      create_window("Button", 0, MAKERECT(4, 16, 0, 0), win, win_button, NULL);
 //      create_window("Text edit", 0, MAKERECT(4, 36, 0, 0), win, win_textedit, NULL);
       load_window_children(win, edit_mode);
-      set_window_item_text(win, ID_POS_X, "Item 1");
-      set_window_item_text(win, ID_POS_Y, "Item 2");
       return true;
     case MSG_PAINT:
 //      for (int i = 0; i < num; i++) {
@@ -474,18 +479,10 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           mapthing_t const *thing = &game.map.things[index];
           sprite_t *get_thing_sprite_name(int thing_type, int angle);
           sprite_t *spr = get_thing_sprite_name(thing->type, 0);
-          float scale = fminf(1, fminf(((float)THUMBNAIL_SIZE) / spr->width,
-                                       ((float)THUMBNAIL_SIZE) / spr->height));
-          draw_rect(spr->texture,
-                    4+(THUMBNAIL_SIZE-spr->width*scale)/2,
-                    4+(THUMBNAIL_SIZE-spr->height*scale)/2,
-                    spr->width * scale,
-                    spr->height * scale);
-          char buf[256]={0};
-          sprintf(buf, "Thing type: %d", thing->type);
-          draw_text_small(buf, 4, 80, -1);
-          sprintf(buf, "Thing coord: %d, %d", thing->x, thing->y);
-          draw_text_small(buf, 4, 90, -1);
+          set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
+          set_window_item_text(win, ID_THING_TYPE, "%d", thing->type);
+          set_window_item_text(win, ID_THING_POS_X, "%d", thing->x);
+          set_window_item_text(win, ID_THING_POS_Y, "%d", thing->y);
         }
       }
       return false;

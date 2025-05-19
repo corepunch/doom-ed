@@ -510,6 +510,40 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
+#define CHECK_PRESSED 1
+#define CHECK_VALUE 2
+
+bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  int *pressed = (void *)&win->userdata;
+  switch (msg) {
+    case MSG_CREATE:
+      win->frame.w = MAX(win->frame.w, get_small_text_width(win->title)+6);
+      win->frame.h = MAX(win->frame.h, 13);
+      return true;
+    case MSG_PAINT:
+      draw_button(win->frame.x, win->frame.y, 10, 10, *pressed & CHECK_PRESSED);
+//      draw_text_small(win->title, win->frame.x+(*pressed?4:3), win->frame.y+(*pressed?4:3), COLOR_TEXT_NORMAL);
+      if (*pressed&CHECK_VALUE) {
+        draw_icon(icon_checkbox, win->frame.x+1, win->frame.y+1, 1);
+      }
+      return true;
+    case MSG_LBUTTONDOWN:
+      *pressed |= CHECK_PRESSED;
+      invalidate_window(win);
+      return true;
+    case MSG_LBUTTONUP:
+      *pressed &= ~CHECK_PRESSED;
+      if (*pressed & CHECK_VALUE) {
+        *pressed &= ~CHECK_VALUE;
+      } else {
+        *pressed |= CHECK_VALUE;
+      }
+      invalidate_window(win);
+      return true;
+  }
+  return false;
+}
+
 bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 //  bool *pressed = (void *)&win->userdata;
   switch (msg) {
@@ -536,8 +570,25 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case MSG_PAINT:
-//      draw_text_gl3(win->title, win->frame.x, win->frame.y, 1);
       draw_text_small(win->title, win->frame.x, win->frame.y, COLOR_TEXT_NORMAL);
+      return true;
+  }
+  return false;
+}
+
+bool win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  sprite_t *spr;
+  switch (msg) {
+    case MSG_PAINT:
+      fill_rect(0xff000000, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
+      if (*win->title && (spr = find_sprite(win->title))) {
+        float scale = fminf(1, fminf(((float)win->frame.w) / spr->width, ((float)win->frame.h) / spr->height));
+        draw_rect(spr->texture,
+                  win->frame.x+(win->frame.w-spr->width*scale)/2,
+                  win->frame.y+(win->frame.h-spr->height*scale)/2,
+                  spr->width * scale,
+                  spr->height * scale);
+      }
       return true;
   }
   return false;
@@ -549,8 +600,12 @@ window_t *create_window2(windef_t const *def, window_t *parent) {
     proc = win_label;
   } else if (!strcmp(def->classname, "BUTTON")) {
     proc = win_button;
+  } else if (!strcmp(def->classname, "CHECKBOX")) {
+    proc = win_checkbox;
   } else if (!strcmp(def->classname, "EDITTEXT")) {
     proc = win_textedit;
+  } else if (!strcmp(def->classname, "SPRITE")) {
+    proc = win_sprite;
   } else {
     return NULL;
   }
@@ -562,7 +617,16 @@ window_t *create_window2(windef_t const *def, window_t *parent) {
   return NULL;
 }
 
-void set_window_item_text(window_t *win, uint32_t id, const char *text) {
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
+
+void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...) {
+  char text[256] = {0};
+  va_list args;
+  va_start(args, fmt);
+  vsnprintf(text, sizeof(text), fmt, args);
+  va_end(args);
   for (window_t *c = win->children; c; c = c->next) {
     if (c->id == id) {
       strncpy(c->title, text, sizeof(c->title));
