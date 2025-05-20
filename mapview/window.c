@@ -159,6 +159,10 @@ window_t *find_window(int x, int y) {
   return last;
 }
 
+window_t *get_root_window(window_t *window) {
+  return window->parent ? get_root_window(window->parent) : window;
+}
+
 static void active_window(window_t* win) {
   if (active) {
     post_message(active, MSG_KILLFOCUS, 0, win);
@@ -169,6 +173,16 @@ static void active_window(window_t* win) {
     invalidate_window(win);
   }
   active = win;
+}
+
+static void set_focus(window_t* item) {
+  window_t* root = get_root_window(item);
+//  window_t *old = root->focused;
+  root->focused = item;
+//  if (old) {
+//    invalidate_window(root->)
+//  }
+  invalidate_window(root);
 }
 
 static void move_to_top(window_t* win) {
@@ -268,8 +282,23 @@ void handle_windows(void) {
       case SDL_QUIT:
         running = false;
         break;
+      case SDL_TEXTINPUT:
+        if (!active) {
+          // skip
+        } else if (active->focused) {
+          send_message(active->focused, MSG_TEXTINPUT, 0, event.text.text);
+        } else {
+          send_message(active, MSG_TEXTINPUT, 0, event.text.text);
+        }
+        break;
       case SDL_KEYDOWN:
-        send_message(active, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
+        if (!active) {
+          // skip
+        } else if (active->focused) {
+          send_message(active->focused, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
+        } else {
+          send_message(active, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
+        }
         break;
       case SDL_KEYUP:
         send_message(active, MSG_KEYUP, event.key.keysym.scancode, NULL);
@@ -381,7 +410,9 @@ void handle_windows(void) {
   }
   for (uint8_t write = queue.write; queue.read != write; queue.read++) {
     msg_t *m = &queue.messages[queue.read];
-    send_message(m->target, m->msg, m->wparam, m->lparam);
+    if (m->msg == MSG_PAINT || m->msg == MSG_NCPAINT) {
+      send_message(m->target, m->msg, m->wparam, m->lparam);
+    }
   }
 }
 
@@ -411,13 +442,10 @@ void draw_window_controls(window_t *win) {
   }
 }
 
-window_t *get_root_window(window_t *window) {
-  return window->parent ? get_root_window(window->parent) : window;
-}
-
-void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   rect_t const *frame = &win->frame;
   window_t *root = get_root_window(win);
+  int value = 0;
   if (win) {
     switch (msg) {
       case MSG_NCPAINT:
@@ -438,7 +466,8 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
                        root->frame.h + root->scroll[1]);
         break;
     }
-    if (!win->proc(win, msg, wparam, lparam)) {
+    value = win->proc(win, msg, wparam, lparam);
+    if (!value) {
       switch (msg) {
         case MSG_PAINT:
           for (window_t *sub = win->children; sub; sub = sub->next) {
@@ -466,7 +495,10 @@ void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
     }
   }
-  glDisable(GL_STENCIL_TEST);
+  if (msg == MSG_PAINT || msg == MSG_NCPAINT) {
+    glDisable(GL_STENCIL_TEST);
+  }
+  return value;
 }
 
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
@@ -491,7 +523,7 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   bool *pressed = (void *)&win->userdata;
   switch (msg) {
     case MSG_CREATE:
-      win->frame.w = MAX(win->frame.w, get_small_text_width(win->title)+6);
+      win->frame.w = MAX(win->frame.w, strwidth(win->title)+6);
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
@@ -517,12 +549,12 @@ bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   int *pressed = (void *)&win->userdata;
   switch (msg) {
     case MSG_CREATE:
-      win->frame.w = MAX(win->frame.w, get_small_text_width(win->title)+6);
+      win->frame.w = MAX(win->frame.w, strwidth(win->title)+6);
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
       draw_button(win->frame.x, win->frame.y, 10, 10, *pressed & CHECK_PRESSED);
-//      draw_text_small(win->title, win->frame.x+(*pressed?4:3), win->frame.y+(*pressed?4:3), COLOR_TEXT_NORMAL);
+      draw_text_small(win->title, win->frame.x + 16, win->frame.y + 1, COLOR_TEXT_NORMAL);
       if (*pressed&CHECK_VALUE) {
         draw_icon(icon_checkbox, win->frame.x+1, win->frame.y+1, 1);
       }
@@ -533,36 +565,109 @@ bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return true;
     case MSG_LBUTTONUP:
       *pressed &= ~CHECK_PRESSED;
-      if (*pressed & CHECK_VALUE) {
+      send_message(win, BM_SETCHECK, !send_message(win, BM_GETCHECK, 0, NULL), NULL);
+      send_message(get_root_window(win), MSG_COMMAND, MAKEDWORD(win->id, BN_CLICKED), win);
+      invalidate_window(win);
+      return true;
+    case BM_SETCHECK:
+      if (wparam == BST_UNCHECKED) {
         *pressed &= ~CHECK_VALUE;
       } else {
         *pressed |= CHECK_VALUE;
       }
-      invalidate_window(win);
       return true;
+    case BM_GETCHECK:
+      return ((*pressed)&CHECK_VALUE) ? BST_CHECKED : BST_UNCHECKED;
   }
   return false;
 }
+
+#define BUFFER_SIZE 64
+#define PADDING 3
 
 bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 //  bool *pressed = (void *)&win->userdata;
   switch (msg) {
     case MSG_CREATE:
-      win->frame.w = MAX(win->frame.w, get_small_text_width(win->title)+6);
+      win->frame.w = MAX(win->frame.w, strwidth(win->title)+PADDING*2);
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
+      if (get_root_window(win)->focused == win) {
+        fill_rect(COLOR_FOCUSED, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
+      }
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, true);
-      draw_text_small(win->title, win->frame.x+3, win->frame.y+3, COLOR_TEXT_NORMAL);
+      draw_text_small(win->title, win->frame.x+PADDING, win->frame.y+PADDING, COLOR_TEXT_NORMAL);
+      if (get_root_window(win)->focused == win && win->editing) {
+        fill_rect(COLOR_TEXT_NORMAL,
+                  win->frame.x+PADDING+strnwidth(win->title, win->cursor_pos),
+                  win->frame.y+PADDING,
+                  2, 8);
+      }
       return true;
 //    case MSG_LBUTTONDOWN:
 //      *pressed = true;
 //      invalidate_window(win);
 //      return true;
-//    case MSG_LBUTTONUP:
+    case MSG_LBUTTONUP:
 //      *pressed = false;
+      set_focus(win);
+      win->editing = true;
+      win->cursor_pos = 0;
+      for (int i = 0; i <= strlen(win->title); i++) {
+        int x1 = win->frame.x+PADDING+strnwidth(win->title, i);
+        int x2 = win->frame.x+PADDING+strnwidth(win->title, win->cursor_pos);
+        if (abs((int)LOWORD(wparam) - x1) < abs((int)LOWORD(wparam) - x2)) {
+          win->cursor_pos = i;
+        }
+      }
 //      invalidate_window(win);
-//      return true;
+      return true;
+    case MSG_TEXTINPUT:
+      if (strlen(win->title) + strlen(lparam) < BUFFER_SIZE - 1) {
+        memmove(win->title + win->cursor_pos + 1,
+                win->title + win->cursor_pos,
+                strlen(win->title + win->cursor_pos) + 1);
+        win->title[win->cursor_pos] = *(char *)lparam; // Only handle 1-byte characters
+        win->cursor_pos++;
+      }
+      invalidate_window(win);
+      return true;
+    case MSG_KEYDOWN:
+      switch (wparam) {
+        case SDL_SCANCODE_RETURN:
+          if (!win->editing) {
+            win->cursor_pos = (int)strlen(win->title);
+            win->editing = true;
+          } else {
+            send_message(get_root_window(win), MSG_COMMAND, MAKEDWORD(win->id, EN_UPDATE), win);
+            win->editing = false;
+          }
+          break;
+        case SDL_SCANCODE_ESCAPE:
+          win->editing = false;
+          break;
+        case SDL_SCANCODE_BACKSPACE:
+          if (win->cursor_pos > 0 && win->editing) {
+            memmove(win->title + win->cursor_pos - 1,
+                    win->title + win->cursor_pos,
+                    strlen(win->title + win->cursor_pos) + 1);
+            win->cursor_pos--;
+          }
+          break;
+        case SDL_SCANCODE_LEFT:
+          if (win->cursor_pos > 0 && win->editing) {
+            win->cursor_pos--;
+          }
+          break;
+        case SDL_SCANCODE_RIGHT:
+          if (win->cursor_pos < strlen(win->title) && win->editing) {
+            win->cursor_pos++;
+          }
+          break;
+      }
+      invalidate_window(win);
+      return true;
   }
   return false;
 }
@@ -614,6 +719,14 @@ window_t *create_window2(windef_t const *def, window_t *parent) {
                                 MAKERECT(def->x, def->y, def->w, def->h),
                                 parent, proc, NULL);
   win->id = def->id;
+  return NULL;
+}
+
+window_t *get_window_item(window_t const *win, uint32_t id) {
+  for (window_t *c = win->children; c; c = c->next) {
+    if (c->id == id)
+      return c;
+  }
   return NULL;
 }
 

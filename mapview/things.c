@@ -206,11 +206,11 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
       continue;
     
     // Find the sector this thing is in to get light level
-    if (thing->flags == -1) {
+    if (thing->height == -1) {
       continue; // Skip if not in any sector
     }
 
-    mapsector_t const *sector = &map->sectors[thing->flags];
+    mapsector_t const *sector = &map->sectors[thing->height];
 
     // Calculate distance to player (for potential culling)
 //    float dist_to_player = dist_sq(player->x, player->y, thing->x, thing->y);
@@ -220,12 +220,10 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
 //      continue;
 //    }
     
-    // Get appropriate sprite name based on thing type and angle
-    sprite_t* sprite = get_thing_sprite_name(thing->type, thing->angle);
-    
     // Calculate thing height (based on floor height)
     float z_pos = sector->floorheight;
-    
+    // Get appropriate sprite name based on thing type and angle
+    sprite_t* sprite = get_thing_sprite_name(thing->type, thing->angle);
     // Set up matrices for this thing
     mat4 model, mv;
     glm_mat4_identity(model);

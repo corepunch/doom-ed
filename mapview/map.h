@@ -90,6 +90,8 @@ enum {
   MSG_PAINT,
   MSG_SETFOCUS,
   MSG_KILLFOCUS,
+  MSG_COMMAND,
+  MSG_TEXTINPUT,
   MSG_WHEEL,
   MSG_MOUSEMOVE,
   MSG_LBUTTONDOWN,
@@ -102,6 +104,22 @@ enum {
   MSG_JOYBUTTONDOWN,
   MSG_JOYBUTTONUP,
   MSG_JOYAXISMOTION,
+  MSG_USER = 1000
+};
+
+enum {
+  BM_SETCHECK = MSG_USER,
+  BM_GETCHECK,
+};
+
+enum {
+  BST_UNCHECKED,
+  BST_CHECKED
+};
+
+enum {
+  EN_UPDATE = 100,
+  BN_CLICKED,
 };
 
 // Lump order in a map WAD: each map needs a couple of lumps
@@ -217,7 +235,7 @@ typedef struct {
   int16_t tid;
   int16_t x;
   int16_t y;
-  int16_t flags;
+  int16_t height;
   int16_t angle;
   int16_t type;
   int16_t options;
@@ -383,7 +401,6 @@ typedef struct {
 #define WINDOW_VSCROLL 4
 #define WINDOW_HSCROLL 8
 
-
 #define TITLEBAR_HEIGHT 12
 
 struct window_s;
@@ -406,21 +423,25 @@ typedef struct window_s {
   winproc_t proc;
   uint32_t child_id;
   bool hovered;
+  bool editing;
   char title[64];
+  int cursor_pos;
   void *userdata;
   void *userdata2;
   struct window_s *next;
   struct window_s *children;
   struct window_s *parent;
+  struct window_s *focused;
 } window_t;
 
 window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
 void load_window_children(window_t *win, windef_t const *def);
-void send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);
 void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
 int window_title_bar_y(window_t const *win);
+window_t *get_window_item(window_t const *win, uint32_t id);
 
 extern game_t game;
 
@@ -455,7 +476,8 @@ void draw_rect(int tex, int x, int y, int w, int h);
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 void draw_text_gl3(const char* text, int x, int y, float alpha);
 void draw_text_small(const char* text, int x, int y, uint32_t col);
-int get_small_text_width(const char* text);
+int strwidth(const char* text);
+int strnwidth(const char* text, int text_length);
 void draw_icon(int icon, int x, int y, float alpha);
 void draw_palette(map_data_t const *map);
 char const* get_texture_name(int i);

@@ -436,18 +436,67 @@ enum {
   ID_THING_POS_X,
   ID_THING_POS_Y,
   ID_THING_SPRITE,
+  ID_THING_EASY,
+  ID_THING_NORMAL,
+  ID_THING_HARD,
+  ID_THING_FIGHTER,
+  ID_THING_CLERIC,
+  ID_THING_MAGE,
+  ID_THING_GSINGLE,
+  ID_THING_GCOOP,
+  ID_THING_GDEATHMATCH,
+  ID_THING_AMBUSH,
+  ID_THING_DORMANT,
 };
+
+
+
+#define MTF_EASY    1
+#define MTF_NORMAL    2
+#define MTF_HARD    4
+#define MTF_AMBUSH    8
+#define MTF_DORMANT    16
+#define MTF_FIGHTER    32
+#define MTF_CLERIC    64
+#define MTF_MAGE    128
+#define MTF_GSINGLE    256
+#define MTF_GCOOP    512
+#define MTF_GDEATHMATCH  1024
 
 windef_t edit_mode[] = {
   { "TEXT", "Type:", -1, 4, 13, 50, 10 },
   { "TEXT", "Position X:", -1, 4, 33, 50, 10 },
   { "TEXT", "Position Y:", -1, 4, 53, 50, 10 },
-  { "BUTTON", "Click me", ID_THING_TYPE, 60, 10, 50, 10 },
-  { "EDITTEXT", "", ID_THING_POS_X, 60, 30, 50, 10 },
-  { "EDITTEXT", "", ID_THING_POS_Y, 60, 50, 50, 10 },
+  { "BUTTON", "Click me", ID_THING_TYPE, 64, 10, 50, 10 },
+  { "EDITTEXT", "", ID_THING_POS_X, 64, 30, 50, 10 },
+  { "EDITTEXT", "", ID_THING_POS_Y, 64, 50, 50, 10 },
   { "SPRITE", "", ID_THING_SPRITE, 4, 70, 64, 64 },
-  { "CHECKBOX", "", ID_THING_SPRITE, 4, 140, 20, 10 },
+  { "CHECKBOX", "Easy", ID_THING_EASY, 4, 140, 20, 10 },
+  { "CHECKBOX", "Medium", ID_THING_NORMAL, 4, 155, 20, 10 },
+  { "CHECKBOX", "Hard", ID_THING_HARD, 4, 170, 20, 10 },
+  { "CHECKBOX", "Fighter", ID_THING_FIGHTER, 4, 190, 20, 10 },
+  { "CHECKBOX", "Cleric", ID_THING_CLERIC, 4, 205, 20, 10 },
+  { "CHECKBOX", "Mage", ID_THING_MAGE, 4, 220, 20, 10 },
+  { "CHECKBOX", "Single", ID_THING_GSINGLE, 64, 140, 20, 10 },
+  { "CHECKBOX", "Coop", ID_THING_GCOOP, 64, 155, 20, 10 },
+  { "CHECKBOX", "Deathmatch", ID_THING_GDEATHMATCH, 64, 170, 20, 10 },
+  { "CHECKBOX", "Ambush", ID_THING_AMBUSH, 64, 190, 20, 10 },
+  { "CHECKBOX", "Dormant", ID_THING_DORMANT, 64, 205, 20, 10 },
   { NULL }
+};
+
+uint32_t checkboxes[] = {
+  ID_THING_EASY,
+  ID_THING_NORMAL,
+  ID_THING_HARD,
+  ID_THING_AMBUSH,
+  ID_THING_DORMANT,
+  ID_THING_FIGHTER,
+  ID_THING_CLERIC,
+  ID_THING_MAGE,
+  ID_THING_GSINGLE,
+  ID_THING_GCOOP,
+  ID_THING_GDEATHMATCH,
 };
 
 bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
@@ -458,18 +507,9 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case MSG_CREATE:
       win->userdata = lparam;
       ((editor_state_t*)lparam)->inspector = win;
-//      create_window("Sample button", 0, MAKERECT(4, 4, 0, 0), win, win_label, NULL);
-//      create_window("Button", 0, MAKERECT(4, 16, 0, 0), win, win_button, NULL);
-//      create_window("Text edit", 0, MAKERECT(4, 36, 0, 0), win, win_textedit, NULL);
       load_window_children(win, edit_mode);
       return true;
     case MSG_PAINT:
-//      for (int i = 0; i < num; i++) {
-//        if (editor->sel_mode == i) {
-//          fill_rect(colors[i], i*tab_width, 0, tab_width, win->frame.h);
-//        }
-//        draw_text_gl3(modes[i], i*tab_width+4, 0, 1);
-//      }
       if (editor->sel_mode == edit_things) {
         uint16_t index = editor->selected.thing;
         if (editor->hover.thing != 0xFFFF) {
@@ -480,15 +520,42 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           sprite_t *get_thing_sprite_name(int thing_type, int angle);
           sprite_t *spr = get_thing_sprite_name(thing->type, 0);
           set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
-          set_window_item_text(win, ID_THING_TYPE, "%d", thing->type);
+          set_window_item_text(win, ID_THING_TYPE, "%d", thing->height);
           set_window_item_text(win, ID_THING_POS_X, "%d", thing->x);
           set_window_item_text(win, ID_THING_POS_Y, "%d", thing->y);
+          for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
+            window_t *checkbox = get_window_item(win, checkboxes[i]);
+            uint32_t value = thing->options&(1<<i);
+            send_message(checkbox, BM_SETCHECK, value, NULL);
+          }
         }
       }
       return false;
     case MSG_LBUTTONUP:
       editor->sel_mode = LOWORD(wparam) / tab_width;
       invalidate_window(win);
+      return true;
+    case MSG_COMMAND:
+      if (editor->selected.thing != 0xFFFF) {
+        mapthing_t *thing = &game.map.things[editor->selected.thing];
+        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
+          if (wparam == MAKEDWORD(checkboxes[i], BN_CLICKED)) {
+            if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
+              thing->options |= 1 << i;
+            } else {
+              thing->options &= ~(1 << i);
+            }
+          }
+        }
+        if (wparam == MAKEDWORD(ID_THING_POS_X, EN_UPDATE)) {
+          thing->x = atoi(((window_t *)lparam)->title);
+          invalidate_window(editor->window);
+        }
+        if (wparam == MAKEDWORD(ID_THING_POS_Y, EN_UPDATE)) {
+          thing->y = atoi(((window_t *)lparam)->title);
+          invalidate_window(editor->window);
+        }
+      }
       return true;
   }
   return false;

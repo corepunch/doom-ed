@@ -405,10 +405,9 @@ bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 
 void push_sprite_args(int tex, int x, int y, int w, int h, float alpha);
 
-int get_small_text_width(const char* text) {
+int strnwidth(const char* text, int text_length) {
   if (!text || !*text) return 0; // Early return for empty strings
   
-  int text_length = (int)strlen(text);
   if (text_length > MAX_TEXT_LENGTH) text_length = MAX_TEXT_LENGTH;
   
   int cursor_x = 0;
@@ -421,6 +420,11 @@ int get_small_text_width(const char* text) {
     cursor_x += w+1;
   }
   return cursor_x;
+}
+
+int strwidth(const char* text) {
+  if (!text || !*text) return 0; // Early return for empty strings
+  return strnwidth(text, (int)strlen(text));
 }
 
 void draw_text_small(const char* text, int x, int y, uint32_t col) {
