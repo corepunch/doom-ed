@@ -147,13 +147,23 @@ create_window(char const *title,
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
-((x1) <= (x) && (y1) <= (y) && (x1) + (w1) > (x) && (y1) + (h1) > (y))
+(x1) <= (x) && (y1) <= (y) && (x1) + (w1) > (x) && (y1) + (h1) > (y)
 
 window_t *find_window(int x, int y) {
   window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
-    if CONTAINS(x, y, win->frame.x, win->frame.y-TITLEBAR_HEIGHT, win->frame.w, win->frame.h+TITLEBAR_HEIGHT) {
+    if (CONTAINS(x, y, win->frame.x, win->frame.y-TITLEBAR_HEIGHT, win->frame.w, win->frame.h+TITLEBAR_HEIGHT)) {
       last = win;
+    }
+    for (window_t *item = win->children; item; item = item->next) {
+      if (CONTAINS(x, y,
+                   win->frame.x + item->frame.x,
+                   win->frame.y + item->frame.y,
+                   item->frame.w,
+                   item->frame.h))
+      {
+        last = item;
+      }
     }
   }
   return last;
@@ -175,17 +185,8 @@ static void active_window(window_t* win) {
   active = win;
 }
 
-static void set_focus(window_t* item) {
-  window_t* root = get_root_window(item);
-//  window_t *old = root->focused;
-  root->focused = item;
-//  if (old) {
-//    invalidate_window(root->)
-//  }
-  invalidate_window(root);
-}
-
-static void move_to_top(window_t* win) {
+static void move_to_top(window_t* _win) {
+  window_t *win = get_root_window(_win);
   invalidate_window(win);
   
   window_t **head = &windows, *p = NULL, *n = *head;
@@ -285,8 +286,6 @@ void handle_windows(void) {
       case SDL_TEXTINPUT:
         if (!active) {
           // skip
-        } else if (active->focused) {
-          send_message(active->focused, MSG_TEXTINPUT, 0, event.text.text);
         } else {
           send_message(active, MSG_TEXTINPUT, 0, event.text.text);
         }
@@ -294,8 +293,6 @@ void handle_windows(void) {
       case SDL_KEYDOWN:
         if (!active) {
           // skip
-        } else if (active->focused) {
-          send_message(active->focused, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
         } else {
           send_message(active, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
         }
@@ -337,15 +334,17 @@ void handle_windows(void) {
         break;
         
       case SDL_MOUSEBUTTONDOWN:
-        if ((SDL_GetRelativeMouseMode() && (win = active))||
-            (win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
+        if ((SDL_GetRelativeMouseMode() && (win = active)) ||
+            (win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y))))
+        {
           //        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
+          active_window(win);
           move_to_top(win);
           int x = LOCAL_X(event.button, win);
           int y = LOCAL_Y(event.button, win);
-          if (x >= win->frame.w - RESIZE_HANDLE && y >= win->frame.h - RESIZE_HANDLE) {
+          if (x >= win->frame.w - RESIZE_HANDLE && y >= win->frame.h - RESIZE_HANDLE && !win->parent) {
             resizing = win;
-          } else if (SCALE_POINT(event.button.y) < win->frame.y) {
+          } else if (SCALE_POINT(event.button.y) < win->frame.y && !win->parent) {
             dragging = win;
             drag_anchor[0] = SCALE_POINT(event.button.x) - win->frame.x;
             drag_anchor[1] = SCALE_POINT(event.button.y) - win->frame.y;
@@ -379,9 +378,7 @@ void handle_windows(void) {
                    (win = find_window(SCALE_POINT(event.button.x),
                                       SCALE_POINT(event.button.y)))) {
           //        } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
-          if (win != active) {
-            active_window(win);
-          } else if (SCALE_POINT(event.button.y) >= win->frame.y) {
+          if (SCALE_POINT(event.button.y) >= win->frame.y) {
             int x = LOCAL_X(event.button, win);
             int y = LOCAL_Y(event.button, win);
 //            switch (event.button.button) {
@@ -527,6 +524,7 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
+      fill_rect(active == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, *pressed);
       draw_text_small(win->title, win->frame.x+(*pressed?4:3), win->frame.y+(*pressed?4:3), COLOR_TEXT_NORMAL);
       return true;
@@ -553,6 +551,7 @@ bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
+      fill_rect(active == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, 14, 14);
       draw_button(win->frame.x, win->frame.y, 10, 10, *pressed & CHECK_PRESSED);
       draw_text_small(win->title, win->frame.x + 16, win->frame.y + 1, COLOR_TEXT_NORMAL);
       if (*pressed&CHECK_VALUE) {
@@ -593,12 +592,10 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
-      if (get_root_window(win)->focused == win) {
-        fill_rect(COLOR_FOCUSED, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
-      }
+      fill_rect(active == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, true);
       draw_text_small(win->title, win->frame.x+PADDING, win->frame.y+PADDING, COLOR_TEXT_NORMAL);
-      if (get_root_window(win)->focused == win && win->editing) {
+      if (active == win && win->editing) {
         fill_rect(COLOR_TEXT_NORMAL,
                   win->frame.x+PADDING+strnwidth(win->title, win->cursor_pos),
                   win->frame.y+PADDING,
@@ -611,7 +608,7 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 //      return true;
     case MSG_LBUTTONUP:
 //      *pressed = false;
-      set_focus(win);
+      active_window(win);
       win->editing = true;
       win->cursor_pos = 0;
       for (int i = 0; i <= strlen(win->title); i++) {

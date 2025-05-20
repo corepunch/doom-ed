@@ -431,7 +431,6 @@ typedef struct window_s {
   struct window_s *next;
   struct window_s *children;
   struct window_s *parent;
-  struct window_s *focused;
 } window_t;
 
 window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
