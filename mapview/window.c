@@ -546,7 +546,6 @@ void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 int get_text_width(const char*);
 
 bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  bool *pressed = (void *)&win->userdata;
   switch (msg) {
     case MSG_CREATE:
       win->frame.w = MAX(win->frame.w, strwidth(win->title)+6);
@@ -554,26 +553,40 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return true;
     case MSG_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
-      draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, *pressed);
-      draw_text_small(win->title, win->frame.x+(*pressed?4:3), win->frame.y+(*pressed?4:3), COLOR_TEXT_NORMAL);
+      draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, win->pressed);
+      draw_text_small(win->title, win->frame.x+((win->pressed)?4:3), win->frame.y+((win->pressed)?4:3), COLOR_TEXT_NORMAL);
       return true;
     case MSG_LBUTTONDOWN:
-      *pressed = true;
+      win->pressed = true;
       invalidate_window(win);
       return true;
     case MSG_LBUTTONUP:
-      *pressed = false;
+      win->pressed = false;
+      send_message(get_root_window(win), MSG_COMMAND, MAKEDWORD(win->id, BN_CLICKED), win);
       invalidate_window(win);
       return true;
+    case MSG_KEYDOWN:
+      if (wparam == SDL_SCANCODE_RETURN || wparam == SDL_SCANCODE_SPACE) {
+        win->pressed = true;
+        invalidate_window(win);
+        return true;
+      }
+      return false;
+    case MSG_KEYUP:
+      if (wparam == SDL_SCANCODE_RETURN || wparam == SDL_SCANCODE_SPACE) {
+        win->pressed = false;
+        send_message(win, BM_SETCHECK, !send_message(win, BM_GETCHECK, 0, NULL), NULL);
+        send_message(get_root_window(win), MSG_COMMAND, MAKEDWORD(win->id, BN_CLICKED), win);
+        invalidate_window(win);
+        return true;
+      } else {
+        return false;
+      }
   }
   return false;
 }
 
-#define CHECK_PRESSED 1
-#define CHECK_VALUE 2
-
 bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  int *pressed = (void *)&win->userdata;
   switch (msg) {
     case MSG_CREATE:
       win->frame.w = MAX(win->frame.w, strwidth(win->title)+6);
@@ -581,31 +594,44 @@ bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return true;
     case MSG_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, 14, 14);
-      draw_button(win->frame.x, win->frame.y, 10, 10, *pressed & CHECK_PRESSED);
+      draw_button(win->frame.x, win->frame.y, 10, 10, win->pressed);
       draw_text_small(win->title, win->frame.x + 16, win->frame.y + 1, COLOR_TEXT_NORMAL);
-      if (*pressed&CHECK_VALUE) {
+      if (win->value) {
         draw_icon(icon_checkbox, win->frame.x+1, win->frame.y+1, 1);
       }
       return true;
     case MSG_LBUTTONDOWN:
-      *pressed |= CHECK_PRESSED;
+      win->pressed = true;
       invalidate_window(win);
       return true;
     case MSG_LBUTTONUP:
-      *pressed &= ~CHECK_PRESSED;
+      win->pressed = false;
       send_message(win, BM_SETCHECK, !send_message(win, BM_GETCHECK, 0, NULL), NULL);
       send_message(get_root_window(win), MSG_COMMAND, MAKEDWORD(win->id, BN_CLICKED), win);
       invalidate_window(win);
       return true;
     case BM_SETCHECK:
-      if (wparam == BST_UNCHECKED) {
-        *pressed &= ~CHECK_VALUE;
-      } else {
-        *pressed |= CHECK_VALUE;
-      }
+      win->value = (wparam != BST_UNCHECKED);
       return true;
     case BM_GETCHECK:
-      return ((*pressed)&CHECK_VALUE) ? BST_CHECKED : BST_UNCHECKED;
+      return win->value ? BST_CHECKED : BST_UNCHECKED;
+    case MSG_KEYDOWN:
+      if (wparam == SDL_SCANCODE_RETURN || wparam == SDL_SCANCODE_SPACE) {
+        win->pressed = true;
+        invalidate_window(win);
+        return true;
+      }
+      return false;
+    case MSG_KEYUP:
+      if (wparam == SDL_SCANCODE_RETURN || wparam == SDL_SCANCODE_SPACE) {
+        win->pressed = false;
+        send_message(win, BM_SETCHECK, !send_message(win, BM_GETCHECK, 0, NULL), NULL);
+        send_message(get_root_window(win), MSG_COMMAND, MAKEDWORD(win->id, BN_CLICKED), win);
+        invalidate_window(win);
+        return true;
+      } else {
+        return false;
+      }
   }
   return false;
 }

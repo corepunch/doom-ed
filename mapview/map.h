@@ -425,6 +425,8 @@ typedef struct window_s {
   bool hovered;
   bool editing;
   bool notabstop;
+  bool pressed;
+  bool value;
   char title[64];
   int cursor_pos;
   void *userdata;
