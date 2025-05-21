@@ -531,10 +531,6 @@ bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
       }
       return false;
-    case MSG_LBUTTONUP:
-      editor->sel_mode = LOWORD(wparam) / tab_width;
-      invalidate_window(win);
-      return true;
     case MSG_COMMAND:
       if (editor->selected.thing != 0xFFFF) {
         mapthing_t *thing = &game.map.things[editor->selected.thing];

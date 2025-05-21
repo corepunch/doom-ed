@@ -10,6 +10,7 @@
 #define COLOR_PANEL_DARK_BG  0xff2c2c2c  // main panel or window background
 #define COLOR_LIGHT_EDGE     0xff7f7f7f  // top-left edge for beveled elements
 #define COLOR_DARK_EDGE      0xff1a1a1a  // bottom-right edge for bevel
+#define COLOR_FLARE          0xffcfcfcf  // top-left edge for beveled elements
 #define COLOR_FOCUSED        0xff5EC4F3
 
 // Additional UI Colors
@@ -53,6 +54,11 @@ void draw_button(int x, int y, int w, int h, bool pressed) {
   fill_rect(pressed?COLOR_DARK_EDGE:COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
   fill_rect(pressed?COLOR_LIGHT_EDGE:COLOR_DARK_EDGE, x, y, w+1, h+1);
   fill_rect(pressed?COLOR_PANEL_DARK_BG:COLOR_PANEL_BG, x, y, w, h);
+  if (pressed) {
+    fill_rect(COLOR_FLARE, x+w, y+h, 1, 1);
+  } else {
+    fill_rect(COLOR_FLARE, x-1, y-1, 1, 1);
+  }
 }
 
 void draw_panel(int x, int y, int w, int h, bool active) {
@@ -61,6 +67,7 @@ void draw_panel(int x, int y, int w, int h, bool active) {
   } else {
     fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
     fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
+    fill_rect(COLOR_FLARE, x-1, y-1, 1, 1);
   }
   fill_rect(COLOR_LIGHT_EDGE, x+w-RESIZE_HANDLE+1, y+h-RESIZE_HANDLE+1, RESIZE_HANDLE, RESIZE_HANDLE);
   fill_rect(COLOR_PANEL_BG, x, y, w, h);
@@ -95,10 +102,10 @@ static void paint_stencil(uint8_t id) {
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
   
+  glEnable(GL_STENCIL_TEST);
   glClearStencil(0);
   glClear(GL_STENCIL_BUFFER_BIT);
   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-  glEnable(GL_STENCIL_TEST);
   for (window_t const *w = windows; w; w = w->next) {
     glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
@@ -434,8 +441,8 @@ void handle_windows(void) {
         break;
     }
   }
-  for (uint8_t write = queue.write; queue.read != write; queue.read++) {
-    msg_t *m = &queue.messages[queue.read];
+  for (uint8_t write = queue.write; queue.read != write;) {
+    msg_t *m = &queue.messages[queue.read++];
     if (m->msg == MSG_PAINT || m->msg == MSG_NCPAINT) {
       send_message(m->target, m->msg, m->wparam, m->lparam);
     }
@@ -476,8 +483,8 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     switch (msg) {
       case MSG_NCPAINT:
         paint_stencil(win->id);
-        //        set_viewport(&(window_t){0, 0, screen_width, screen_height});
-        //        set_projection(0, 0, screen_width, screen_height);
+        // set_viewport(&(window_t){0, 0, screen_width, screen_height});
+        // set_projection(0, 0, screen_width, screen_height);
         if (!(win->flags&WINDOW_TRANSPARENT)) {
           draw_panel(frame->x, frame->y-TITLEBAR_HEIGHT, frame->w, frame->h+TITLEBAR_HEIGHT, _focused == win);
         }
@@ -528,7 +535,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 }
 
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  for (uint8_t w = queue.write, r = queue.read + 1; r != w; r++) {
+  for (uint8_t w = queue.write, r = queue.read; r != w; r++) {
     if (queue.messages[r].target == win && queue.messages[r].msg == msg) {
       queue.messages[r].wparam = wparam;
       queue.messages[r].lparam = lparam;
@@ -595,6 +602,7 @@ bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case MSG_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, 14, 14);
       draw_button(win->frame.x, win->frame.y, 10, 10, win->pressed);
+      draw_text_small(win->title, win->frame.x + 17, win->frame.y + 2, COLOR_DARK_EDGE);
       draw_text_small(win->title, win->frame.x + 16, win->frame.y + 1, COLOR_TEXT_NORMAL);
       if (win->value) {
         draw_icon(icon_checkbox, win->frame.x+1, win->frame.y+1, 1);
@@ -732,6 +740,7 @@ bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->notabstop = true;
       return true;
     case MSG_PAINT:
+      draw_text_small(win->title, win->frame.x+1, win->frame.y+1, COLOR_DARK_EDGE);
       draw_text_small(win->title, win->frame.x, win->frame.y, COLOR_TEXT_NORMAL);
       return true;
   }

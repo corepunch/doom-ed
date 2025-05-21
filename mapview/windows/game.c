@@ -316,13 +316,16 @@ void paint_face(map_data_t *map, bool eyedropper) {
 }
 
 bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  extern window_t *_focused;
   switch (msg) {
     case MSG_CREATE:
       create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
       return true;
     case MSG_PAINT:
       draw_dungeon(win);
-      post_message(win, MSG_PAINT, wparam, lparam);
+      if (_focused == win) {
+        post_message(win, MSG_PAINT, wparam, lparam);
+      }
       return false;
   }
 
