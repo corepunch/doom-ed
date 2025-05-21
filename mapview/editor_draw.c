@@ -397,7 +397,7 @@ draw_editor(map_data_t const *map,
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
   glDisable(GL_DEPTH_TEST);
   
-  extern window_t *active;
+  extern window_t *_focused;
 
 //  if (editor->window != active) {
 //    goto draw_player;

@@ -424,6 +424,7 @@ typedef struct window_s {
   uint32_t child_id;
   bool hovered;
   bool editing;
+  bool notabstop;
   char title[64];
   int cursor_pos;
   void *userdata;

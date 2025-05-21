@@ -33,7 +33,7 @@
 extern int screen_width, screen_height;
 
 window_t *windows = NULL;
-window_t *active = NULL;
+window_t *_focused = NULL;
 
 typedef struct {
   window_t *target;
@@ -139,7 +139,7 @@ create_window(char const *title,
   win->id = parent ? ++parent->child_id : ++_id;
   win->parent = parent;
   strncpy(win->title, title, sizeof(win->title));
-  active = win;
+  _focused = win;
   push_window(win, parent ? &parent->children : &windows);
   proc(win, MSG_CREATE, 0, lparam);
   invalidate_window(win);
@@ -156,7 +156,8 @@ window_t *find_window(int x, int y) {
       last = win;
     }
     for (window_t *item = win->children; item; item = item->next) {
-      if (CONTAINS(x, y,
+      if (!item->notabstop &&
+          CONTAINS(x, y,
                    win->frame.x + item->frame.x,
                    win->frame.y + item->frame.y,
                    item->frame.w,
@@ -173,16 +174,17 @@ window_t *get_root_window(window_t *window) {
   return window->parent ? get_root_window(window->parent) : window;
 }
 
-static void active_window(window_t* win) {
-  if (active) {
-    post_message(active, MSG_KILLFOCUS, 0, win);
-    invalidate_window(active);
+static void set_focus(window_t* win) {
+  if (_focused) {
+    _focused->editing = false;
+    post_message(_focused, MSG_KILLFOCUS, 0, win);
+    invalidate_window(_focused);
   }
   if (win) {
-    post_message(active, MSG_SETFOCUS, 0, active);
+    post_message(_focused, MSG_SETFOCUS, 0, _focused);
     invalidate_window(win);
   }
-  active = win;
+  _focused = win;
 }
 
 static void move_to_top(window_t* _win) {
@@ -273,6 +275,23 @@ static int handle_mouse(int msg, window_t *win, int x, int y) {
   return false;
 }
 
+window_t* find_next_tab_stop(window_t *win, bool allow_current) {
+  if (!win) return false;
+  window_t *next;
+  if ((next = find_next_tab_stop(win->children, true))) return next;
+  if (!win->notabstop && allow_current) return win;
+  if ((next = find_next_tab_stop(win->next, true))) return next;
+  return allow_current ? NULL : find_next_tab_stop(win->parent, false);
+}
+
+window_t* find_prev_tab_stop(window_t* win) {
+  window_t *it = (win = (win->parent ? win : find_next_tab_stop(win, false)));
+  for (window_t *next = find_next_tab_stop(it, false);
+       next != win;
+       it = next, next = find_next_tab_stop(next, false));
+  return it;
+}
+
 void handle_windows(void) {
   extern bool running;
   SDL_Event event;
@@ -284,27 +303,37 @@ void handle_windows(void) {
         running = false;
         break;
       case SDL_TEXTINPUT:
-        if (!active) {
+        if (!_focused) {
           // skip
         } else {
-          send_message(active, MSG_TEXTINPUT, 0, event.text.text);
+          send_message(_focused, MSG_TEXTINPUT, 0, event.text.text);
         }
         break;
       case SDL_KEYDOWN:
-        if (!active) {
+        if (!_focused) {
           // skip
-        } else {
-          send_message(active, MSG_KEYDOWN, event.key.keysym.scancode, NULL);
+        } else if (!send_message(_focused, MSG_KEYDOWN, event.key.keysym.scancode, NULL)) {
+          switch (event.key.keysym.scancode) {
+            case SDL_SCANCODE_TAB:
+              if (event.key.keysym.mod & KMOD_SHIFT) {
+                set_focus(find_prev_tab_stop(_focused));
+              } else {
+                set_focus(find_next_tab_stop(_focused, false));
+              }
+              break;
+            default:
+              break;
+          }
         }
         break;
       case SDL_KEYUP:
-        send_message(active, MSG_KEYUP, event.key.keysym.scancode, NULL);
+        send_message(_focused, MSG_KEYUP, event.key.keysym.scancode, NULL);
         break;
       case SDL_JOYAXISMOTION:
-        send_message(active, MSG_JOYAXISMOTION, MAKEDWORD(event.jaxis.axis, event.jaxis.value), NULL);
+        send_message(_focused, MSG_JOYAXISMOTION, MAKEDWORD(event.jaxis.axis, event.jaxis.value), NULL);
         break;
       case SDL_JOYBUTTONDOWN:
-        send_message(active, MSG_JOYBUTTONDOWN, event.jbutton.button, NULL);
+        send_message(_focused, MSG_JOYBUTTONDOWN, event.jbutton.button, NULL);
         break;
       case SDL_MOUSEMOTION:
         if (dragging) {
@@ -315,7 +344,7 @@ void handle_windows(void) {
           int new_w = SCALE_POINT(event.motion.x) - resizing->frame.x;
           int new_h = SCALE_POINT(event.motion.y) - resizing->frame.y;
           resize_window(resizing, new_w, new_h);
-        } else if ((SDL_GetRelativeMouseMode() && (win = active))||
+        } else if ((SDL_GetRelativeMouseMode() && (win = _focused))||
                    (win = find_window(SCALE_POINT(event.motion.x),
                                       SCALE_POINT(event.motion.y))))
         {
@@ -334,11 +363,11 @@ void handle_windows(void) {
         break;
         
       case SDL_MOUSEBUTTONDOWN:
-        if ((SDL_GetRelativeMouseMode() && (win = active)) ||
+        if ((SDL_GetRelativeMouseMode() && (win = _focused)) ||
             (win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y))))
         {
           //        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
-          active_window(win);
+          set_focus(win);
           move_to_top(win);
           int x = LOCAL_X(event.button, win);
           int y = LOCAL_Y(event.button, win);
@@ -348,7 +377,7 @@ void handle_windows(void) {
             dragging = win;
             drag_anchor[0] = SCALE_POINT(event.button.x) - win->frame.x;
             drag_anchor[1] = SCALE_POINT(event.button.y) - win->frame.y;
-          } else if (win == active) {
+          } else if (win == _focused) {
             int msg = 0;
             switch (event.button.button) {
               case 1: msg = MSG_LBUTTONDOWN; break;
@@ -369,12 +398,12 @@ void handle_windows(void) {
             case 1: send_message(dragging, MSG_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
               //              case 3: send_message(win, MSG_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
           }
-          active_window(dragging);
+          set_focus(dragging);
           dragging = NULL;
         } else if (resizing) {
-          active_window(resizing);
+          set_focus(resizing);
           resizing = NULL;
-        } else if ((SDL_GetRelativeMouseMode() && (win = active))||
+        } else if ((SDL_GetRelativeMouseMode() && (win = _focused))||
                    (win = find_window(SCALE_POINT(event.button.x),
                                       SCALE_POINT(event.button.y)))) {
           //        } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
@@ -450,7 +479,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         //        set_viewport(&(window_t){0, 0, screen_width, screen_height});
         //        set_projection(0, 0, screen_width, screen_height);
         if (!(win->flags&WINDOW_TRANSPARENT)) {
-          draw_panel(frame->x, frame->y-TITLEBAR_HEIGHT, frame->w, frame->h+TITLEBAR_HEIGHT, active == win);
+          draw_panel(frame->x, frame->y-TITLEBAR_HEIGHT, frame->w, frame->h+TITLEBAR_HEIGHT, _focused == win);
         }
         draw_window_controls(win);
         break;
@@ -524,7 +553,7 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
-      fill_rect(active == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
+      fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, *pressed);
       draw_text_small(win->title, win->frame.x+(*pressed?4:3), win->frame.y+(*pressed?4:3), COLOR_TEXT_NORMAL);
       return true;
@@ -551,7 +580,7 @@ bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
-      fill_rect(active == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, 14, 14);
+      fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, 14, 14);
       draw_button(win->frame.x, win->frame.y, 10, 10, *pressed & CHECK_PRESSED);
       draw_text_small(win->title, win->frame.x + 16, win->frame.y + 1, COLOR_TEXT_NORMAL);
       if (*pressed&CHECK_VALUE) {
@@ -592,10 +621,10 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case MSG_PAINT:
-      fill_rect(active == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
+      fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, true);
       draw_text_small(win->title, win->frame.x+PADDING, win->frame.y+PADDING, COLOR_TEXT_NORMAL);
-      if (active == win && win->editing) {
+      if (_focused == win && win->editing) {
         fill_rect(COLOR_TEXT_NORMAL,
                   win->frame.x+PADDING+strnwidth(win->title, win->cursor_pos),
                   win->frame.y+PADDING,
@@ -608,7 +637,7 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 //      return true;
     case MSG_LBUTTONUP:
 //      *pressed = false;
-      active_window(win);
+      set_focus(win);
       win->editing = true;
       win->cursor_pos = 0;
       for (int i = 0; i <= strlen(win->title); i++) {
@@ -662,6 +691,8 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             win->cursor_pos++;
           }
           break;
+        default:
+          return win->editing;
       }
       invalidate_window(win);
       return true;
@@ -671,6 +702,9 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 
 bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
+    case MSG_CREATE:
+      win->notabstop = true;
+      return true;
     case MSG_PAINT:
       draw_text_small(win->title, win->frame.x, win->frame.y, COLOR_TEXT_NORMAL);
       return true;
@@ -681,6 +715,9 @@ bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 bool win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   sprite_t *spr;
   switch (msg) {
+    case MSG_CREATE:
+      win->notabstop = true;
+      return true;
     case MSG_PAINT:
       fill_rect(0xff000000, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
       if (*win->title && (spr = find_sprite(win->title))) {
