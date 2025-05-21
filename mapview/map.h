@@ -84,31 +84,32 @@ enum {
 #define MAKEDWORD(low, high) ((uint32_t)(((uint16_t)(low)) | ((uint32_t)((uint16_t)(high))) << 16))
 
 enum {
-  MSG_CREATE,
-  MSG_NCPAINT,
-  MSG_NCLBUTTONUP,
-  MSG_PAINT,
-  MSG_SETFOCUS,
-  MSG_KILLFOCUS,
-  MSG_COMMAND,
-  MSG_TEXTINPUT,
-  MSG_WHEEL,
-  MSG_MOUSEMOVE,
-  MSG_LBUTTONDOWN,
-  MSG_LBUTTONUP,
-  MSG_RBUTTONDOWN,
-  MSG_RBUTTONUP,
-  MSG_RESIZE,
-  MSG_KEYDOWN,
-  MSG_KEYUP,
-  MSG_JOYBUTTONDOWN,
-  MSG_JOYBUTTONUP,
-  MSG_JOYAXISMOTION,
-  MSG_USER = 1000
+  WM_CREATE,
+  WM_NCPAINT,
+  WM_NCLBUTTONUP,
+  WM_PAINT,
+  WM_SETFOCUS,
+  WM_KILLFOCUS,
+  WM_COMMAND,
+  WM_TEXTINPUT,
+  WM_WHEEL,
+  WM_MOUSEMOVE,
+  WM_MOUSELEAVE,
+  WM_LBUTTONDOWN,
+  WM_LBUTTONUP,
+  WM_RBUTTONDOWN,
+  WM_RBUTTONUP,
+  WM_RESIZE,
+  WM_KEYDOWN,
+  WM_KEYUP,
+  WM_JOYBUTTONDOWN,
+  WM_JOYBUTTONUP,
+  WM_JOYAXISMOTION,
+  WM_USER = 1000
 };
 
 enum {
-  BM_SETCHECK = MSG_USER,
+  BM_SETCHECK = WM_USER,
   BM_GETCHECK,
 };
 
@@ -444,6 +445,7 @@ void invalidate_window(window_t *win);
 void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
 int window_title_bar_y(window_t const *win);
 window_t *get_window_item(window_t const *win, uint32_t id);
+void track_mouse(window_t *win);
 
 extern game_t game;
 

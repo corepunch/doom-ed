@@ -321,7 +321,7 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern char *sprnames[NUMSPRITES];
   editor_state_t *editor = win->userdata2;
   switch (msg) {
-    case MSG_CREATE:
+    case WM_CREATE:
       num_items = 0;
       for (int i = 0; i < NUMMOBJTYPES; i++) {
         if (mobjinfo[i].doomednum == -1)
@@ -331,7 +331,7 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->userdata2 = lparam;
       win->userdata = layout(num_items, win->frame.w, get_mobj_size, ed_objs);
       break;
-    case MSG_PAINT:
+    case WM_PAINT:
       for (int i = 0; i < num_items; i++) {
         int mobjindex;
         int pos = get_layout_item(win->userdata, i, &mobjindex);
@@ -344,11 +344,11 @@ bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
       }
       break;
-    case MSG_RESIZE:
+    case WM_RESIZE:
       free(win->userdata);
       win->userdata = layout(num_items, win->frame.w, get_mobj_size, ed_objs);
       return true;
-    case MSG_LBUTTONUP: {
+    case WM_LBUTTONUP: {
       int texture_idx =
       get_texture_at_point(win->userdata, LOWORD(wparam), HIWORD(wparam));
       if (texture_idx >= 0) {

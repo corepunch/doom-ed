@@ -361,10 +361,10 @@ typedef struct {
 bool win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   mapside_texture_t *tex = win->userdata;
   switch (msg) {
-    case MSG_CREATE:
+    case WM_CREATE:
       win->userdata = lparam;
       return true;
-    case MSG_PAINT:
+    case WM_PAINT:
       draw_rect(tex ? tex->texture : 1, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
       return true;
   }
@@ -374,21 +374,21 @@ bool win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   window_udata_t *udata = win->userdata;
   switch (msg) {
-    case MSG_CREATE:
+    case WM_CREATE:
       udata = malloc(sizeof(window_udata_t));
       udata->cache = lparam;
       udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       win->userdata = udata;
 //      create_window("Image", 0, MAKERECT(10, 10, 30, 30), win, win_image, &udata->cache->textures[0]);
       return true;
-    case MSG_RESIZE:
+    case WM_RESIZE:
       free(udata->layout);
       udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       return true;
-    case MSG_PAINT:
+    case WM_PAINT:
       draw_texture_layout_with_selection(udata->layout, udata->cache->textures, udata->cache->selected, SCALE);
       return false;
-    case MSG_LBUTTONUP: {
+    case WM_LBUTTONUP: {
       int texture_idx =
       get_texture_at_point(udata->layout, LOWORD(wparam) / SCALE, HIWORD(wparam) / SCALE);
       if (texture_idx >= 0) {

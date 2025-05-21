@@ -21,7 +21,8 @@ bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_editmode(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -49,7 +50,7 @@ void init_player(map_data_t const *map, player_t *player) {
   create_window("Editor", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
   create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, 128, 256), NULL, win_things, &editor);
 //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
-  create_window("Mode", 0, MAKERECT(200, 20, 150, 300), NULL, win_editmode, &editor);
+  create_window("Mode", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, &editor);
 }
 
 void goto_map(const char *mapname) {
@@ -248,7 +249,7 @@ void draw_dungeon(window_t const *win) {
   set_projection(0, 0, win->frame.w, win->frame.h);
   
 //  bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-//  win_perf((window_t*)win, MSG_PAINT, 0, NULL);
+//  win_perf((window_t*)win, WM_PAINT, 0, NULL);
   
 //  mapside_texture_t const *tex1 = get_texture(get_selected_texture());
 //  mapside_texture_t const *tex2 = get_flat_texture(get_selected_flat_texture());
@@ -318,23 +319,23 @@ void paint_face(map_data_t *map, bool eyedropper) {
 bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern window_t *_focused;
   switch (msg) {
-    case MSG_CREATE:
+    case WM_CREATE:
       create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
       return true;
-    case MSG_PAINT:
+    case WM_PAINT:
       draw_dungeon(win);
       if (_focused == win) {
-        post_message(win, MSG_PAINT, wparam, lparam);
+        post_message(win, WM_PAINT, wparam, lparam);
       }
       return false;
   }
 
   if (SDL_GetRelativeMouseMode()) {
     switch (msg) {
-      case MSG_KILLFOCUS:
+      case WM_KILLFOCUS:
         SDL_SetRelativeMouseMode(false);
         return true;
-      case MSG_KEYDOWN:
+      case WM_KEYDOWN:
         switch (wparam) {
           case SDL_SCANCODE_ESCAPE:
             SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -361,7 +362,7 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             break;
         }
         return true;
-      case MSG_KEYUP:
+      case WM_KEYUP:
         switch (wparam) {
           case SDL_SCANCODE_W:
           case SDL_SCANCODE_UP:
@@ -383,7 +384,7 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             break;
         }
         return true;
-      case MSG_MOUSEMOVE:
+      case WM_MOUSEMOVE:
         game.player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
         game.player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
         // Keep angle within 0-360 range
@@ -393,17 +394,17 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         if (game.player.pitch > 89.0f) game.player.pitch = 89.0f;
         if (game.player.pitch < -89.0f) game.player.pitch = -89.0f;
         return true;
-      case MSG_LBUTTONUP:
+      case WM_LBUTTONUP:
         paint_face(&game.map, SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LALT]);
         return true;
-      case MSG_JOYBUTTONDOWN:
+      case WM_JOYBUTTONDOWN:
         if (wparam == 0) {
           paint_face(&game.map, false);
         } else if (wparam == 1) {
           paint_face(&game.map, true);
         }
         return true;
-      case MSG_JOYAXISMOTION:
+      case WM_JOYAXISMOTION:
         switch (LOWORD(wparam)) {
           case 0: game.player.strafe_move = ((int16_t)HIWORD(wparam))/(float)0x8000; break;
           case 1: game.player.forward_move = -((int16_t)HIWORD(wparam))/(float)0x8000; break;
@@ -414,12 +415,12 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     }
   } else {
     switch (msg) {
-      case MSG_LBUTTONUP:
+      case WM_LBUTTONUP:
         if (!SDL_GetRelativeMouseMode()) {
           SDL_SetRelativeMouseMode(SDL_TRUE);
         }
         return true;
-//      case MSG_KEYDOWN:
+//      case WM_KEYDOWN:
 //        switch (wparam) {
 //          case SDL_SCANCODE_ESCAPE:
 //            SDL_SetRelativeMouseMode(SDL_FALSE);

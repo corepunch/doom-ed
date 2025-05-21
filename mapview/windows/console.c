@@ -394,7 +394,7 @@ void toggle_console(void) {
 
 bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
-    case MSG_PAINT:
+    case WM_PAINT:
       draw_console();
       break;
     default:

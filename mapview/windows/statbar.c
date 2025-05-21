@@ -3,7 +3,7 @@
 
 bool win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
-    case MSG_CREATE:
+    case WM_CREATE:
 #ifdef HEXEN
       load_sprite("H2BAR");
       load_sprite("H2TOP");
@@ -14,7 +14,7 @@ bool win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       load_sprite("STBAR");
 #endif
       break;
-    case MSG_PAINT: {
+    case WM_PAINT: {
 #ifdef HEXEN
       sprite_t* STBAR = find_sprite("H2BAR");
       if (STBAR) {

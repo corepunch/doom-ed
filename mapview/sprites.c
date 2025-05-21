@@ -622,6 +622,6 @@ void draw_icon(int icon, int x, int y, float alpha) {
 
 void fill_rect(int color, int x, int y, int w, int h) {
   glBindTexture(GL_TEXTURE_2D, g_sprite_system.tmp);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
   draw_rect_ex(g_sprite_system.tmp, x, y, w, h, false, 1);
 }
