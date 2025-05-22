@@ -182,6 +182,7 @@ static int icon_x(window_t const *win, int i) {
 
 bool win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void set_selection_mode(editor_state_t *editor, int mode) {
   rect_t rect = editor->inspector->frame;
@@ -190,6 +191,7 @@ void set_selection_mode(editor_state_t *editor, int mode) {
   switch (mode) {
     case edit_things: func = win_thing; break;
     case edit_sectors: func = win_sector; break;
+    case edit_lines: func = win_line; break;
     default:
       return;
   }
@@ -277,7 +279,7 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case WM_MOUSELEAVE:
       editor->hover.point = -1;
       editor->hover.sector = -1;
-      editor->hover.linedef = -1;
+      editor->hover.line = -1;
       editor->hover.thing = -1;
       invalidate_window(editor->window);
       invalidate_window(editor->inspector);
@@ -321,8 +323,8 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
-          } else if (editor->hover.linedef != 0xFFFF) {
-            editor->hover.point = split_linedef(map, editor->hover.linedef, sn.x, sn.y);
+          } else if (editor->hover.line != 0xFFFF) {
+            editor->hover.point = split_linedef(map, editor->hover.line, sn.x, sn.y);
           } else if (point_exists(sn, map, &point)) {
             editor->hover.point = point;
             editor->dragging = true;
@@ -336,6 +338,10 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           editor->selected.sector = editor->hover.sector;
           invalidate_window(win);
           break;
+        case edit_lines:
+          editor->selected.line = editor->hover.line;
+          invalidate_window(win);
+          break;
       }
       return true;
     case WM_RBUTTONDOWN:
@@ -346,8 +352,8 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             editor->hover.point = -1;
           } else if (point_exists(sn, map, &point)) {
             editor->hover.point = point;
-          } else if (editor->hover.linedef != 0xFFFF) {
-            editor->hover.point = split_linedef(map, editor->hover.linedef, sn.x, sn.y);
+          } else if (editor->hover.line != 0xFFFF) {
+            editor->hover.point = split_linedef(map, editor->hover.line, sn.x, sn.y);
           } else {
             editor->hover.point = add_vertex(map, sn);
           }

@@ -816,7 +816,7 @@ bool win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
                   win->frame.y+(win->frame.h-spr->height*scale)/2,
                   spr->width * scale,
                   spr->height * scale);
-      } else if ((tex = get_flat_texture(win->title))) {
+      } else if ((tex = get_flat_texture(win->title))||(tex = get_texture(win->title))) {
         float scale = fminf(1, fminf(((float)win->frame.w) / tex->width,
                                      ((float)win->frame.h) / tex->height));
         draw_rect(tex->texture,

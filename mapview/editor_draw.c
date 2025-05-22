@@ -206,7 +206,7 @@ static void draw_walls_editor(map_data_t const *map) {
     // Determine if this is a one-sided or two-sided wall
     bool two_sided = linedef->sidenum[1] != 0xFFFF;
     // Set color - white for one-sided (outer) walls, red for two-sided (inner) walls
-    if (editor->hover.linedef == i) {
+    if (editor->hover.line == i) {
       glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 1.0f);
     } else if (!two_sided) {
       glUniform4f(ui_prog_color, 1.0f, 1.0f, 1.0f, 1.0f);
@@ -421,14 +421,14 @@ draw_editor(map_data_t const *map,
       sn.x = x;
       sn.y = y;
       dist = d;
-      ((editor_state_t*)editor)->hover.linedef = i;
+      ((editor_state_t*)editor)->hover.line = i;
     }
   }
   
 //  static int s = -1;
-//  if (s!=editor->hover.linedef) {
-//    printf("%d\n", editor->hover.linedef);
-//    s =editor->hover.linedef;
+//  if (s!=editor->hover.line) {
+//    printf("%d\n", editor->hover.line);
+//    s =editor->hover.line;
 //  }
 
   if (editor->sel_mode == edit_vertices) {
@@ -440,7 +440,7 @@ draw_editor(map_data_t const *map,
         sn.x = map->vertices[i].x;
         sn.y = map->vertices[i].y;
         dist = d;
-        ((editor_state_t*)editor)->hover.linedef = -1;
+        ((editor_state_t*)editor)->hover.line = -1;
       }
     }
   }
@@ -450,7 +450,7 @@ draw_editor(map_data_t const *map,
       draw_cursor(sn.x, sn.y);
     }
   } else {
-    ((editor_state_t*)editor)->hover.linedef = -1;
+    ((editor_state_t*)editor)->hover.line = -1;
     if (editor->sel_mode == edit_vertices) {
       // Snap to grid
       snap_mouse_position(editor, world, &sn);
@@ -465,13 +465,20 @@ draw_editor(map_data_t const *map,
   switch (editor->sel_mode) {
     case edit_vertices:
     case edit_lines:
-      draw_line(map, editor->hover.linedef);
       // If currently drawing, show line from last point to cursor
       if (editor->dragging || editor->drawing) {
         float x = map->vertices[editor->hover.point].x;
         float y = map->vertices[editor->hover.point].y;
         draw_line_ex(map, x, y, sn.x, sn.y);
       }
+      glUniform4ub(ui_prog_color, COLOR_SELECTED);
+      draw_line(map, editor->selected.line);
+      if (editor->selected.line == editor->hover.line) {
+        glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
+      } else {
+        glUniform4ub(ui_prog_color, COLOR_HOVER);
+      }
+      draw_line(map, editor->hover.line);
       break;
     case edit_sectors:
       glUniform4ub(ui_prog_color, COLOR_SELECTED);

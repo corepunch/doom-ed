@@ -38,7 +38,7 @@ enum {
 };
 
 typedef struct {
-  uint16_t point, linedef, sector, thing;
+  uint16_t point, line, sector, thing;
 } editor_selection_t;
 
 typedef struct {
