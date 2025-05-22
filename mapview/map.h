@@ -85,6 +85,7 @@ enum {
 
 enum {
   WM_CREATE,
+  WM_DESTROY,
   WM_NCPAINT,
   WM_NCLBUTTONUP,
   WM_PAINT,
@@ -438,6 +439,7 @@ typedef struct window_s {
 } window_t;
 
 window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
+void destroy_window(window_t *win);
 void load_window_children(window_t *win, windef_t const *def);
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
@@ -446,6 +448,10 @@ void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
 int window_title_bar_y(window_t const *win);
 window_t *get_window_item(window_t const *win, uint32_t id);
 void track_mouse(window_t *win);
+
+bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 extern game_t game;
 

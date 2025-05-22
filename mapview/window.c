@@ -119,8 +119,6 @@ static void paint_stencil(uint8_t id) {
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 }
 
-static uint8_t _id;
-
 void push_window(window_t *win, window_t **windows)  {
   if (!*windows) {
     *windows = win;
@@ -144,7 +142,22 @@ create_window(char const *title,
   win->frame = *frame;
   win->proc = proc;
   win->flags = flags;
-  win->id = parent ? ++parent->child_id : ++_id;
+  if (parent) {
+    win->id = ++parent->child_id;
+  } else {
+    bool used[256]={0};
+    for (window_t *w = windows; w; w = w->next) {
+      used[w->id] = true;
+    }
+    for (int i = 1; i < 256; i++) {
+      if (!used[i]) {
+        win->id = i;
+      }
+    }
+    if (win->id == 0) {
+      printf("Too many windows open\n");
+    }
+  }
   win->parent = parent;
   strncpy(win->title, title, sizeof(win->title));
   _focused = win;
@@ -152,6 +165,28 @@ create_window(char const *title,
   proc(win, WM_CREATE, 0, lparam);
   invalidate_window(win);
   return win;
+}
+
+void destroy_window(window_t *win) {
+  send_message(win, WM_DESTROY, 0, NULL);
+  if (win == windows) {
+    windows = win->next;
+  } else {
+    for (window_t *w = windows->next, *p = windows;
+         w; w = w->next, p = p->next)
+    {
+      if (w == win) {
+        p->next = win->next;
+        break;
+      }
+    }
+  }
+  for (uint8_t w = queue.write, r = queue.read; r != w; r++) {
+    if (queue.messages[r].target == win) {
+      queue.messages[r].target = NULL;
+    }
+  }
+  free(win);
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
@@ -460,9 +495,10 @@ void handle_windows(void) {
   }
   for (uint8_t write = queue.write; queue.read != write;) {
     msg_t *m = &queue.messages[queue.read++];
-    if (m->msg == WM_PAINT || m->msg == WM_NCPAINT) {
-      send_message(m->target, m->msg, m->wparam, m->lparam);
-    }
+    if (m->target == NULL) continue;
+//    if (m->msg == WM_PAINT || m->msg == WM_NCPAINT) {
+    send_message(m->target, m->msg, m->wparam, m->lparam);
+//    }
   }
 }
 
@@ -768,9 +804,6 @@ bool win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   sprite_t const *spr;
   mapside_texture_t const *tex;
   switch (msg) {
-//    case WM_CREATE:
-//      win->notabstop = true;
-//      return true;
     case WM_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.w, true);

@@ -455,7 +455,7 @@ draw_editor(map_data_t const *map,
       // Snap to grid
       snap_mouse_position(editor, world, &sn);
       // Draw cursor at the snapped position
-      draw_cursor(sn.x, sn.y);
+//      draw_cursor(sn.x, sn.y);
     }
   }
 

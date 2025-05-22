@@ -34,6 +34,7 @@ enum {
   edit_sectors,
   edit_things,
   edit_sounds,
+  edit_modes
 };
 
 typedef struct {
@@ -43,6 +44,7 @@ typedef struct {
 typedef struct {
   window_t *window;
   window_t *inspector;
+  window_t *game;
   int16_t cursor[2];
   vec2 camera;
   int grid_size;         // Grid size (8 units by default)

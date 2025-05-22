@@ -46,7 +46,7 @@ void init_player(map_data_t const *map, player_t *player) {
 //  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);
   //  create_window("Console", 0, MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
   extern editor_state_t editor;
-  create_window("Game", 0, MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
+  create_window("Game", 0, MAKERECT(380, 128, 320, 320), NULL, win_game, &editor);
   create_window("Editor", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
   create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, 128, 256), NULL, win_things, &editor);
 //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
@@ -320,6 +320,8 @@ bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern window_t *_focused;
   switch (msg) {
     case WM_CREATE:
+      win->userdata = lparam;
+      ((editor_state_t *)lparam)->game = win;
       create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
       return true;
     case WM_PAINT:

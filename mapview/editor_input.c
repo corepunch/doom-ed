@@ -180,6 +180,23 @@ static int icon_x(window_t const *win, int i) {
   return win->frame.x + 4 + i * ICON_STEP;
 }
 
+bool win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
+void set_selection_mode(editor_state_t *editor, int mode) {
+  rect_t rect = editor->inspector->frame;
+  editor->sel_mode = mode;
+  void *func = NULL;
+  switch (mode) {
+    case edit_things: func = win_thing; break;
+    case edit_sectors: func = win_sector; break;
+    default:
+      return;
+  }
+  destroy_window(editor->inspector);
+  create_window("Mode", 0, &rect, NULL, func, editor);
+}
+
 bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mapvertex_t sn;
   editor_state_t *editor = win->userdata;
@@ -188,14 +205,14 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   int old_point = editor ? editor->hover.point : -1;
   switch (msg) {
     case WM_NCPAINT:
-      for (int i = 0; i < 6; i++) {
+      for (int i = 0; i < edit_modes; i++) {
         draw_icon(icon_points + i, icon_x(win, i), window_title_bar_y(win),
                   editor->sel_mode == i ? 1.0f : 0.5f);
       }
       return true;
     case WM_NCLBUTTONUP:
       if ((LOWORD(wparam) - icon_x(win, 0)) / ICON_STEP < 5 && LOWORD(wparam) >= icon_x(win, 0)) {
-        editor->sel_mode = (LOWORD(wparam) - icon_x(win, 0)) / ICON_STEP;
+        set_selection_mode(editor, (LOWORD(wparam) - icon_x(win, 0)) / ICON_STEP);
         post_message(win, WM_NCPAINT, 0, NULL);
       }
       return true;
@@ -435,209 +452,3 @@ bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 //  0xFF7A4C88,
 //};
 
-bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-
-enum {
-  ID_THING_TYPE = 1000,
-  ID_THING_POS_X,
-  ID_THING_POS_Y,
-  ID_THING_SPRITE,
-  ID_THING_EASY,
-  ID_THING_NORMAL,
-  ID_THING_HARD,
-  ID_THING_FIGHTER,
-  ID_THING_CLERIC,
-  ID_THING_MAGE,
-  ID_THING_GSINGLE,
-  ID_THING_GCOOP,
-  ID_THING_GDEATHMATCH,
-  ID_THING_AMBUSH,
-  ID_THING_DORMANT,
-};
-
-#define MTF_EASY    1
-#define MTF_NORMAL    2
-#define MTF_HARD    4
-#define MTF_AMBUSH    8
-#define MTF_DORMANT    16
-#define MTF_FIGHTER    32
-#define MTF_CLERIC    64
-#define MTF_MAGE    128
-#define MTF_GSINGLE    256
-#define MTF_GCOOP    512
-#define MTF_GDEATHMATCH  1024
-
-windef_t thing_layout[] = {
-  { "TEXT", "Type:", -1, 4, 13, 50, 10 },
-  { "TEXT", "Position X:", -1, 4, 33, 50, 10 },
-  { "TEXT", "Position Y:", -1, 4, 53, 50, 10 },
-  { "BUTTON", "Click me", ID_THING_TYPE, 64, 10, 50, 10 },
-  { "EDITTEXT", "", ID_THING_POS_X, 64, 30, 50, 10 },
-  { "EDITTEXT", "", ID_THING_POS_Y, 64, 50, 50, 10 },
-  { "SPRITE", "", ID_THING_SPRITE, 4, 70, 64, 64 },
-  { "CHECKBOX", "Easy", ID_THING_EASY, 4, 140, 20, 10 },
-  { "CHECKBOX", "Medium", ID_THING_NORMAL, 4, 155, 20, 10 },
-  { "CHECKBOX", "Hard", ID_THING_HARD, 4, 170, 20, 10 },
-  { "CHECKBOX", "Fighter", ID_THING_FIGHTER, 4, 190, 20, 10 },
-  { "CHECKBOX", "Cleric", ID_THING_CLERIC, 4, 205, 20, 10 },
-  { "CHECKBOX", "Mage", ID_THING_MAGE, 4, 220, 20, 10 },
-  { "CHECKBOX", "Single", ID_THING_GSINGLE, 64, 140, 20, 10 },
-  { "CHECKBOX", "Coop", ID_THING_GCOOP, 64, 155, 20, 10 },
-  { "CHECKBOX", "Deathmatch", ID_THING_GDEATHMATCH, 64, 170, 20, 10 },
-  { "CHECKBOX", "Ambush", ID_THING_AMBUSH, 64, 190, 20, 10 },
-  { "CHECKBOX", "Dormant", ID_THING_DORMANT, 64, 205, 20, 10 },
-  { NULL }
-};
-
-uint32_t thing_checkboxes[] = {
-  ID_THING_EASY,
-  ID_THING_NORMAL,
-  ID_THING_HARD,
-  ID_THING_AMBUSH,
-  ID_THING_DORMANT,
-  ID_THING_FIGHTER,
-  ID_THING_CLERIC,
-  ID_THING_MAGE,
-  ID_THING_GSINGLE,
-  ID_THING_GCOOP,
-  ID_THING_GDEATHMATCH,
-};
-
-mapthing_t *selected_thing(editor_state_t *editor) {
-  if (editor->hover.thing != 0xFFFF) {
-    return &game.map.things[editor->hover.thing];
-  } else if (editor->selected.thing != 0xFFFF) {
-    return &game.map.things[editor->selected.thing];
-  } else {
-    return NULL;
-  }
-}
-
-mapsector_t *selected_sector(editor_state_t *editor) {
-  if (editor->hover.sector != 0xFFFF) {
-    return &game.map.sectors[editor->hover.sector];
-  } else if (editor->selected.sector != 0xFFFF) {
-    return &game.map.sectors[editor->selected.sector];
-  } else {
-    return NULL;
-  }
-}
-
-bool win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  editor_state_t *editor = win->userdata;
-  mapthing_t *thing;
-  switch (msg) {
-    case WM_CREATE:
-      win->userdata = lparam;
-      ((editor_state_t*)lparam)->inspector = win;
-      load_window_children(win, thing_layout);
-      return true;
-    case WM_PAINT:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(editor))) {
-        sprite_t *get_thing_sprite_name(int thing_type, int angle);
-        sprite_t *spr = get_thing_sprite_name(thing->type, 0);
-        set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
-        set_window_item_text(win, ID_THING_TYPE, "%d", thing->height);
-        set_window_item_text(win, ID_THING_POS_X, "%d", thing->x);
-        set_window_item_text(win, ID_THING_POS_Y, "%d", thing->y);
-        for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
-          window_t *checkbox = get_window_item(win, thing_checkboxes[i]);
-          uint32_t value = thing->options&(1<<i);
-          send_message(checkbox, BM_SETCHECK, value, NULL);
-        }
-      }
-      return false;
-    case WM_COMMAND:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(editor))) {
-        for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
-          if (wparam == MAKEDWORD(thing_checkboxes[i], BN_CLICKED)) {
-            if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
-              thing->options |= 1 << i;
-            } else {
-              thing->options &= ~(1 << i);
-            }
-          }
-        }
-        if (wparam == MAKEDWORD(ID_THING_POS_X, EN_UPDATE)) {
-          thing->x = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
-        }
-        if (wparam == MAKEDWORD(ID_THING_POS_Y, EN_UPDATE)) {
-          thing->y = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
-        }
-      }
-      return true;
-  }
-  return false;
-}
-
-enum {
-  ID_SECTOR_FLOOR_HEIGHT = 1000,
-  ID_SECTOR_FLOOR_IMAGE,
-  ID_SECTOR_CEILING_HEIGHT,
-  ID_SECTOR_CEILING_IMAGE,
-};
-
-windef_t sector_layout[] = {
-//  { "TEXT", "Type:", -1, 4, 13, 50, 10 },
-  { "TEXT", "Floor Hgt:", -1, 4, 13, 50, 10 },
-  { "TEXT", "Ceiling Hgt:", -1, 4, 33, 50, 10 },
-  { "EDITTEXT", "", ID_SECTOR_FLOOR_HEIGHT, 64, 10, 50, 10 },
-  { "EDITTEXT", "", ID_SECTOR_CEILING_HEIGHT, 64, 30, 50, 10 },
-  { "SPRITE", "", ID_SECTOR_FLOOR_IMAGE, 4, 52, 64, 64 },
-  { "SPRITE", "", ID_SECTOR_CEILING_IMAGE, 76, 52, 64, 64 },
-  { NULL }
-};
-
-bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  editor_state_t *editor = win->userdata;
-  mapsector_t *sector;
-  switch (msg) {
-    case WM_CREATE:
-      win->userdata = lparam;
-      ((editor_state_t*)lparam)->inspector = win;
-      load_window_children(win, sector_layout);
-      return true;
-    case WM_PAINT:
-      if (editor->sel_mode == edit_sectors && (sector = selected_sector(editor))) {
-//        sprite_t *spr = get_thing_sprite_name(thing->type, 0);
-        set_window_item_text(win, ID_SECTOR_FLOOR_HEIGHT, "%d", sector->floorheight);
-        set_window_item_text(win, ID_SECTOR_FLOOR_IMAGE, sector->floorpic);
-        set_window_item_text(win, ID_SECTOR_CEILING_HEIGHT, "%d", sector->ceilingheight);
-        set_window_item_text(win, ID_SECTOR_CEILING_IMAGE, sector->ceilingpic);
-//        set_window_item_text(win, ID_THING_POS_Y, "%d", thing->y);
-//        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
-//          window_t *checkbox = get_window_item(win, checkboxes[i]);
-//          uint32_t value = thing->options&(1<<i);
-//          send_message(checkbox, BM_SETCHECK, value, NULL);
-//        }
-      }
-      return false;
-//    case WM_COMMAND:
-//      if (editor->selected.thing != 0xFFFF) {
-//        mapthing_t *thing = &game.map.things[editor->selected.thing];
-//        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
-//          if (wparam == MAKEDWORD(checkboxes[i], BN_CLICKED)) {
-//            if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
-//              thing->options |= 1 << i;
-//            } else {
-//              thing->options &= ~(1 << i);
-//            }
-//          }
-//        }
-//        if (wparam == MAKEDWORD(ID_THING_POS_X, EN_UPDATE)) {
-//          thing->x = atoi(((window_t *)lparam)->title);
-//          invalidate_window(editor->window);
-//        }
-//        if (wparam == MAKEDWORD(ID_THING_POS_Y, EN_UPDATE)) {
-//          thing->y = atoi(((window_t *)lparam)->title);
-//          invalidate_window(editor->window);
-//        }
-//      }
-//      return true;
-  }
-  return false;
-}
