@@ -72,21 +72,26 @@ void draw_button(int x, int y, int w, int h, bool pressed) {
 
 static void draw_panel(window_t const *win) {
   int t = (win->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
-  int x = win->frame.x;
-  int y = win->frame.y-t;
-  int w = win->frame.w;
-  int h = win->frame.h+t;
+  int x = win->frame.x, y = win->frame.y-t;
+  int w = win->frame.w, h = win->frame.h+t;
   bool active = _focused == win;
   bool resize = !(win->flags & WINDOW_NORESIZE);
   if (active) {
-    fill_rect(COLOR_FOCUSED, x-1, y-1, w+2, h+2);
+    fill_rect(COLOR_FOCUSED, x-1, y-1, w+2, 1);
+    fill_rect(COLOR_FOCUSED, x-1, y-1, 1, h+2);
+    fill_rect(COLOR_FOCUSED, x+w, y, 1, h+1);
+    fill_rect(COLOR_FOCUSED, x, y+h, w+1, 1);
   } else {
-    fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
-    fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
+    fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, 1);
+    fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, 1, h+2);
+    fill_rect(COLOR_DARK_EDGE, x+w, y, 1, h+1);
+    fill_rect(COLOR_DARK_EDGE, x, y+h, w+1, 1);
     fill_rect(COLOR_FLARE, x-1, y-1, 1, 1);
   }
   if (resize) {
-    fill_rect(COLOR_LIGHT_EDGE, x+w-RESIZE_HANDLE+1, y+h-RESIZE_HANDLE+1, RESIZE_HANDLE, RESIZE_HANDLE);
+    int r = RESIZE_HANDLE;
+    fill_rect(COLOR_LIGHT_EDGE, x+w, y+h-r+1, 1, r);
+    fill_rect(COLOR_LIGHT_EDGE, x+w-r+1, y+h, r, 1);
   }
   fill_rect(COLOR_PANEL_BG, x, y, w, h);
 }
@@ -116,7 +121,7 @@ void set_viewport(window_t const *win) {
   glScissor(vp_x, vp_y, vp_w, vp_h);
 }
 
-static void paint_stencil(uint8_t id) {
+static void repaint_stencil(void) {
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
   
@@ -131,9 +136,9 @@ static void paint_stencil(uint8_t id) {
     int t = (w->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
     draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
   }
-  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-  glStencilFunc(GL_EQUAL, id, 0xFF);
-  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+//  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+//  glStencilFunc(GL_EQUAL, id, 0xFF);
+//  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 }
 
 void push_window(window_t *win, window_t **windows)  {
@@ -180,6 +185,7 @@ create_window(char const *title,
   _focused = win;
   push_window(win, parent ? &parent->children : &windows);
   proc(win, WM_CREATE, 0, lparam);
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_window(win);
   return win;
 }
@@ -192,6 +198,8 @@ bool do_windows_overlap(const window_t *a, const window_t *b) {
 }
 
 void move_window(window_t *win, int x, int y) {
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+
   for (window_t *t = windows; t; t = t->next) {
     if (t != win && do_windows_overlap(t, win)) {
       invalidate_window(t);
@@ -199,15 +207,17 @@ void move_window(window_t *win, int x, int y) {
   }
   win->frame.x = x;
   win->frame.y = y;
-  
-  paint_stencil(0);
-  draw_wallpaper();
-  glDisable(GL_STENCIL_TEST);
+
+//  paint_stencil(0);
+//  draw_wallpaper();
+//  glDisable(GL_STENCIL_TEST);
   
   invalidate_window(win);
 }
 
 void resize_window(window_t *win, int new_w, int new_h) {
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+  
   for (window_t *t = windows; t; t = t->next) {
     if (t != win && do_windows_overlap(t, win)) {
       invalidate_window(t);
@@ -216,9 +226,9 @@ void resize_window(window_t *win, int new_w, int new_h) {
   if (new_w > 0) _resizing->frame.w = new_w;
   if (new_h > 0) _resizing->frame.h = new_h;
   
-  paint_stencil(0);
-  draw_wallpaper();
-  glDisable(GL_STENCIL_TEST);
+//  paint_stencil(0);
+//  draw_wallpaper();
+//  glDisable(GL_STENCIL_TEST);
   
   invalidate_window(win);
   
@@ -255,11 +265,10 @@ void destroy_window(window_t *win) {
     }
   }
   free(win);
-
-  paint_stencil(0);
-  draw_wallpaper();
-
-  glDisable(GL_STENCIL_TEST);
+  
+//  paint_stencil(0);
+//  draw_wallpaper();
+//  glDisable(GL_STENCIL_TEST);
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
@@ -528,12 +537,24 @@ void handle_windows(void) {
         break;
     }
   }
+
   for (uint8_t write = queue.write; queue.read != write;) {
     msg_t *m = &queue.messages[queue.read++];
     if (m->target == NULL) continue;
-//    if (m->msg == WM_PAINT || m->msg == WM_NCPAINT) {
+    if (m->msg == WM_REFRESHSTENCIL) {
+      repaint_stencil();
+      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+      glStencilFunc(GL_EQUAL, 0, 0xFF);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+      draw_wallpaper();
+      continue;
+    }
+    if (m->msg == WM_PAINT || m->msg == WM_NCPAINT) {
+      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+      glStencilFunc(GL_EQUAL, m->target->id, 0xFF);
+      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    }
     send_message(m->target, m->msg, m->wparam, m->lparam);
-//    }
   }
 }
 
@@ -550,6 +571,11 @@ int window_title_bar_y(window_t const *win) {
 }
 
 void draw_window_controls(window_t *win) {
+  fill_rect(COLOR_PANEL_DARK_BG,
+            win->frame.x,
+            win->frame.y-TITLEBAR_HEIGHT,
+            win->frame.w,
+            TITLEBAR_HEIGHT);
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
   // draw_button(frame->x+frame->w-11, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
@@ -571,9 +597,9 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (win) {
     switch (msg) {
       case WM_NCPAINT:
-        paint_stencil(win->id);
-        // set_viewport(&(window_t){0, 0, screen_width, screen_height});
-        // set_projection(0, 0, screen_width, screen_height);
+        glStencilFunc(GL_EQUAL, win->id, 0xFF);
+        set_viewport(&(window_t){0, 0, screen_width, screen_height});
+        set_projection(0, 0, screen_width, screen_height);
         if (!(win->flags&WINDOW_TRANSPARENT)) {
           draw_panel(win);
         }
@@ -582,7 +608,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         break;
       case WM_PAINT:
-        paint_stencil(root->id);
+        glStencilFunc(GL_EQUAL, win->id, 0xFF);
         set_viewport(root);
         set_projection(root->scroll[0],
                        root->scroll[1],
@@ -600,7 +626,6 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           break;
         case WM_NCPAINT:
           if (!(win->flags&WINDOW_NOTITLE)) {
-            fill_rect(0x40000000, frame->x, frame->y-TITLEBAR_HEIGHT, frame->w, TITLEBAR_HEIGHT);
             // fill_rect(0x40ffffff, frame->x+frame->w-TITLEBAR_HEIGHT, frame->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
             draw_text_gl3(win->title, frame->x+2, window_title_bar_y(win)-1, 1);
           }
@@ -618,9 +643,6 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           break;
       }
     }
-  }
-  if (msg == WM_PAINT || msg == WM_NCPAINT) {
-    glDisable(GL_STENCIL_TEST);
   }
   return value;
 }
