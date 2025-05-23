@@ -236,6 +236,7 @@ void resize_window(window_t *win, int new_w, int new_h) {
 }
 
 void destroy_window(window_t *win) {
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   for (window_t *t = windows; t; t = t->next) {
     if (t != win && do_windows_overlap(t, win)) {
       invalidate_window(t);
@@ -329,6 +330,7 @@ void set_focus(window_t* win) {
 
 static void move_to_top(window_t* _win) {
   window_t *win = get_root_window(_win);
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_window(win);
   
   window_t **head = &windows, *p = NULL, *n = *head;
