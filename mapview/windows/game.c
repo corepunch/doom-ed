@@ -15,14 +15,14 @@ extern GLuint world_prog, ui_prog;
 extern SDL_Window* window;
 extern unsigned frame;
 
-bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -248,7 +248,7 @@ void draw_dungeon(window_t const *win) {
   void set_projection(int x, int y, int w, int h);
   set_projection(0, 0, win->frame.w, win->frame.h);
   
-//  bool win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//  result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 //  win_perf((window_t*)win, WM_PAINT, 0, NULL);
   
 //  mapside_texture_t const *tex1 = get_texture(get_selected_texture());
@@ -316,7 +316,7 @@ void paint_face(map_data_t *map, bool eyedropper) {
 
 }
 
-bool win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern window_t *_focused;
   switch (msg) {
     case WM_CREATE:

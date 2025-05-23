@@ -315,7 +315,7 @@ void cleanup_things(void) {
 static int num_items = 0;
 static mobjinfo_t ed_objs[NUMMOBJTYPES];
 
-bool win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mobjinfo_t mobjinfo[NUMMOBJTYPES];
   extern state_t states[NUMSTATES];
   extern char *sprnames[NUMSPRITES];

@@ -5,16 +5,18 @@ enum {
   ID_SECTOR_FLOOR_IMAGE,
   ID_SECTOR_CEILING_HEIGHT,
   ID_SECTOR_CEILING_IMAGE,
+  ID_TEST_COMBOBOX,
 };
 
 windef_t sector_layout[] = {
-  //  { "TEXT", "Type:", -1, 4, 13, 50, 10 },
-  { "TEXT", "Floor Hgt:", -1, 4, 13, 50, 10 },
-  { "TEXT", "Ceiling Hgt:", -1, 4, 33, 50, 10 },
-  { "EDITTEXT", "", ID_SECTOR_FLOOR_HEIGHT, 64, 10, 50, 10 },
-  { "EDITTEXT", "", ID_SECTOR_CEILING_HEIGHT, 64, 30, 50, 10 },
-  { "SPRITE", "", ID_SECTOR_FLOOR_IMAGE, 4, 52, 64, 64 },
-  { "SPRITE", "", ID_SECTOR_CEILING_IMAGE, 76, 52, 64, 64 },
+  //  { "TEXT", "Type:", -1, 50 },
+  { "TEXT", "Floor Hgt:", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_SECTOR_FLOOR_HEIGHT, 50 },
+  { "TEXT", "Ceiling Hgt:", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_SECTOR_CEILING_HEIGHT, 50 },
+//  { "COMBOBOX", "Stone", ID_TEST_COMBOBOX, 90 }, {"SPACE"},
+  { "SPRITE", "", ID_SECTOR_FLOOR_IMAGE, 64, 64 },
+  { "SPRITE", "", ID_SECTOR_CEILING_IMAGE, 64, 64 },
   { NULL }
 };
 
@@ -28,7 +30,21 @@ mapsector_t *selected_sector(editor_state_t *editor) {
   }
 }
 
-bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+//static void init_combobox(window_t *cb) {
+//  send_message(cb, CB_ADDSTRING, 0, "worldspawn");
+//  send_message(cb, CB_ADDSTRING, 0, "trigger_once");
+//  send_message(cb, CB_ADDSTRING, 0, "func_door");
+//  send_message(cb, CB_ADDSTRING, 0, "light");
+//  send_message(cb, CB_ADDSTRING, 0, "misc_model");
+//  send_message(cb, CB_ADDSTRING, 0, "path_corner");
+//  send_message(cb, CB_ADDSTRING, 0, "env_spark");
+//  send_message(cb, CB_ADDSTRING, 0, "func_train");
+//  send_message(cb, CB_ADDSTRING, 0, "info_player_start");
+//  send_message(cb, CB_ADDSTRING, 0, "target_teleport");
+//  send_message(cb, CB_SETCURSEL, 2, NULL);
+//}
+
+result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = win->userdata;
   mapsector_t *sector;
   switch (msg) {
@@ -36,6 +52,7 @@ bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       win->userdata = lparam;
       ((editor_state_t*)lparam)->inspector = win;
       load_window_children(win, sector_layout);
+//      init_combobox(get_window_item(win, ID_TEST_COMBOBOX));
       return true;
     case WM_PAINT:
       if (editor->sel_mode == edit_sectors && (sector = selected_sector(editor))) {

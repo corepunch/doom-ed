@@ -392,7 +392,7 @@ void toggle_console(void) {
   console.show_console = !console.show_console;
 }
 
-bool win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_PAINT:
       draw_console();

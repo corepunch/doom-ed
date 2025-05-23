@@ -1,7 +1,7 @@
 #include "../map.h"
 #include "../sprites.h"
 
-bool win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_CREATE:
 #ifdef HEXEN

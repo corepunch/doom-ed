@@ -19,6 +19,7 @@ typedef enum {
   icon_minus,
   icon_collapse,
   icon_maximize,
+  icon_dropdown,
   icon_points,
   icon_lines,
   icon_sectors,

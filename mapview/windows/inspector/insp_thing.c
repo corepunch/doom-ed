@@ -32,24 +32,25 @@ enum {
 };
 
 windef_t thing_layout[] = {
-  { "TEXT", "Type:", -1, 4, 13, 50, 10 },
-  { "TEXT", "Position X:", -1, 4, 33, 50, 10 },
-  { "TEXT", "Position Y:", -1, 4, 53, 50, 10 },
-  { "BUTTON", "Click me", ID_THING_TYPE, 64, 10, 50, 10 },
-  { "EDITTEXT", "", ID_THING_POS_X, 64, 30, 50, 10 },
-  { "EDITTEXT", "", ID_THING_POS_Y, 64, 50, 50, 10 },
-  { "SPRITE", "", ID_THING_SPRITE, 4, 70, 64, 64 },
-  { "CHECKBOX", "Easy", ID_THING_EASY, 4, 140, 20, 10 },
-  { "CHECKBOX", "Medium", ID_THING_NORMAL, 4, 155, 20, 10 },
-  { "CHECKBOX", "Hard", ID_THING_HARD, 4, 170, 20, 10 },
-  { "CHECKBOX", "Fighter", ID_THING_FIGHTER, 4, 190, 20, 10 },
-  { "CHECKBOX", "Cleric", ID_THING_CLERIC, 4, 205, 20, 10 },
-  { "CHECKBOX", "Mage", ID_THING_MAGE, 4, 220, 20, 10 },
-  { "CHECKBOX", "Single", ID_THING_GSINGLE, 64, 140, 20, 10 },
-  { "CHECKBOX", "Coop", ID_THING_GCOOP, 64, 155, 20, 10 },
-  { "CHECKBOX", "Deathmatch", ID_THING_GDEATHMATCH, 64, 170, 20, 10 },
-  { "CHECKBOX", "Ambush", ID_THING_AMBUSH, 64, 190, 20, 10 },
-  { "CHECKBOX", "Dormant", ID_THING_DORMANT, 64, 205, 20, 10 },
+  { "TEXT", "Type:", -1, LABEL_WIDTH },
+  { "BUTTON", "Click me", ID_THING_TYPE, 50 },
+  { "TEXT", "Position X:", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_THING_POS_X, 50 },
+  { "TEXT", "Position Y:", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_THING_POS_Y, 50 },
+  { "SPRITE", "", ID_THING_SPRITE, 64, 64 },
+  { "SPACE" },
+  { "CHECKBOX", "Easy", ID_THING_EASY, 64 },
+  { "CHECKBOX", "Medium", ID_THING_NORMAL, 64 },
+  { "CHECKBOX", "Hard", ID_THING_HARD, 64 },
+  { "CHECKBOX", "Fighter", ID_THING_FIGHTER, 64 },
+  { "CHECKBOX", "Cleric", ID_THING_CLERIC, 64 },
+  { "CHECKBOX", "Mage", ID_THING_MAGE, 64 },
+  { "CHECKBOX", "Single", ID_THING_GSINGLE, 64 },
+  { "CHECKBOX", "Coop", ID_THING_GCOOP, 64 },
+  { "CHECKBOX", "Deathmatch", ID_THING_GDEATHMATCH, 64 },
+  { "CHECKBOX", "Ambush", ID_THING_AMBUSH, 64 },
+  { "CHECKBOX", "Dormant", ID_THING_DORMANT, 64 },
   { NULL }
 };
 
@@ -77,7 +78,7 @@ mapthing_t *selected_thing(editor_state_t *editor) {
   }
 }
 
-bool win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = win->userdata;
   mapthing_t *thing;
   switch (msg) {

@@ -180,9 +180,9 @@ static int icon_x(window_t const *win, int i) {
   return win->frame.x + 4 + i * ICON_STEP;
 }
 
-bool win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void set_selection_mode(editor_state_t *editor, int mode) {
   rect_t rect = editor->inspector->frame;
@@ -199,7 +199,7 @@ void set_selection_mode(editor_state_t *editor, int mode) {
   create_window("Mode", 0, &rect, NULL, func, editor);
 }
 
-bool win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mapvertex_t sn;
   editor_state_t *editor = win->userdata;
   map_data_t *map = &game.map;

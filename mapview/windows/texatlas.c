@@ -358,7 +358,7 @@ typedef struct {
   texture_layout_t* layout;
 } window_udata_t;
 
-bool win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   mapside_texture_t *tex = win->userdata;
   switch (msg) {
     case WM_CREATE:
@@ -371,7 +371,7 @@ bool win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
-bool win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   window_udata_t *udata = win->userdata;
   switch (msg) {
     case WM_CREATE:

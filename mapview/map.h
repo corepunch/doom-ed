@@ -112,7 +112,13 @@ enum {
 enum {
   BM_SETCHECK = WM_USER,
   BM_GETCHECK,
+  CB_ADDSTRING,
+  CB_GETCURSEL,
+  CB_SETCURSEL,
+  CB_GETLBTEXT,
 };
+
+#define CB_ERR -1
 
 enum {
   BST_UNCHECKED,
@@ -122,6 +128,7 @@ enum {
 enum {
   EN_UPDATE = 100,
   BN_CLICKED,
+  CBN_SELCHANGE,
 };
 
 // Lump order in a map WAD: each map needs a couple of lumps
@@ -399,22 +406,29 @@ typedef struct {
 } game_t;
 
 #define WINDOW_NOTITLE 1
+#define WINDOW_NORESIZE 16
 #define WINDOW_TRANSPARENT 2
 #define WINDOW_VSCROLL 4
 #define WINDOW_HSCROLL 8
 
 #define TITLEBAR_HEIGHT 12
+#define WINDOW_PADDING 4
+#define LINE_PADDING 5
+#define CONTROL_HEIGHT 10
+#define LABEL_WIDTH 54
+#define WIDTH_FILL -1
 
 struct window_s;
-typedef bool (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
 typedef uint32_t flags_t;
+typedef uint32_t result_t;
+typedef result_t (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
 
 typedef struct {
   const char *classname;
   const char *text;
   uint32_t id;
-  int x, y, w, h;
-  uint32_t flags;
+  int w, h;
+  flags_t flags;
 } windef_t;
 
 typedef struct window_s {
@@ -448,10 +462,8 @@ void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
 int window_title_bar_y(window_t const *win);
 window_t *get_window_item(window_t const *win, uint32_t id);
 void track_mouse(window_t *win);
-
-bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+void set_capture(window_t *win);
+void set_focus(window_t* win);
 
 extern game_t game;
 
@@ -507,7 +519,6 @@ void goto_map(const char *mapname);
 bool init_wad(const char *filename);
 void shutdown_wad(void);
 
-void draw_panel(int x, int y, int w, int h, bool active);
 void draw_windows(bool rich);
 void handle_windows(void);
 

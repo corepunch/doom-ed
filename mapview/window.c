@@ -36,6 +36,14 @@ extern int screen_width, screen_height;
 window_t *windows = NULL;
 window_t *_focused = NULL;
 window_t *_tracked = NULL;
+window_t *_captured = NULL;
+
+static window_t *_dragging = NULL;
+static window_t *_resizing = NULL;
+static int drag_anchor[2];
+
+#define LOCAL_X(VALUE, WIN) (SCALE_POINT((VALUE).x) - (WIN)->frame.x + (WIN)->scroll[0])
+#define LOCAL_Y(VALUE, WIN) (SCALE_POINT((VALUE).y) - (WIN)->frame.y + (WIN)->scroll[1])
 
 typedef struct {
   window_t *target;
@@ -62,7 +70,14 @@ void draw_button(int x, int y, int w, int h, bool pressed) {
   }
 }
 
-void draw_panel(int x, int y, int w, int h, bool active) {
+static void draw_panel(window_t const *win) {
+  int t = (win->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
+  int x = win->frame.x;
+  int y = win->frame.y-t;
+  int w = win->frame.w;
+  int h = win->frame.h+t;
+  bool active = _focused == win;
+  bool resize = !(win->flags & WINDOW_NORESIZE);
   if (active) {
     fill_rect(COLOR_FOCUSED, x-1, y-1, w+2, h+2);
   } else {
@@ -70,7 +85,9 @@ void draw_panel(int x, int y, int w, int h, bool active) {
     fill_rect(COLOR_DARK_EDGE, x, y, w+1, h+1);
     fill_rect(COLOR_FLARE, x-1, y-1, 1, 1);
   }
-  fill_rect(COLOR_LIGHT_EDGE, x+w-RESIZE_HANDLE+1, y+h-RESIZE_HANDLE+1, RESIZE_HANDLE, RESIZE_HANDLE);
+  if (resize) {
+    fill_rect(COLOR_LIGHT_EDGE, x+w-RESIZE_HANDLE+1, y+h-RESIZE_HANDLE+1, RESIZE_HANDLE, RESIZE_HANDLE);
+  }
   fill_rect(COLOR_PANEL_BG, x, y, w, h);
 }
 
@@ -111,7 +128,7 @@ static void paint_stencil(uint8_t id) {
     glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
     int p = 1;
-    int t = TITLEBAR_HEIGHT;
+    int t = (w->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
     draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
   }
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
@@ -167,8 +184,59 @@ create_window(char const *title,
   return win;
 }
 
+
+bool do_windows_overlap(const window_t *a, const window_t *b) {
+  return a && b &&
+  a->frame.x < b->frame.x + b->frame.w && a->frame.x + a->frame.w > b->frame.x &&
+  a->frame.y < b->frame.y + b->frame.h && a->frame.y + a->frame.h > b->frame.y;
+}
+
+void move_window(window_t *win, int x, int y) {
+  for (window_t *t = windows; t; t = t->next) {
+    if (t != win && do_windows_overlap(t, win)) {
+      invalidate_window(t);
+    }
+  }
+  win->frame.x = x;
+  win->frame.y = y;
+  
+  paint_stencil(0);
+  draw_wallpaper();
+  glDisable(GL_STENCIL_TEST);
+  
+  invalidate_window(win);
+}
+
+void resize_window(window_t *win, int new_w, int new_h) {
+  for (window_t *t = windows; t; t = t->next) {
+    if (t != win && do_windows_overlap(t, win)) {
+      invalidate_window(t);
+    }
+  }
+  if (new_w > 0) _resizing->frame.w = new_w;
+  if (new_h > 0) _resizing->frame.h = new_h;
+  
+  paint_stencil(0);
+  draw_wallpaper();
+  glDisable(GL_STENCIL_TEST);
+  
+  invalidate_window(win);
+  
+  post_message(win, WM_RESIZE, 0, NULL);
+}
+
 void destroy_window(window_t *win) {
+  for (window_t *t = windows; t; t = t->next) {
+    if (t != win && do_windows_overlap(t, win)) {
+      invalidate_window(t);
+    }
+  }
   send_message(win, WM_DESTROY, 0, NULL);
+  if (_focused == win) set_focus(NULL);
+  if (_captured == win) set_capture(NULL);
+  if (_tracked == win) track_mouse(NULL);
+  if (_dragging == win) _dragging = NULL;
+  if (_resizing == win) _resizing = NULL;
   if (win == windows) {
     windows = win->next;
   } else {
@@ -187,6 +255,11 @@ void destroy_window(window_t *win) {
     }
   }
   free(win);
+
+  paint_stencil(0);
+  draw_wallpaper();
+
+  glDisable(GL_STENCIL_TEST);
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
@@ -195,7 +268,8 @@ void destroy_window(window_t *win) {
 window_t *find_window(int x, int y) {
   window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
-    if (CONTAINS(x, y, win->frame.x, win->frame.y-TITLEBAR_HEIGHT, win->frame.w, win->frame.h+TITLEBAR_HEIGHT)) {
+    int t = win->flags & WINDOW_NOTITLE ? 0 : TITLEBAR_HEIGHT;
+    if (CONTAINS(x, y, win->frame.x, win->frame.y-t, win->frame.w, win->frame.h+t)) {
       last = win;
     }
     for (window_t *item = win->children; item; item = item->next) {
@@ -227,7 +301,11 @@ void track_mouse(window_t *win) {
   _tracked = win;
 }
 
-static void set_focus(window_t* win) {
+void set_capture(window_t *win) {
+  _captured = win;
+}
+
+void set_focus(window_t* win) {
   if (_focused) {
     _focused->editing = false;
     post_message(_focused, WM_KILLFOCUS, 0, win);
@@ -270,53 +348,6 @@ static void move_to_top(window_t* _win) {
   win->next = NULL;
 }
 
-static window_t *dragging = NULL;
-static window_t *resizing = NULL;
-static int drag_anchor[2];
-
-bool do_windows_overlap(const window_t *a, const window_t *b) {
-  return a && b &&
-  a->frame.x < b->frame.x + b->frame.w && a->frame.x + a->frame.w > b->frame.x &&
-  a->frame.y < b->frame.y + b->frame.h && a->frame.y + a->frame.h > b->frame.y;
-}
-
-void move_window(window_t *win, int x, int y) {
-  for (window_t *t = windows; t; t = t->next) {
-    if (t != win && do_windows_overlap(t, win)) {
-      invalidate_window(t);
-    }
-  }
-  win->frame.x = x;
-  win->frame.y = y;
-  
-  paint_stencil(0);
-  draw_wallpaper();
-  glDisable(GL_STENCIL_TEST);
-  
-  invalidate_window(win);
-}
-
-void resize_window(window_t *win, int new_w, int new_h) {
-  for (window_t *t = windows; t; t = t->next) {
-    if (t != win && do_windows_overlap(t, win)) {
-      invalidate_window(t);
-    }
-  }
-  if (new_w > 0) resizing->frame.w = new_w;
-  if (new_h > 0) resizing->frame.h = new_h;
-  
-  paint_stencil(0);
-  draw_wallpaper();
-  glDisable(GL_STENCIL_TEST);
-  
-  invalidate_window(win);
-  
-  post_message(win, WM_RESIZE, 0, NULL);
-}
-
-#define LOCAL_X(VALUE, WIN) (SCALE_POINT((VALUE).x) - (WIN)->frame.x + (WIN)->scroll[0])
-#define LOCAL_Y(VALUE, WIN) (SCALE_POINT((VALUE).y) - (WIN)->frame.y + (WIN)->scroll[1])
-
 static int handle_mouse(int msg, window_t *win, int x, int y) {
   for (window_t *c = win->children; c; c = c->next) {
     if (CONTAINS(x, y, c->frame.x, c->frame.y, c->frame.w, c->frame.h) &&
@@ -356,16 +387,10 @@ void handle_windows(void) {
         running = false;
         break;
       case SDL_TEXTINPUT:
-        if (!_focused) {
-          // skip
-        } else {
-          send_message(_focused, WM_TEXTINPUT, 0, event.text.text);
-        }
+        send_message(_focused, WM_TEXTINPUT, 0, event.text.text);
         break;
       case SDL_KEYDOWN:
-        if (!_focused) {
-          // skip
-        } else if (!send_message(_focused, WM_KEYDOWN, event.key.keysym.scancode, NULL)) {
+        if (_focused && !send_message(_focused, WM_KEYDOWN, event.key.keysym.scancode, NULL)) {
           switch (event.key.keysym.scancode) {
             case SDL_SCANCODE_TAB:
               if (event.key.keysym.mod & KMOD_SHIFT) {
@@ -389,23 +414,26 @@ void handle_windows(void) {
         send_message(_focused, WM_JOYBUTTONDOWN, event.jbutton.button, NULL);
         break;
       case SDL_MOUSEMOTION:
-        if (dragging) {
-          move_window(dragging,
+        if (_dragging) {
+          move_window(_dragging,
                       SCALE_POINT(event.motion.x) - drag_anchor[0],
                       SCALE_POINT(event.motion.y) - drag_anchor[1]);
-        } else if (resizing) {
-          int new_w = SCALE_POINT(event.motion.x) - resizing->frame.x;
-          int new_h = SCALE_POINT(event.motion.y) - resizing->frame.y;
-          resize_window(resizing, new_w, new_h);
-        } else if ((SDL_GetRelativeMouseMode() && (win = _focused))||
+        } else if (_resizing) {
+          int new_w = SCALE_POINT(event.motion.x) - _resizing->frame.x;
+          int new_h = SCALE_POINT(event.motion.y) - _resizing->frame.y;
+          resize_window(_resizing, new_w, new_h);
+        } else if ((SDL_GetRelativeMouseMode() && (win = _focused)) ||
+                   ((win = _captured) ||
                    (win = find_window(SCALE_POINT(event.motion.x),
-                                      SCALE_POINT(event.motion.y))))
+                                      SCALE_POINT(event.motion.y)))))
         {
           int16_t x = LOCAL_X(event.motion, win);
           int16_t y = LOCAL_Y(event.motion, win);
           int16_t dx = event.motion.xrel;
           int16_t dy = event.motion.yrel;
-          send_message(win, WM_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
+          if (y >= 0) {
+            send_message(win, WM_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
+          }
         }
         if (_tracked && !CONTAINS(SCALE_POINT(event.motion.x),
                                   SCALE_POINT(event.motion.y),
@@ -416,24 +444,35 @@ void handle_windows(void) {
         }
         break;
       case SDL_MOUSEWHEEL:
-        if ((win = find_window(SCALE_POINT(event.wheel.mouseX), SCALE_POINT(event.wheel.mouseY)))) {
+        if ((win = find_window(SCALE_POINT(event.wheel.mouseX),
+                               SCALE_POINT(event.wheel.mouseY))))
+        {
           send_message(win, WM_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
         }
         break;
         
       case SDL_MOUSEBUTTONDOWN:
         if ((SDL_GetRelativeMouseMode() && (win = _focused)) ||
-            (win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y))))
+            (win = _captured) ||
+            (win = find_window(SCALE_POINT(event.button.x),
+                               SCALE_POINT(event.button.y))))
         {
           //        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
           set_focus(win);
           move_to_top(win);
           int x = LOCAL_X(event.button, win);
           int y = LOCAL_Y(event.button, win);
-          if (x >= win->frame.w - RESIZE_HANDLE && y >= win->frame.h - RESIZE_HANDLE && !win->parent) {
-            resizing = win;
-          } else if (SCALE_POINT(event.button.y) < win->frame.y && !win->parent) {
-            dragging = win;
+          if (x >= win->frame.w - RESIZE_HANDLE &&
+              y >= win->frame.h - RESIZE_HANDLE &&
+              !win->parent &&
+              !(win->flags&WINDOW_NORESIZE) &&
+              win != _captured)
+          {
+            _resizing = win;
+          } else if (SCALE_POINT(event.button.y) < win->frame.y &&
+                     !win->parent &&
+                     win != _captured) {
+            _dragging = win;
             drag_anchor[0] = SCALE_POINT(event.button.x) - win->frame.x;
             drag_anchor[1] = SCALE_POINT(event.button.y) - win->frame.y;
           } else if (win == _focused) {
@@ -450,29 +489,25 @@ void handle_windows(void) {
         break;
         
       case SDL_MOUSEBUTTONUP:
-        if (dragging) {
+        if (_dragging) {
           int x = SCALE_POINT(event.button.x);
           int y = SCALE_POINT(event.button.y);
           switch (event.button.button) {
-            case 1: send_message(dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
+            case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
               //              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
           }
-          set_focus(dragging);
-          dragging = NULL;
-        } else if (resizing) {
-          set_focus(resizing);
-          resizing = NULL;
+          set_focus(_dragging);
+          _dragging = NULL;
+        } else if (_resizing) {
+          set_focus(_resizing);
+          _resizing = NULL;
         } else if ((SDL_GetRelativeMouseMode() && (win = _focused))||
+                   (win = _captured) ||
                    (win = find_window(SCALE_POINT(event.button.x),
                                       SCALE_POINT(event.button.y)))) {
-          //        } else if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
-          if (SCALE_POINT(event.button.y) >= win->frame.y) {
+          if (SCALE_POINT(event.button.y) >= win->frame.y || win == _captured) {
             int x = LOCAL_X(event.button, win);
             int y = LOCAL_Y(event.button, win);
-//            switch (event.button.button) {
-//              case 1: send_message(win, WM_LBUTTONUP, MAKEDWORD(x, y), NULL); break;
-//              case 3: send_message(win, WM_RBUTTONUP, MAKEDWORD(x, y), NULL); break;
-//            }
             int msg = 0;
             switch (event.button.button) {
               case 1: msg = WM_LBUTTONUP; break;
@@ -529,6 +564,7 @@ void draw_window_controls(window_t *win) {
 }
 
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  if (!win) return false;
   rect_t const *frame = &win->frame;
   window_t *root = get_root_window(win);
   int value = 0;
@@ -539,9 +575,11 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         // set_viewport(&(window_t){0, 0, screen_width, screen_height});
         // set_projection(0, 0, screen_width, screen_height);
         if (!(win->flags&WINDOW_TRANSPARENT)) {
-          draw_panel(frame->x, frame->y-TITLEBAR_HEIGHT, frame->w, frame->h+TITLEBAR_HEIGHT, _focused == win);
+          draw_panel(win);
         }
-        draw_window_controls(win);
+        if (!(win->flags&WINDOW_NOTITLE)) {
+          draw_window_controls(win);
+        }
         break;
       case WM_PAINT:
         paint_stencil(root->id);
@@ -589,10 +627,10 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   for (uint8_t w = queue.write, r = queue.read; r != w; r++) {
-    if (queue.messages[r].target == win && queue.messages[r].msg == msg) {
-      queue.messages[r].wparam = wparam;
-      queue.messages[r].lparam = lparam;
-      return;
+    if (queue.messages[r].target == win &&
+        queue.messages[r].msg == msg)
+    {
+      queue.messages[r].target = NULL;
     }
   }
   queue.messages[queue.write++] = (msg_t) {
@@ -605,7 +643,7 @@ void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 
 int get_text_width(const char*);
 
-bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_CREATE:
       win->frame.w = MAX(win->frame.w, strwidth(win->title)+6);
@@ -635,7 +673,6 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case WM_KEYUP:
       if (wparam == SDL_SCANCODE_RETURN || wparam == SDL_SCANCODE_SPACE) {
         win->pressed = false;
-        send_message(win, BM_SETCHECK, !send_message(win, BM_GETCHECK, 0, NULL), NULL);
         send_message(get_root_window(win), WM_COMMAND, MAKEDWORD(win->id, BN_CLICKED), win);
         invalidate_window(win);
         return true;
@@ -646,17 +683,122 @@ bool win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
-bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+#define LIST_HEIGHT 13
+#define LIST_X 3
+#define LIST_Y 3
+
+#define MAX_COMBOBOX_STRINGS 256
+typedef char combobox_string_t[64];
+
+#define LIST_SELITEM 0x5001
+
+result_t win_list(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  window_t *cb = win->userdata;
+  combobox_string_t const *texts = cb?cb->userdata:NULL;
   switch (msg) {
     case WM_CREATE:
-      win->frame.w = MAX(win->frame.w, strwidth(win->title)+6);
+      win->userdata = lparam;
+      return true;
+    case WM_PAINT:
+      for (int i = 0; i < cb->cursor_pos; i++) {
+        if (i == win->cursor_pos) {
+          fill_rect(COLOR_TEXT_NORMAL, 0, i*LIST_HEIGHT, win->frame.h, LIST_HEIGHT);
+          draw_text_small(texts[i], LIST_X, i*LIST_HEIGHT+LIST_Y, COLOR_PANEL_BG);
+        } else {
+          draw_text_small(texts[i], LIST_X, i*LIST_HEIGHT+LIST_Y, COLOR_TEXT_NORMAL);
+        }
+      }
+      return true;
+    case WM_LBUTTONDOWN:
+      win->cursor_pos = HIWORD(wparam)/LIST_HEIGHT;
+      if (win->cursor_pos < cb->cursor_pos) {
+        strncpy(cb->title, texts[win->cursor_pos], sizeof(cb->title));
+      }
+      invalidate_window(win);
+      return true;
+    case WM_LBUTTONUP:
+      send_message(get_root_window(cb), WM_COMMAND, MAKEDWORD(cb->id, CBN_SELCHANGE), cb);
+      destroy_window(win);
+      return true;
+    case LIST_SELITEM:
+      win->cursor_pos = wparam;
+      return true;
+  }
+  return false;
+}
+
+result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  combobox_string_t *texts = win->userdata;
+  switch (msg) {
+    case WM_CREATE:
+      win_button(win, msg, wparam, lparam);
+      win->frame.w = MAX(win->frame.w, strwidth(win->title)+16);
+      win->userdata = malloc(sizeof(combobox_string_t) * MAX_COMBOBOX_STRINGS);
+      return true;
+    case WM_DESTROY:
+      free(win->userdata);
+      return true;
+    case WM_PAINT:
+      win_button(win, msg, wparam, lparam);
+      draw_icon(icon_maximize, win->frame.x+win->frame.w-10, win->frame.y+3, 0.75);
+      return true;
+    case WM_LBUTTONUP: {
+      win_button(win, msg, wparam, lparam);
+      rect_t rect = {
+        get_root_window(win)->frame.x + win->frame.x,
+        get_root_window(win)->frame.y + win->frame.y + win->frame.h + 2,
+        win->frame.w,
+        100,
+      };
+      window_t *list = create_window("", WINDOW_NOTITLE|WINDOW_NORESIZE|WINDOW_VSCROLL, &rect, NULL, win_list, win);
+      send_message(list, LIST_SELITEM, 2, NULL);
+      set_capture(list);
+      return true;
+    }
+    case CB_ADDSTRING:
+      if (win->cursor_pos < MAX_COMBOBOX_STRINGS) {
+        strncpy(texts[win->cursor_pos++], lparam, sizeof(combobox_string_t));
+        strncpy(win->title, lparam, sizeof(win->title));
+        return true;
+      } else {
+        return false;
+      }
+    case CB_GETLBTEXT:
+      if (wparam < win->cursor_pos) {
+        strcpy(lparam, texts[wparam]);
+        return true;
+      } else {
+        return false;
+      }
+    case CB_SETCURSEL:
+      if (wparam < win->cursor_pos) {
+        strncpy(win->title, texts[wparam], sizeof(win->title));
+        return true;
+      } else {
+        return false;
+      }
+    case CB_GETCURSEL:
+      for (int i = 0; i < win->cursor_pos; i++) {
+        if (!strncmp(texts[i], win->title, sizeof(win->title)))
+          return i;
+      }
+      return CB_ERR;
+    default:
+      return win_button(win, msg, wparam, lparam);
+  }
+}
+
+result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  switch (msg) {
+    case WM_CREATE:
+      win->frame.w = MAX(win->frame.w, strwidth(win->title)+16);
       win->frame.h = MAX(win->frame.h, 13);
       return true;
     case WM_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, 14, 14);
       draw_button(win->frame.x, win->frame.y, 10, 10, win->pressed);
-      draw_text_small(win->title, win->frame.x + 17, win->frame.y + 2, COLOR_DARK_EDGE);
-      draw_text_small(win->title, win->frame.x + 16, win->frame.y + 1, COLOR_TEXT_NORMAL);
+      draw_text_small(win->title, win->frame.x + 17, win->frame.y + 3, COLOR_DARK_EDGE);
+      draw_text_small(win->title, win->frame.x + 16, win->frame.y + 2, COLOR_TEXT_NORMAL);
       if (win->value) {
         draw_icon(icon_checkbox, win->frame.x+1, win->frame.y+1, 1);
       }
@@ -700,7 +842,7 @@ bool win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 #define BUFFER_SIZE 64
 #define PADDING 3
 
-bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 //  bool *pressed = (void *)&win->userdata;
   switch (msg) {
     case WM_CREATE:
@@ -787,20 +929,21 @@ bool win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
-bool win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_CREATE:
+      win->frame.w = MAX(win->frame.w, strwidth(win->title));
       win->notabstop = true;
       return true;
     case WM_PAINT:
-      draw_text_small(win->title, win->frame.x+1, win->frame.y+1, COLOR_DARK_EDGE);
-      draw_text_small(win->title, win->frame.x, win->frame.y, COLOR_TEXT_NORMAL);
+      draw_text_small(win->title, win->frame.x+1, win->frame.y+1+PADDING, COLOR_DARK_EDGE);
+      draw_text_small(win->title, win->frame.x, win->frame.y+PADDING, COLOR_TEXT_NORMAL);
       return true;
   }
   return false;
 }
 
-bool win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   sprite_t const *spr;
   mapside_texture_t const *tex;
   switch (msg) {
@@ -830,8 +973,8 @@ bool win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
-window_t *create_window2(windef_t const *def, window_t *parent) {
-  bool (*proc)(window_t *, uint32_t, uint32_t, void *);
+window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent) {
+  winproc_t proc = NULL;
   if (!strcmp(def->classname, "TEXT")) {
     proc = win_label;
   } else if (!strcmp(def->classname, "BUTTON")) {
@@ -840,17 +983,16 @@ window_t *create_window2(windef_t const *def, window_t *parent) {
     proc = win_checkbox;
   } else if (!strcmp(def->classname, "EDITTEXT")) {
     proc = win_textedit;
+  } else if (!strcmp(def->classname, "COMBOBOX")) {
+    proc = win_combobox;
   } else if (!strcmp(def->classname, "SPRITE")) {
     proc = win_sprite;
   } else {
     return NULL;
   }
-  window_t *win = create_window(def->text,
-                                def->flags,
-                                MAKERECT(def->x, def->y, def->w, def->h),
-                                parent, proc, NULL);
+  window_t *win = create_window(def->text, def->flags, r, parent, proc, NULL);
   win->id = def->id;
-  return NULL;
+  return win;
 }
 
 window_t *get_window_item(window_t const *win, uint32_t id) {
@@ -879,7 +1021,23 @@ void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...) {
 }
 
 void load_window_children(window_t *win, windef_t const *def) {
+  int x = WINDOW_PADDING;
+  int y = WINDOW_PADDING;
   for (; def->classname; def++) {
-    create_window2(def, win);
+    int w = def->w == -1 ? win->frame.w - WINDOW_PADDING*2 : def->w;
+    int h = def->h == 0 ? CONTROL_HEIGHT : def->h;
+    if (x + w > win->frame.w - WINDOW_PADDING || !strcmp(def->classname, "SPACE")) {
+      x = WINDOW_PADDING;
+      for (window_t *child = win->children; child; child = child->next) {
+        y = MAX(y, child->frame.y + child->frame.h);
+      }
+      y += LINE_PADDING;
+    }
+    if (!strcmp(def->classname, "SPACE"))
+      continue;
+    window_t *item = create_window2(def, MAKERECT(x, y, w, h), win);
+    if (item) {
+      x += item->frame.w + LINE_PADDING;
+    }
   }
 }
