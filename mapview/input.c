@@ -263,7 +263,9 @@ void game_tick(float delta_time) {
   }
   
   // Update position
-  player->x += player->vel_x * delta_time;
-  player->y += player->vel_y * delta_time;
+//  player->x += player->vel_x * delta_time;
+//  player->y += player->vel_y * delta_time;
+  
+  update_player_position_with_sliding(&game.map, player, player->vel_x * delta_time, player->vel_y * delta_time);
   
 }

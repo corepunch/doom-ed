@@ -206,18 +206,6 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   int point = -1;
   int old_point = editor ? editor->hover.point : -1;
   switch (msg) {
-    case WM_NCPAINT:
-      for (int i = 0; i < edit_modes; i++) {
-        draw_icon(icon_points + i, icon_x(win, i), window_title_bar_y(win),
-                  editor->sel_mode == i ? 1.0f : 0.5f);
-      }
-      return true;
-    case WM_NCLBUTTONUP:
-      if ((LOWORD(wparam) - icon_x(win, 0)) / ICON_STEP < 5 && LOWORD(wparam) >= icon_x(win, 0)) {
-        set_selection_mode(editor, (LOWORD(wparam) - icon_x(win, 0)) / ICON_STEP);
-        post_message(win, WM_NCPAINT, 0, NULL);
-      }
-      return true;
     case WM_CREATE:
       win->userdata = lparam;
       ((editor_state_t *)lparam)->window = win;
@@ -458,3 +446,22 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //  0xFF7A4C88,
 //};
 
+result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  editor_state_t *editor = win->userdata;
+  switch (msg) {
+    case WM_CREATE:
+      win->userdata = lparam;
+      return true;
+    case WM_PAINT:
+      for (int i = 0; i < icon16_count; i++) {
+        draw_icon16(i, i*16, 0, editor->sel_mode == i ? 1.0f : 0.5f);
+      }
+      return true;
+    case WM_LBUTTONUP:
+      set_selection_mode(editor, LOWORD(wparam) / 16);
+      invalidate_window(win);
+      return true;
+    default:
+      return false;
+  }
+}

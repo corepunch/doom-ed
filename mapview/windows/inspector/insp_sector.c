@@ -6,10 +6,12 @@ enum {
   ID_SECTOR_CEILING_HEIGHT,
   ID_SECTOR_CEILING_IMAGE,
   ID_TEST_COMBOBOX,
+  ID_SECTOR_IDENT,
 };
 
 windef_t sector_layout[] = {
-  //  { "TEXT", "Type:", -1, 50 },
+  { "TEXT", "Sector#", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_SECTOR_IDENT, 50 },
   { "TEXT", "Floor Hgt:", -1, LABEL_WIDTH },
   { "EDITTEXT", "", ID_SECTOR_FLOOR_HEIGHT, 50 },
   { "TEXT", "Ceiling Hgt:", -1, LABEL_WIDTH },

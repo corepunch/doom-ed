@@ -407,10 +407,12 @@ typedef struct {
 } game_t;
 
 #define WINDOW_NOTITLE 1
-#define WINDOW_NORESIZE 16
 #define WINDOW_TRANSPARENT 2
 #define WINDOW_VSCROLL 4
 #define WINDOW_HSCROLL 8
+#define WINDOW_NORESIZE 16
+#define WINDOW_NOFILL 32
+#define WINDOW_ALWAYSONTOP 64
 
 #define TITLEBAR_HEIGHT 12
 #define WINDOW_PADDING 4
@@ -501,7 +503,8 @@ void draw_text_gl3(const char* text, int x, int y, float alpha);
 void draw_text_small(const char* text, int x, int y, uint32_t col);
 int strwidth(const char* text);
 int strnwidth(const char* text, int text_length);
-void draw_icon(int icon, int x, int y, float alpha);
+void draw_icon8(int icon, int x, int y, float alpha);
+void draw_icon16(int icon, int x, int y, float alpha);
 void draw_palette(map_data_t const *map);
 char const* get_texture_name(int i);
 char const* get_flat_texture_name(int i);

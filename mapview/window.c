@@ -75,7 +75,6 @@ static void draw_panel(window_t const *win) {
   int x = win->frame.x, y = win->frame.y-t;
   int w = win->frame.w, h = win->frame.h+t;
   bool active = _focused == win;
-  bool resize = !(win->flags & WINDOW_NORESIZE);
   if (active) {
     fill_rect(COLOR_FOCUSED, x-1, y-1, w+2, 1);
     fill_rect(COLOR_FOCUSED, x-1, y-1, 1, h+2);
@@ -88,12 +87,14 @@ static void draw_panel(window_t const *win) {
     fill_rect(COLOR_DARK_EDGE, x, y+h, w+1, 1);
     fill_rect(COLOR_FLARE, x-1, y-1, 1, 1);
   }
-  if (resize) {
+  if (!(win->flags & WINDOW_NORESIZE)) {
     int r = RESIZE_HANDLE;
     fill_rect(COLOR_LIGHT_EDGE, x+w, y+h-r+1, 1, r);
     fill_rect(COLOR_LIGHT_EDGE, x+w-r+1, y+h, r, 1);
   }
-  fill_rect(COLOR_PANEL_BG, x, y, w, h);
+  if (!(win->flags&WINDOW_NOFILL)) {
+    fill_rect(COLOR_PANEL_BG, x, y, w, h);
+  }
 }
 
 void invalidate_window(window_t *win) {
@@ -136,9 +137,8 @@ static void repaint_stencil(void) {
     int t = (w->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
     draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
   }
-//  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-//  glStencilFunc(GL_EQUAL, id, 0xFF);
-//  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+  glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+  glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
 }
 
 void push_window(window_t *win, window_t **windows)  {
@@ -207,10 +207,6 @@ void move_window(window_t *win, int x, int y) {
   }
   win->frame.x = x;
   win->frame.y = y;
-
-//  paint_stencil(0);
-//  draw_wallpaper();
-//  glDisable(GL_STENCIL_TEST);
   
   invalidate_window(win);
 }
@@ -226,17 +222,13 @@ void resize_window(window_t *win, int new_w, int new_h) {
   if (new_w > 0) _resizing->frame.w = new_w;
   if (new_h > 0) _resizing->frame.h = new_h;
   
-//  paint_stencil(0);
-//  draw_wallpaper();
-//  glDisable(GL_STENCIL_TEST);
-  
   invalidate_window(win);
   
   post_message(win, WM_RESIZE, 0, NULL);
 }
 
 void destroy_window(window_t *win) {
-  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+  post_message((window_t*)1, WM_REFRESHSTENCIL, 0, NULL);
   for (window_t *t = windows; t; t = t->next) {
     if (t != win && do_windows_overlap(t, win)) {
       invalidate_window(t);
@@ -266,10 +258,6 @@ void destroy_window(window_t *win) {
     }
   }
   free(win);
-  
-//  paint_stencil(0);
-//  draw_wallpaper();
-//  glDisable(GL_STENCIL_TEST);
 }
 
 #define CONTAINS(x, y, x1, y1, w1, h1) \
@@ -330,33 +318,18 @@ void set_focus(window_t* win) {
 
 static void move_to_top(window_t* _win) {
   window_t *win = get_root_window(_win);
+  window_t **head = &windows, *p = NULL, *n = *head;
+  window_t *limit = windows;
+  while (limit&&!(limit->flags&WINDOW_ALWAYSONTOP)) limit = limit->next;
+  while (n && n != win) { p = n; n = n->next; }
+  if (!n) return;
+  if (win->flags&WINDOW_ALWAYSONTOP) limit = NULL;
+  if (p != limit) p->next = win->next; else *head = win->next;
+  if (!*head) return;
+  for (p = *head; p->next != limit; p = p->next);
+  p->next = win; win->next = limit;
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_window(win);
-  
-  window_t **head = &windows, *p = NULL, *n = *head;
-  
-  // Find the node `win` in the list
-  while (n != win) {
-    p = n;
-    n = n->next;
-    if (!n) return;  // If `win` is not found, exit
-  }
-  
-  // Remove the node `win` from the list
-  if (p) p->next = win->next;
-  else *head = win->next;  // If `win` is at the head, update the head
-  
-  // Ensure that if `win` was the only node, we don't append it to itself
-  if (!*head) return;  // If the list becomes empty, there's nothing to append
-  
-  // Find the tail of the list
-  window_t *tail = *head;
-  while (tail->next)
-    tail = tail->next;
-  
-  // Append `win` to the end of the list
-  tail->next = win;
-  win->next = NULL;
 }
 
 static int handle_mouse(int msg, window_t *win, int x, int y) {
@@ -545,16 +518,9 @@ void handle_windows(void) {
     if (m->target == NULL) continue;
     if (m->msg == WM_REFRESHSTENCIL) {
       repaint_stencil();
-      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
       glStencilFunc(GL_EQUAL, 0, 0xFF);
-      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
       draw_wallpaper();
       continue;
-    }
-    if (m->msg == WM_PAINT || m->msg == WM_NCPAINT) {
-      glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-      glStencilFunc(GL_EQUAL, m->target->id, 0xFF);
-      glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
     }
     send_message(m->target, m->msg, m->wparam, m->lparam);
   }
@@ -584,7 +550,7 @@ void draw_window_controls(window_t *win) {
   // draw_button(frame->x+frame->w-11-12, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
   // draw_rect(icon3_tex, frame->x+2, frame->y+2-TITLEBAR_HEIGHT, 8, 8);
   for (int i = 0; i < 2; i++) {
-    draw_icon(icon_collapse + i,
+    draw_icon8(icon8_collapse + i,
               win->frame.x + win->frame.w - (i+1)*8-2,
               window_title_bar_y(win),
               0.5f);
@@ -610,7 +576,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         break;
       case WM_PAINT:
-        glStencilFunc(GL_EQUAL, win->id, 0xFF);
+        glStencilFunc(GL_EQUAL, get_root_window(win)->id, 0xFF);
         set_viewport(root);
         set_projection(root->scroll[0],
                        root->scroll[1],
@@ -764,7 +730,7 @@ result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       return true;
     case WM_PAINT:
       win_button(win, msg, wparam, lparam);
-      draw_icon(icon_maximize, win->frame.x+win->frame.w-10, win->frame.y+3, 0.75);
+      draw_icon8(icon8_maximize, win->frame.x+win->frame.w-10, win->frame.y+3, 0.75);
       return true;
     case WM_LBUTTONUP: {
       win_button(win, msg, wparam, lparam);
@@ -824,7 +790,7 @@ result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       draw_text_small(win->title, win->frame.x + 17, win->frame.y + 3, COLOR_DARK_EDGE);
       draw_text_small(win->title, win->frame.x + 16, win->frame.y + 2, COLOR_TEXT_NORMAL);
       if (win->value) {
-        draw_icon(icon_checkbox, win->frame.x+1, win->frame.y+1, 1);
+        draw_icon8(icon8_checkbox, win->frame.x+1, win->frame.y+1, 1);
       }
       return true;
     case WM_LBUTTONDOWN:
@@ -884,12 +850,7 @@ result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
                   2, 8);
       }
       return true;
-//    case WM_LBUTTONDOWN:
-//      *pressed = true;
-//      invalidate_window(win);
-//      return true;
     case WM_LBUTTONUP:
-//      *pressed = false;
       set_focus(win);
       win->editing = true;
       win->cursor_pos = 0;
@@ -900,7 +861,6 @@ result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
           win->cursor_pos = i;
         }
       }
-//      invalidate_window(win);
       return true;
     case WM_TEXTINPUT:
       if (strlen(win->title) + strlen(lparam) < BUFFER_SIZE - 1) {

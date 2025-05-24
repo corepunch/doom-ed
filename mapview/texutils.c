@@ -18,8 +18,26 @@ unsigned char *expand_to_8bit(unsigned char *data, int width, int height) {
   return expanded_data;
 }
 
+unsigned char *expand_16x16_u16_to_8bit(uint16_t *data) {
+  unsigned char *expanded = malloc(16 * 16);
+  for (int y = 0; y < 16; ++y) {
+    uint16_t row = data[y];
+    for (int x = 0; x < 16; ++x) {
+      int bit = (row >> (15 - x)) & 1;
+      expanded[y * 16 + x] = bit ? 0xFF : 0x00;
+    }
+  }
+  return expanded;
+}
+
 GLuint make_1bit_tex(void *data, int width, int height) {
-  unsigned char *texture_data = expand_to_8bit(data, width, height);
+  unsigned char *texture_data;
+  
+  if (width == 16) {
+    texture_data = expand_16x16_u16_to_8bit(data);
+  } else {
+    texture_data = expand_to_8bit(data, width, height);
+  }
   
   // Create the texture
   GLuint texture;

@@ -615,10 +615,16 @@ void draw_rect(int tex, int x, int y, int w, int h) {
 
 #include "editor.h"
 
-void draw_icon(int icon, int x, int y, float alpha) {
+void draw_icon8(int icon, int x, int y, float alpha) {
   extern editor_state_t editor;
-  draw_rect_ex(editor.icons[icon], x, y, 8, 8, false, alpha);
+  draw_rect_ex(editor.icons8[icon], x, y, 8, 8, false, alpha);
 }
+
+void draw_icon16(int icon, int x, int y, float alpha) {
+  extern editor_state_t editor;
+  draw_rect_ex(editor.icons16[icon], x, y, 16, 16, false, alpha);
+}
+
 
 void fill_rect(int color, int x, int y, int w, int h) {
   glBindTexture(GL_TEXTURE_2D, g_sprite_system.tmp);

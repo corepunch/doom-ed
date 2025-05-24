@@ -16,17 +16,26 @@
 #define ED_SCROLL 16
 
 typedef enum {
-  icon_minus,
-  icon_collapse,
-  icon_maximize,
-  icon_dropdown,
-  icon_points,
-  icon_lines,
-  icon_sectors,
-  icon_things,
-  icon_sounds,
-  icon_checkbox,
-  icon_count,
+  icon16_points,
+  icon16_lines,
+  icon16_sectors,
+  icon16_things,
+  icon16_sounds,
+  icon16_count,
+} ed_icon16_t;
+
+typedef enum {
+  icon8_minus,
+  icon8_collapse,
+  icon8_maximize,
+  icon8_dropdown,
+  icon8_points,
+  icon8_lines,
+  icon8_sectors,
+  icon8_things,
+  icon8_sounds,
+  icon8_checkbox,
+  icon8_count,
 } ed_icon_t;
 
 enum {
@@ -58,7 +67,8 @@ typedef struct {
   int sel_mode;
   float scale;
   uint32_t vao, vbo;
-  int icons[icon_count];
+  int icons8[icon8_count];
+  int icons16[icon16_count];
 } editor_state_t;
 
 void init_editor(editor_state_t *editor);
