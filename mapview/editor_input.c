@@ -459,7 +459,7 @@ result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       return true;
     case WM_LBUTTONUP:
       set_selection_mode(editor, LOWORD(wparam) / 16);
-      invalidate_window(win);
+      set_focus(win);
       return true;
     default:
       return false;

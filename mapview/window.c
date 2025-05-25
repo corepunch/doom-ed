@@ -304,6 +304,8 @@ void set_capture(window_t *win) {
 }
 
 void set_focus(window_t* win) {
+  if (win == _focused)
+    return;
   if (_focused) {
     _focused->editing = false;
     post_message(_focused, WM_KILLFOCUS, 0, win);
@@ -318,18 +320,33 @@ void set_focus(window_t* win) {
 
 static void move_to_top(window_t* _win) {
   window_t *win = get_root_window(_win);
-  window_t **head = &windows, *p = NULL, *n = *head;
-  window_t *limit = windows;
-  while (limit&&!(limit->flags&WINDOW_ALWAYSONTOP)) limit = limit->next;
-  while (n && n != win) { p = n; n = n->next; }
-  if (!n) return;
-  if (win->flags&WINDOW_ALWAYSONTOP) limit = NULL;
-  if (p != limit) p->next = win->next; else *head = win->next;
-  if (!*head) return;
-  for (p = *head; p->next != limit; p = p->next);
-  p->next = win; win->next = limit;
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_window(win);
+  
+  window_t **head = &windows, *p = NULL, *n = *head;
+  
+  // Find the node `win` in the list
+  while (n != win) {
+    p = n;
+    n = n->next;
+    if (!n) return;  // If `win` is not found, exit
+  }
+  
+  // Remove the node `win` from the list
+  if (p) p->next = win->next;
+  else *head = win->next;  // If `win` is at the head, update the head
+  
+  // Ensure that if `win` was the only node, we don't append it to itself
+  if (!*head) return;  // If the list becomes empty, there's nothing to append
+  
+  // Find the tail of the list
+  window_t *tail = *head;
+  while (tail->next)
+    tail = tail->next;
+  
+  // Append `win` to the end of the list
+  tail->next = win;
+  win->next = NULL;
 }
 
 static int handle_mouse(int msg, window_t *win, int x, int y) {
@@ -406,8 +423,7 @@ void handle_windows(void) {
           int new_w = SCALE_POINT(event.motion.x) - _resizing->frame.x;
           int new_h = SCALE_POINT(event.motion.y) - _resizing->frame.y;
           resize_window(_resizing, new_w, new_h);
-        } else if ((SDL_GetRelativeMouseMode() && (win = _focused)) ||
-                   ((win = _captured) ||
+        } else if (((win = _captured) ||
                    (win = find_window(SCALE_POINT(event.motion.x),
                                       SCALE_POINT(event.motion.y)))))
         {
@@ -436,8 +452,7 @@ void handle_windows(void) {
         break;
         
       case SDL_MOUSEBUTTONDOWN:
-        if ((SDL_GetRelativeMouseMode() && (win = _focused)) ||
-            (win = _captured) ||
+        if ((win = _captured) ||
             (win = find_window(SCALE_POINT(event.button.x),
                                SCALE_POINT(event.button.y))))
         {
@@ -478,17 +493,17 @@ void handle_windows(void) {
           int y = SCALE_POINT(event.button.y);
           switch (event.button.button) {
             case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
-              //              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+              // case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
           }
           set_focus(_dragging);
           _dragging = NULL;
         } else if (_resizing) {
           set_focus(_resizing);
           _resizing = NULL;
-        } else if ((SDL_GetRelativeMouseMode() && (win = _focused))||
-                   (win = _captured) ||
+        } else if ((win = _captured) ||
                    (win = find_window(SCALE_POINT(event.button.x),
-                                      SCALE_POINT(event.button.y)))) {
+                                      SCALE_POINT(event.button.y))))
+        {
           if (SCALE_POINT(event.button.y) >= win->frame.y || win == _captured) {
             int x = LOCAL_X(event.button, win);
             int y = LOCAL_Y(event.button, win);

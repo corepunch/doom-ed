@@ -177,6 +177,12 @@ read_center_pixel(window_t const *win,
   int y = fb_height - (win->frame.y + win->frame.h / 2) * fb_height / screen_height;
 
   glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
+  
+//  static int _pixel = 0;
+//  if (pixel != _pixel) {
+//    printf("%08x\n", pixel);
+//    _pixel = pixel;
+//  }
 }
 
 //float verticalToHorizontalFOV(float verticalFOV_deg, float aspectRatio) {
@@ -320,6 +326,7 @@ void paint_face(map_data_t *map, bool eyedropper) {
 
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern window_t *_focused;
+  extern window_t *_captured;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
@@ -334,15 +341,16 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return false;
   }
 
-  if (SDL_GetRelativeMouseMode()) {
+  if (_captured == win) {
     switch (msg) {
       case WM_KILLFOCUS:
-        SDL_SetRelativeMouseMode(false);
+        SDL_SetRelativeMouseMode(SDL_FALSE);
         return true;
       case WM_KEYDOWN:
         switch (wparam) {
           case SDL_SCANCODE_ESCAPE:
             SDL_SetRelativeMouseMode(SDL_FALSE);
+            set_capture(NULL);
             break;
           case SDL_SCANCODE_W:
           case SDL_SCANCODE_UP:
@@ -421,6 +429,7 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     switch (msg) {
       case WM_LBUTTONUP:
         if (!SDL_GetRelativeMouseMode()) {
+          set_capture(win);
           SDL_SetRelativeMouseMode(SDL_TRUE);
         }
         return true;

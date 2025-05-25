@@ -29,11 +29,6 @@ typedef enum {
   icon8_collapse,
   icon8_maximize,
   icon8_dropdown,
-  icon8_points,
-  icon8_lines,
-  icon8_sectors,
-  icon8_things,
-  icon8_sounds,
   icon8_checkbox,
   icon8_count,
 } ed_icon_t;
