@@ -53,6 +53,25 @@ if ((map)->name) free((map)->name); \
 #define sensitivity_x 0.075f // Adjust sensitivity as needed
 #define sensitivity_y 0.125f // Adjust sensitivity as needed
 
+typedef enum {
+  icon8_minus,
+  icon8_collapse,
+  icon8_maximize,
+  icon8_dropdown,
+  icon8_checkbox,
+  icon8_editor_helmet,
+  icon8_count,
+} ed_icon_t;
+
+typedef enum {
+  icon16_points,
+  icon16_lines,
+  icon16_sectors,
+  icon16_things,
+  icon16_sounds,
+  icon16_appicon,
+  icon16_count,
+} ed_icon16_t;
 
 enum {
   PIXEL_MID = 0 << 28,
@@ -424,6 +443,8 @@ typedef struct {
 #define LABEL_WIDTH 54
 #define WIDTH_FILL -1
 #define BUTTON_HEIGHT 13
+#define CONTROL_BUTTON_WIDTH 8
+#define CONTROL_BUTTON_PADDING 2
 
 struct window_s;
 typedef uint32_t flags_t;
@@ -451,7 +472,7 @@ typedef struct window_s {
   bool notabstop;
   bool pressed;
   bool value;
-  bool hidden;
+  bool visible;
   char title[64];
   int cursor_pos;
   void *userdata;

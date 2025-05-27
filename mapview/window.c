@@ -148,7 +148,7 @@ static void repaint_stencil(void) {
   glClear(GL_STENCIL_BUFFER_BIT);
   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
   for (window_t const *w = windows; w; w = w->next) {
-    if(w->hidden)
+    if (!w->visible)
       continue;
     glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
@@ -204,61 +204,50 @@ create_window(char const *title,
   _focused = win;
   push_window(win, parent ? &parent->children : &windows);
   send_message(win, WM_CREATE, 0, lparam);
-  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
-  invalidate_window(win);
+  if (parent) {
+    invalidate_window(win);
+  }
   return win;
 }
 
-
 bool do_windows_overlap(const window_t *a, const window_t *b) {
+  if (!a->visible || !b->visible)
+    return false;
   return a && b &&
   a->frame.x < b->frame.x + b->frame.w && a->frame.x + a->frame.w > b->frame.x &&
   a->frame.y < b->frame.y + b->frame.h && a->frame.y + a->frame.h > b->frame.y;
 }
 
-void move_window(window_t *win, int x, int y) {
-  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
-
+static void invalidate_overlaps(window_t *win) {
   for (window_t *t = windows; t; t = t->next) {
     if (t != win && do_windows_overlap(t, win)) {
       invalidate_window(t);
     }
   }
+}
+
+void move_window(window_t *win, int x, int y) {
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+
+  invalidate_overlaps(win);
+  invalidate_window(win);
+
   win->frame.x = x;
   win->frame.y = y;
-  
-  invalidate_window(win);
 }
 
 void resize_window(window_t *win, int new_w, int new_h) {
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
-  
-  for (window_t *t = windows; t; t = t->next) {
-    if (t != win && do_windows_overlap(t, win)) {
-      invalidate_window(t);
-    }
-  }
+  post_message(win, WM_RESIZE, 0, NULL);
+
+  invalidate_overlaps(win);
+  invalidate_window(win);
+
   if (new_w > 0) _resizing->frame.w = new_w;
   if (new_h > 0) _resizing->frame.h = new_h;
-  
-  invalidate_window(win);
-  
-  post_message(win, WM_RESIZE, 0, NULL);
 }
 
-void destroy_window(window_t *win) {
-  post_message((window_t*)1, WM_REFRESHSTENCIL, 0, NULL);
-  for (window_t *t = windows; t; t = t->next) {
-    if (t != win && do_windows_overlap(t, win)) {
-      invalidate_window(t);
-    }
-  }
-  send_message(win, WM_DESTROY, 0, NULL);
-  if (_focused == win) set_focus(NULL);
-  if (_captured == win) set_capture(NULL);
-  if (_tracked == win) track_mouse(NULL);
-  if (_dragging == win) _dragging = NULL;
-  if (_resizing == win) _resizing = NULL;
+static void remove_from_global_list(window_t *win) {
   if (win == windows) {
     windows = win->next;
   } else {
@@ -269,6 +258,9 @@ void destroy_window(window_t *win) {
       }
     }
   }
+}
+
+static void remove_from_global_hooks(window_t *win) {
   while (win == g_hooks->userdata) {
     winhook_t *h = g_hooks;
     g_hooks = g_hooks->next;
@@ -281,11 +273,28 @@ void destroy_window(window_t *win) {
       free(h);
     }
   }
+}
+
+static void remove_from_global_queue(window_t *win) {
   for (uint8_t w = queue.write, r = queue.read; r != w; r++) {
     if (queue.messages[r].target == win) {
       queue.messages[r].target = NULL;
     }
   }
+}
+
+void destroy_window(window_t *win) {
+  post_message((window_t*)1, WM_REFRESHSTENCIL, 0, NULL);
+  invalidate_overlaps(win);
+  send_message(win, WM_DESTROY, 0, NULL);
+  if (_focused == win) set_focus(NULL);
+  if (_captured == win) set_capture(NULL);
+  if (_tracked == win) track_mouse(NULL);
+  if (_dragging == win) _dragging = NULL;
+  if (_resizing == win) _resizing = NULL;
+  remove_from_global_list(win);
+  remove_from_global_hooks(win);
+  remove_from_global_queue(win);
   free(win);
 }
 
@@ -295,7 +304,7 @@ void destroy_window(window_t *win) {
 window_t *find_window(int x, int y) {
   window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
-    if (win->hidden) continue;
+    if (!win->visible) continue;
     int t = win->flags & WINDOW_NOTITLE ? 0 : TITLEBAR_HEIGHT;
     if (CONTAINS(x, y, win->frame.x, win->frame.y-t, win->frame.w, win->frame.h+t)) {
       last = win;
@@ -350,10 +359,11 @@ void set_focus(window_t* win) {
 
 static void move_to_top(window_t* _win) {
   window_t *win = get_root_window(_win);
-  if (win->flags&WINDOW_ALWAYSINBACK)
-    return;
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_window(win);
+  
+  if (win->flags&WINDOW_ALWAYSINBACK)
+    return;
   
   window_t **head = &windows, *p = NULL, *n = *head;
   
@@ -396,7 +406,7 @@ window_t* find_next_tab_stop(window_t *win, bool allow_current) {
   if (!win) return false;
   window_t *next;
   if ((next = find_next_tab_stop(win->children, true))) return next;
-  if (!win->notabstop && !win->hidden && allow_current) return win;
+  if (!win->notabstop && win->visible && allow_current) return win;
   if ((next = find_next_tab_stop(win->next, true))) return next;
   return allow_current ? NULL : find_next_tab_stop(win->parent, false);
 }
@@ -523,12 +533,18 @@ void handle_windows(void) {
         if (_dragging) {
           int x = SCALE_POINT(event.button.x);
           int y = SCALE_POINT(event.button.y);
-          switch (event.button.button) {
-            case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
-              // case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+          int b = (_dragging->frame.x + _dragging->frame.w - CONTROL_BUTTON_PADDING - x) / CONTROL_BUTTON_WIDTH;
+          if (b == 0) {
+            show_window(_dragging, false);
+            _dragging = NULL;
+          } else {
+            switch (event.button.button) {
+              case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
+                // case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+            }
+            set_focus(_dragging);
+            _dragging = NULL;
           }
-          set_focus(_dragging);
-          _dragging = NULL;
         } else if (_resizing) {
           set_focus(_resizing);
           _resizing = NULL;
@@ -596,11 +612,10 @@ void draw_window_controls(window_t *win) {
   // draw_button(frame->x+frame->w-11, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
   // draw_button(frame->x+frame->w-11-12, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
   // draw_rect(icon3_tex, frame->x+2, frame->y+2-TITLEBAR_HEIGHT, 8, 8);
-  for (int i = 0; i < 2; i++) {
-    draw_icon8(icon8_collapse + i,
-              win->frame.x + win->frame.w - (i+1)*8-2,
-              window_title_bar_y(win),
-              0.5f);
+  for (int i = 0; i < 1; i++) {
+    int x = win->frame.x + win->frame.w - (i+1)*CONTROL_BUTTON_WIDTH - CONTROL_BUTTON_PADDING;
+    int y = window_title_bar_y(win);
+    draw_icon8(icon8_minus + i, x, y, 0.5f);
   }
 }
 
@@ -1081,11 +1096,7 @@ void load_window_children(window_t *win, windef_t const *def) {
 void show_window(window_t *win, bool visible) {
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   if (!visible) {
-    for (window_t *t = windows; t; t = t->next) {
-      if (t != win && do_windows_overlap(t, win)) {
-        invalidate_window(t);
-      }
-    }
+    invalidate_overlaps(win);
     if (_focused == win) set_focus(NULL);
     if (_captured == win) set_capture(NULL);
     if (_tracked == win) track_mouse(NULL);
@@ -1093,6 +1104,6 @@ void show_window(window_t *win, bool visible) {
     move_to_top(win);
     set_focus(win);
   }
-  win->hidden = !visible;
+  win->visible = visible;
   post_message(win, WM_SHOWWINDOW, visible, NULL);
 }

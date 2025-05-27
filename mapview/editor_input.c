@@ -196,7 +196,7 @@ void set_selection_mode(editor_state_t *editor, int mode) {
       return;
   }
   destroy_window(editor->inspector);
-  create_window("Mode", 0, &rect, NULL, func, editor);
+  create_window("Tool", 0, &rect, NULL, func, editor);
 }
 
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
@@ -453,7 +453,7 @@ result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       win->userdata = lparam;
       return true;
     case WM_PAINT:
-      for (int i = 0; i < icon16_count; i++) {
+      for (int i = 0; i < 5; i++) {
         draw_icon16(i, i*16, 0, editor->sel_mode == i ? 1.0f : 0.5f);
       }
       return true;

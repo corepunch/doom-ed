@@ -21,14 +21,14 @@ void init_windows(void) {
   //  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);
   //  create_window("Console", 0, MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
   extern editor_state_t editor;
-  create_window("Desktop", WINDOW_NOTITLE|WINDOW_ALWAYSINBACK, MAKERECT(0, 0, screen_width, screen_height), NULL, win_desktop, &editor);
-  create_window("Tray", WINDOW_NOTITLE, MAKERECT(0, 0, 0, 0), NULL, win_tray, &editor);
+  show_window(create_window("Desktop", WINDOW_NOTITLE|WINDOW_ALWAYSINBACK, MAKERECT(0, 0, screen_width, screen_height), NULL, win_desktop, &editor), true);
+  show_window(create_window("Tray", WINDOW_NOTITLE, MAKERECT(0, 0, 0, 0), NULL, win_tray, &editor), true);
   create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, &editor);
   create_window("Editor", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
   create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, 128, 256), NULL, win_things, &editor);
   //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
   create_window("Inspector", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, &editor);
-  create_window("Toolbar", WINDOW_ALWAYSONTOP, MAKERECT(16, 16, 128, 16), NULL, win_toolbar, &editor);
+  show_window(create_window("Toolbar", WINDOW_ALWAYSONTOP, MAKERECT(16, 16, 128, 16), NULL, win_toolbar, &editor), true);
 }
 
 int main(int argc, char* argv[]) {

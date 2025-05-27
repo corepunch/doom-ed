@@ -15,24 +15,6 @@
 
 #define ED_SCROLL 16
 
-typedef enum {
-  icon16_points,
-  icon16_lines,
-  icon16_sectors,
-  icon16_things,
-  icon16_sounds,
-  icon16_count,
-} ed_icon16_t;
-
-typedef enum {
-  icon8_minus,
-  icon8_collapse,
-  icon8_maximize,
-  icon8_dropdown,
-  icon8_checkbox,
-  icon8_count,
-} ed_icon_t;
-
 enum {
   edit_vertices,
   edit_lines,
