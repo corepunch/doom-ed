@@ -86,6 +86,7 @@ enum {
 enum {
   WM_CREATE,
   WM_DESTROY,
+  WM_SHOWWINDOW,
   WM_NCPAINT,
   WM_NCLBUTTONUP,
   WM_PAINT,
@@ -413,6 +414,8 @@ typedef struct {
 #define WINDOW_NORESIZE 16
 #define WINDOW_NOFILL 32
 #define WINDOW_ALWAYSONTOP 64
+#define WINDOW_ALWAYSINBACK 128
+#define WINDOW_HIDDEN 256
 
 #define TITLEBAR_HEIGHT 12
 #define WINDOW_PADDING 4
@@ -420,11 +423,13 @@ typedef struct {
 #define CONTROL_HEIGHT 10
 #define LABEL_WIDTH 54
 #define WIDTH_FILL -1
+#define BUTTON_HEIGHT 13
 
 struct window_s;
 typedef uint32_t flags_t;
 typedef uint32_t result_t;
 typedef result_t (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
+typedef void (*winhook_func_t)(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam, void *userdata);
 
 typedef struct {
   const char *classname;
@@ -446,6 +451,7 @@ typedef struct window_s {
   bool notabstop;
   bool pressed;
   bool value;
+  bool hidden;
   char title[64];
   int cursor_pos;
   void *userdata;
@@ -456,7 +462,9 @@ typedef struct window_s {
 } window_t;
 
 window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
+void show_window(window_t *win, bool visible);
 void destroy_window(window_t *win);
+void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata);
 void load_window_children(window_t *win, windef_t const *def);
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);

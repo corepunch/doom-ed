@@ -15,16 +15,6 @@ extern GLuint world_prog, ui_prog;
 extern SDL_Window* window;
 extern unsigned frame;
 
-result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
   memset(player, 0, sizeof(player_t));
@@ -42,17 +32,6 @@ void init_player(map_data_t const *map, player_t *player) {
       break;
     }
   }
-  
-//  create_window("FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT(0, 0, 128, 64), NULL, win_perf, NULL);
-//  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);
-  //  create_window("Console", 0, MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
-  extern editor_state_t editor;
-  create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, &editor);
-  create_window("Editor", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
-  create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, 128, 256), NULL, win_things, &editor);
-//  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
-  create_window("Inspector", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, &editor);
-  create_window("Toolbar", WINDOW_ALWAYSONTOP, MAKERECT(16, 16, 128, 16), NULL, win_toolbar, &editor);
 }
 
 void goto_map(const char *mapname) {
@@ -323,6 +302,8 @@ void paint_face(map_data_t *map, bool eyedropper) {
   }
 
 }
+
+result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern window_t *_focused;

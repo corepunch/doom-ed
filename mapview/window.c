@@ -33,6 +33,16 @@
 
 extern int screen_width, screen_height;
 
+#define MAX_HOOKED_MESSAGES 512
+
+typedef struct winhook_s {
+  winhook_func_t func;
+  uint32_t msg;
+  void *userdata;
+  struct winhook_s *next;
+} winhook_t;
+
+winhook_t *g_hooks = NULL;
 window_t *windows = NULL;
 window_t *_focused = NULL;
 window_t *_tracked = NULL;
@@ -57,7 +67,14 @@ struct {
   msg_t messages[0x100];
 } queue = {0};
 
-void draw_wallpaper(void);
+void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata) {
+  winhook_t *hook = malloc(sizeof(winhook_t));
+  hook->func = func;
+  hook->msg = msg;
+  hook->userdata = userdata;
+  hook->next = g_hooks;
+  g_hooks = hook;
+}
 
 void draw_button(int x, int y, int w, int h, bool pressed) {
   fill_rect(pressed?COLOR_DARK_EDGE:COLOR_LIGHT_EDGE, x-1, y-1, w+2, h+2);
@@ -131,6 +148,8 @@ static void repaint_stencil(void) {
   glClear(GL_STENCIL_BUFFER_BIT);
   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
   for (window_t const *w = windows; w; w = w->next) {
+    if(w->hidden)
+      continue;
     glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
     glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
     int p = 1;
@@ -184,7 +203,7 @@ create_window(char const *title,
   strncpy(win->title, title, sizeof(win->title));
   _focused = win;
   push_window(win, parent ? &parent->children : &windows);
-  proc(win, WM_CREATE, 0, lparam);
+  send_message(win, WM_CREATE, 0, lparam);
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_window(win);
   return win;
@@ -243,13 +262,23 @@ void destroy_window(window_t *win) {
   if (win == windows) {
     windows = win->next;
   } else {
-    for (window_t *w = windows->next, *p = windows;
-         w; w = w->next, p = p->next)
-    {
+    for (window_t *w=windows->next,*p=windows;w;w=w->next,p=p->next) {
       if (w == win) {
-        p->next = win->next;
+        p->next = w->next;
         break;
       }
+    }
+  }
+  while (win == g_hooks->userdata) {
+    winhook_t *h = g_hooks;
+    g_hooks = g_hooks->next;
+    free(h);
+  }
+  for (winhook_t *w=g_hooks->next,*p=g_hooks;w;w=w->next,p=p->next) {
+    if (w->userdata == win) {
+      winhook_t *h = w;
+      p->next = w->next;
+      free(h);
     }
   }
   for (uint8_t w = queue.write, r = queue.read; r != w; r++) {
@@ -266,6 +295,7 @@ void destroy_window(window_t *win) {
 window_t *find_window(int x, int y) {
   window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
+    if (win->hidden) continue;
     int t = win->flags & WINDOW_NOTITLE ? 0 : TITLEBAR_HEIGHT;
     if (CONTAINS(x, y, win->frame.x, win->frame.y-t, win->frame.w, win->frame.h+t)) {
       last = win;
@@ -320,6 +350,8 @@ void set_focus(window_t* win) {
 
 static void move_to_top(window_t* _win) {
   window_t *win = get_root_window(_win);
+  if (win->flags&WINDOW_ALWAYSINBACK)
+    return;
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_window(win);
   
@@ -364,7 +396,7 @@ window_t* find_next_tab_stop(window_t *win, bool allow_current) {
   if (!win) return false;
   window_t *next;
   if ((next = find_next_tab_stop(win->children, true))) return next;
-  if (!win->notabstop && allow_current) return win;
+  if (!win->notabstop && !win->hidden && allow_current) return win;
   if ((next = find_next_tab_stop(win->next, true))) return next;
   return allow_current ? NULL : find_next_tab_stop(win->parent, false);
 }
@@ -533,8 +565,8 @@ void handle_windows(void) {
     if (m->target == NULL) continue;
     if (m->msg == WM_REFRESHSTENCIL) {
       repaint_stencil();
-      glStencilFunc(GL_EQUAL, 0, 0xFF);
-      draw_wallpaper();
+//      glStencilFunc(GL_EQUAL, 0, 0xFF);
+//      draw_wallpaper();
       continue;
     }
     send_message(m->target, m->msg, m->wparam, m->lparam);
@@ -578,6 +610,11 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   window_t *root = get_root_window(win);
   int value = 0;
   if (win) {
+    for (winhook_t *hook = g_hooks; hook; hook = hook->next) {
+      if (msg == hook->msg) {
+        hook->func(win, msg, wparam, lparam, hook->userdata);
+      }
+    }
     switch (msg) {
       case WM_NCPAINT:
         glStencilFunc(GL_EQUAL, win->id, 0xFF);
@@ -652,7 +689,7 @@ result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   switch (msg) {
     case WM_CREATE:
       win->frame.w = MAX(win->frame.w, strwidth(win->title)+6);
-      win->frame.h = MAX(win->frame.h, 13);
+      win->frame.h = MAX(win->frame.h, BUTTON_HEIGHT);
       return true;
     case WM_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
@@ -688,7 +725,7 @@ result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   return false;
 }
 
-#define LIST_HEIGHT 13
+#define LIST_HEIGHT BUTTON_HEIGHT
 #define LIST_X 3
 #define LIST_Y 3
 
@@ -797,7 +834,7 @@ result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
   switch (msg) {
     case WM_CREATE:
       win->frame.w = MAX(win->frame.w, strwidth(win->title)+16);
-      win->frame.h = MAX(win->frame.h, 13);
+      win->frame.h = MAX(win->frame.h, BUTTON_HEIGHT);
       return true;
     case WM_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, 14, 14);
@@ -1039,4 +1076,23 @@ void load_window_children(window_t *win, windef_t const *def) {
       x += item->frame.w + LINE_PADDING;
     }
   }
+}
+
+void show_window(window_t *win, bool visible) {
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+  if (!visible) {
+    for (window_t *t = windows; t; t = t->next) {
+      if (t != win && do_windows_overlap(t, win)) {
+        invalidate_window(t);
+      }
+    }
+    if (_focused == win) set_focus(NULL);
+    if (_captured == win) set_capture(NULL);
+    if (_tracked == win) track_mouse(NULL);
+  } else {
+    move_to_top(win);
+    set_focus(win);
+  }
+  win->hidden = !visible;
+  post_message(win, WM_SHOWWINDOW, visible, NULL);
 }
