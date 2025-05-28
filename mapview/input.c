@@ -69,19 +69,19 @@ mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
   return highest_sector; // Returns NULL if no sector was found
 }
 
-void handle_scroll(SDL_Event event, map_data_t *map) {
+void handle_scroll(int wheel[], map_data_t *map) {
   extern int pixel;
   static int buffer_x = 0;
   static int buffer_y = 0;
-  buffer_x += event.wheel.x;
-  buffer_y += event.wheel.y;
+  buffer_x += wheel[0];
+  buffer_y += wheel[1];
   
   // Reset buffer_y if scroll direction changed
-  if ((buffer_y ^ event.wheel.y) < 0) {
-    buffer_y = event.wheel.y;
+  if ((buffer_y ^ wheel[1]) < 0) {
+    buffer_y = wheel[1];
   }
-  if ((buffer_x ^ event.wheel.x) < 0) {
-    buffer_x = event.wheel.x;
+  if ((buffer_x ^ wheel[0]) < 0) {
+    buffer_x = wheel[0];
   }
   
   int move_x, move_y;
@@ -165,7 +165,7 @@ void handle_game_input(float delta_time) {
       }
     }
     else if (event.type == SDL_MOUSEWHEEL) {
-      handle_scroll(event, map);
+//      handle_scroll(event, map);
     }
     else if (event.type == SDL_JOYAXISMOTION) {
       //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);

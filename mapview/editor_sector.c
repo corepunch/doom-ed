@@ -422,11 +422,10 @@ int split_linedef(map_data_t *map, int linedef_id, float x, float y) {
     memcpy(&map->sidedefs[back], &map->sidedefs[linedef->sidenum[1]], sizeof(mapsidedef_t));
   }
   
-  add_linedef(map, linedef->end, vertex, front, back);
+  uint16_t end = linedef->end;
   linedef->end = vertex;
   
-  // Rebuild vertex buffers
-  build_wall_vertex_buffer(map);
+  add_linedef(map, end, vertex, front, back);
   
   return vertex;
 }

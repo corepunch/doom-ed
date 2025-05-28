@@ -303,6 +303,8 @@ void paint_face(map_data_t *map, bool eyedropper) {
 
 }
 
+void handle_scroll(int wheel[], map_data_t *map);
+
 result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
@@ -376,6 +378,9 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           default:
             break;
         }
+        return true;
+      case WM_WHEEL:
+        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game.map);
         return true;
       case WM_MOUSEMOVE:
         game.player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;

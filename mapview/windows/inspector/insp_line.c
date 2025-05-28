@@ -7,6 +7,8 @@ enum {
   ID_LINE_ARG3,
   ID_LINE_ARG4,
   ID_LINE_ARG5,
+  ID_LINE_START,
+  ID_LINE_END,
   ID_LINE_FRONT_X,
   ID_LINE_FRONT_Y,
   ID_LINE_FRONT_BTM,
@@ -30,6 +32,9 @@ windef_t line_layout[] = {
   { "EDITTEXT", "", ID_LINE_ARG3, 24 },
   { "EDITTEXT", "", ID_LINE_ARG4, 24 },
   { "EDITTEXT", "", ID_LINE_ARG5, 24 },
+  { "SPACE" },
+  { "EDITTEXT", "", ID_LINE_START, 40 },
+  { "EDITTEXT", "", ID_LINE_END, 40 },
   { "SPACE" },
   { "TEXT", "Front Sidedef:", -1, WIDTH_FILL },
   { "TEXT", "x:", -1 },
@@ -72,6 +77,8 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case WM_PAINT:
       if (editor->sel_mode == edit_lines && (line = selected_line(editor))) {
         set_window_item_text(win, ID_LINE_TYPE, "%d", line->special);
+        set_window_item_text(win, ID_LINE_START, "%d", line->start);
+        set_window_item_text(win, ID_LINE_END, "%d", line->end);
         for (int i = 0; i < 5; i++) {
           set_window_item_text(win, ID_LINE_ARG1+i, "%d", line->args[i]);
         }

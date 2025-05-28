@@ -6,7 +6,6 @@
 #include "map.h"
 
 #define init_wall_vertex(X, Y, Z, U, V) \
-wall_created = true; \
 map->walls.vertices[map->walls.num_vertices++] = \
 (wall_vertex_t) {X,Y,Z,U*dist+u_offset,V*height+v_offset,n[0],n[1],n[2],color}
 
@@ -55,22 +54,29 @@ void build_wall_vertex_buffer(map_data_t *map) {
   // Loop through all linedefs
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t const *linedef = &map->linedefs[i];
-    
-    // Skip if invalid front sidedef
-    if (linedef->sidenum[0] >= map->num_sidedefs) {
-      continue;
-    }
-    
     mapvertex_t const *v1 = &map->vertices[linedef->start];
     mapvertex_t const *v2 = &map->vertices[linedef->end];
-    mapsidedef2_t *front = &map->walls.sections[linedef->sidenum[0]];
-    mapsidedef2_t *back = NULL;
     int8_t n[3];
     float dx = v2->x - v1->x;
     float dy = v2->y - v1->y;
     float dist = compute_normal_packed(-dx, -dy, n);
+
+    // Skip if invalid front sidedef
+    if (linedef->sidenum[0] >= map->num_sidedefs) {
+      int32_t color = 0x00ff00ff;
+      float height = 0;
+      float u_offset = 0;
+      float v_offset = 0;
+      init_wall_vertex(v1->x, v1->y, 0, 0.0f, 1.0f);
+      init_wall_vertex(v2->x, v2->y, 0, 1.0f, 1.0f);
+      init_wall_vertex(v2->x, v2->y, 0, 1.0f, 0.0f);
+      init_wall_vertex(v1->x, v1->y, 0, 0.0f, 0.0f);
+      continue;
+    }
+    
+    mapsidedef2_t *front = &map->walls.sections[linedef->sidenum[0]];
+    mapsidedef2_t *back = NULL;
     bool two_sided = linedef->sidenum[1] != 0xFFFF;
-    bool wall_created = false;
     int32_t color = two_sided ? 0x00ffff00 : 0;
 
     // Check if there's a back side to this linedef
@@ -174,20 +180,6 @@ void build_wall_vertex_buffer(map_data_t *map) {
         init_wall_vertex(v1->x, v1->y, top, 1.0f, 0.0f);
         init_wall_vertex(v2->x, v2->y, top, 0.0f, 0.0f);
       }
-    }
-    if (!wall_created) { // create dummy wall, for top-down view
-      front->mid_section.vertex_start = map->walls.num_vertices;
-      front->mid_section.vertex_count = 4;
-      front->mid_section.texture = get_texture(front->def->midtexture);
-      
-      float bottom = back ? MAX(front->sector->floorheight, back->sector->floorheight) : front->sector->floorheight;
-      float top = back ? MIN(front->sector->ceilingheight, back->sector->ceilingheight) : front->sector->ceilingheight;
-      float height = fabs(top - bottom);
-      
-      init_wall_vertex(v1->x, v1->y, bottom, 0.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, bottom, 1.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, bottom, 1.0f, 0.0f);
-      init_wall_vertex(v1->x, v1->y, bottom, 0.0f, 0.0f);
     }
   }
   

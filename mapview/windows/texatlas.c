@@ -293,18 +293,10 @@ int find_texture_in_direction(texture_layout_t* layout,
   // Define direction vectors
   int dir_x = 0, dir_y = 0;
   switch (direction) {
-    case key_left:
-      dir_x = -1;
-      break;
-    case key_right:
-      dir_x = 1;
-      break;
-    case key_up:
-      dir_y = -1;
-      break;
-    case key_down:
-      dir_y = 1;
-      break;
+    case key_left: dir_x = -1; break;
+    case key_right: dir_x = 1;break;
+    case key_up: dir_y = -1; break;
+    case key_down: dir_y = 1; break;
     default:
       return -1;
   }
