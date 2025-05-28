@@ -100,19 +100,26 @@ void handle_scroll(int wheel[], map_data_t *map) {
     move_x = -((-buffer_x) & ~7); // negative side: floor up
   }
   
+  uint16_t index = pixel&~PIXEL_MASK;
   if (move_y != 0) {
     buffer_y -= move_y;
     switch (pixel&PIXEL_MASK) {
       case PIXEL_FLOOR:
-        map->sectors[pixel&~PIXEL_MASK].floorheight -= move_y;
+        if (index < map->num_sectors) {
+          map->sectors[index].floorheight -= move_y;
+        }
         break;
       case PIXEL_CEILING:
-        map->sectors[pixel&~PIXEL_MASK].ceilingheight -= move_y;
+        if (index < map->num_sectors) {
+          map->sectors[index].ceilingheight -= move_y;
+        }
         break;
       case PIXEL_MID:
       case PIXEL_TOP:
       case PIXEL_BOTTOM:
-        map->sidedefs[pixel&~PIXEL_MASK].rowoffset -= move_y;
+        if (index < map->num_sidedefs) {
+          map->sidedefs[index].rowoffset -= move_y;
+        }
         break;
       default:
         break;
@@ -128,7 +135,9 @@ void handle_scroll(int wheel[], map_data_t *map) {
       case PIXEL_MID:
       case PIXEL_TOP:
       case PIXEL_BOTTOM:
-        map->sidedefs[pixel&~PIXEL_MASK].textureoffset += move_x;
+        if (index < map->num_sidedefs) {
+          map->sidedefs[pixel&~PIXEL_MASK].textureoffset += move_x;
+        }
         break;
       default:
         break;

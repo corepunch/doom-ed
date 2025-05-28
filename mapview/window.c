@@ -470,15 +470,16 @@ void handle_windows(void) {
           send_message(win, WM_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
         }
         break;
-        
       case SDL_MOUSEBUTTONDOWN:
         if ((win = _captured) ||
             (win = find_window(SCALE_POINT(event.button.x),
                                SCALE_POINT(event.button.y))))
         {
-          //        if ((win = find_window(SCALE_POINT(event.button.x), SCALE_POINT(event.button.y)))) {
-          set_focus(win);
-          move_to_top(win);
+          if (win->parent) {
+            set_focus(win);
+          } else {
+            move_to_top(win);
+          }
           int x = LOCAL_X(event.button, win);
           int y = LOCAL_Y(event.button, win);
           if (x >= win->frame.w - RESIZE_HANDLE &&
@@ -488,9 +489,7 @@ void handle_windows(void) {
               win != _captured)
           {
             _resizing = win;
-          } else if (SCALE_POINT(event.button.y) < win->frame.y &&
-                     !win->parent &&
-                     win != _captured) {
+          } else if (SCALE_POINT(event.button.y) < win->frame.y && !win->parent && win != _captured) {
             _dragging = win;
             drag_anchor[0] = SCALE_POINT(event.button.x) - win->frame.x;
             drag_anchor[1] = SCALE_POINT(event.button.y) - win->frame.y;
@@ -549,6 +548,7 @@ void handle_windows(void) {
 //              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
             }
           }
+          set_focus(win);
         }
         break;
     }

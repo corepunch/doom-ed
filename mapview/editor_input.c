@@ -274,17 +274,6 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     case WM_LBUTTONUP:
       if (editor->move_camera == 2) {
         editor->move_camera = 1;
-      } switch (editor->sel_mode) {
-        case edit_vertices:
-          if (editor->dragging) {
-            extern mapvertex_t sn;
-            editor->dragging = false;
-            map->vertices[editor->hover.point] = sn;
-            // Rebuild vertex buffers
-            build_wall_vertex_buffer(map);
-            build_floor_vertex_buffer(map);
-          }
-          return true;
       }
       return true;
     case WM_LBUTTONDOWN:
@@ -292,34 +281,6 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         editor->move_camera = 2;
         return true;
       } else switch (editor->sel_mode) {
-        case edit_vertices:
-          if (editor->drawing) {
-            // Cancel current drawing
-            editor->drawing = false;
-            editor->num_draw_points = 0;
-          } else if (editor->hover.line != 0xFFFF) {
-            editor->hover.point = split_linedef(map, editor->hover.line, sn.x, sn.y);
-          } else if (point_exists(sn, map, &point)) {
-            editor->hover.point = point;
-            editor->dragging = true;
-          }
-          break;
-        case edit_things:
-          editor->selected.thing = editor->hover.thing;
-          invalidate_window(win);
-          break;
-        case edit_sectors:
-          editor->selected.sector = editor->hover.sector;
-          invalidate_window(win);
-          break;
-        case edit_lines:
-          editor->selected.line = editor->hover.line;
-          invalidate_window(win);
-          break;
-      }
-      return true;
-    case WM_RBUTTONDOWN:
-      switch (editor->sel_mode) {
         case edit_vertices:
           if (editor->dragging) {
             editor->dragging = false;
@@ -352,9 +313,49 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
             editor->drawing = true;
           }
           break;
+        case edit_things:
+          editor->selected.thing = editor->hover.thing;
+          invalidate_window(win);
+          break;
+        case edit_sectors:
+          editor->selected.sector = editor->hover.sector;
+          invalidate_window(win);
+          break;
+        case edit_lines:
+          editor->selected.line = editor->hover.line;
+          invalidate_window(win);
+          break;
+      }
+      return true;
+    case WM_RBUTTONDOWN:
+      switch (editor->sel_mode) {
+        case edit_vertices:
+          if (editor->drawing) {
+            // Cancel current drawing
+            editor->drawing = false;
+            editor->num_draw_points = 0;
+          } else if (editor->hover.line != 0xFFFF) {
+            editor->hover.point = split_linedef(map, editor->hover.line, sn.x, sn.y);
+          } else if (point_exists(sn, map, &point)) {
+            editor->hover.point = point;
+            editor->dragging = true;
+          }
+          break;
       }
       return true;
     case WM_RBUTTONUP:
+      switch (editor->sel_mode) {
+        case edit_vertices:
+          if (editor->dragging) {
+            extern mapvertex_t sn;
+            editor->dragging = false;
+            map->vertices[editor->hover.point] = sn;
+            // Rebuild vertex buffers
+            build_wall_vertex_buffer(map);
+            build_floor_vertex_buffer(map);
+          }
+          return true;
+      }
       return true;
 
     case WM_KEYDOWN:

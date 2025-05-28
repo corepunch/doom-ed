@@ -411,7 +411,7 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         return true;
     }
-  } else {
+  } else if (_focused == win) {
     switch (msg) {
       case WM_LBUTTONUP:
         if (!SDL_GetRelativeMouseMode()) {
