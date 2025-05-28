@@ -240,23 +240,9 @@ int run(void) {
     void draw_intermission(void);
     void handle_intermission_input(float delta_time);
 
-    switch (game.state) {
-      case GS_DUNGEON:
-        game_tick(delta_time);
-        handle_windows();
-//        draw_windows(!SDL_GetRelativeMouseMode());
-        break;
-      case GS_EDITOR:
-        handle_editor_input(&game.map, &editor, &game.player, delta_time);
-        draw_editor(&game.map, &editor, &game.player);
-        break;
-      case GS_WORLD:
-        handle_intermission_input(delta_time);
-        draw_intermission();
-        break;
-      default:
-        break;
-    }
+    game_tick(delta_time);
+
+    handle_windows();
 
 //    SDL_GL_SwapWindow(window);
     

@@ -85,29 +85,30 @@ bool find_texture_position(texture_layout_mask_t* mask, int tex_width, int tex_h
 
 // Texture sorting structure for qsort
 typedef struct {
-  int index;          // Original index
-  int width;          // Width of texture
-  int height;         // Height of texture
-  int area;           // Area of texture (width * height)
+  const char *name;
+  int index;  // Original index
+  int width;  // Width of texture
+  int height; // Height of texture
+  int area;   // Area of texture (width * height)
 } texture_sort_entry_t;
 
-// Comparison function for sorting textures by width (descending)
-int compare_textures_by_width(const void* a, const void* b) {
-  const texture_sort_entry_t* tex_a = (const texture_sort_entry_t*)a;
-  const texture_sort_entry_t* tex_b = (const texture_sort_entry_t*)b;
-  
-  // Sort by width (descending)
-  return tex_b->width - tex_a->width;
-}
-
-// Comparison function for sorting textures by height (descending)
-int compare_textures_by_height(const void* a, const void* b) {
-  const texture_sort_entry_t* tex_a = (const texture_sort_entry_t*)a;
-  const texture_sort_entry_t* tex_b = (const texture_sort_entry_t*)b;
-  
-  // Sort by height (descending)
-  return tex_b->height - tex_a->height;
-}
+//// Comparison function for sorting textures by width (descending)
+//int compare_textures_by_width(const void* a, const void* b) {
+//  const texture_sort_entry_t* tex_a = (const texture_sort_entry_t*)a;
+//  const texture_sort_entry_t* tex_b = (const texture_sort_entry_t*)b;
+//
+//  // Sort by width (descending)
+//  return tex_b->width - tex_a->width;
+//}
+//
+//// Comparison function for sorting textures by height (descending)
+//int compare_textures_by_height(const void* a, const void* b) {
+//  const texture_sort_entry_t* tex_a = (const texture_sort_entry_t*)a;
+//  const texture_sort_entry_t* tex_b = (const texture_sort_entry_t*)b;
+//  
+//  // Sort by height (descending)
+//  return tex_b->height - tex_a->height;
+//}
 
 // Comparison function for sorting textures by area (descending)
 int compare_textures_by_area(const void* a, const void* b) {
@@ -115,19 +116,27 @@ int compare_textures_by_area(const void* a, const void* b) {
   const texture_sort_entry_t* tex_b = (const texture_sort_entry_t*)b;
   
   // Sort by area (descending)
-  return tex_b->area - tex_a->area;
+  if (tex_b->area == tex_a->area) {
+    return strcmp(tex_a->name, tex_b->name);
+  } else {
+    return tex_b->area - tex_a->area;
+  }
 }
 
-int get_texture_size(int index, void *_texture) {
+texdef_t get_texture_size(int index, void *_texture) {
   mapside_texture_t* texture = _texture;
-  return MAKEDWORD(texture[index].width, texture[index].height);
+  return (texdef_t) {
+    .name = texture[index].name,
+    .width = texture[index].width,
+    .height = texture[index].height
+  };
 }
 
 // Generate a texture layout for display
 texture_layout_t*
 layout(int num_textures,
        int layout_width,
-       int (*get_size)(int, void *),
+       texdef_t (*get_size)(int, void *),
        void *param)
 {
   // Determine layout dimensions based on cell size
@@ -150,11 +159,12 @@ layout(int num_textures,
   // Create sorted indices array
   texture_sort_entry_t* sorted_textures = (texture_sort_entry_t*)malloc(num_textures * sizeof(texture_sort_entry_t));
   for (int i = 0; i < num_textures; i++) {
-    int size = get_size(i, param);
+    texdef_t texdef = get_size(i, param);
     sorted_textures[i].index = i;
-    sorted_textures[i].width = LOWORD(size);
-    sorted_textures[i].height = HIWORD(size);
-    sorted_textures[i].area = LOWORD(size) * HIWORD(size) * HIWORD(size);
+    sorted_textures[i].name = texdef.name;
+    sorted_textures[i].width = texdef.width;
+    sorted_textures[i].height = texdef.height;
+    sorted_textures[i].area = texdef.width * texdef.height * texdef.height;
   }
   
   // Sort textures by width (descending)
@@ -163,20 +173,20 @@ layout(int num_textures,
   // Place each texture in the layout (in sorted order)
   for (int i = 0; i < num_textures; i++) {
     int original_idx = sorted_textures[i].index;
-    int size = get_size(original_idx, param);
+    texdef_t texdef = get_size(original_idx, param);
     int pos_x, pos_y;
     
     // Try to find space for this texture
-    int cell_w = (LOWORD(size)+ CELL_SIZE - 1) / CELL_SIZE;
-    int cell_h = (HIWORD(size) + CELL_SIZE - 1) / CELL_SIZE;
+    int cell_w = (texdef.width + CELL_SIZE - 1) / CELL_SIZE;
+    int cell_h = (texdef.height + CELL_SIZE - 1) / CELL_SIZE;
     
-    if (find_texture_position(&mask, LOWORD(size), HIWORD(size), &pos_x, &pos_y)) {
+    if (find_texture_position(&mask, texdef.width, texdef.height, &pos_x, &pos_y)) {
       // Store entry information
       texture_layout_entry_t* entry = &layout->entries[layout->num_entries++];
       entry->x = pos_x;
       entry->y = pos_y;
-      entry->width = LOWORD(size);
-      entry->height = HIWORD(size);
+      entry->width = texdef.width;
+      entry->height = texdef.height;
       entry->cell_w = cell_w;
       entry->cell_h = cell_h;
       entry->texture_idx = original_idx;
@@ -392,6 +402,7 @@ result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       int texture_idx =
       get_texture_at_point(udata->layout, LOWORD(wparam) / SCALE, HIWORD(wparam) / SCALE);
       if (texture_idx >= 0) {
+        puts(udata->cache->textures[texture_idx].name);
         memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
       }
       invalidate_window(win);

@@ -228,7 +228,7 @@ find_texture(texture_directory_t* directory,
 
 // Try to load texture from texture directories
 static mapside_texture_t*
-load_texture_from_directories(texname_t tex_name,
+load_texture_from_directories(texname_t const tex_name,
                               texture_directory_t* tex_dirs[],
                               mappatchnames_t* pnames)
 {
@@ -259,7 +259,7 @@ load_texture_from_directories(texname_t tex_name,
 }
 
 // Try to load texture
-static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
+static void maybe_load_texture(texture_cache_t* cache, texname_t const tex_name,
                                texture_directory_t* tex_dirs[], mappatchnames_t* pnames) {
   if (tex_name[0] == '-' || tex_name[0] == '\0') return;
   if (cache->num_textures == MAX_TEXTURES) return;
@@ -280,8 +280,17 @@ static void maybe_load_texture(texture_cache_t* cache, texname_t tex_name,
   }
 }
 
+// Check if a lump is a marker (like F_START, F_END)
+bool is_marker(const char* name) {
+  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "START") == 0) return true;
+  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "END") == 0) return true;
+  if (strcmp(name, "FF_START") == 0) return true;
+  if (strcmp(name, "FF_END") == 0) return true;
+  return false;
+}
+
 // Main function to allocate textures for map sides
-int allocate_mapside_textures(map_data_t* map) {
+int allocate_mapside_textures(void) {
   texture_cache = malloc(sizeof(texture_cache_t) + sizeof(texture_cache_t) * MAX_TEXTURES);
   memset(texture_cache, 0, sizeof(texture_cache_t));
 
@@ -311,14 +320,25 @@ int allocate_mapside_textures(map_data_t* map) {
     return 0;
   }
   
-  // Process each sidedef
-  for (int i = 0; i < map->num_sidedefs; i++) {
-    mapsidedef_t* side = &map->sidedefs[i];
-    
-    maybe_load_texture(texture_cache, side->toptexture, tex_dirs, pnames);
-    maybe_load_texture(texture_cache, side->midtexture, tex_dirs, pnames);
-    maybe_load_texture(texture_cache, side->bottomtexture, tex_dirs, pnames);
+  for (int j = 0; j < dir_count; j++) {
+    texture_directory_t* directory = tex_dirs[j];
+    for (int i = 0; i < directory->numtextures; i++) {
+      maptexture_t *tex = ((void*)directory)+directory->offsets[i];
+      if (strstr(tex->name, "SKY")||strstr(tex->name, "CLOCK")) {
+        continue;
+      }
+      maybe_load_texture(texture_cache, tex->name, tex_dirs, pnames);
+    }
   }
+  
+  // Process each sidedef
+//  for (int i = 0; i < map->num_sidedefs; i++) {
+//    mapsidedef_t* side = &map->sidedefs[i];
+//    
+//    maybe_load_texture(texture_cache, side->toptexture, tex_dirs, pnames);
+//    maybe_load_texture(texture_cache, side->midtexture, tex_dirs, pnames);
+//    maybe_load_texture(texture_cache, side->bottomtexture, tex_dirs, pnames);
+//  }
   
   create_window("Textures", WINDOW_VSCROLL, MAKERECT(20, 20, 256, 256), NULL, win_textures, texture_cache);
   
@@ -414,101 +434,92 @@ load_flat_texture(texname_t const floorpic)
   return &tmp;
 }
 
-// Check if a lump is a marker (like F_START, F_END)
-//bool is_marker(const char* name) {
-//  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "START") == 0) return true;
-//  if (name[0] == 'F' && name[1] == '_' && strcmp(name + 2, "END") == 0) return true;
-//  if (strcmp(name, "FF_START") == 0) return true;
-//  if (strcmp(name, "FF_END") == 0) return true;
-//  return false;
-//}
-
 // Main function to allocate flat textures for map
-int allocate_flat_textures(map_data_t* map) {
+int allocate_flat_textures(void) {
   flat_cache = malloc(sizeof(texture_cache_t) + MAX_TEXTURES * sizeof(mapside_texture_t));
   memset(flat_cache, 0, sizeof(texture_cache_t));
   
-//  // Find F_START and F_END markers
-//  int f_start = find_lump_num("F_START"), f_end = find_lump_num("F_END");
-//  int ff_start = find_lump_num("FF_START"), ff_end = find_lump_num("FF_END");
-//  
-//  if (f_start < 0 || f_end < 0 || f_start >= f_end) {
-//    printf("Error: Could not find flat markers (F_START/F_END)\n");
-//    return 0;
-//  }
-//  
-//  // Load flats between F_START and F_END
-//  for (int i = f_start + 1; i < f_end; i++) {
-//    // Skip markers
-//    if (is_marker(get_lump_name(i))) continue;
-//    
-//    // Check if we're at capacity
-//    if (flat_cache->num_textures >= MAX_TEXTURES) break;
-//    
-//    // Check if flat is already in cache
-//    bool already_cached = false;
-//    for (int j = 0; j < flat_cache->num_textures; j++) {
-//      if (strncmp(flat_cache->textures[j].name, get_lump_name(i), 8) == 0) {
-//        already_cached = true;
-//        break;
-//      }
-//    }
-//    if (already_cached) continue;
-//    
-//    // Load the flat texture
-//    mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
-//    if (tex) {
-//      flat_cache->textures[flat_cache->num_textures++] = *tex;
-//    }
-//  }
-//  
-//  // If FF_START/FF_END exist, load those flats too (DOOM II)
-//  if (ff_start >= 0 && ff_end >= 0 && ff_start < ff_end) {
-//    for (int i = ff_start + 1; i < ff_end; i++) {
-//      // Skip markers
-//      if (is_marker(get_lump_name(i))) continue;
-//
-//      // Check if we're at capacity
-//      if (flat_cache->num_textures >= MAX_TEXTURES) break;
-//      
-//      // Check if flat is already in cache
-//      bool already_cached = false;
-//      for (int j = 0; j < flat_cache->num_textures; j++) {
-//        if (strncmp(flat_cache->textures[j].name, get_lump_name(i), 8) == 0) {
-//          already_cached = true;
-//          break;
-//        }
-//      }
-//      if (already_cached) continue;
-//      
-//      // Load the flat texture
-//      mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
-//      if (tex) {
-//        flat_cache->textures[flat_cache->num_textures++] = *tex;
-//      }
-//    }
-//  }
+  // Find F_START and F_END markers
+  int f_start = find_lump_num("F_START"), f_end = find_lump_num("F_END");
+  int ff_start = find_lump_num("FF_START"), ff_end = find_lump_num("FF_END");
   
-  // Process each sector to preload required flat textures
-  for (int i = 0; i < map->num_sectors; i++) {
-    mapsector_t* sector = &map->sectors[i];
+  if (f_start < 0 || f_end < 0 || f_start >= f_end) {
+    printf("Error: Could not find flat markers (F_START/F_END)\n");
+    return 0;
+  }
+  
+  // Load flats between F_START and F_END
+  for (int i = f_start + 1; i < f_end; i++) {
+    // Skip markers
+    if (is_marker(get_lump_name(i))) continue;
     
-    // If not loaded yet, try to find and load it
-    if (!get_flat_texture(sector->floorpic)) {
-      mapside_texture_t *tex = load_flat_texture(sector->floorpic);
-      if (tex && flat_cache->num_textures < MAX_TEXTURES) {
-        flat_cache->textures[flat_cache->num_textures++] = *tex;
+    // Check if we're at capacity
+    if (flat_cache->num_textures >= MAX_TEXTURES) break;
+    
+    // Check if flat is already in cache
+    bool already_cached = false;
+    for (int j = 0; j < flat_cache->num_textures; j++) {
+      if (strncmp(flat_cache->textures[j].name, get_lump_name(i), 8) == 0) {
+        already_cached = true;
+        break;
       }
     }
+    if (already_cached) continue;
     
-    // If not loaded yet, try to find and load it
-    if (!get_flat_texture(sector->ceilingpic)) {
-      mapside_texture_t *tex = load_flat_texture(sector->ceilingpic);
-      if (tex && flat_cache->num_textures < MAX_TEXTURES) {
+    // Load the flat texture
+    mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
+    if (tex) {
+      flat_cache->textures[flat_cache->num_textures++] = *tex;
+    }
+  }
+  
+  // If FF_START/FF_END exist, load those flats too (DOOM II)
+  if (ff_start >= 0 && ff_end >= 0 && ff_start < ff_end) {
+    for (int i = ff_start + 1; i < ff_end; i++) {
+      // Skip markers
+      if (is_marker(get_lump_name(i))) continue;
+
+      // Check if we're at capacity
+      if (flat_cache->num_textures >= MAX_TEXTURES) break;
+      
+      // Check if flat is already in cache
+      bool already_cached = false;
+      for (int j = 0; j < flat_cache->num_textures; j++) {
+        if (strncmp(flat_cache->textures[j].name, get_lump_name(i), 8) == 0) {
+          already_cached = true;
+          break;
+        }
+      }
+      if (already_cached) continue;
+      
+      // Load the flat texture
+      mapside_texture_t *tex = load_flat_texture(get_lump_name(i));
+      if (tex) {
         flat_cache->textures[flat_cache->num_textures++] = *tex;
       }
     }
   }
+  
+//  // Process each sector to preload required flat textures
+//  for (int i = 0; i < map->num_sectors; i++) {
+//    mapsector_t* sector = &map->sectors[i];
+//    
+//    // If not loaded yet, try to find and load it
+//    if (!get_flat_texture(sector->floorpic)) {
+//      mapside_texture_t *tex = load_flat_texture(sector->floorpic);
+//      if (tex && flat_cache->num_textures < MAX_TEXTURES) {
+//        flat_cache->textures[flat_cache->num_textures++] = *tex;
+//      }
+//    }
+//    
+//    // If not loaded yet, try to find and load it
+//    if (!get_flat_texture(sector->ceilingpic)) {
+//      mapside_texture_t *tex = load_flat_texture(sector->ceilingpic);
+//      if (tex && flat_cache->num_textures < MAX_TEXTURES) {
+//        flat_cache->textures[flat_cache->num_textures++] = *tex;
+//      }
+//    }
+//  }
   
   extern int screen_width;
   create_window("Flats", WINDOW_VSCROLL, MAKERECT(screen_width-148, 20, 128, 256), NULL, win_textures, flat_cache);

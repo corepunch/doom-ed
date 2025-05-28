@@ -102,8 +102,6 @@ void goto_intermisson(void) {
   SDL_SetRelativeMouseMode(SDL_FALSE);
   
   free_map_data(&game.map);
-
-  game.state = GS_WORLD;
 }
 
 void handle_intermission_input(float delta_time) {

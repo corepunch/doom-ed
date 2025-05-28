@@ -48,7 +48,6 @@ typedef struct {
 
 void init_editor(editor_state_t *editor);
 void set_editor_camera(editor_state_t *editor, int16_t x, int16_t y);
-void toggle_editor_mode(editor_state_t *editor);
 void draw_editor(map_data_t const *map, editor_state_t const *editor, player_t const *player);
 void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *player, float delta_time);
 void finish_sector(map_data_t *map, editor_state_t *editor);

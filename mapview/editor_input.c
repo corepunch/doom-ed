@@ -12,20 +12,6 @@ extern SDL_Window* window;
 //  *y = (*y / grid_size) * grid_size;
 //}
 
-// Toggle editor mode on/off
-void toggle_editor_mode(editor_state_t *editor) {
-  if (game.state == GS_DUNGEON) {
-    game.state = GS_EDITOR;
-  } else if (game.state == GS_EDITOR) {
-    game.state = GS_DUNGEON;
-    editor->drawing = false;
-    editor->num_draw_points = 0;
-  }
-  
-  // Set mouse mode based on editor state
-  SDL_SetRelativeMouseMode(game.state == GS_EDITOR ? SDL_FALSE : SDL_TRUE);
-}
-
 // Handle mouse and keyboard input for the editor
 void handle_editor_input(map_data_t *map,
                          editor_state_t *editor,
@@ -41,7 +27,7 @@ void handle_editor_input(map_data_t *map,
       running = false;
     } else if (event.type == SDL_JOYBUTTONDOWN) {
       if (event.jbutton.button == 8) {
-        toggle_editor_mode(editor);
+//        toggle_editor_mode(editor);
       }
     }
     else if (event.type == SDL_JOYAXISMOTION) {
@@ -405,9 +391,6 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
-          } else if (game.state == GS_EDITOR) {
-            // Exit editor mode
-            toggle_editor_mode(editor);
           }
           return true;
         case SDL_SCANCODE_G:

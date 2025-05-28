@@ -63,21 +63,24 @@ int main(int argc, char* argv[]) {
   
 //  printf("%s\n", cache_lump("MAPINFO"));
   
-  game.state = GS_WORLD;
+  memset(&game, 0, sizeof(game));
   
   // Print map info
   // Initialize SDL
   if (!init_sdl()) {
     return 1;
   }
-
+  
   init_console();
   load_console_font();
   init_sprites();
   init_intermission();
   init_windows();
+  
+  allocate_mapside_textures();
+  allocate_flat_textures();
 
-  goto_map("MAP01");
+//  goto_map("MAP01");
   
   run();
   

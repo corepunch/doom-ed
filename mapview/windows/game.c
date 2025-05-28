@@ -39,14 +39,12 @@ void goto_map(const char *mapname) {
   
   if (game.map.num_vertices > 0) {
     print_map_info(&game.map);
-    allocate_mapside_textures(&game.map);
-    allocate_flat_textures(&game.map);
+//    allocate_mapside_textures(&game.map);
+//    allocate_flat_textures(&game.map);
     init_sky(&game.map);
     init_player(&game.map, &game.player);
     build_wall_vertex_buffer(&game.map);
     build_floor_vertex_buffer(&game.map);
-    
-    game.state = GS_DUNGEON;
     
     conprintf("Successfully loaded map %s", get_map_name(mapname));
   } else {
@@ -174,8 +172,10 @@ void draw_dungeon(window_t const *win) {
   void draw_minimap(map_data_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
   
-  if (game.map.num_vertices == 0)
+  if (game.map.num_vertices == 0) {
+    fill_rect(COLOR_PANEL_BG, 0, 0, win->frame.w, win->frame.h);
     return;
+  }
 
   map_data_t const *map = &game.map;
   mapsector_t const *sector = update_player_height(map, &game.player);

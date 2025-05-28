@@ -7,16 +7,16 @@
       <BreakpointProxy
          BreakpointExtensionID = "Xcode.Breakpoint.FileBreakpoint">
          <BreakpointContent
-            uuid = "3773D295-1856-4CB6-93E6-C8BAA10797CE"
+            uuid = "5FCF4D52-2595-46D3-B480-28133157ACB1"
             shouldBeEnabled = "Yes"
             ignoreCount = "0"
             continueAfterRunningActions = "No"
-            filePath = "mapview/editor_input.c"
+            filePath = "mapview/wi_stuff.c"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "26"
-            endingLineNumber = "26"
-            landmarkName = "toggle_editor_mode(editor)"
+            startingLineNumber = "80"
+            endingLineNumber = "80"
+            landmarkName = "draw_intermission()"
             landmarkType = "9">
          </BreakpointContent>
       </BreakpointProxy>

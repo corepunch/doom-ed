@@ -171,7 +171,7 @@ void handle_game_input(float delta_time) {
       //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
     } else if (event.type == SDL_JOYBUTTONDOWN) {
       if (event.jbutton.button == 8) {
-        toggle_editor_mode(&editor);
+//        toggle_editor_mode(&editor);
       }
       printf("Button %d pressed\n", event.jbutton.button);
     } else if (event.type == SDL_JOYBUTTONUP) {
@@ -265,8 +265,8 @@ void game_tick(float delta_time) {
   // Update position
   
   if (player->vel_x != 0 && player->vel_y != 0) {
-    //  player->x += player->vel_x * delta_time;
-    //  player->y += player->vel_y * delta_time;
-    update_player_position_with_sliding(&game.map, player, player->vel_x * delta_time, player->vel_y * delta_time);
+      player->x += player->vel_x * delta_time;
+      player->y += player->vel_y * delta_time;
+//    update_player_position_with_sliding(&game.map, player, player->vel_x * delta_time, player->vel_y * delta_time);
   }
 }

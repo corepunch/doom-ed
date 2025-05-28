@@ -278,22 +278,26 @@ sprite_t const *get_thing_sprite(int index, mobjinfo_t const *mobjinfo) {
   return find_sprite(name);
 }
 
-int get_mobj_size(int index, void *_things) {
+texdef_t get_mobj_size(int index, void *_things) {
 //  mobjinfo_t const *mobj = &((mobjinfo_t const *)_things)[index];
   sprite_t const *spr = get_thing_sprite(index, _things);
   if (spr) {
     float scale = fminf(1,fminf(((float)THUMBNAIL_SIZE) / spr->width,
                                 ((float)THUMBNAIL_SIZE) / spr->height));
-    return MAKEDWORD(spr->width * scale, spr->height * scale);
+    return (texdef_t){
+      .name = spr->name,
+      .width = spr->width * scale,
+      .height = spr->height * scale
+    };
   } else {
-    return 0;
+    return (texdef_t){0};
   }
 }
 
 struct texture_layout_s*
 layout(int num_textures,
        int layout_width,
-       int (*get_size)(int, void *),
+       texdef_t (*get_size)(int, void *),
        void *param);
 
 int

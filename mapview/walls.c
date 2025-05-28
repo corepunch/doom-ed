@@ -232,7 +232,8 @@ void draw_walls(map_data_t const *map,
 {
   // Bind the wall VAO
   glBindVertexArray(map->walls.vao);
-  
+  glDisable(GL_BLEND);
+
   glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, viewdef->mvp[0]);
   glUniform3fv(world_prog_viewPos, 1, viewdef->viewpos);
   
@@ -302,6 +303,7 @@ draw_wall_ids(map_data_t const *map,
               mapsector_t const *sector,
               viewdef_t const *viewdef)
 {
+  glDisable(GL_BLEND);
   glBindVertexArray(map->walls.vao);
   glDisableVertexAttribArray(3);
   glVertexAttrib4f(3, 0, 0, 0, 0);

@@ -398,6 +398,7 @@ void draw_floors(map_data_t const *map,
 
   sectors_drawn++;
     
+  glDisable(GL_BLEND);
   glBindVertexArray(map->floors.vao);
   
   // Set MVP matrix uniform
@@ -449,6 +450,7 @@ draw_floor_ids(map_data_t const *map,
   mapsector2_t *sec = &map->floors.sectors[sector-map->sectors];
   sec->frame = viewdef->frame;
   
+  glDisable(GL_BLEND);
   glBindVertexArray(map->floors.vao);
   
   glCullFace(GL_BACK);

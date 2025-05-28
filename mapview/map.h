@@ -368,6 +368,12 @@ typedef struct {
   uint16_t offset;
 } mapseg_t;
 
+typedef struct {
+  char const *name;
+  uint16_t width;
+  uint16_t height;
+} texdef_t;
+
 extern palette_entry_t *palette;
 
 // Map data structure using the collection macro
@@ -412,19 +418,34 @@ typedef struct texture_cache_s {
   mapside_texture_t textures[1];
 } texture_cache_t;
 
-typedef enum {
-  GS_DUNGEON,
-  GS_EDITOR,
-  GS_WORLD
-} gameState_t;
-
 typedef struct {
   int episode;
   int level;
-  gameState_t state;
   map_data_t map;
   player_t player;
 } game_t;
+
+// Base UI Colors
+#define COLOR_PANEL_BG       0xff3c3c3c  // main panel or window background
+#define COLOR_PANEL_DARK_BG  0xff2c2c2c  // main panel or window background
+#define COLOR_LIGHT_EDGE     0xff7f7f7f  // top-left edge for beveled elements
+#define COLOR_DARK_EDGE      0xff1a1a1a  // bottom-right edge for bevel
+#define COLOR_FLARE          0xffcfcfcf  // top-left edge for beveled elements
+#define COLOR_FOCUSED        0xff5EC4F3
+
+// Additional UI Colors
+#define COLOR_BUTTON_BG      0xff404040  // button background (unpressed)
+#define COLOR_BUTTON_INNER   0xff505050  // inner fill of button
+#define COLOR_BUTTON_HOVER   0xff5a5a5a  // slightly brighter for hover state
+#define COLOR_TEXT_NORMAL    0xffc0c0c0  // standard text color
+#define COLOR_TEXT_DISABLED  0xff808080  // for disabled/inactive text
+#define COLOR_TEXT_ERROR     0xffff4444  // red text for errors
+#define COLOR_TEXT_SUCCESS   0xff44ff44  // green text for success messages
+#define COLOR_BORDER_FOCUS   0xff101010  // very dark outline for focused item
+#define COLOR_BORDER_ACTIVE  0xff808080  // light gray for active border
+
+// Transparency helpers (if needed)
+#define COLOR_TRANSPARENT    0x00000000  // fully transparent
 
 #define WINDOW_NOTITLE 1
 #define WINDOW_TRANSPARENT 2
@@ -508,8 +529,8 @@ void *cache_lump_num(uint16_t i);
 int find_lump_num(const char* name);
 char const *get_lump_name(int i);
 
-int allocate_mapside_textures(map_data_t* map);
-int allocate_flat_textures(map_data_t* map);
+int allocate_mapside_textures(void);
+int allocate_flat_textures(void);
 
 uint8_t* load_patch(void* patch_lump, int* width, int* height);
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
