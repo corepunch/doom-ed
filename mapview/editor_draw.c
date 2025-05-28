@@ -42,17 +42,6 @@ void init_editor(editor_state_t *editor) {
   // Reset bindings
   glBindVertexArray(0);
   glBindBuffer(GL_ARRAY_BUFFER, 0);
-  
-  GLuint make_1bit_tex(void *data, int width, int height);
-  extern uint8_t ed_icons8[icon8_count][8];
-  extern uint16_t ed_icons16[icon16_count][16];
-  for (int i = 0; i < icon8_count; i++) {
-    editor->icons8[i] = make_1bit_tex(ed_icons8[i], 8, 8);
-  }
-  for (int i = 0; i < icon16_count; i++) {
-    editor->icons16[i] = make_1bit_tex(ed_icons16[i], 16, 16);
-  }
-
 }
 
 void set_editor_camera(editor_state_t *editor, int16_t x, int16_t y) {

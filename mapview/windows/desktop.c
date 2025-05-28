@@ -70,6 +70,8 @@ void draw_wallpaper(void) {
   glDisableVertexAttribArray(3);
   glVertexAttrib4f(3, 0, 0, 0, 0);
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
+  
+//  draw_rect(17, 0, 0, 256, 256);
 }
 
 result_t win_desktop(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {

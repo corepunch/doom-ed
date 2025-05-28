@@ -601,6 +601,7 @@ void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
   
   // Bind VAO and draw
   glBindVertexArray(sys->vao);
+  glDisable(GL_BLEND);
   glDrawArrays(type?GL_LINE_LOOP:GL_TRIANGLE_FAN, 0, 4);
   
   // Reset state
@@ -615,16 +616,16 @@ void draw_rect(int tex, int x, int y, int w, int h) {
 
 #include "editor.h"
 
-void draw_icon8(int icon, int x, int y, float alpha) {
-  extern editor_state_t editor;
-  draw_rect_ex(editor.icons8[icon], x, y, 8, 8, false, alpha);
+void draw_icon8(int icon, int x, int y, uint32_t col) {
+  char str[2] = { icon+128+6*16, 0 };
+  draw_text_small(str, x, y, col);
 }
 
-void draw_icon16(int icon, int x, int y, float alpha) {
-  extern editor_state_t editor;
-  draw_rect_ex(editor.icons16[icon], x, y, 16, 16, false, alpha);
+void draw_icon16(int icon, int x, int y, uint32_t col) {
+  icon*=2;
+  char str[6] = { icon+128, icon+129, '\n', icon+144, icon+145, 0 };
+  draw_text_small(str, x, y, col);
 }
-
 
 void fill_rect(int color, int x, int y, int w, int h) {
   glBindTexture(GL_TEXTURE_2D, g_sprite_system.tmp);

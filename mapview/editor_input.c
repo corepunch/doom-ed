@@ -454,7 +454,7 @@ result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       return true;
     case WM_PAINT:
       for (int i = 0; i < 5; i++) {
-        draw_icon16(i, i*16, 0, editor->sel_mode == i ? 1.0f : 0.5f);
+        draw_icon16(i, i*16, 0, editor->sel_mode == i ? -1 : 0x80ffffff);
       }
       return true;
     case WM_LBUTTONUP:

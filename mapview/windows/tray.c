@@ -59,7 +59,7 @@ result_t win_tray(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       register_window_hook(WM_DESTROY, on_win_destroyed, win);
       return true;
     case WM_PAINT:
-      draw_icon16(icon16_appicon, 3, 0, 0.5);
+      draw_icon16(icon16_appicon, 3, 0, -1);
       return false;
     case WM_COMMAND:
       if (HIWORD(wparam) == BN_CLICKED) {

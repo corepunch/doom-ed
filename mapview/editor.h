@@ -44,8 +44,6 @@ typedef struct {
   int sel_mode;
   float scale;
   uint32_t vao, vbo;
-  int icons8[icon8_count];
-  int icons16[icon16_count];
 } editor_state_t;
 
 void init_editor(editor_state_t *editor);

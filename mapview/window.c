@@ -615,7 +615,7 @@ void draw_window_controls(window_t *win) {
   for (int i = 0; i < 1; i++) {
     int x = win->frame.x + win->frame.w - (i+1)*CONTROL_BUTTON_WIDTH - CONTROL_BUTTON_PADDING;
     int y = window_title_bar_y(win);
-    draw_icon8(icon8_minus + i, x, y, 0.5f);
+    draw_icon8(icon8_minus + i, x, y, COLOR_TEXT_NORMAL);
   }
 }
 
@@ -662,7 +662,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         case WM_NCPAINT:
           if (!(win->flags&WINDOW_NOTITLE)) {
             // fill_rect(0x40ffffff, frame->x+frame->w-TITLEBAR_HEIGHT, frame->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
-            draw_text_gl3(win->title, frame->x+2, window_title_bar_y(win)-1, 1);
+            draw_text_small(win->title, frame->x+2, window_title_bar_y(win), -1);
           }
           break;
         case WM_WHEEL:
@@ -797,7 +797,7 @@ result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       return true;
     case WM_PAINT:
       win_button(win, msg, wparam, lparam);
-      draw_icon8(icon8_maximize, win->frame.x+win->frame.w-10, win->frame.y+3, 0.75);
+      draw_icon8(icon8_maximize, win->frame.x+win->frame.w-10, win->frame.y+3, COLOR_TEXT_NORMAL);
       return true;
     case WM_LBUTTONUP: {
       win_button(win, msg, wparam, lparam);
@@ -857,7 +857,7 @@ result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       draw_text_small(win->title, win->frame.x + 17, win->frame.y + 3, COLOR_DARK_EDGE);
       draw_text_small(win->title, win->frame.x + 16, win->frame.y + 2, COLOR_TEXT_NORMAL);
       if (win->value) {
-        draw_icon8(icon8_checkbox, win->frame.x+1, win->frame.y+1, 1);
+        draw_icon8(icon8_checkbox, win->frame.x+1, win->frame.y+1, COLOR_TEXT_NORMAL);
       }
       return true;
     case WM_LBUTTONDOWN:

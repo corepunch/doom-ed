@@ -13,7 +13,7 @@
 #define CONSOLE_FONT_HEIGHT 8     // Height of the Doom font character
 #define CONSOLE_FONT_WIDTH 8      // Width of each character
 
-#define FONT_TEX_SIZE 256
+#define FONT_TEX_SIZE 128
 
 #define MAX_TEXT_LENGTH 256
 
@@ -118,10 +118,19 @@ static bool create_font_atlas(void) {
         atlas_data[(atlas_y + y) * FONT_TEX_SIZE + atlas_x + x] = bit_value ? 255 : 0;
         if (bit_value) {
           console.small_font.char_from[c] = MIN(x, console.small_font.char_from[c]);
-          console.small_font.char_to[c] = MAX(x+1, console.small_font.char_to[c]);
+          console.small_font.char_to[c] = MAX(x+2, console.small_font.char_to[c]);
         }
       }
     }
+  }
+  
+  extern unsigned char icons_bits[];
+  size_t half = FONT_TEX_SIZE * FONT_TEX_SIZE / 2;
+  memcpy(atlas_data + half, icons_bits, half);
+  
+  for (int i = 128; i < 256; i++) {
+    console.small_font.char_to[i] = 8;
+    console.small_font.char_from[i] = 0;
   }
   
   // Create OpenGL texture for the atlas
@@ -417,7 +426,7 @@ int strnwidth(const char* text, int text_length) {
     char c = text[i];
     uint8_t w = console.small_font.char_to[c] - console.small_font.char_from[c];
     // Advance cursor position
-    cursor_x += w+1;
+    cursor_x += w;
   }
   return cursor_x;
 }
@@ -440,18 +449,23 @@ void draw_text_small(const char* text, int x, int y, uint32_t col) {
   
   // Pre-calculate all vertices for the entire string
   for (int i = 0; i < text_length; i++) {
-    char c = text[i];
+    unsigned char c = text[i];
+    
+    if (c == '\n') {
+      cursor_x = x;
+      y += SMALL_FONT_HEIGHT;
+      continue;
+    }
     
     // Calculate texture coordinates
-    int char_code = (int)c;
-    int atlas_x = (char_code % console.small_font.chars_per_row) * SMALL_FONT_WIDTH;
-    int atlas_y = (char_code / console.small_font.chars_per_row) * SMALL_FONT_HEIGHT;
+    int atlas_x = (c % console.small_font.chars_per_row) * SMALL_FONT_WIDTH;
+    int atlas_y = (c / console.small_font.chars_per_row) * SMALL_FONT_HEIGHT;
     
     // Convert to normalized UV coordinates (0-255 range for uint8_t)
-    float u1 = (atlas_x + console.small_font.char_from[c])/256.f;
-    float v1 = (atlas_y)/256.f;
-    float u2 = (atlas_x + console.small_font.char_to[c])/256.f;
-    float v2 = (atlas_y + SMALL_FONT_HEIGHT)/256.f;
+    float u1 = (atlas_x + console.small_font.char_from[c])/(float)FONT_TEX_SIZE;
+    float v1 = (atlas_y)/(float)FONT_TEX_SIZE;
+    float u2 = (atlas_x + console.small_font.char_to[c])/(float)FONT_TEX_SIZE;
+    float v2 = (atlas_y + SMALL_FONT_HEIGHT)/(float)FONT_TEX_SIZE;
     
     uint8_t w = console.small_font.char_to[c] - console.small_font.char_from[c];
     uint8_t h = SMALL_FONT_HEIGHT;
@@ -470,7 +484,7 @@ void draw_text_small(const char* text, int x, int y, uint32_t col) {
     }
     
     // Advance cursor position
-    cursor_x += w+1;
+    cursor_x += w;
   }
   
   // Early return if nothing to draw
