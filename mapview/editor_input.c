@@ -440,8 +440,10 @@ result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       }
       return true;
     case WM_LBUTTONUP:
-      set_selection_mode(editor, LOWORD(wparam) / 16);
-      set_focus(win);
+      if (LOWORD(wparam) / 16 < 5) {
+        set_selection_mode(editor, LOWORD(wparam) / 16);
+      }
+      invalidate_window(win);
       return true;
     default:
       return false;

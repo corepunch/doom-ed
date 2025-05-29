@@ -30,7 +30,7 @@ void init_windows(void) {
   //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
 //  create_window("Inspector", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, &editor);
   
-  window_t *stackview = create_window("Sidebar", WINDOW_NOFILL, MAKERECT(320, 16, 150, 320), NULL, win_stack, NULL);
+  window_t *stackview = create_window("Sidebar", WINDOW_NOFILL, MAKERECT(320, 16, 155, 320), NULL, win_stack, NULL);
   show_window(stackview, true);
   send_message(stackview, ST_ADDWINDOW, 0, create_window("Toolbar", WINDOW_NOTRAYBUTTON, MAKERECT(16, 16, 150, 16), NULL, win_toolbar, &editor));
   send_message(stackview, ST_ADDWINDOW, 0, create_window("Inspector", WINDOW_NOTRAYBUTTON, MAKERECT(200, 20, 150, 300), NULL, win_sector, &editor));
