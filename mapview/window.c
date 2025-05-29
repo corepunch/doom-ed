@@ -117,6 +117,14 @@ void set_viewport(window_t const *win) {
   glScissor(vp_x, vp_y, vp_w, vp_h);
 }
 
+static void paint_window_stencil(window_t const *w) {
+  int p = 1;
+  int t = (w->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
+  glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
+  glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
+  draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
+}
+
 static void repaint_stencil(void) {
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
@@ -125,14 +133,10 @@ static void repaint_stencil(void) {
   glClearStencil(0);
   glClear(GL_STENCIL_BUFFER_BIT);
   glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-  for (window_t const *w = windows; w; w = w->next) {
+  for (window_t *w = windows; w; w = w->next) {
     if (!w->visible)
       continue;
-    glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
-    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
-    int p = 1;
-    int t = (w->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
-    draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
+    send_message(w, WM_PAINTSTENCIL, 0, NULL);
   }
   glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
   glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
@@ -205,6 +209,7 @@ static void invalidate_overlaps(window_t *win) {
 }
 
 void move_window(window_t *win, int x, int y) {
+  post_message(win, WM_RESIZE, 0, NULL);
   post_message(win, WM_REFRESHSTENCIL, 0, NULL);
 
   invalidate_overlaps(win);
@@ -215,14 +220,14 @@ void move_window(window_t *win, int x, int y) {
 }
 
 void resize_window(window_t *win, int new_w, int new_h) {
-  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
   post_message(win, WM_RESIZE, 0, NULL);
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
 
   invalidate_overlaps(win);
   invalidate_window(win);
 
-  if (new_w > 0) _resizing->frame.w = new_w;
-  if (new_h > 0) _resizing->frame.h = new_h;
+  win->frame.w = new_w > 0 ? new_w : win->frame.w;
+  win->frame.h = new_h > 0 ? new_h : win->frame.h;
 }
 
 static void remove_from_global_list(window_t *win) {
@@ -261,6 +266,14 @@ static void remove_from_global_queue(window_t *win) {
   }
 }
 
+void clear_window_children(window_t *win) {
+  for (window_t *item = win->children, *next = item ? item->next : NULL;
+       item; item = next, next = next?next->next:NULL) {
+    destroy_window(item);
+  }
+  win->children = NULL;
+}
+
 void destroy_window(window_t *win) {
   post_message((window_t*)1, WM_REFRESHSTENCIL, 0, NULL);
   invalidate_overlaps(win);
@@ -273,6 +286,7 @@ void destroy_window(window_t *win) {
   remove_from_global_list(win);
   remove_from_global_hooks(win);
   remove_from_global_queue(win);
+  clear_window_children(win);
   free(win);
 }
 
@@ -286,17 +300,7 @@ window_t *find_window(int x, int y) {
     int t = win->flags & WINDOW_NOTITLE ? 0 : TITLEBAR_HEIGHT;
     if (CONTAINS(x, y, win->frame.x, win->frame.y-t, win->frame.w, win->frame.h+t)) {
       last = win;
-    }
-    for (window_t *item = win->children; item; item = item->next) {
-      if (!item->notabstop &&
-          CONTAINS(x, y,
-                   win->frame.x + item->frame.x,
-                   win->frame.y + item->frame.y,
-                   item->frame.w,
-                   item->frame.h))
-      {
-        last = item;
-      }
+      send_message(win, WM_HITTEST, MAKEDWORD(x - win->frame.x, y - win->frame.y), &last);
     }
   }
   return last;
@@ -384,15 +388,14 @@ window_t* find_next_tab_stop(window_t *win, bool allow_current) {
   if (!win) return false;
   window_t *next;
   if ((next = find_next_tab_stop(win->children, true))) return next;
-  if (!win->notabstop && win->visible && allow_current) return win;
+  if (!win->notabstop && (win->parent || win->visible) && allow_current) return win;
   if ((next = find_next_tab_stop(win->next, true))) return next;
   return allow_current ? NULL : find_next_tab_stop(win->parent, false);
 }
 
 window_t* find_prev_tab_stop(window_t* win) {
   window_t *it = (win = (win->parent ? win : find_next_tab_stop(win, false)));
-  for (window_t *next = find_next_tab_stop(it, false);
-       next != win;
+  for (window_t *next = find_next_tab_stop(it, false); next != win;
        it = next, next = find_next_tab_stop(next, false));
   return it;
 }
@@ -619,6 +622,10 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         if (!(win->flags&WINDOW_NOTITLE)) {
           draw_window_controls(win);
         }
+        if (!(win->flags&WINDOW_NOTITLE)) {
+          // fill_rect(0x40ffffff, frame->x+frame->w-TITLEBAR_HEIGHT, frame->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
+          draw_text_small(win->title, frame->x+2, window_title_bar_y(win), -1);
+        }
         break;
       case WM_PAINT:
         glStencilFunc(GL_EQUAL, get_root_window(win)->id, 0xFF);
@@ -629,18 +636,11 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
                        root->frame.h + root->scroll[1]);
         break;
     }
-    value = win->proc(win, msg, wparam, lparam);
-    if (!value) {
+    if (!(value = win->proc(win, msg, wparam, lparam))) {
       switch (msg) {
         case WM_PAINT:
           for (window_t *sub = win->children; sub; sub = sub->next) {
             sub->proc(sub, WM_PAINT, wparam, lparam);
-          }
-          break;
-        case WM_NCPAINT:
-          if (!(win->flags&WINDOW_NOTITLE)) {
-            // fill_rect(0x40ffffff, frame->x+frame->w-TITLEBAR_HEIGHT, frame->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
-            draw_text_small(win->title, frame->x+2, window_title_bar_y(win), -1);
           }
           break;
         case WM_WHEEL:
@@ -652,6 +652,18 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           }
           if (win->flags & (WINDOW_VSCROLL|WINDOW_HSCROLL)) {
             invalidate_window(win);
+          }
+          break;
+        case WM_PAINTSTENCIL:
+          paint_window_stencil(win);
+          break;
+        case WM_HITTEST:
+          for (window_t *item = win->children; item; item = item->next) {
+            rect_t r = item->frame;
+            uint16_t x = LOWORD(wparam), y = HIWORD(wparam);
+            if (!item->notabstop && CONTAINS(x, y, r.x, r.y, r.w, r.h)) {
+              *(window_t **)lparam = item;
+            }
           }
           break;
       }
@@ -896,14 +908,16 @@ result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       }
       return true;
     case WM_LBUTTONUP:
-      set_focus(win);
-      win->editing = true;
-      win->cursor_pos = 0;
-      for (int i = 0; i <= strlen(win->title); i++) {
-        int x1 = win->frame.x+PADDING+strnwidth(win->title, i);
-        int x2 = win->frame.x+PADDING+strnwidth(win->title, win->cursor_pos);
-        if (abs((int)LOWORD(wparam) - x1) < abs((int)LOWORD(wparam) - x2)) {
-          win->cursor_pos = i;
+      if (_focused == win) {
+        invalidate_window(win);
+        win->editing = true;
+        win->cursor_pos = 0;
+        for (int i = 0; i <= strlen(win->title); i++) {
+          int x1 = win->frame.x+PADDING+strnwidth(win->title, i);
+          int x2 = win->frame.x+PADDING+strnwidth(win->title, win->cursor_pos);
+          if (abs((int)LOWORD(wparam) - x1) < abs((int)LOWORD(wparam) - x2)) {
+            win->cursor_pos = i;
+          }
         }
       }
       return true;
@@ -996,6 +1010,69 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
                   win->frame.y+(win->frame.h-tex->height*scale)/2,
                   tex->width * scale,
                   tex->height * scale);
+      }
+      return true;
+  }
+  return false;
+}
+
+typedef struct {
+  window_t *items[16];
+  uint8_t num_items;
+} stack_data_t;
+
+result_t win_stack(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  stack_data_t *data = win->userdata;
+  switch (msg) {
+    case WM_CREATE:
+      data = malloc(sizeof(stack_data_t));
+      memset(data, 0, sizeof(stack_data_t));
+      win->userdata = data;
+      return true;
+    case WM_DESTROY:
+      free(win->userdata);
+      return true;
+    case WM_NCPAINT:
+      for (int i = 0; i < data->num_items; i++) {
+        send_message(data->items[i], WM_NCPAINT, 0, NULL);
+      }
+      return false;
+    case WM_PAINT:
+      for (int i = 0; i < data->num_items; i++) {
+        send_message(data->items[i], WM_PAINT, 0, NULL);
+      }
+      return true;
+    case WM_PAINTSTENCIL:
+      paint_window_stencil(win);
+      for (int i = 0; i < data->num_items; i++) {
+        paint_window_stencil(data->items[i]);
+      }
+      return true;
+    case WM_HITTEST:
+      for (int i = 0, y = 1; i < data->num_items; i++) {
+        window_t *item = data->items[i];
+        int bottom = y + item->frame.h + 2;
+        int mx = LOWORD(wparam), my = HIWORD(wparam);
+        if (my > y && my < bottom) {
+          *((window_t **)lparam) = item;
+          uint32_t wparam = MAKEDWORD(mx, my - item->frame.y + win->frame.y);
+          send_message(item, WM_HITTEST, wparam, lparam);
+        }
+        y = bottom;
+      }
+      return true;
+    case ST_ADDWINDOW:
+      data->items[data->num_items] = lparam;
+      data->items[data->num_items]->flags |= WINDOW_NOTITLE | WINDOW_NORESIZE;
+      data->num_items++;
+      post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+      // fall through
+    case WM_RESIZE:
+      for (int i = 0, y = win->frame.y + 1; i < data->num_items; i++) {
+        window_t *item = data->items[i];
+        move_window(item, win->frame.x + 1, y);
+        resize_window(item, win->frame.w-2, item->frame.h);
+        y += item->frame.h + 2;
       }
       return true;
   }

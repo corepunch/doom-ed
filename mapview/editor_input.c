@@ -171,18 +171,16 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void set_selection_mode(editor_state_t *editor, int mode) {
-  rect_t rect = editor->inspector->frame;
-  editor->sel_mode = mode;
-  void *func = NULL;
-  switch (mode) {
-    case edit_things: func = win_thing; break;
-    case edit_sectors: func = win_sector; break;
-    case edit_lines: func = win_line; break;
+  switch ((editor->sel_mode = mode)) {
+    case edit_things: editor->inspector->proc = win_thing; break;
+    case edit_sectors: editor->inspector->proc = win_sector; break;
+    case edit_lines: editor->inspector->proc = win_line; break;
     default:
       return;
   }
-  destroy_window(editor->inspector);
-  create_window("Tool", 0, &rect, NULL, func, editor);
+  clear_window_children(editor->inspector);
+  post_message(editor->inspector, WM_CREATE, 0, &editor);
+  invalidate_window(editor->inspector);
 }
 
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {

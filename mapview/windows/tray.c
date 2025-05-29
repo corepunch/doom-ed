@@ -16,7 +16,7 @@ void create_button(window_t *tray, window_t *window) {
 }
 
 static void on_win_created(window_t *win, uint32_t msg, uint32_t wparam, void *lparam, void *userdata) {
-  if (!win->parent) {
+  if (!win->parent && !(win->flags&WINDOW_NOTRAYBUTTON)) {
     create_button(userdata, win);
   }
 }

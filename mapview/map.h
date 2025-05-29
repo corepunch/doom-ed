@@ -50,8 +50,8 @@ if ((map)->name) free((map)->name); \
 
 #define THUMBNAIL_SIZE 64
 
-#define sensitivity_x 0.075f // Adjust sensitivity as needed
-#define sensitivity_y 0.125f // Adjust sensitivity as needed
+#define sensitivity_x 0.125f // Adjust sensitivity as needed
+#define sensitivity_y 0.175f // Adjust sensitivity as needed
 
 typedef enum {
   icon8_minus,
@@ -110,8 +110,10 @@ enum {
   WM_NCLBUTTONUP,
   WM_PAINT,
   WM_REFRESHSTENCIL,
+  WM_PAINTSTENCIL,
   WM_SETFOCUS,
   WM_KILLFOCUS,
+  WM_HITTEST,
   WM_COMMAND,
   WM_TEXTINPUT,
   WM_WHEEL,
@@ -137,6 +139,7 @@ enum {
   CB_GETCURSEL,
   CB_SETCURSEL,
   CB_GETLBTEXT,
+  ST_ADDWINDOW,
 };
 
 #define CB_ERR -1
@@ -456,6 +459,7 @@ typedef struct {
 #define WINDOW_ALWAYSONTOP 64
 #define WINDOW_ALWAYSINBACK 128
 #define WINDOW_HIDDEN 256
+#define WINDOW_NOTRAYBUTTON 512
 
 #define TITLEBAR_HEIGHT 12
 #define WINDOW_PADDING 4
@@ -506,6 +510,7 @@ typedef struct window_s {
 window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
 void show_window(window_t *win, bool visible);
 void destroy_window(window_t *win);
+void clear_window_children(window_t *win);
 void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata);
 void load_window_children(window_t *win, windef_t const *def);
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);

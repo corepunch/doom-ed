@@ -54,6 +54,9 @@
          contextName = "draw_sprite:sprites.c">
       </ContextState>
       <ContextState
+         contextName = "win_stack:window.c">
+      </ContextState>
+      <ContextState
          contextName = "init_wad:wad.c">
       </ContextState>
       <ContextState
@@ -70,6 +73,9 @@
       </ContextState>
       <ContextState
          contextName = "allocate_mapside_textures:texture.c">
+      </ContextState>
+      <ContextState
+         contextName = "move_window:window.c">
       </ContextState>
       <ContextState
          contextName = "load_sky_texture:sky.c">

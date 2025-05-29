@@ -345,6 +345,8 @@ int allocate_mapside_textures(void) {
   if (texture_cache->num_textures) {
     memcpy(texture_cache->selected, texture_cache->textures->name, sizeof(texname_t));
   }
+  
+  memcpy(texture_cache->selected, "CASTLE07", 8);
 
   return texture_cache->num_textures;
 }
