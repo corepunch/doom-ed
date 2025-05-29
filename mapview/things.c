@@ -383,3 +383,12 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   }
   return false;
 }
+
+void assign_thing_sector(map_data_t const *map, mapthing_t *thing) {
+  mapsector_t const *sector = find_player_sector(map, thing->x, thing->y);
+  if(sector) {
+    thing->height = sector - map->sectors;
+  } else {
+    thing->height = -1;
+  }
+}

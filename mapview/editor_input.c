@@ -209,6 +209,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         if (editor->move_thing) {
           map->things[editor->hover.thing].x -= world_1[0] - world_2[0];
           map->things[editor->hover.thing].y -= world_1[1] - world_2[1];
+          assign_thing_sector(map, &map->things[editor->hover.thing]);
         } else {
           editor->camera[0] += world_1[0] - world_2[0];
           editor->camera[1] += world_1[1] - world_2[1];

@@ -539,6 +539,7 @@ int allocate_flat_textures(void);
 
 uint8_t* load_patch(void* patch_lump, int* width, int* height);
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
+void assign_thing_sector(map_data_t const *map, mapthing_t *thing);
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);
 mapside_texture_t const *get_texture(const char* name);
 mapside_texture_t const *get_flat_texture(const char* name);

@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
   allocate_mapside_textures();
   allocate_flat_textures();
 
-//  goto_map("MAP01");
+  goto_map("MAP01");
   
   run();
   

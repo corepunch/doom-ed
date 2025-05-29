@@ -153,12 +153,7 @@ map_data_t load_map(const char* map_name) {
   }
   
   for (int i = 0; i < map.num_things; i++) {
-    mapsector_t const *sector = find_player_sector(&map, map.things[i].x, map.things[i].y);
-    if(sector) {
-      map.things[i].height = sector - map.sectors;
-    } else {
-      map.things[i].height = -1;
-    }
+    assign_thing_sector(&map, &map.things[i]);
   }
   
   return map;
