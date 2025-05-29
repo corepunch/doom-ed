@@ -467,7 +467,8 @@ void handle_windows(void) {
         }
         break;
       case SDL_MOUSEWHEEL:
-        if ((win = find_window(SCALE_POINT(event.wheel.mouseX),
+        if ((win = _captured) ||
+            (win = find_window(SCALE_POINT(event.wheel.mouseX),
                                SCALE_POINT(event.wheel.mouseY))))
         {
           send_message(win, WM_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);

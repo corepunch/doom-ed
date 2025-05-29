@@ -199,15 +199,20 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return true;
     case WM_MOUSEMOVE:
       track_mouse(win);
-      if (editor->move_camera == 2) {
+      if (editor->move_camera == 2 || editor->move_thing) {
         int16_t move_cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
         vec3 world_1, world_2;
         mat4 mvp;
         get_editor_mvp(editor, mvp);
         get_mouse_position(editor, editor->cursor, mvp, world_1);
         get_mouse_position(editor, move_cursor, mvp, world_2);
-        editor->camera[0] += world_1[0] - world_2[0];
-        editor->camera[1] += world_1[1] - world_2[1];
+        if (editor->move_thing) {
+          map->things[editor->hover.thing].x -= world_1[0] - world_2[0];
+          map->things[editor->hover.thing].y -= world_1[1] - world_2[1];
+        } else {
+          editor->camera[0] += world_1[0] - world_2[0];
+          editor->camera[1] += world_1[1] - world_2[1];
+        }
         editor->cursor[0] = LOWORD(wparam);
         editor->cursor[1] = HIWORD(wparam);
       } else {
@@ -273,6 +278,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       if (editor->move_camera == 2) {
         editor->move_camera = 1;
       }
+      editor->move_thing = 0;
       return true;
     case WM_LBUTTONDOWN:
       if (editor->move_camera > 0) {
@@ -313,6 +319,20 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           break;
         case edit_things:
           editor->selected.thing = editor->hover.thing;
+          if (editor->hover.thing == 0xFFFF) {
+            int16_t cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
+            vec3 world;
+            mat4 mvp;
+            get_editor_mvp(editor, mvp);
+            get_mouse_position(editor, cursor, mvp, world);
+            add_thing(map, (mapthing_t){
+              .x = world[0],
+              .y = world[1],
+              .type = editor->selected_thing_type,
+            });
+          } else {
+            editor->move_thing = 1;
+          }
           invalidate_window(win);
           break;
         case edit_sectors:

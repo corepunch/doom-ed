@@ -209,19 +209,26 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
     if (thing->height == -1) {
       continue; // Skip if not in any sector
     }
-
-    mapsector_t const *sector = &map->sectors[thing->height];
-
-    // Calculate distance to player (for potential culling)
-//    float dist_to_player = dist_sq(player->x, player->y, thing->x, thing->y);
     
-    // Simple culling - skip if too far away
-//    if (dist_to_player > 100000.0f) { // Adjust threshold as needed
-//      continue;
-//    }
+    float z_pos = 0;
+    float light = 1;
+
+    if (thing->height < map->num_sectors) {
+      mapsector_t const *sector = &map->sectors[thing->height];
+      
+      // Calculate distance to player (for potential culling)
+      //    float dist_to_player = dist_sq(player->x, player->y, thing->x, thing->y);
+      
+      // Simple culling - skip if too far away
+      //    if (dist_to_player > 100000.0f) { // Adjust threshold as needed
+      //      continue;
+      //    }
+      
+      // Calculate thing height (based on floor height)
+      z_pos = sector->floorheight;
+      light = sector->lightlevel / 255.0f;
+    }
     
-    // Calculate thing height (based on floor height)
-    float z_pos = sector->floorheight;
     // Get appropriate sprite name based on thing type and angle
     sprite_t* sprite = get_thing_sprite_name(thing->type, thing->angle);
     // Set up matrices for this thing
@@ -254,7 +261,6 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
     glUniform2f(glGetUniformLocation(renderer->program, "scale"), sprite->width, sprite->height);
     
     // Set light level
-    float light = sector->lightlevel / 255.0f;
     glUniform1f(glGetUniformLocation(renderer->program, "light"), rotate?light*1.5:1.25);
     
     // Bind texture
@@ -345,6 +351,11 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           float scale = fminf(1,fminf(((float)THUMBNAIL_SIZE) / spr->width,
                                       ((float)THUMBNAIL_SIZE) / spr->height));
           draw_rect(spr->texture,LOWORD(pos),HIWORD(pos),spr->width * scale,spr->height * scale);
+          mobjinfo_t const *mobj = &ed_objs[mobjindex];
+          if (editor->selected_thing_type == mobj->doomednum) {
+            extern int selection_tex;
+            draw_rect_ex(selection_tex, LOWORD(pos), HIWORD(pos), spr->width * scale, spr->height * scale, true, 1);
+          }
         }
       }
       break;
@@ -356,15 +367,17 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       int texture_idx =
       get_texture_at_point(win->userdata, LOWORD(wparam), HIWORD(wparam));
       if (texture_idx >= 0) {
+        mobjinfo_t const *mobj = &ed_objs[texture_idx];
 //        printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
-        if (editor->selected.thing != 0xFFFF) {
-          mobjinfo_t const *mobj = &ed_objs[texture_idx];
+        if (editor->selected.thing < game.map.num_things) {
           game.map.things[editor->selected.thing].type = mobj->doomednum;
           invalidate_window(editor->window);
         }
+        
+        editor->selected_thing_type = mobj->doomednum;
 //        memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
       }
-//      invalidate_window(win);
+      invalidate_window(win);
       return true;
     }
   }

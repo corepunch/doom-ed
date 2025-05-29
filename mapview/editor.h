@@ -38,10 +38,12 @@ typedef struct {
   bool drawing;          // Currently drawing a sector?
   bool dragging;          // Currently dragging a vertex?
   int move_camera;
+  int move_thing;
   mapvertex_t draw_points[MAX_DRAW_POINTS]; // Points for current sector being drawn
   int num_draw_points;   // Number of points in current sector
   editor_selection_t hover, selected;
   int sel_mode;
+  int selected_thing_type;
   float scale;
   uint32_t vao, vbo;
 } editor_state_t;
@@ -75,6 +77,7 @@ float closest_point_on_line(float point_x, float point_y,
                             float *t_param);
 
 
+uint16_t add_thing(map_data_t *map, mapthing_t thing);
 uint16_t add_vertex(map_data_t *map, mapvertex_t vertex);
 uint16_t add_linedef(map_data_t *map, uint16_t start, uint16_t end,
                      uint16_t front_side, uint16_t back_side);

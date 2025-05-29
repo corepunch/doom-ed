@@ -85,6 +85,18 @@ uint16_t add_vertex(map_data_t *map, mapvertex_t vertex) {
   return index;
 }
 
+// Add a new thing to the map
+uint16_t add_thing(map_data_t *map, mapthing_t thing) {
+  CHECK_CAPACITY(mapthing_t, things);
+  RESIZE_ARRAY(mapthing_t, things, map->num_things + 1);
+  
+  uint16_t index = map->num_things;
+  map->things[index] = thing;
+  map->num_things++;
+  
+  return index;
+}
+
 // Add a new linedef to the map
 uint16_t add_linedef(map_data_t *map, uint16_t start, uint16_t end,
                             uint16_t front_side, uint16_t back_side) {
