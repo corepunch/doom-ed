@@ -394,7 +394,7 @@ result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       int texture_idx =
       get_texture_at_point(udata->layout, LOWORD(wparam) / SCALE, HIWORD(wparam) / SCALE);
       if (texture_idx >= 0) {
-        puts(udata->cache->textures[texture_idx].name);
+//        puts(udata->cache->textures[texture_idx].name);
         memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
       }
       invalidate_window(win);

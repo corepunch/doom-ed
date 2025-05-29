@@ -179,7 +179,7 @@ void set_selection_mode(editor_state_t *editor, int mode) {
       return;
   }
   clear_window_children(editor->inspector);
-  post_message(editor->inspector, WM_CREATE, 0, &editor);
+  post_message(editor->inspector, WM_CREATE, 0, editor);
   invalidate_window(editor->inspector);
 }
 

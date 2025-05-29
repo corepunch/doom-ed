@@ -6,6 +6,7 @@
 #include "map.h"
 
 #define init_wall_vertex(X, Y, Z, U, V) \
+write_line=true;\
 map->walls.vertices[map->walls.num_vertices++] = \
 (wall_vertex_t) {X,Y,Z,U*dist+u_offset,V*height+v_offset,n[0],n[1],n[2],color}
 
@@ -57,86 +58,84 @@ void build_wall_vertex_buffer(map_data_t *map) {
     mapvertex_t const *v1 = &map->vertices[linedef->start];
     mapvertex_t const *v2 = &map->vertices[linedef->end];
     int8_t n[3];
+    bool write_line = false;
     float dx = v2->x - v1->x;
     float dy = v2->y - v1->y;
     float dist = compute_normal_packed(-dx, -dy, n);
 
     // Skip if invalid front sidedef
-    if (linedef->sidenum[0] >= map->num_sidedefs) {
-      int32_t color = 0x00ff00ff;
-      float height = 0;
-      float u_offset = 0;
-      float v_offset = 0;
-      init_wall_vertex(v1->x, v1->y, 0, 0.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, 0, 1.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, 0, 1.0f, 0.0f);
-      init_wall_vertex(v1->x, v1->y, 0, 0.0f, 0.0f);
-      continue;
-    }
+//    if (linedef->sidenum[0] >= map->num_sidedefs) {
     
-    mapsidedef2_t *front = &map->walls.sections[linedef->sidenum[0]];
+    mapsidedef2_t *front = NULL;
     mapsidedef2_t *back = NULL;
     bool two_sided = linedef->sidenum[1] != 0xFFFF;
-    int32_t color = two_sided ? 0x00ffff00 : 0;
+    int32_t color = two_sided ? 0x00e0b000 : 0x00408040;
 
+    // Check if there's a back side to this linedef
+    if (linedef->sidenum[0] != 0xFFFF && linedef->sidenum[0] < map->num_sidedefs) {
+      front = &map->walls.sections[linedef->sidenum[0]];
+    }
+    
     // Check if there's a back side to this linedef
     if (linedef->sidenum[1] != 0xFFFF && linedef->sidenum[1] < map->num_sidedefs) {
       back = &map->walls.sections[linedef->sidenum[1]];
     }
     
-    float u_offset = front->def->textureoffset;
-    float v_offset = front->def->rowoffset;
-    
     // Process front side
-    // Add vertices for upper texture (if ceiling heights differ)
-    if (back && front->sector->ceilingheight > back->sector->ceilingheight) {
-      // Store vertex_start in the appropriate structure (this would need to be added to sidedef)
-      front->upper_section.vertex_start = map->walls.num_vertices;
-      front->upper_section.vertex_count = 4;
-      front->upper_section.texture = get_texture(front->def->toptexture);
+    if (front) {
+      float u_offset = front->def->textureoffset;
+      float v_offset = front->def->rowoffset;
       
-      float height = fabs((float)(back->sector->ceilingheight - front->sector->ceilingheight));
+      // Add vertices for upper texture (if ceiling heights differ)
+      if (back && front->sector->ceilingheight > back->sector->ceilingheight) {
+        // Store vertex_start in the appropriate structure (this would need to be added to sidedef)
+        front->upper_section.vertex_start = map->walls.num_vertices;
+        front->upper_section.vertex_count = 4;
+        front->upper_section.texture = get_texture(front->def->toptexture);
+        
+        float height = fabs((float)(back->sector->ceilingheight - front->sector->ceilingheight));
+        
+        init_wall_vertex(v1->x, v1->y, back->sector->ceilingheight, 0.0f, 1.0f);
+        init_wall_vertex(v2->x, v2->y, back->sector->ceilingheight, 1.0f, 1.0f);
+        init_wall_vertex(v2->x, v2->y, front->sector->ceilingheight, 1.0f, 0.0f);
+        init_wall_vertex(v1->x, v1->y, front->sector->ceilingheight, 0.0f, 0.0f);
+      }
       
-      init_wall_vertex(v1->x, v1->y, back->sector->ceilingheight, 0.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, back->sector->ceilingheight, 1.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, front->sector->ceilingheight, 1.0f, 0.0f);
-      init_wall_vertex(v1->x, v1->y, front->sector->ceilingheight, 0.0f, 0.0f);
-    }
-    
-    // Add vertices for lower texture (if floor heights differ)
-    if (back && front->sector->floorheight < back->sector->floorheight) {
-      front->lower_section.vertex_start = map->walls.num_vertices;
-      front->lower_section.vertex_count = 4;
-      front->lower_section.texture = get_texture(front->def->bottomtexture);
+      // Add vertices for lower texture (if floor heights differ)
+      if (back && front->sector->floorheight < back->sector->floorheight) {
+        front->lower_section.vertex_start = map->walls.num_vertices;
+        front->lower_section.vertex_count = 4;
+        front->lower_section.texture = get_texture(front->def->bottomtexture);
+        
+        float height = fabs((float)(back->sector->floorheight - front->sector->floorheight));
+        
+        init_wall_vertex(v1->x, v1->y, front->sector->floorheight, 0.0f, 1.0f);
+        init_wall_vertex(v2->x, v2->y, front->sector->floorheight, 1.0f, 1.0f);
+        init_wall_vertex(v2->x, v2->y, back->sector->floorheight, 1.0f, 0.0f);
+        init_wall_vertex(v1->x, v1->y, back->sector->floorheight, 0.0f, 0.0f);
+      }
       
-      float height = fabs((float)(back->sector->floorheight - front->sector->floorheight));
-      
-      init_wall_vertex(v1->x, v1->y, front->sector->floorheight, 0.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, front->sector->floorheight, 1.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, back->sector->floorheight, 1.0f, 0.0f);
-      init_wall_vertex(v1->x, v1->y, back->sector->floorheight, 0.0f, 0.0f);
-    }
-    
-    // Add vertices for middle texture
-    if (get_texture(front->def->midtexture)) {
-      front->mid_section.vertex_start = map->walls.num_vertices;
-      front->mid_section.vertex_count = 4;
-      front->mid_section.texture = get_texture(front->def->midtexture);
-      
-      float bottom = back ? MAX(front->sector->floorheight, back->sector->floorheight) : front->sector->floorheight;
-      float top = back ? MIN(front->sector->ceilingheight, back->sector->ceilingheight) : front->sector->ceilingheight;
-      float height = fabs(top - bottom);
-      
-      init_wall_vertex(v1->x, v1->y, bottom, 0.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, bottom, 1.0f, 1.0f);
-      init_wall_vertex(v2->x, v2->y, top, 1.0f, 0.0f);
-      init_wall_vertex(v1->x, v1->y, top, 0.0f, 0.0f);
+      // Add vertices for middle texture
+      if (get_texture(front->def->midtexture)) {
+        front->mid_section.vertex_start = map->walls.num_vertices;
+        front->mid_section.vertex_count = 4;
+        front->mid_section.texture = get_texture(front->def->midtexture);
+        
+        float bottom = back ? MAX(front->sector->floorheight, back->sector->floorheight) : front->sector->floorheight;
+        float top = back ? MIN(front->sector->ceilingheight, back->sector->ceilingheight) : front->sector->ceilingheight;
+        float height = fabs(top - bottom);
+        
+        init_wall_vertex(v1->x, v1->y, bottom, 0.0f, 1.0f);
+        init_wall_vertex(v2->x, v2->y, bottom, 1.0f, 1.0f);
+        init_wall_vertex(v2->x, v2->y, top, 1.0f, 0.0f);
+        init_wall_vertex(v1->x, v1->y, top, 0.0f, 0.0f);
+      }
     }
     
     // Process back side if it exists
     if (back) {
-      u_offset = back->def->textureoffset;
-      v_offset = back->def->rowoffset;
+      float u_offset = back->def->textureoffset;
+      float v_offset = back->def->rowoffset;
       // Add vertices for upper texture (if ceiling heights differ)
       if (back->sector->ceilingheight > front->sector->ceilingheight) {
         back->upper_section.vertex_start = map->walls.num_vertices;
@@ -180,6 +179,17 @@ void build_wall_vertex_buffer(map_data_t *map) {
         init_wall_vertex(v1->x, v1->y, top, 1.0f, 0.0f);
         init_wall_vertex(v2->x, v2->y, top, 0.0f, 0.0f);
       }
+    }
+    
+    if (!write_line) {
+      int32_t color = 0x00ffff00;
+      float height = 0;
+      float u_offset = 0;
+      float v_offset = 0;
+      init_wall_vertex(v1->x, v1->y, 0, 0.0f, 1.0f);
+      init_wall_vertex(v2->x, v2->y, 0, 1.0f, 1.0f);
+      init_wall_vertex(v2->x, v2->y, 0, 1.0f, 0.0f);
+      init_wall_vertex(v1->x, v1->y, 0, 0.0f, 0.0f);
     }
   }
   

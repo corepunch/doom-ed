@@ -65,22 +65,30 @@ void draw_button(int x, int y, int w, int h, bool pressed) {
   }
 }
 
+static void draw_focused(rect_t const *r) {
+  fill_rect(COLOR_FOCUSED, r->x-1, r->y-1, r->w+2, 1);
+  fill_rect(COLOR_FOCUSED, r->x-1, r->y-1, 1, r->h+2);
+  fill_rect(COLOR_FOCUSED, r->x+r->w, r->y, 1, r->h+1);
+  fill_rect(COLOR_FOCUSED, r->x, r->y+r->h, r->w+1, 1);
+}
+
+static void draw_bevel(rect_t const *r) {
+  fill_rect(COLOR_LIGHT_EDGE, r->x-1, r->y-1, r->w+2, 1);
+  fill_rect(COLOR_LIGHT_EDGE, r->x-1, r->y-1, 1, r->h+2);
+  fill_rect(COLOR_DARK_EDGE, r->x+r->w, r->y, 1, r->h+1);
+  fill_rect(COLOR_DARK_EDGE, r->x, r->y+r->h, r->w+1, 1);
+  fill_rect(COLOR_FLARE, r->x-1, r->y-1, 1, 1);
+}
+
 static void draw_panel(window_t const *win) {
   int t = (win->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
   int x = win->frame.x, y = win->frame.y-t;
   int w = win->frame.w, h = win->frame.h+t;
   bool active = _focused == win;
   if (active) {
-    fill_rect(COLOR_FOCUSED, x-1, y-1, w+2, 1);
-    fill_rect(COLOR_FOCUSED, x-1, y-1, 1, h+2);
-    fill_rect(COLOR_FOCUSED, x+w, y, 1, h+1);
-    fill_rect(COLOR_FOCUSED, x, y+h, w+1, 1);
+    draw_focused(MAKERECT(x, y, w, h));
   } else {
-    fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, w+2, 1);
-    fill_rect(COLOR_LIGHT_EDGE, x-1, y-1, 1, h+2);
-    fill_rect(COLOR_DARK_EDGE, x+w, y, 1, h+1);
-    fill_rect(COLOR_DARK_EDGE, x, y+h, w+1, 1);
-    fill_rect(COLOR_FLARE, x-1, y-1, 1, 1);
+    draw_bevel(MAKERECT(x, y, w, h));
   }
   if (!(win->flags & WINDOW_NORESIZE)) {
     int r = RESIZE_HANDLE;
@@ -584,11 +592,9 @@ int window_title_bar_y(window_t const *win) {
 }
 
 void draw_window_controls(window_t *win) {
-  fill_rect(COLOR_PANEL_DARK_BG,
-            win->frame.x,
-            win->frame.y-TITLEBAR_HEIGHT,
-            win->frame.w,
-            TITLEBAR_HEIGHT);
+  rect_t r = win->frame;
+  fill_rect(COLOR_PANEL_DARK_BG, r.x, r.y-TITLEBAR_HEIGHT, r.w, TITLEBAR_HEIGHT);
+//  draw_bevel(MAKERECT(r.x+1, r.y+1-TITLEBAR_HEIGHT, r.w-2, TITLEBAR_HEIGHT-2));
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
   // draw_button(frame->x+frame->w-11, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
