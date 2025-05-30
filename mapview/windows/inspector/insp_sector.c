@@ -87,14 +87,12 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           build_wall_vertex_buffer(&game.map);
           build_floor_vertex_buffer(&game.map);
           invalidate_window(editor->window);
-          invalidate_window(editor->game);
         }
         if (wparam == MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE)) {
           sector->ceilingheight = atoi(((window_t *)lparam)->title);
           build_wall_vertex_buffer(&game.map);
           build_floor_vertex_buffer(&game.map);
           invalidate_window(editor->window);
-          invalidate_window(editor->game);
         }
       }
       return true;

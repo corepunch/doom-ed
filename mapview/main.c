@@ -16,6 +16,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_stack(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void init_windows(void) {
   //  create_window("FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT(0, 0, 128, 64), NULL, win_perf, NULL);
@@ -24,9 +25,10 @@ void init_windows(void) {
   extern editor_state_t editor;
   show_window(create_window("Desktop", WINDOW_NOTITLE|WINDOW_ALWAYSINBACK|WINDOW_NOTRAYBUTTON, MAKERECT(0, 0, screen_width, screen_height), NULL, win_desktop, &editor), true);
   show_window(create_window("Tray", WINDOW_NOTITLE|WINDOW_NOTRAYBUTTON, MAKERECT(0, 0, 0, 0), NULL, win_tray, &editor), true);
-  create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, &editor);
+//  create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, &editor);
   create_window("Editor", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, &editor);
   create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, 128, 256), NULL, win_things, &editor);
+  create_window("Project", WINDOW_VSCROLL, MAKERECT(4, 20, 128, 256), NULL, win_project, NULL);
   //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, &editor);
 //  create_window("Inspector", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, &editor);
   

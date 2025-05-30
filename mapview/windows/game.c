@@ -169,7 +169,7 @@ read_center_pixel(window_t const *win,
 //}
 
 void draw_dungeon(window_t const *win) {
-  void draw_minimap(map_data_t const *, player_t const *);
+  void draw_minimap(map_data_t const *, editor_state_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
   
   if (game.map.num_vertices == 0) {
@@ -249,9 +249,9 @@ void draw_dungeon(window_t const *win) {
 //  }
 
   extern bool mode;
-  if (mode) {
-    draw_minimap(map, player);
-  }
+//  if (mode) {
+    draw_minimap(map, win->userdata, player);
+//  }
 }
 
 extern editor_state_t editor;
@@ -306,6 +306,7 @@ void paint_face(map_data_t *map, bool eyedropper) {
 void handle_scroll(int wheel[], map_data_t *map);
 
 result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern window_t *_focused;
@@ -313,7 +314,6 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      ((editor_state_t *)lparam)->game = win;
       create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
       return true;
     case WM_PAINT:
@@ -355,6 +355,12 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           case SDL_SCANCODE_LSHIFT:
             mode = true;
             break;
+          case SDL_SCANCODE_TAB:
+            set_capture(NULL);
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            win->proc = win_editor;
+            invalidate_window(win);
+            return true;
         }
         return true;
       case WM_KEYUP:
@@ -419,13 +425,19 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           SDL_SetRelativeMouseMode(SDL_TRUE);
         }
         return true;
-//      case WM_KEYDOWN:
-//        switch (wparam) {
+      case WM_KEYDOWN:
+        switch (wparam) {
 //          case SDL_SCANCODE_ESCAPE:
 //            SDL_SetRelativeMouseMode(SDL_FALSE);
 //            //SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
 //            break;
-//        }
+          case SDL_SCANCODE_TAB:
+            set_capture(NULL);
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+            win->proc = win_editor;
+            invalidate_window(win);
+            return true;
+        }
     }
   }
   return false;

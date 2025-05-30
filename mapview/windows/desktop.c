@@ -26,13 +26,14 @@ void create_desktop_tex(void) {
   
   glGenTextures(1, &wallpaper_tex);
   glBindTexture(GL_TEXTURE_2D, wallpaper_tex);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WALLPAPER_SIZE, WALLPAPER_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, texdata);
+//  glTexImage2D(GL_TEXTURE_2D, 0, GL_RED, WALLPAPER_SIZE, WALLPAPER_SIZE, 0, GL_RED, GL_UNSIGNED_BYTE, texdata);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xff302820});
   
   // Swizzle red to all channels
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
-  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_R, GL_RED);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_G, GL_RED);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_B, GL_RED);
+//  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_SWIZZLE_A, GL_RED);
   
   // Filtering + wrap
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
@@ -70,7 +71,6 @@ void draw_wallpaper(void) {
   glDisableVertexAttribArray(3);
   glVertexAttrib4f(3, 0, 0, 0, 0);
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
-  
 //  draw_rect(17, 0, 0, 256, 256);
 }
 

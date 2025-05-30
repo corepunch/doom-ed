@@ -40,7 +40,7 @@ if ((map)->name) free((map)->name); \
 #define SPRITE_SCALE 2
 #define SCALE_POINT(x) ((x)/2)
 #define HEXEN
-#define HIGHLIGHT(light) light//((light)+0.25)
+#define HIGHLIGHT(light) ((light)+0.25)
 #define CONSOLE_PADDING 2
 #define LINE_HEIGHT 8
 #define VGA_WIDTH 320
@@ -569,7 +569,7 @@ int get_flat_texture_index(char const* name);
 float dist_sq(float x1, float y1, float x2, float y2);
 
 map_data_t load_map(const char* map_name);
-void find_all_maps(void);
+void find_all_maps(void (*proc)(const char *, void *), void *parm);
 void print_map_info(map_data_t* map);
 void free_map_data(map_data_t* map);
 

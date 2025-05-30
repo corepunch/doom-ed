@@ -149,6 +149,10 @@ snap_mouse_position(editor_state_t const *editor,
 {
   float world_x, world_y;
   
+  snapped->x = world[0];
+  snapped->y = world[1];
+  return;
+  
   world_x = world[0] + editor->grid_size/2;
   world_y = world[1] - editor->grid_size/2;
   
@@ -169,6 +173,7 @@ static int icon_x(window_t const *win, int i) {
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void set_selection_mode(editor_state_t *editor, int mode) {
   switch ((editor->sel_mode = mode)) {
@@ -181,6 +186,14 @@ void set_selection_mode(editor_state_t *editor, int mode) {
   clear_window_children(editor->inspector);
   post_message(editor->inspector, WM_CREATE, 0, editor);
   invalidate_window(editor->inspector);
+}
+
+static void editor_reset_input(editor_state_t *editor) {
+  editor->drawing = false;
+  editor->dragging = false;
+  editor->move_camera = 0;
+  editor->move_thing = 0;
+  editor->num_draw_points = 0;
 }
 
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
@@ -255,10 +268,10 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       //      invalidate_window(win);
       //      return true;
     case WM_MOUSELEAVE:
-      editor->hover.point = -1;
-      editor->hover.sector = -1;
-      editor->hover.line = -1;
-      editor->hover.thing = -1;
+//      editor->hover.point = -1;
+//      editor->hover.sector = -1;
+//      editor->hover.line = -1;
+//      editor->hover.thing = -1;
       invalidate_window(editor->window);
       invalidate_window(editor->inspector);
       return true;
@@ -376,12 +389,11 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           return true;
       }
       return true;
-
+    case WM_KILLFOCUS:
+      editor_reset_input(editor);
+      return true;
     case WM_KEYDOWN:
       switch (wparam) {
-//        case SDL_SCANCODE_TAB:
-//          toggle_editor_mode(editor);
-//          break;
         case SDL_SCANCODE_W:
         case SDL_SCANCODE_UP:
           // forward_move = 1;
@@ -428,6 +440,13 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         }
         case SDL_SCANCODE_LGUI:
           editor->move_camera = 1;
+          return true;
+        case SDL_SCANCODE_TAB:
+          editor_reset_input(editor);
+          win->proc = win_game;
+          set_capture(win);
+          SDL_SetRelativeMouseMode(SDL_TRUE);
+          invalidate_window(win);
           return true;
       }
       break;

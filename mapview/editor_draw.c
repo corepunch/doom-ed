@@ -329,6 +329,56 @@ void draw_sector_outline(map_data_t const *map, uint16_t index) {
   }
 }
 
+void draw_player_icon(editor_state_t const *editor, const player_t *player) {
+  glUseProgram(ui_prog);
+  glBindVertexArray(editor->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
+  glDisable(GL_DEPTH_TEST);
+
+  glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 0.5f);
+  
+  float angle_rad = glm_rad(player->angle);
+  float input_x = -50 * cos(angle_rad);
+  float input_y =  50 * sin(angle_rad);
+  
+  wall_vertex_t verts[2] = { { player->x, player->y }, { player->x+input_x, player->y+input_y } };
+  
+  //  wall_vertex_t verts[3] = {
+  //    { player->x + player->points[1][0], player->y + player->points[1][1] },
+  //    { player->x, player->y },
+  //    { player->x + player->points[0][0], player->y + player->points[0][1] },
+  //  };
+  
+  glBindTexture(GL_TEXTURE_2D, white_tex);
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
+  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
+  glDrawArrays(GL_LINE_STRIP, 0, 2);
+  glPointSize(4);
+  glDrawArrays(GL_POINTS, 0, 1);
+}
+
+static viewdef_t setup_matrix(vec4 *mvp, const player_t *player) {
+  extern GLuint world_prog;
+  glUseProgram(world_prog);
+  glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, (const float*)mvp);
+  glUniform3f(world_prog_viewPos, 0,0,-10001);//player->x, player->y, player->z);
+  
+  viewdef_t viewdef = {.frame=frame++};
+  memcpy(viewdef.mvp, mvp, sizeof(mat4));
+  memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
+  viewdef.viewpos[2] = -100000;
+  glm_frustum_planes(mvp, viewdef.frustum);
+  
+  // Set up rendering
+  glUseProgram(ui_prog);
+  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, (const float*)mvp);
+  
+  glDisable(GL_DEPTH_TEST);
+  
+  return viewdef;
+}
+
 // Draw the editor UI
 void
 draw_editor(map_data_t const *map,
@@ -350,24 +400,7 @@ draw_editor(map_data_t const *map,
 //  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
   
   
-  extern GLuint world_prog;
-  glUseProgram(world_prog);
-  glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, (const float*)mvp);
-  glUniform3f(world_prog_viewPos, 0,0,-10001);//player->x, player->y, player->z);
-
-  void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate);
-
-  viewdef_t viewdef={.frame=frame++};
-  memcpy(viewdef.mvp, mvp, sizeof(mat4));
-  memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
-  viewdef.viewpos[2] = -100000;
-  glm_frustum_planes(mvp, viewdef.frustum);
-  
-  // Set up rendering
-  glUseProgram(ui_prog);
-  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, (const float*)mvp);
-  
-  glDisable(GL_DEPTH_TEST);
+  viewdef_t viewdef = setup_matrix(mvp, player);
   
   // Draw grid
 //  draw_grid(editor->grid_size, player, 64);
@@ -380,9 +413,7 @@ draw_editor(map_data_t const *map,
   glBindVertexArray(editor->vao);
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
 
-  // Draw sector being created
-//  draw_current_sector(editor);
-
+  void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate);
   draw_things(map, &viewdef, false);
   
   glUseProgram(ui_prog);
@@ -496,26 +527,58 @@ draw_editor(map_data_t const *map,
   }
   
 draw_player:
+
+  draw_player_icon(editor, player);
+}
+
+#define MINIMAP_SCALE 2
+#define ROTATE_MAP
+
+void minimap_matrix(player_t const *player, mat4 mvp) {
+  mat4 proj, view;
   
-  glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 0.5f);
+  float w = SCREEN_WIDTH*MINIMAP_SCALE;
+  float h = SCREEN_HEIGHT*MINIMAP_SCALE;
   
-  float angle_rad = glm_rad(player->angle);
-  float input_x = -50 * cos(angle_rad);
-  float input_y =  50 * sin(angle_rad);
+  glm_ortho(w, -w, h, -h, -1000, 1000, proj);
+  
+  // Set up view matrix to center on player
+#ifndef ROTATE_MAP
+  glm_translate_make(view, (vec3){ -player->x, -player->y, 0.0f });
+#else
+  mat4 trans, rot;
+  // Set up the translation matrix to center on the player
+  glm_translate_make(trans, (vec3){ -player->x, -player->y, 0.0f });
+  
+  // Step 2: Rotate the world so player's angle is at the top
+  float angle_rad = glm_rad(player->angle+90); // rotate counter-clockwise to make player face up
+  glm_rotate_make(rot, angle_rad, (vec3){0.0f, 0.0f, 1.0f});
+  
+  // Step 3: Combine rotation and translation
+  glm_mat4_mul(rot, trans, view); // view = rot * trans
+#endif
+  // Step 4: Combine with projection
+  glm_mat4_mul(proj, view, mvp);  // mvp = proj * view
+}
 
-  wall_vertex_t verts[2] = { { player->x, player->y }, { player->x+input_x, player->y+input_y } };
-
-//  wall_vertex_t verts[3] = {
-//    { player->x + player->points[1][0], player->y + player->points[1][1] },
-//    { player->x, player->y },
-//    { player->x + player->points[0][0], player->y + player->points[0][1] },
-//  };
-
-  glBindTexture(GL_TEXTURE_2D, white_tex);
-  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-  glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
-  glDrawArrays(GL_LINE_STRIP, 0, 2);
-  glPointSize(4);
-  glDrawArrays(GL_POINTS, 0, 1);
+void draw_minimap(map_data_t const *map,
+                  editor_state_t const *editor,
+                  player_t const *player) {
+  
+  mat4 mvp;
+//  minimap_matrix(player, mvp);
+  get_editor_mvp(editor, mvp);
+  
+  glUseProgram(ui_prog);
+  glBindTexture(GL_TEXTURE_2D, no_tex);
+  glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, (const float*)mvp);
+  glUniform4f(ui_prog_color, 1.0f, 1.0f, 1.0f, 0.25f);
+  glDisable(GL_DEPTH_TEST);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+  glBindVertexArray(map->walls.vao);
+  glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
+  glDisable(GL_BLEND);
+  
+  draw_player_icon(editor, player);
 }

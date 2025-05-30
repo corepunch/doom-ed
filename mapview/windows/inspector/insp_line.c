@@ -110,7 +110,6 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           build_wall_vertex_buffer(&game.map); \
           build_floor_vertex_buffer(&game.map); \
           invalidate_window(editor->window); \
-          invalidate_window(editor->game); \
         }
         SET_OFFSET(ID_LINE_FRONT_X, 0, textureoffset);
         SET_OFFSET(ID_LINE_FRONT_Y, 0, rowoffset);

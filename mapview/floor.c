@@ -413,17 +413,17 @@ void draw_floors(map_data_t const *map,
   
   extern int pixel;
   glCullFace(GL_BACK);
-  //  if (CHECK_PIXEL(pixel, FLOOR, sector - map->sectors)) {
-  //    draw_textured_surface(&sec->floor, HIGHLIGHT(light), GL_TRIANGLES);
-  //  } else {
-  draw_textured_surface(&sec->floor, light, GL_TRIANGLES);
-  //  }
+  if (CHECK_PIXEL(pixel, FLOOR, sector - map->sectors)) {
+    draw_textured_surface(&sec->floor, HIGHLIGHT(light), GL_TRIANGLES);
+  } else {
+    draw_textured_surface(&sec->floor, light, GL_TRIANGLES);
+  }
   glCullFace(GL_FRONT);
-  //  if (CHECK_PIXEL(pixel, CEILING, sector - map->sectors)) {
-  //    draw_textured_surface(&sec->ceiling, HIGHLIGHT(light), GL_TRIANGLES);
-  //  } else {
-  draw_textured_surface(&sec->ceiling, light, GL_TRIANGLES);
-  //  }
+  if (CHECK_PIXEL(pixel, CEILING, sector - map->sectors)) {
+    draw_textured_surface(&sec->ceiling, HIGHLIGHT(light), GL_TRIANGLES);
+  } else {
+    draw_textured_surface(&sec->ceiling, light, GL_TRIANGLES);
+  }
   glCullFace(GL_BACK);
   
   draw_walls(map, sector, viewdef);

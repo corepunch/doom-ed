@@ -98,10 +98,10 @@ bool is_map_block_valid(filelump_t* dir, int index, int total_lumps) {
   return true;
 }
 
-void find_all_maps(void) {
-  for (int i = 0; i < wad.num_lumps - 10; i++) {
+void find_all_maps(void (*proc)(const char *, void *), void *parm) {
+  for (int i = 0; i < wad.num_lumps; i++) {
     if (is_map_block_valid(wad.directory, i, wad.num_lumps)) {
-      printf("Found map: %s\n", wad.directory[i].name);
+      proc(wad.directory[i].name, parm);
     }
   }
 }

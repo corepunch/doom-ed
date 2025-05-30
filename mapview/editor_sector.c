@@ -132,12 +132,14 @@ uint16_t add_sidedef(map_data_t *map, uint16_t sector_index) {
   };
   
   // Set default textures
-  map->sidedefs[map->num_sidedefs].toptexture[0] = '-';
-  map->sidedefs[map->num_sidedefs].toptexture[1] = '\0';
-  map->sidedefs[map->num_sidedefs].bottomtexture[0] = '-';
-  map->sidedefs[map->num_sidedefs].bottomtexture[1] = '\0';
+//  map->sidedefs[map->num_sidedefs].toptexture[0] = '-';
+//  map->sidedefs[map->num_sidedefs].toptexture[1] = '\0';
+//  map->sidedefs[map->num_sidedefs].bottomtexture[0] = '-';
+//  map->sidedefs[map->num_sidedefs].bottomtexture[1] = '\0';
   
   strncpy(map->sidedefs[map->num_sidedefs].midtexture, get_selected_texture(), 8);
+  strncpy(map->sidedefs[map->num_sidedefs].toptexture, get_selected_texture(), 8);
+  strncpy(map->sidedefs[map->num_sidedefs].bottomtexture, get_selected_texture(), 8);
 
   return map->num_sidedefs++;
 }
