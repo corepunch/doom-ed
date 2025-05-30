@@ -71,38 +71,39 @@ mapsector_t const *find_player_sector(map_data_t const *map, int x, int y) {
 
 void handle_scroll(int wheel[], map_data_t *map) {
   extern int pixel;
-  static int buffer_x = 0;
-  static int buffer_y = 0;
-  buffer_x += wheel[0];
-  buffer_y += wheel[1];
-  
-  // Reset buffer_y if scroll direction changed
-  if ((buffer_y ^ wheel[1]) < 0) {
-    buffer_y = wheel[1];
-  }
-  if ((buffer_x ^ wheel[0]) < 0) {
-    buffer_x = wheel[0];
-  }
-  
-  int move_x, move_y;
-  
-  // Correct rounding for both positive and negative
-  if (buffer_y >= 0) {
-    move_y = (buffer_y & ~7); // positive side: floor down
-  } else {
-    move_y = -((-buffer_y) & ~7); // negative side: floor up
-  }
-  
-  // Correct rounding for both positive and negative
-  if (buffer_x >= 0) {
-    move_x = (buffer_x & ~7); // positive side: floor down
-  } else {
-    move_x = -((-buffer_x) & ~7); // negative side: floor up
-  }
+  int move_x = wheel[0], move_y = wheel[1];
+//  static int buffer_x = 0;
+//  static int buffer_y = 0;
+//  buffer_x += wheel[0];
+//  buffer_y += wheel[1];
+//  
+//  // Reset buffer_y if scroll direction changed
+//  if ((buffer_y ^ wheel[1]) < 0) {
+//    buffer_y = wheel[1];
+//  }
+//  if ((buffer_x ^ wheel[0]) < 0) {
+//    buffer_x = wheel[0];
+//  }
+//  
+//  int move_x, move_y;
+//  
+//  // Correct rounding for both positive and negative
+//  if (buffer_y >= 0) {
+//    move_y = (buffer_y & ~7); // positive side: floor down
+//  } else {
+//    move_y = -((-buffer_y) & ~7); // negative side: floor up
+//  }
+//  
+//  // Correct rounding for both positive and negative
+//  if (buffer_x >= 0) {
+//    move_x = (buffer_x & ~7); // positive side: floor down
+//  } else {
+//    move_x = -((-buffer_x) & ~7); // negative side: floor up
+//  }
   
   uint16_t index = pixel&~PIXEL_MASK;
-  if (move_y != 0) {
-    buffer_y -= move_y;
+//  if (move_y != 0) {
+//    buffer_y -= move_y;
     switch (pixel&PIXEL_MASK) {
       case PIXEL_FLOOR:
         if (index < map->num_sectors) {
@@ -125,12 +126,12 @@ void handle_scroll(int wheel[], map_data_t *map) {
         break;
     }
     
-    build_wall_vertex_buffer(map);
-    build_floor_vertex_buffer(map);
-  }
-  
-  if (move_x != 0) {
-    buffer_x -= move_x;
+//    build_wall_vertex_buffer(map);
+//    build_floor_vertex_buffer(map);
+//  }
+//  
+//  if (move_x != 0) {
+//    buffer_x -= move_x;
     switch (pixel&PIXEL_MASK) {
       case PIXEL_MID:
       case PIXEL_TOP:
@@ -145,7 +146,7 @@ void handle_scroll(int wheel[], map_data_t *map) {
     
     build_wall_vertex_buffer(map);
     build_floor_vertex_buffer(map);
-  }
+//  }
 }
 
 void handle_game_input(float delta_time) {
