@@ -334,28 +334,46 @@ void draw_player_icon(editor_state_t const *editor, const player_t *player) {
   glBindVertexArray(editor->vao);
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
   glDisable(GL_DEPTH_TEST);
-
+  
   glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 0.5f);
   
   float angle_rad = glm_rad(player->angle);
-  float input_x = -50 * cos(angle_rad);
-  float input_y =  50 * sin(angle_rad);
+  float shaft_length = 20.0f;
+  float head_length = 20.0f;
+  float head_angle = glm_rad(30.0f); // 30 degrees for arrowhead lines
   
-  wall_vertex_t verts[2] = { { player->x, player->y }, { player->x+input_x, player->y+input_y } };
+  float dx = -shaft_length * cosf(angle_rad);
+  float dy =  shaft_length * sinf(angle_rad);
   
-  //  wall_vertex_t verts[3] = {
-  //    { player->x + player->points[1][0], player->y + player->points[1][1] },
-  //    { player->x, player->y },
-  //    { player->x + player->points[0][0], player->y + player->points[0][1] },
-  //  };
+  float tip_x = player->x + dx;
+  float tip_y = player->y + dy;
+  
+  // Arrowhead lines
+  float left_dx = head_length * cosf(angle_rad + head_angle);
+  float left_dy = -head_length * sinf(angle_rad + head_angle);
+  float right_dx = head_length * cosf(angle_rad - head_angle);
+  float right_dy = -head_length * sinf(angle_rad - head_angle);
+  
+  wall_vertex_t verts[6] = {
+    // Shaft
+    { player->x - dx, player->y - dy },
+    { tip_x, tip_y },
+    // Left head
+    { tip_x, tip_y },
+    { tip_x + left_dx, tip_y + left_dy },
+    // Right head
+    { tip_x, tip_y },
+    { tip_x + right_dx, tip_y + right_dy },
+  };
   
   glBindTexture(GL_TEXTURE_2D, white_tex);
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
   glVertexAttribPointer(3, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), &verts[0].color);
-  glDrawArrays(GL_LINE_STRIP, 0, 2);
-  glPointSize(4);
-  glDrawArrays(GL_POINTS, 0, 1);
+  glDrawArrays(GL_LINES, 0, 6);
+  
+//  glPointSize(4);
+//  glDrawArrays(GL_POINTS, 0, 1);
 }
 
 static viewdef_t setup_matrix(vec4 *mvp, const player_t *player) {

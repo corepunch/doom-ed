@@ -168,7 +168,7 @@ read_center_pixel(window_t const *win,
 //  return horizontalFOV_rad * (180.0f / M_PI); // radians to degrees
 //}
 
-void draw_dungeon(window_t const *win) {
+void draw_dungeon(window_t const *win, bool draw_pixel) {
   void draw_minimap(map_data_t const *, editor_state_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
   
@@ -193,7 +193,9 @@ void draw_dungeon(window_t const *win) {
   glDepthMask(GL_TRUE);
   glEnable(GL_DEPTH_TEST);
 
-  read_center_pixel(win, map, sector, &viewdef);
+  if (draw_pixel) {
+    read_center_pixel(win, map, sector, &viewdef);
+  }
   
   glClear(/*GL_COLOR_BUFFER_BIT|*/GL_DEPTH_BUFFER_BIT);
 #if 1
@@ -228,7 +230,7 @@ void draw_dungeon(window_t const *win) {
 #endif
   draw_things(map, &viewdef, true);
   
-  draw_weapon((float)win->frame.w/(float)win->frame.h);
+//  draw_weapon((float)win->frame.w/(float)win->frame.h);
   
   draw_crosshair((float)win->frame.w/(float)win->frame.h);
 
@@ -309,6 +311,9 @@ result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  static bool alt = false;
+  static bool moved = false;
+  
   extern window_t *_focused;
   extern window_t *_captured;
   switch (msg) {
@@ -317,10 +322,11 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
       return true;
     case WM_PAINT:
-      draw_dungeon(win);
+      draw_dungeon(win, moved);
       if (_focused == win) {
         post_message(win, WM_PAINT, wparam, lparam);
       }
+      moved = false;
       return false;
   }
 
@@ -337,23 +343,44 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             break;
           case SDL_SCANCODE_W:
           case SDL_SCANCODE_UP:
-            game.player.forward_move = 1;
+            if (alt) {
+              handle_scroll((int[]){0, -8}, &game.map);
+            } else {
+              game.player.forward_move = 1;
+            }
             break;
           case SDL_SCANCODE_S:
           case SDL_SCANCODE_DOWN:
-            game.player.forward_move = -1;
+            if (alt) {
+              handle_scroll((int[]){0, 8}, &game.map);
+            } else {
+              game.player.forward_move = -1;
+            }
             break;
             // Calculate strafe direction vector (perpendicular to forward)
           case SDL_SCANCODE_D:
           case SDL_SCANCODE_RIGHT:
-            game.player.strafe_move = 1;
+            if (alt) {
+              handle_scroll((int[]){-8, 0}, &game.map);
+            } else {
+              game.player.strafe_move = 1;
+            }
             break;
           case SDL_SCANCODE_A:
           case SDL_SCANCODE_LEFT:
-            game.player.strafe_move = -1;
+            if (alt) {
+              handle_scroll((int[]){8, 0}, &game.map);
+            } else {
+              game.player.strafe_move = -1;
+            }
             break;
           case SDL_SCANCODE_LSHIFT:
+          case SDL_SCANCODE_RSHIFT:
             mode = true;
+            break;
+          case SDL_SCANCODE_LALT:
+          case SDL_SCANCODE_RALT:
+            alt = true;
             break;
           case SDL_SCANCODE_TAB:
             set_capture(NULL);
@@ -379,16 +406,22 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             game.player.strafe_move = 0;
             break;
           case SDL_SCANCODE_LSHIFT:
+          case SDL_SCANCODE_RSHIFT:
             mode = false;
+            break;
+          case SDL_SCANCODE_LALT:
+          case SDL_SCANCODE_RALT:
+            alt = false;
             break;
           default:
             break;
         }
         return true;
-      case WM_WHEEL:
-        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game.map);
-        return true;
+//      case WM_WHEEL:
+//        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game.map);
+//        return true;
       case WM_MOUSEMOVE:
+        moved = true;
         game.player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
         game.player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
         // Keep angle within 0-360 range
