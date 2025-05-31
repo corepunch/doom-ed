@@ -465,7 +465,7 @@ void draw_weapon(float k) {
   }
 }
 
-#define CROSSHAIR_SIZE 10
+#define CROSSHAIR_SIZE 8
 
 // Draw a crosshair in the center of the screen
 void draw_crosshair(float k) {
