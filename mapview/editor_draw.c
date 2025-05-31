@@ -106,41 +106,6 @@ static void draw_grid(int grid_size, player_t const *player, int view_size) {
   glDisable(GL_BLEND);
 }
 
-// Draw the current sector being created
-static void draw_current_sector(editor_state_t const *editor) {
-  if (editor->num_draw_points < 2) return;
-  
-  // Set line color (yellow)
-  glUniform4f(ui_prog_color, 1.0f, 1.0f, 0.0f, 1.0f);
-  
-  // Draw lines connecting all points
-  for (int i = 0; i < editor->num_draw_points - 1; i++) {
-    wall_vertex_t verts[2] = {
-      { editor->draw_points[i].x, editor->draw_points[i].y, 0, 0, 0, 0, 0, 0 },
-      { editor->draw_points[i+1].x, editor->draw_points[i+1].y, 0, 0, 0, 0, 0, 0 }
-    };
-    
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
-    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
-    glDrawArrays(GL_LINES, 0, 2);
-  }
-  
-  // Highlight vertices
-  glPointSize(5.0f);
-  for (int i = 0; i < editor->num_draw_points; i++) {
-    wall_vertex_t vert = {
-      editor->draw_points[i].x,
-      editor->draw_points[i].y,
-      0, 0, 0, 0, 0, 0
-    };
-    
-    glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &vert.x);
-    glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &vert.u);
-    glDrawArrays(GL_POINTS, 0, 1);
-  }
-  glPointSize(1.0f);
-}
-
 extern GLuint no_tex;
 //
 //static void draw_floors_ids_editor(map_data_t const *map) {
@@ -263,7 +228,7 @@ static void draw_cursor(int x, int y) {
 
 mapvertex_t sn;
 
-void get_mouse_position(editor_state_t const *, int16_t const *screen, mat4 const, vec3);
+void get_mouse_position(window_t *, editor_state_t const *, int16_t const *screen, mat4 const, vec3);
 void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
 void get_editor_mvp(editor_state_t const *editor, mat4 mvp) {
   // Set up orthographic projection for 2D view
@@ -399,7 +364,8 @@ static viewdef_t setup_matrix(vec4 *mvp, const player_t *player) {
 
 // Draw the editor UI
 void
-draw_editor(map_data_t const *map,
+draw_editor(window_t *win,
+            map_data_t const *map,
             editor_state_t const *editor,
             player_t const *player)
 {
@@ -446,7 +412,7 @@ draw_editor(map_data_t const *map,
 //  }
   
   vec3 world;
-  get_mouse_position(editor, editor->cursor, mvp, world);
+  get_mouse_position(win, editor, editor->cursor, mvp, world);
   
   sn.x = world[0];
   sn.y = world[1];

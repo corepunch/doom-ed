@@ -421,11 +421,45 @@ typedef struct texture_cache_s {
   mapside_texture_t textures[1];
 } texture_cache_t;
 
+
+
+enum {
+  edit_vertices,
+  edit_lines,
+  edit_sectors,
+  edit_things,
+  edit_sounds,
+  edit_modes
+};
+
+typedef struct {
+  uint16_t point, line, sector, thing;
+} editor_selection_t;
+
+typedef struct {
+  struct window_s *window;
+  struct window_s *inspector;
+  int16_t cursor[2];
+  vec2 camera;
+  int grid_size;         // Grid size (8 units by default)
+  bool drawing;          // Currently drawing a sector?
+  bool dragging;          // Currently dragging a vertex?
+  int move_camera;
+  int move_thing;
+  int num_draw_points;   // Number of points in current sector
+  editor_selection_t hover, selected;
+  int sel_mode;
+  int selected_thing_type;
+  float scale;
+  uint32_t vao, vbo;
+} editor_state_t;
+
 typedef struct {
   int episode;
   int level;
   map_data_t map;
   player_t player;
+  editor_state_t state;
 } game_t;
 
 // Base UI Colors
@@ -523,7 +557,7 @@ void track_mouse(window_t *win);
 void set_capture(window_t *win);
 void set_focus(window_t* win);
 
-extern game_t *game;
+extern game_t *g_game;
 
 bool init_sdl(void);
 int run(void);
@@ -545,7 +579,6 @@ mapside_texture_t const *get_texture(const char* name);
 mapside_texture_t const *get_flat_texture(const char* name);
 void build_wall_vertex_buffer(map_data_t *map);
 void build_floor_vertex_buffer(map_data_t *map);
-void handle_game_input(float delta_time);
 void draw_textured_surface(wall_section_t const *surface, float light, int mode);
 void draw_textured_surface_id(wall_section_t const *surface, uint32_t id, int mode);
 

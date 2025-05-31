@@ -149,59 +149,7 @@ void handle_scroll(int wheel[], map_data_t *map) {
 //  }
 }
 
-void handle_game_input(float delta_time) {
-  extern editor_state_t editor;
-  SDL_Event event;
-//  map_data_t *map = &game->map;
-  player_t *player = &game->player;
-  
-  if (SDL_GetRelativeMouseMode()) {
-    player->mouse_x_rel = 0;
-    player->mouse_y_rel = 0;
-  }
-  
-  // Center position for relative mouse mode
-  int window_width, window_height;
-  SDL_GetWindowSize(window, &window_width, &window_height); // Assuming 'window' is accessible
-  
-  // Process SDL events
-  while (SDL_PollEvent(&event)) {
-    if (event.type == SDL_QUIT) {
-      running = false;
-    }
-    else if (event.type == SDL_MOUSEMOTION) {
-      if (SDL_GetRelativeMouseMode()) {
-        // Get relative mouse movement
-      }
-    }
-    else if (event.type == SDL_MOUSEWHEEL) {
-//      handle_scroll(event, map);
-    }
-    else if (event.type == SDL_JOYAXISMOTION) {
-      //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
-    } else if (event.type == SDL_JOYBUTTONDOWN) {
-      if (event.jbutton.button == 8) {
-//        toggle_editor_mode(&editor);
-      }
-      printf("Button %d pressed\n", event.jbutton.button);
-    } else if (event.type == SDL_JOYBUTTONUP) {
-      printf("Button %d released\n", event.jbutton.button);
-    } else if (event.type == SDL_JOYHATMOTION) {
-      
-      if (event.jhat.hat == 0) {
-        //        if (event.jhat.value & 4) selected_texture++;
-        //        if (event.jhat.value & 1) selected_texture--;
-        //        if (event.jhat.value & 8) selected_floor_texture--;
-        //        if (event.jhat.value & 2) selected_floor_texture++;
-      }
-      printf("Hat %d moved to %d\n", event.jhat.hat, event.jhat.value);
-    }
-    
-  }
-  
-}
-
-void game_tick(float delta_time) {
+void game_tick(game_t *game, float delta_time) {
   player_t *player = &game->player;
   // Apply mouse rotation if relative mode is enabled
   if (true) {

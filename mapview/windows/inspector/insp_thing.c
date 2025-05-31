@@ -68,11 +68,13 @@ uint32_t thing_checkboxes[] = {
   ID_THING_GDEATHMATCH,
 };
 
-mapthing_t *selected_thing(editor_state_t *editor) {
-  if (editor->hover.thing != 0xFFFF) {
-    return &game->map.things[editor->hover.thing];
-  } else if (editor->selected.thing != 0xFFFF) {
-    return &game->map.things[editor->selected.thing];
+mapthing_t *selected_thing(game_t *game) {
+  if (!g_game) {
+    return NULL;
+  } else if (game->state.hover.thing != 0xFFFF) {
+    return &game->map.things[game->state.hover.thing];
+  } else if (game->state.selected.thing != 0xFFFF) {
+    return &game->map.things[game->state.selected.thing];
   } else {
     return NULL;
   }
@@ -88,7 +90,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       load_window_children(win, thing_layout);
       return true;
     case WM_PAINT:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(editor))) {
+      if (editor->sel_mode == edit_things && (thing = selected_thing(g_game))) {
         sprite_t *get_thing_sprite_name(int thing_type, int angle);
         sprite_t *spr = get_thing_sprite_name(thing->type, 0);
         set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
@@ -103,7 +105,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
       return false;
     case WM_COMMAND:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(editor))) {
+      if (editor->sel_mode == edit_things && (thing = selected_thing(g_game))) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
           if (wparam == MAKEDWORD(thing_checkboxes[i], BN_CLICKED)) {
             if (send_message(lparam, BM_GETCHECK, 0, NULL)) {

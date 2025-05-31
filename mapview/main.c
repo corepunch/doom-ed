@@ -65,8 +65,6 @@ int main(int argc, char* argv[]) {
   
 //  printf("%s\n", cache_lump("MAPINFO"));
   
-  memset(&game, 0, sizeof(game));
-  
   // Print map info
   // Initialize SDL
   if (!init_sdl()) {
@@ -86,9 +84,6 @@ int main(int argc, char* argv[]) {
 //  open_map("MAP01");
   
   run();
-  
-  // Cleanup
-  free_map_data(&game->map);
 
   shutdown_wad();
   

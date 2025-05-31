@@ -97,7 +97,8 @@ void handle_editor_input(map_data_t *map,
 
 
 void
-get_mouse_position(editor_state_t const *editor,
+get_mouse_position(window_t *win,
+                   editor_state_t const *editor,
                    int16_t const screen[2],
                    mat4 view_proj_matrix,
                    vec3 world)
@@ -105,8 +106,8 @@ get_mouse_position(editor_state_t const *editor,
   float z_plane = 0;
   
   // Convert to world coordinates
-  int win_width = editor->window->frame.w;
-  int win_height = editor->window->frame.h;
+  int win_width = win->frame.w;
+  int win_height = win->frame.h;
   
   // Convert to normalized device coordinates (-1 to 1)
   float ndc_x = (2.0f * screen[0]) / win_width - 1.0f;
@@ -211,7 +212,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       free_map_data(&game->map);
       return true;
     case WM_PAINT:
-      draw_editor(&game->map, editor, &game->player);
+      draw_editor(win, &game->map, editor, &game->player);
       return true;
     case WM_MOUSEMOVE:
       track_mouse(win);
@@ -220,8 +221,8 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         vec3 world_1, world_2;
         mat4 mvp;
         get_editor_mvp(editor, mvp);
-        get_mouse_position(editor, editor->cursor, mvp, world_1);
-        get_mouse_position(editor, move_cursor, mvp, world_2);
+        get_mouse_position(win, editor, editor->cursor, mvp, world_1);
+        get_mouse_position(win, editor, move_cursor, mvp, world_2);
         if (editor->move_thing) {
           game->map.things[editor->hover.thing].x -= world_1[0] - world_2[0];
           game->map.things[editor->hover.thing].y -= world_1[1] - world_2[1];
@@ -238,7 +239,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         vec3 world_1;
         mat4 mvp;
         get_editor_mvp(editor, mvp);
-        get_mouse_position(editor, editor->cursor, mvp, world_1);
+        get_mouse_position(win, editor, editor->cursor, mvp, world_1);
         if (editor->sel_mode == edit_sectors) {
           mapsector_t const *sec = find_player_sector(&game->map, world_1[0], world_1[1]);
           editor->hover.sector = sec ? (int)(sec - game->map.sectors) : -1;
@@ -263,7 +264,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           }
         }
       }
-      invalidate_window(editor->window);
+      invalidate_window(win);
       invalidate_window(editor->inspector);
       return true;
       //    case WM_WHEEL:
@@ -275,17 +276,17 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //      editor->hover.sector = -1;
 //      editor->hover.line = -1;
 //      editor->hover.thing = -1;
-      invalidate_window(editor->window);
+      invalidate_window(win);
       invalidate_window(editor->inspector);
       return true;
     case WM_WHEEL: {
       mat4 mvp;
       vec3 world_before, world_after, delta;
       get_editor_mvp(editor, mvp);
-      get_mouse_position(editor, editor->cursor, mvp, world_before);
+      get_mouse_position(win, editor, editor->cursor, mvp, world_before);
       editor->scale *= MAX(1.f - (int16_t)HIWORD(wparam) / 50.f, 0.1f);
       get_editor_mvp(editor, mvp);
-      get_mouse_position(editor, editor->cursor, mvp, world_after);
+      get_mouse_position(win, editor, editor->cursor, mvp, world_after);
       glm_vec2_sub(world_before, world_after, delta);
       glm_vec2_add(editor->camera, delta, editor->camera);
       invalidate_window(win);
@@ -341,7 +342,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
             vec3 world;
             mat4 mvp;
             get_editor_mvp(editor, mvp);
-            get_mouse_position(editor, cursor, mvp, world);
+            get_mouse_position(win, editor, cursor, mvp, world);
             add_thing(&game->map, (mapthing_t){
               .x = world[0],
               .y = world[1],
@@ -437,7 +438,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         case SDL_SCANCODE_SPACE: {
           mat4 mvp;
           get_editor_mvp(editor, mvp);
-          get_mouse_position(editor, editor->cursor, mvp, &game->player.x);
+          get_mouse_position(win, editor, editor->cursor, mvp, &game->player.x);
           invalidate_window(win);
           return true;
         }

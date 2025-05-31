@@ -39,6 +39,9 @@ result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       return true;
     case WM_LBUTTONUP:
       win->cursor_pos = HIWORD(wparam)/BUTTON_HEIGHT;
+      if (win->cursor_pos < items->num_items) {
+        open_map(items->items[win->cursor_pos]);
+      }
       invalidate_window(win);
       return true;
     case WM_KEYDOWN:

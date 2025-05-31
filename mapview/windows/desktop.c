@@ -8,8 +8,9 @@
 #define WALLPAPER_SIZE 64
 
 extern GLuint ui_prog;
-extern editor_state_t editor;
 GLuint wallpaper_tex;
+
+static GLuint desktop_vao, desktop_vbo;
 
 unsigned char* generate_xor_pattern(void) {
   unsigned char* data = malloc(WALLPAPER_SIZE * WALLPAPER_SIZE);
@@ -64,8 +65,8 @@ void draw_wallpaper(void) {
   glUniform2f(ui_prog_tex0_size, WALLPAPER_SIZE, WALLPAPER_SIZE);
   glUniform4f(ui_prog_color, 1, 1, 1, 1);
   glUniformMatrix4fv(ui_prog_mvp, 1, GL_FALSE, projection[0]);
-  glBindVertexArray(editor.vao);
-  glBindBuffer(GL_ARRAY_BUFFER, editor.vbo);
+  glBindVertexArray(desktop_vao);
+  glBindBuffer(GL_ARRAY_BUFFER, desktop_vbo);
   glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].x);
   glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), &verts[0].u);
   glDisableVertexAttribArray(3);
@@ -77,6 +78,16 @@ void draw_wallpaper(void) {
 result_t win_desktop(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_CREATE:
+      
+      // Create VAO and VBO for editor rendering
+      glGenVertexArrays(1, &desktop_vao);
+      glGenBuffers(1, &desktop_vbo);
+      
+      // Set up VAO
+      glBindVertexArray(desktop_vao);
+      glBindBuffer(GL_ARRAY_BUFFER, desktop_vbo);
+
+      
       create_desktop_tex();
       return true;
     case WM_PAINT:

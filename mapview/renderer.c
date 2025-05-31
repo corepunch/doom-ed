@@ -82,7 +82,6 @@ int ui_prog_tex0_size;
 int ui_prog_tex0;
 int ui_prog_color;
 
-editor_state_t editor = {0};
 SDL_Window* window = NULL;
 SDL_GLContext ctx;
 SDL_Joystick* joystick = NULL;
@@ -93,7 +92,7 @@ unsigned frame = 0;
 palette_entry_t *palette;
 
 editor_state_t *get_editor(void) {
-  return &editor;
+  return g_game ? &g_game->state : NULL;
 }
 
 void init_floor_shader(void);
@@ -208,7 +207,6 @@ bool init_sdl(void) {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xffffff00});
 
   init_floor_shader();
-  init_editor(&editor);
   init_things();
   init_sky_geometry();
   init_radial_menu();
@@ -240,11 +238,13 @@ int run(void) {
 //    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
 //    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-    void game_tick(float);
+    void game_tick(game_t *game, float);
     void draw_intermission(void);
     void handle_intermission_input(float delta_time);
 
-    game_tick(delta_time);
+    if (g_game) {
+      game_tick(g_game, delta_time);
+    }
 
     handle_windows();
 

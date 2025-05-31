@@ -369,8 +369,8 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       if (texture_idx >= 0) {
         mobjinfo_t const *mobj = &ed_objs[texture_idx];
 //        printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
-        if (editor->selected.thing < game->map.num_things) {
-          game->map.things[editor->selected.thing].type = mobj->doomednum;
+        if (g_game && editor->selected.thing < g_game->map.num_things) {
+          g_game->map.things[editor->selected.thing].type = mobj->doomednum;
           invalidate_window(editor->window);
         }
         

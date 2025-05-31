@@ -25,7 +25,7 @@ void init_intermission(void);
 void draw_sprite(const char* name, float x, float y, float scale, float alpha);
 
 // Draw the weapon sprite at the bottom center of screen
-void draw_weapon(float aspect);
+void draw_weapon(player_t const *player, float aspect);
 
 // Clean up sprite system resources
 void cleanup_sprites(void);

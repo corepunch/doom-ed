@@ -422,7 +422,7 @@ void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
 }
 
 // Draw the shotgun at the bottom center of the screen
-void draw_weapon(float k) {
+void draw_weapon(player_t const *player, float k) {
   set_projection(0, 0, k * VGA_HEGHT, VGA_HEGHT);
   
   // Find appropriate shotgun sprite frame (usually "SHTGA0")
@@ -452,7 +452,7 @@ void draw_weapon(float k) {
     // Draw with full opacity
     
     int x, y;
-    get_weapon_wobble_offset(&x, &y, MAX(fabs(game->player.vel_x), fabs(game->player.vel_y))/75);
+    get_weapon_wobble_offset(&x, &y, MAX(fabs(player->vel_x), fabs(player->vel_y))/75);
     
 //#ifndef HEXEN
 //    y += 20;

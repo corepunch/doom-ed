@@ -8,7 +8,7 @@
 #include "../console.h"
 #include "../editor.h"
 
-game_t *game = NULL;
+game_t *g_game = NULL;
 
 bool init_sky(map_data_t const*);
 const char *get_map_name(const char *name);
@@ -28,9 +28,6 @@ void init_player(map_data_t const *map, player_t *player) {
       player->x = map->things[i].x;
       player->y = map->things[i].y;
       player->angle = map->things[i].angle;
-      
-      extern editor_state_t editor;
-      set_editor_camera(&editor, map->things[i].x, map->things[i].y);
       break;
     }
   }
@@ -42,7 +39,7 @@ void new_map(void) {
   game_t *gm = malloc(sizeof(game_t));
   memset(gm, 0, sizeof(game_t));
   show_window(create_window("New map", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
-  game = gm;
+  g_game = gm;
 }
 
 void open_map(const char *mapname) {
@@ -57,15 +54,19 @@ void open_map(const char *mapname) {
     init_player(&gm->map, &gm->player);
     build_wall_vertex_buffer(&gm->map);
     build_floor_vertex_buffer(&gm->map);
-    
+
+    set_editor_camera(&gm->state, gm->player.x, gm->player.y);
+
     conprintf("Successfully loaded map %s", get_map_name(mapname));
   } else {
     conprintf("Failed to load map %s", mapname);
   }
-  
+
+  init_editor(&gm->state);
+
   show_window(create_window(mapname, 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
   
-  game = gm;
+  g_game = gm;
 }
 
 //#define ISOMETRIC
@@ -188,6 +189,8 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   void draw_minimap(map_data_t const *, editor_state_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
   
+  game_t *game = win->userdata;
+  
   if (game->map.num_vertices == 0) {
     fill_rect(COLOR_PANEL_BG, 0, 0, win->frame.w, win->frame.h);
     return;
@@ -246,7 +249,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
 #endif
   draw_things(map, &viewdef, true);
   
-//  draw_weapon((float)win->frame.w/(float)win->frame.h);
+//  draw_weapon(&game->player, (float)win->frame.w/(float)win->frame.h);
   
   draw_crosshair((float)win->frame.w/(float)win->frame.h);
 
@@ -272,7 +275,6 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
 //  }
 }
 
-extern editor_state_t editor;
 extern bool mode;
 
 void paint_face(map_data_t *map, bool eyedropper) {
