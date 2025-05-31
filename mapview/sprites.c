@@ -452,7 +452,7 @@ void draw_weapon(float k) {
     // Draw with full opacity
     
     int x, y;
-    get_weapon_wobble_offset(&x, &y, MAX(fabs(game.player.vel_x), fabs(game.player.vel_y))/75);
+    get_weapon_wobble_offset(&x, &y, MAX(fabs(game->player.vel_x), fabs(game->player.vel_y))/75);
     
 //#ifndef HEXEN
 //    y += 20;

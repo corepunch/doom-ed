@@ -424,6 +424,10 @@ int strnwidth(const char* text, int text_length) {
   // Pre-calculate all vertices for the entire string
   for (int i = 0; i < text_length; i++) {
     char c = text[i];
+    if (c == ' ') {
+      cursor_x += 3;
+      continue;
+    }
     uint8_t w = console.small_font.char_to[c] - console.small_font.char_from[c];
     // Advance cursor position
     cursor_x += w;
@@ -451,6 +455,10 @@ void draw_text_small(const char* text, int x, int y, uint32_t col) {
   for (int i = 0; i < text_length; i++) {
     unsigned char c = text[i];
     
+    if (c == ' ') {
+      cursor_x += 3;
+      continue;
+    }
     if (c == '\n') {
       cursor_x = x;
       y += SMALL_FONT_HEIGHT;

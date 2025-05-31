@@ -24,9 +24,9 @@ windef_t sector_layout[] = {
 
 mapsector_t *selected_sector(editor_state_t *editor) {
   if (editor->hover.sector != 0xFFFF) {
-    return &game.map.sectors[editor->hover.sector];
+    return &game->map.sectors[editor->hover.sector];
   } else if (editor->selected.sector != 0xFFFF) {
-    return &game.map.sectors[editor->selected.sector];
+    return &game->map.sectors[editor->selected.sector];
   } else {
     return NULL;
   }
@@ -47,12 +47,12 @@ mapsector_t *selected_sector(editor_state_t *editor) {
 //}
 
 result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  editor_state_t *editor = win->userdata;
+  editor_state_t *editor = get_editor();
   mapsector_t *sector;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      ((editor_state_t*)lparam)->inspector = win;
+      editor->inspector = win;
       load_window_children(win, sector_layout);
 //      init_combobox(get_window_item(win, ID_TEST_COMBOBOX));
       return true;
@@ -84,14 +84,14 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //        }
         if (wparam == MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE)) {
           sector->floorheight = atoi(((window_t *)lparam)->title);
-          build_wall_vertex_buffer(&game.map);
-          build_floor_vertex_buffer(&game.map);
+          build_wall_vertex_buffer(&game->map);
+          build_floor_vertex_buffer(&game->map);
           invalidate_window(editor->window);
         }
         if (wparam == MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE)) {
           sector->ceilingheight = atoi(((window_t *)lparam)->title);
-          build_wall_vertex_buffer(&game.map);
-          build_floor_vertex_buffer(&game.map);
+          build_wall_vertex_buffer(&game->map);
+          build_floor_vertex_buffer(&game->map);
           invalidate_window(editor->window);
         }
       }

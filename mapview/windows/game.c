@@ -8,6 +8,8 @@
 #include "../console.h"
 #include "../editor.h"
 
+game_t *game = NULL;
+
 bool init_sky(map_data_t const*);
 const char *get_map_name(const char *name);
 
@@ -34,22 +36,36 @@ void init_player(map_data_t const *map, player_t *player) {
   }
 }
 
-void goto_map(const char *mapname) {
-  game.map = load_map(mapname);
+result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
+void new_map(void) {
+  game_t *gm = malloc(sizeof(game_t));
+  memset(gm, 0, sizeof(game_t));
+  show_window(create_window("New map", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
+  game = gm;
+}
+
+void open_map(const char *mapname) {
+  game_t *gm = malloc(sizeof(game_t));
+  gm->map = load_map(mapname);
   
-  if (game.map.num_vertices > 0) {
-    print_map_info(&game.map);
-//    allocate_mapside_textures(&game.map);
-//    allocate_flat_textures(&game.map);
-    init_sky(&game.map);
-    init_player(&game.map, &game.player);
-    build_wall_vertex_buffer(&game.map);
-    build_floor_vertex_buffer(&game.map);
+  if (gm->map.num_vertices > 0) {
+    print_map_info(&gm->map);
+//    allocate_mapside_textures(&game->map);
+//    allocate_flat_textures(&game->map);
+    init_sky(&gm->map);
+    init_player(&gm->map, &gm->player);
+    build_wall_vertex_buffer(&gm->map);
+    build_floor_vertex_buffer(&gm->map);
     
     conprintf("Successfully loaded map %s", get_map_name(mapname));
   } else {
     conprintf("Failed to load map %s", mapname);
   }
+  
+  show_window(create_window(mapname, 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
+  
+  game = gm;
 }
 
 //#define ISOMETRIC
@@ -172,14 +188,14 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   void draw_minimap(map_data_t const *, editor_state_t const *, player_t const *);
   void draw_things(map_data_t const *, viewdef_t const *, bool);
   
-  if (game.map.num_vertices == 0) {
+  if (game->map.num_vertices == 0) {
     fill_rect(COLOR_PANEL_BG, 0, 0, win->frame.w, win->frame.h);
     return;
   }
 
-  map_data_t const *map = &game.map;
-  mapsector_t const *sector = update_player_height(map, &game.player);
-  player_t *player = &game.player;
+  map_data_t const *map = &game->map;
+  mapsector_t const *sector = update_player_height(map, &game->player);
+  player_t *player = &game->player;
   mat4 mvp;
   
   get_view_matrix(map, player, (float)win->frame.w/(float)win->frame.h, mvp);
@@ -224,7 +240,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
 //  void R_RenderBSPNode (map_data_t *map, int bspnum, viewdef_t *viewdef);
 //  R_ClearClipSegs(screen_width);
 //  
-//  R_RenderBSPNode(&game.map, game.map.num_nodes-1, &viewdef);
+//  R_RenderBSPNode(&game->map, game->map.num_nodes-1, &viewdef);
   
   draw_floors(map, sector, &viewdef);
 #endif
@@ -252,7 +268,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
 
   extern bool mode;
 //  if (mode) {
-    draw_minimap(map, win->userdata, player);
+    draw_minimap(map, get_editor(), player);
 //  }
 }
 
@@ -313,13 +329,16 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   static bool alt = false;
   static bool moved = false;
-  
   extern window_t *_focused;
   extern window_t *_captured;
+  game_t *game = win->userdata;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
       create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
+      return true;
+    case WM_DESTROY:
+      free_map_data(&game->map);
       return true;
     case WM_PAINT:
       draw_dungeon(win, moved);
@@ -344,34 +363,34 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           case SDL_SCANCODE_W:
           case SDL_SCANCODE_UP:
             if (alt) {
-              handle_scroll((int[]){0, -8}, &game.map);
+              handle_scroll((int[]){0, -8}, &game->map);
             } else {
-              game.player.forward_move = 1;
+              game->player.forward_move = 1;
             }
             break;
           case SDL_SCANCODE_S:
           case SDL_SCANCODE_DOWN:
             if (alt) {
-              handle_scroll((int[]){0, 8}, &game.map);
+              handle_scroll((int[]){0, 8}, &game->map);
             } else {
-              game.player.forward_move = -1;
+              game->player.forward_move = -1;
             }
             break;
             // Calculate strafe direction vector (perpendicular to forward)
           case SDL_SCANCODE_D:
           case SDL_SCANCODE_RIGHT:
             if (alt) {
-              handle_scroll((int[]){-8, 0}, &game.map);
+              handle_scroll((int[]){-8, 0}, &game->map);
             } else {
-              game.player.strafe_move = 1;
+              game->player.strafe_move = 1;
             }
             break;
           case SDL_SCANCODE_A:
           case SDL_SCANCODE_LEFT:
             if (alt) {
-              handle_scroll((int[]){8, 0}, &game.map);
+              handle_scroll((int[]){8, 0}, &game->map);
             } else {
-              game.player.strafe_move = -1;
+              game->player.strafe_move = -1;
             }
             break;
           case SDL_SCANCODE_LSHIFT:
@@ -396,14 +415,14 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           case SDL_SCANCODE_UP:
           case SDL_SCANCODE_S:
           case SDL_SCANCODE_DOWN:
-            game.player.forward_move = 0;
+            game->player.forward_move = 0;
             break;
             // Calculate strafe direction vector (perpendicular to forward)
           case SDL_SCANCODE_D:
           case SDL_SCANCODE_RIGHT:
           case SDL_SCANCODE_A:
           case SDL_SCANCODE_LEFT:
-            game.player.strafe_move = 0;
+            game->player.strafe_move = 0;
             break;
           case SDL_SCANCODE_LSHIFT:
           case SDL_SCANCODE_RSHIFT:
@@ -418,35 +437,35 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         return true;
 //      case WM_WHEEL:
-//        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game.map);
+//        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game->map);
 //        return true;
       case WM_MOUSEMOVE:
         moved = true;
-        game.player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
-        game.player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
+        game->player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
+        game->player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
         // Keep angle within 0-360 range
-        if (game.player.angle < 0) game.player.angle += 360;
-        if (game.player.angle >= 360) game.player.angle -= 360;
+        if (game->player.angle < 0) game->player.angle += 360;
+        if (game->player.angle >= 360) game->player.angle -= 360;
         // Clamp pitch to prevent flipping over
-        if (game.player.pitch > 89.0f) game.player.pitch = 89.0f;
-        if (game.player.pitch < -89.0f) game.player.pitch = -89.0f;
+        if (game->player.pitch > 89.0f) game->player.pitch = 89.0f;
+        if (game->player.pitch < -89.0f) game->player.pitch = -89.0f;
         return true;
       case WM_LBUTTONUP:
-        paint_face(&game.map, SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LALT]);
+        paint_face(&game->map, SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LALT]);
         return true;
       case WM_JOYBUTTONDOWN:
         if (wparam == 0) {
-          paint_face(&game.map, false);
+          paint_face(&game->map, false);
         } else if (wparam == 1) {
-          paint_face(&game.map, true);
+          paint_face(&game->map, true);
         }
         return true;
       case WM_JOYAXISMOTION:
         switch (LOWORD(wparam)) {
-          case 0: game.player.strafe_move = ((int16_t)HIWORD(wparam))/(float)0x8000; break;
-          case 1: game.player.forward_move = -((int16_t)HIWORD(wparam))/(float)0x8000; break;
-          case 3: game.player.mouse_x_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
-          case 4: game.player.mouse_y_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
+          case 0: game->player.strafe_move = ((int16_t)HIWORD(wparam))/(float)0x8000; break;
+          case 1: game->player.forward_move = -((int16_t)HIWORD(wparam))/(float)0x8000; break;
+          case 3: game->player.mouse_x_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
+          case 4: game->player.mouse_y_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
         }
         return true;
     }

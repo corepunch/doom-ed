@@ -152,8 +152,8 @@ void handle_scroll(int wheel[], map_data_t *map) {
 void handle_game_input(float delta_time) {
   extern editor_state_t editor;
   SDL_Event event;
-//  map_data_t *map = &game.map;
-  player_t *player = &game.player;
+//  map_data_t *map = &game->map;
+  player_t *player = &game->player;
   
   if (SDL_GetRelativeMouseMode()) {
     player->mouse_x_rel = 0;
@@ -202,7 +202,7 @@ void handle_game_input(float delta_time) {
 }
 
 void game_tick(float delta_time) {
-  player_t *player = &game.player;
+  player_t *player = &game->player;
   // Apply mouse rotation if relative mode is enabled
   if (true) {
     // Horizontal mouse movement controls yaw (left/right rotation)
@@ -277,6 +277,6 @@ void game_tick(float delta_time) {
   if (player->vel_x != 0 && player->vel_y != 0) {
 //      player->x += player->vel_x * delta_time;
 //      player->y += player->vel_y * delta_time;
-    update_player_position_with_sliding(&game.map, player, player->vel_x * delta_time, player->vel_y * delta_time);
+    update_player_position_with_sliding(&game->map, player, player->vel_x * delta_time, player->vel_y * delta_time);
   }
 }

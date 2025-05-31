@@ -92,6 +92,10 @@ unsigned frame = 0;
 
 palette_entry_t *palette;
 
+editor_state_t *get_editor(void) {
+  return &editor;
+}
+
 void init_floor_shader(void);
 void init_sky_geometry(void);
 bool init_radial_menu(void);

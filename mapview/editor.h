@@ -54,6 +54,8 @@ void handle_editor_input(map_data_t *map, editor_state_t *editor, player_t *play
 void finish_sector(map_data_t *map, editor_state_t *editor);
 bool point_exists(mapvertex_t point, map_data_t *map, int *index);
 int split_linedef(map_data_t *map, int linedef_id, float x, float y);
+editor_state_t *get_editor(void);
+
 
 /**
  * Calculate the closest point on a line segment to a given point

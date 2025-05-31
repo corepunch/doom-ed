@@ -58,21 +58,21 @@ windef_t line_layout[] = {
 
 maplinedef_t *selected_line(editor_state_t *editor) {
   if (editor->hover.line != 0xFFFF) {
-    return &game.map.linedefs[editor->hover.line];
+    return &game->map.linedefs[editor->hover.line];
   } else if (editor->selected.line != 0xFFFF) {
-    return &game.map.linedefs[editor->selected.line];
+    return &game->map.linedefs[editor->selected.line];
   } else {
     return NULL;
   }
 }
 
 result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  editor_state_t *editor = win->userdata;
+  editor_state_t *editor = get_editor();
   maplinedef_t *line;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      ((editor_state_t*)lparam)->inspector = win;
+      editor->inspector = win;
       load_window_children(win, line_layout);
       return true;
     case WM_PAINT:
@@ -84,7 +84,7 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           set_window_item_text(win, ID_LINE_ARG1+i, "%d", line->args[i]);
         }
         if (line->sidenum[0] != 0xFFFF) {
-          mapsidedef_t *front = &game.map.sidedefs[line->sidenum[0]];
+          mapsidedef_t *front = &game->map.sidedefs[line->sidenum[0]];
           set_window_item_text(win, ID_LINE_FRONT_X, "%d", front->textureoffset);
           set_window_item_text(win, ID_LINE_FRONT_Y, "%d", front->rowoffset);
           set_window_item_text(win, ID_LINE_FRONT_TOP, front->toptexture);
@@ -92,7 +92,7 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           set_window_item_text(win, ID_LINE_FRONT_BTM, front->bottomtexture);
         }
         if (line->sidenum[1] != 0xFFFF) {
-          mapsidedef_t *back = &game.map.sidedefs[line->sidenum[1]];
+          mapsidedef_t *back = &game->map.sidedefs[line->sidenum[1]];
           set_window_item_text(win, ID_LINE_BACK_X, "%d", back->textureoffset);
           set_window_item_text(win, ID_LINE_BACK_Y, "%d", back->rowoffset);
           set_window_item_text(win, ID_LINE_BACK_TOP, back->toptexture);
@@ -105,10 +105,10 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       if (editor->sel_mode == edit_lines && (line = selected_line(editor))) {
 #define SET_OFFSET(ID, SIDE, OFFSET) \
         if (wparam == MAKEDWORD(ID, EN_UPDATE) && line->sidenum[SIDE] != 0xFFFF) { \
-          mapsidedef_t *side = &game.map.sidedefs[line->sidenum[SIDE]]; \
+          mapsidedef_t *side = &game->map.sidedefs[line->sidenum[SIDE]]; \
           side->OFFSET = atoi(((window_t *)lparam)->title); \
-          build_wall_vertex_buffer(&game.map); \
-          build_floor_vertex_buffer(&game.map); \
+          build_wall_vertex_buffer(&game->map); \
+          build_floor_vertex_buffer(&game->map); \
           invalidate_window(editor->window); \
         }
         SET_OFFSET(ID_LINE_FRONT_X, 0, textureoffset);

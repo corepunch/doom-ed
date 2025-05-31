@@ -523,7 +523,7 @@ void track_mouse(window_t *win);
 void set_capture(window_t *win);
 void set_focus(window_t* win);
 
-extern game_t game;
+extern game_t *game;
 
 bool init_sdl(void);
 int run(void);
@@ -574,7 +574,8 @@ void print_map_info(map_data_t* map);
 void free_map_data(map_data_t* map);
 
 void goto_intermisson(void);
-void goto_map(const char *mapname);
+void new_map(void);
+void open_map(const char *mapname);
 
 bool init_wad(const char *filename);
 void shutdown_wad(void);

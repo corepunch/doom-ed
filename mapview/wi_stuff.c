@@ -100,8 +100,6 @@ void draw_intermission(void) {
 
 void goto_intermisson(void) {
   SDL_SetRelativeMouseMode(SDL_FALSE);
-  
-  free_map_data(&game.map);
 }
 
 void handle_intermission_input(float delta_time) {
@@ -127,7 +125,7 @@ void handle_intermission_input(float delta_time) {
         if (selected >= 0) {
           char name[64]={0};
           snprintf(name, 64, "E1M%d", selected+1);
-          goto_map(name);
+          open_map(name);
           current = selected;
         }
         break;

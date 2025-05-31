@@ -329,7 +329,7 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   extern mobjinfo_t mobjinfo[NUMMOBJTYPES];
   extern state_t states[NUMSTATES];
   extern char *sprnames[NUMSPRITES];
-  editor_state_t *editor = win->userdata2;
+  editor_state_t *editor = get_editor();
   switch (msg) {
     case WM_CREATE:
       num_items = 0;
@@ -369,8 +369,8 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       if (texture_idx >= 0) {
         mobjinfo_t const *mobj = &ed_objs[texture_idx];
 //        printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
-        if (editor->selected.thing < game.map.num_things) {
-          game.map.things[editor->selected.thing].type = mobj->doomednum;
+        if (editor->selected.thing < game->map.num_things) {
+          game->map.things[editor->selected.thing].type = mobj->doomednum;
           invalidate_window(editor->window);
         }
         

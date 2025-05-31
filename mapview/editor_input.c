@@ -198,17 +198,20 @@ static void editor_reset_input(editor_state_t *editor) {
 
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mapvertex_t sn;
-  editor_state_t *editor = win->userdata;
-  map_data_t *map = &game.map;
+  editor_state_t *editor = get_editor();
+  game_t *game = win->userdata;
   int point = -1;
   int old_point = editor ? editor->hover.point : -1;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      ((editor_state_t *)lparam)->window = win;
+      editor->window = win;
+      return true;
+    case WM_DESTROY:
+      free_map_data(&game->map);
       return true;
     case WM_PAINT:
-      draw_editor(&game.map, win->userdata, &game.player);
+      draw_editor(&game->map, editor, &game->player);
       return true;
     case WM_MOUSEMOVE:
       track_mouse(win);
@@ -220,9 +223,9 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         get_mouse_position(editor, editor->cursor, mvp, world_1);
         get_mouse_position(editor, move_cursor, mvp, world_2);
         if (editor->move_thing) {
-          map->things[editor->hover.thing].x -= world_1[0] - world_2[0];
-          map->things[editor->hover.thing].y -= world_1[1] - world_2[1];
-          assign_thing_sector(map, &map->things[editor->hover.thing]);
+          game->map.things[editor->hover.thing].x -= world_1[0] - world_2[0];
+          game->map.things[editor->hover.thing].y -= world_1[1] - world_2[1];
+          assign_thing_sector(&game->map, &game->map.things[editor->hover.thing]);
         } else {
           editor->camera[0] += world_1[0] - world_2[0];
           editor->camera[1] += world_1[1] - world_2[1];
@@ -237,12 +240,12 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         get_editor_mvp(editor, mvp);
         get_mouse_position(editor, editor->cursor, mvp, world_1);
         if (editor->sel_mode == edit_sectors) {
-          mapsector_t const *sec = find_player_sector(&game.map, world_1[0], world_1[1]);
-          editor->hover.sector = sec ? (int)(sec - game.map.sectors) : -1;
+          mapsector_t const *sec = find_player_sector(&game->map, world_1[0], world_1[1]);
+          editor->hover.sector = sec ? (int)(sec - game->map.sectors) : -1;
         } else if (editor->sel_mode == edit_things) {
           editor->hover.thing = -1;
-          for (int i = 0; i < game.map.num_things; i++) {
-            mapthing_t const *th = &game.map.things[i];
+          for (int i = 0; i < game->map.num_things; i++) {
+            mapthing_t const *th = &game->map.things[i];
             sprite_t *get_thing_sprite_name(int thing_type, int angle);
             sprite_t *spr = get_thing_sprite_name(th->type, 0);
             if (!spr) continue;
@@ -303,28 +306,28 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           if (editor->dragging) {
             editor->dragging = false;
             editor->hover.point = -1;
-          } else if (point_exists(sn, map, &point)) {
+          } else if (point_exists(sn, &game->map, &point)) {
             editor->hover.point = point;
           } else if (editor->hover.line != 0xFFFF) {
-            editor->hover.point = split_linedef(map, editor->hover.line, sn.x, sn.y);
+            editor->hover.point = split_linedef(&game->map, editor->hover.line, sn.x, sn.y);
           } else {
-            editor->hover.point = add_vertex(map, sn);
+            editor->hover.point = add_vertex(&game->map, sn);
           }
           if (editor->drawing) {
-            mapvertex_t a = map->vertices[old_point];
-            mapvertex_t b = map->vertices[editor->hover.point];
-            uint16_t sec = find_point_sector(map, vertex_midpoint(a, b));
+            mapvertex_t a = game->map.vertices[old_point];
+            mapvertex_t b = game->map.vertices[editor->hover.point];
+            uint16_t sec = find_point_sector(&game->map, vertex_midpoint(a, b));
             uint16_t line = -1;
             if (sec != 0xFFFF) {
-              line = add_linedef(map, old_point, editor->hover.point, add_sidedef(map, sec), add_sidedef(map, sec));
+              line = add_linedef(&game->map, old_point, editor->hover.point, add_sidedef(&game->map, sec), add_sidedef(&game->map, sec));
             } else {
-              line = add_linedef(map, old_point, editor->hover.point, 0xFFFF, 0xFFFF);
+              line = add_linedef(&game->map, old_point, editor->hover.point, 0xFFFF, 0xFFFF);
             }
             uint16_t vertices[256];
-            int num_vertices = check_closed_loop(map, line, vertices);
+            int num_vertices = check_closed_loop(&game->map, line, vertices);
             if (num_vertices) {
-              uint16_t sector = add_sector(map);
-              set_loop_sector(map, sector, vertices, num_vertices);
+              uint16_t sector = add_sector(&game->map);
+              set_loop_sector(&game->map, sector, vertices, num_vertices);
               editor->drawing = false;
             }
           } else {
@@ -339,7 +342,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
             mat4 mvp;
             get_editor_mvp(editor, mvp);
             get_mouse_position(editor, cursor, mvp, world);
-            add_thing(map, (mapthing_t){
+            add_thing(&game->map, (mapthing_t){
               .x = world[0],
               .y = world[1],
               .type = editor->selected_thing_type,
@@ -367,8 +370,8 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
             editor->drawing = false;
             editor->num_draw_points = 0;
           } else if (editor->hover.line != 0xFFFF) {
-            editor->hover.point = split_linedef(map, editor->hover.line, sn.x, sn.y);
-          } else if (point_exists(sn, map, &point)) {
+            editor->hover.point = split_linedef(&game->map, editor->hover.line, sn.x, sn.y);
+          } else if (point_exists(sn, &game->map, &point)) {
             editor->hover.point = point;
             editor->dragging = true;
           }
@@ -381,10 +384,10 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           if (editor->dragging) {
             extern mapvertex_t sn;
             editor->dragging = false;
-            map->vertices[editor->hover.point] = sn;
+            game->map.vertices[editor->hover.point] = sn;
             // Rebuild vertex buffers
-            build_wall_vertex_buffer(map);
-            build_floor_vertex_buffer(map);
+            build_wall_vertex_buffer(&game->map);
+            build_floor_vertex_buffer(&game->map);
           }
           return true;
       }
@@ -434,7 +437,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         case SDL_SCANCODE_SPACE: {
           mat4 mvp;
           get_editor_mvp(editor, mvp);
-          get_mouse_position(editor, editor->cursor, mvp, &game.player.x);
+          get_mouse_position(editor, editor->cursor, mvp, &game->player.x);
           invalidate_window(win);
           return true;
         }
@@ -469,7 +472,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //};
 
 result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  editor_state_t *editor = win->userdata;
+  editor_state_t *editor = get_editor();
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;

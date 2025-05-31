@@ -70,21 +70,21 @@ uint32_t thing_checkboxes[] = {
 
 mapthing_t *selected_thing(editor_state_t *editor) {
   if (editor->hover.thing != 0xFFFF) {
-    return &game.map.things[editor->hover.thing];
+    return &game->map.things[editor->hover.thing];
   } else if (editor->selected.thing != 0xFFFF) {
-    return &game.map.things[editor->selected.thing];
+    return &game->map.things[editor->selected.thing];
   } else {
     return NULL;
   }
 }
 
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  editor_state_t *editor = win->userdata;
+  editor_state_t *editor = get_editor();
   mapthing_t *thing;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      ((editor_state_t*)lparam)->inspector = win;
+      editor->inspector = win;
       load_window_children(win, thing_layout);
       return true;
     case WM_PAINT:
