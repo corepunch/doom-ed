@@ -39,6 +39,7 @@ void new_map(void) {
   game_t *gm = malloc(sizeof(game_t));
   memset(gm, 0, sizeof(game_t));
   show_window(create_window("New map", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
+  init_editor(&gm->state);
   g_game = gm;
 }
 

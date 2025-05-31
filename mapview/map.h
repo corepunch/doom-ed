@@ -438,7 +438,6 @@ typedef struct {
 
 typedef struct {
   struct window_s *window;
-  struct window_s *inspector;
   int16_t cursor[2];
   vec2 camera;
   int grid_size;         // Grid size (8 units by default)
@@ -557,6 +556,7 @@ void track_mouse(window_t *win);
 void set_capture(window_t *win);
 void set_focus(window_t* win);
 
+extern window_t *g_inspector;
 extern game_t *g_game;
 
 bool init_sdl(void);

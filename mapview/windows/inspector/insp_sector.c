@@ -54,7 +54,7 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      editor->inspector = win;
+      g_inspector = win;
       load_window_children(win, sector_layout);
 //      init_combobox(get_window_item(win, ID_TEST_COMBOBOX));
       return true;

@@ -15,6 +15,8 @@ result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
 result_t win_stack(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
+window_t *g_inspector = NULL;
+
 void init_windows(void) {
   //  create_window("FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT(0, 0, 128, 64), NULL, win_perf, NULL);
   //  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);

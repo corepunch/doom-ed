@@ -178,15 +178,15 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void set_selection_mode(editor_state_t *editor, int mode) {
   switch ((editor->sel_mode = mode)) {
-    case edit_things: editor->inspector->proc = win_thing; break;
-    case edit_sectors: editor->inspector->proc = win_sector; break;
-    case edit_lines: editor->inspector->proc = win_line; break;
+    case edit_things: g_inspector->proc = win_thing; break;
+    case edit_sectors: g_inspector->proc = win_sector; break;
+    case edit_lines: g_inspector->proc = win_line; break;
     default:
       return;
   }
-  clear_window_children(editor->inspector);
-  post_message(editor->inspector, WM_CREATE, 0, editor);
-  invalidate_window(editor->inspector);
+  clear_window_children(g_inspector);
+  post_message(g_inspector, WM_CREATE, 0, editor);
+  invalidate_window(g_inspector);
 }
 
 static void editor_reset_input(editor_state_t *editor) {
@@ -199,14 +199,14 @@ static void editor_reset_input(editor_state_t *editor) {
 
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mapvertex_t sn;
-  editor_state_t *editor = get_editor();
   game_t *game = win->userdata;
+  editor_state_t *editor = game ? &game->state : NULL;
   int point = -1;
   int old_point = editor ? editor->hover.point : -1;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      editor->window = win;
+      ((game_t *)lparam)->state.window = win;
       return true;
     case WM_DESTROY:
       free_map_data(&game->map);
@@ -265,7 +265,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         }
       }
       invalidate_window(win);
-      invalidate_window(editor->inspector);
+      invalidate_window(g_inspector);
       return true;
       //    case WM_WHEEL:
       //      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
@@ -277,7 +277,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //      editor->hover.line = -1;
 //      editor->hover.thing = -1;
       invalidate_window(win);
-      invalidate_window(editor->inspector);
+      invalidate_window(g_inspector);
       return true;
     case WM_WHEEL: {
       mat4 mvp;

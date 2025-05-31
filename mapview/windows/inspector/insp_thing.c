@@ -86,7 +86,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
-      editor->inspector = win;
+      g_inspector = win;
       load_window_children(win, thing_layout);
       return true;
     case WM_PAINT:
