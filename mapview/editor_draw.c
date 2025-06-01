@@ -226,8 +226,6 @@ static void draw_cursor(int x, int y) {
   glDrawArrays(GL_LINES, 0, 4);
 }
 
-mapvertex_t sn;
-
 void get_mouse_position(window_t *, editor_state_t const *, int16_t const *screen, mat4 const, vec3);
 void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
 void get_editor_mvp(editor_state_t const *editor, mat4 mvp) {
@@ -410,58 +408,22 @@ draw_editor(window_t *win,
 //    goto draw_player;
 //  }
   
-  vec3 world;
-  get_mouse_position(win, editor, editor->cursor, mvp, world);
-  
-  sn.x = world[0];
-  sn.y = world[1];
+//  vec3 world;
+//  get_mouse_position(win, editor, editor->cursor, mvp, world);
   
   if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
-    float dist = 100000;
-    for (int i = 0; i < map->num_linedefs; i++) {
-      float x, y, z;
-      float d = closest_point_on_line(world[0], world[1],
-                                      map->vertices[map->linedefs[i].start].x,
-                                      map->vertices[map->linedefs[i].start].y,
-                                      map->vertices[map->linedefs[i].end].x,
-                                      map->vertices[map->linedefs[i].end].y,
-                                      &x, &y, &z);
-      if (dist > d) {
-        sn.x = x;
-        sn.y = y;
-        dist = d;
-        ((editor_state_t*)editor)->hover.index = i;
-        ((editor_state_t*)editor)->hover.type = obj_line;
-      }
-    }
-    
     if (editor->sel_mode == edit_vertices) {
-      for (int i = 0; i < map->num_vertices; i++) {
-        float dx = world[0] - map->vertices[i].x;
-        float dy = world[1] - map->vertices[i].y;
-        float d = dx*dx + dy*dy;
-        if (editor->grid_size * 8.0f > d) {
-          sn.x = map->vertices[i].x;
-          sn.y = map->vertices[i].y;
-          dist = d;
-          ((editor_state_t*)editor)->hover.index = -1;
-        }
-      }
+      draw_cursor(editor->sn.x, editor->sn.y);
     }
-    
-    if (dist < editor->grid_size * 8.0f) {
-      if (editor->sel_mode == edit_vertices) {
-        draw_cursor(sn.x, sn.y);
-      }
-    } else {
-      ((editor_state_t*)editor)->hover.index = -1;
-      if (editor->sel_mode == edit_vertices) {
-        // Snap to grid
-        snap_mouse_position(editor, world, &sn);
-        // Draw cursor at the snapped position
-        draw_cursor(sn.x, sn.y);
-      }
-    }
+//    } else {
+//      ((editor_state_t*)editor)->hover.index = -1;
+//      if (editor->sel_mode == edit_vertices) {
+//        // Snap to grid
+////        snap_mouse_position(editor, world, &editor->sn);
+//        // Draw cursor at the snapped position
+////        draw_cursor(editor->sn.x, editor->sn.y);
+//      }
+//    }
   }
 
   glUniform4ub(ui_prog_color, COLOR_HOVER);
@@ -474,7 +436,7 @@ draw_editor(window_t *win,
       if ((editor->dragging || editor->drawing) && has_selection(editor->hover, obj_point)) {
         float x = map->vertices[editor->hover.index].x;
         float y = map->vertices[editor->hover.index].y;
-        draw_line_ex(map, x, y, sn.x, sn.y);
+        draw_line_ex(map, x, y, editor->sn.x, editor->sn.y);
       }
       glUniform4ub(ui_prog_color, COLOR_SELECTED);
       if (has_selection(editor->selected, obj_line)) {

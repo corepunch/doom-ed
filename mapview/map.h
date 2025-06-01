@@ -462,6 +462,7 @@ typedef struct {
   int selected_thing_type;
   float scale;
   uint32_t vao, vbo;
+  mapvertex_t sn;
 } editor_state_t;
 
 typedef struct {
