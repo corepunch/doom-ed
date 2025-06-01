@@ -253,10 +253,8 @@ static void hover_vertex(game_t *game, editor_selection_t *hover, float *world) 
     if (d < game->state.grid_size * 8.0f) {
       game->state.sn.x = game->map.vertices[i].x;
       game->state.sn.y = game->map.vertices[i].y;
-//      hover->index = i;
-//      hover->type = obj_point;
-      hover->index = -1;
-      hover->type = obj_none;
+      hover->index = i;
+      hover->type = obj_point;
     }
   }
 }

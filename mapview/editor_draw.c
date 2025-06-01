@@ -265,19 +265,25 @@ void draw_line(map_data_t const *map, uint16_t i) {
     map->vertices[map->linedefs[i].end].y);
 }
 
+void draw_square(map_data_t const *map, int x, int y, int w, int h) {
+  draw_line_ex(map, x - w, y - h, x + w, y - h);
+  draw_line_ex(map, x + w, y - h, x + w, y + h);
+  draw_line_ex(map, x - w, y + h, x + w, y + h);
+  draw_line_ex(map, x - w, y - h, x - w, y + h);
+}
+
 void draw_thing_outline(map_data_t const *map, uint16_t index) {
   if (index >= map->num_things) return;
   mapthing_t const *thing = &map->things[index];
   sprite_t *spr = get_thing_sprite_name(thing->type, 0);
   if (!spr) return;
-  int x = thing->x;// - spr->offsetx;
-  int y = thing->y;// - spr->offsety;
-  int w = spr->width/2;
-  int h = spr->height/2;
-  draw_line_ex(map, x - w, y - h, x + w, y - h);
-  draw_line_ex(map, x + w, y - h, x + w, y + h);
-  draw_line_ex(map, x - w, y + h, x + w, y + h);
-  draw_line_ex(map, x - w, y - h, x - w, y + h);
+  draw_square(map, thing->x, thing->y, spr->width/2, spr->height/2);
+}
+
+void draw_vertex_outline(map_data_t const *map, uint16_t index) {
+  if (index >= map->num_vertices) return;
+  mapvertex_t const *vertex = &map->vertices[index];
+  draw_square(map, vertex->x, vertex->y, 10, 10);
 }
 
 void draw_sector_outline(map_data_t const *map, uint16_t index) {
@@ -359,6 +365,30 @@ static viewdef_t setup_matrix(vec4 *mvp, const player_t *player) {
   return viewdef;
 }
 
+static void
+draw_selection(const editor_selection_t *selected,
+               const map_data_t *map,
+               uint32_t color)
+{
+  glUniform4ub(ui_prog_color, color);
+  switch (selected->type) {
+    case obj_line:
+      draw_line(map, selected->index);
+      break;
+    case edit_sectors:
+      draw_sector_outline(map, selected->index);
+      break;
+    case edit_things:
+      draw_thing_outline(map, selected->index);
+      break;
+    case edit_vertices:
+      draw_vertex_outline(map, selected->index);
+      break;
+    default:
+      break;
+  }
+}
+
 // Draw the editor UI
 void
 draw_editor(window_t *win,
@@ -426,8 +456,11 @@ draw_editor(window_t *win,
 //    }
   }
 
-  glUniform4ub(ui_prog_color, COLOR_HOVER);
   glBindTexture(GL_TEXTURE_2D, white_tex);
+  bool hovered_selected = !memcmp(&editor->hover, &editor->selected, sizeof(editor->hover));
+
+  draw_selection(&editor->selected, map, COLOR_SELECTED);
+  draw_selection(&editor->hover, map, hovered_selected ? COLOR_SELECTED_HOVER : COLOR_HOVER);
   
   switch (editor->sel_mode) {
     case edit_vertices:
@@ -437,52 +470,6 @@ draw_editor(window_t *win,
         float x = map->vertices[editor->hover.index].x;
         float y = map->vertices[editor->hover.index].y;
         draw_line_ex(map, x, y, editor->sn.x, editor->sn.y);
-      }
-      glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      if (has_selection(editor->selected, obj_line)) {
-        draw_line(map, editor->selected.index);
-        if (editor->selected.index == editor->hover.index &&
-            has_selection(editor->hover, obj_line))
-        {
-          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-        } else {
-          glUniform4ub(ui_prog_color, COLOR_HOVER);
-        }
-      }
-      if (has_selection(editor->hover, obj_line)) {
-        draw_line(map, editor->hover.index);
-      }
-      break;
-    case edit_sectors:
-      glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      if (has_selection(editor->selected, obj_sector)) {
-        draw_sector_outline(map, editor->selected.index);
-        if (editor->selected.index == editor->hover.index &&
-            has_selection(editor->hover, obj_sector))
-        {
-          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-        } else {
-          glUniform4ub(ui_prog_color, COLOR_HOVER);
-        }
-      }
-      if (has_selection(editor->hover, obj_sector)) {
-        draw_sector_outline(map, editor->hover.index);
-      }
-      break;
-    case edit_things:
-      glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      if (has_selection(editor->selected, obj_thing)) {
-        draw_thing_outline(map, editor->selected.index);
-        if (editor->selected.index == editor->hover.index &&
-            has_selection(editor->hover, obj_thing))
-        {
-          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-        } else {
-          glUniform4ub(ui_prog_color, COLOR_HOVER);
-        }
-      }
-      if (has_selection(editor->hover, obj_thing)) {
-        draw_thing_outline(map, editor->hover.index);
       }
       break;
   }
