@@ -38,6 +38,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void new_map(void) {
   game_t *gm = malloc(sizeof(game_t));
   memset(gm, 0, sizeof(game_t));
+  gm->last_time = SDL_GetTicks();
   show_window(create_window("New map", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
   init_editor(&gm->state);
   g_game = gm;
@@ -46,7 +47,8 @@ void new_map(void) {
 void open_map(const char *mapname) {
   game_t *gm = malloc(sizeof(game_t));
   gm->map = load_map(mapname);
-  
+  gm->last_time = SDL_GetTicks();
+
   if (gm->map.num_vertices > 0) {
     print_map_info(&gm->map);
 //    allocate_mapside_textures(&game->map);
@@ -325,6 +327,7 @@ void paint_face(map_data_t *map, bool eyedropper) {
 }
 
 void handle_scroll(int wheel[], map_data_t *map);
+void game_tick(game_t *game);
 
 result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
@@ -344,6 +347,7 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       free_map_data(&game->map);
       return true;
     case WM_PAINT:
+      game_tick(game);
       draw_dungeon(win, moved);
       if (_focused == win) {
         post_message(win, WM_PAINT, wparam, lparam);

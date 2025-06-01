@@ -456,6 +456,7 @@ typedef struct {
 typedef struct {
   int episode;
   int level;
+  uint32_t last_time;
   map_data_t map;
   player_t player;
   editor_state_t state;

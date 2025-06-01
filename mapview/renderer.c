@@ -226,25 +226,15 @@ void cleanup(void) {
 // Main function
 int run(void) {
   // Main game loop
-  Uint32 last_time = SDL_GetTicks();
-
   while (running) {
     mode = false;
     // Calculate delta time for smooth movement
-    Uint32 current_time = SDL_GetTicks();
-    float delta_time = (current_time - last_time) / 1000.0f;
-    last_time = current_time;
 
 //    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
 //    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-    void game_tick(game_t *game, float);
     void draw_intermission(void);
     void handle_intermission_input(float delta_time);
-
-    if (g_game) {
-      game_tick(g_game, delta_time);
-    }
 
     handle_windows();
 

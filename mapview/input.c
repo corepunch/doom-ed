@@ -149,7 +149,11 @@ void handle_scroll(int wheel[], map_data_t *map) {
 //  }
 }
 
-void game_tick(game_t *game, float delta_time) {
+void game_tick(game_t *game) {
+  Uint32 current_time = SDL_GetTicks();
+  float delta_time = (current_time - game->last_time) / 1000.0f;
+  game->last_time = current_time;
+
   player_t *player = &game->player;
   // Apply mouse rotation if relative mode is enabled
   if (true) {
