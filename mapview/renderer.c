@@ -95,10 +95,6 @@ editor_state_t *get_editor(void) {
   return g_game ? &g_game->state : NULL;
 }
 
-void init_floor_shader(void);
-void init_sky_geometry(void);
-bool init_radial_menu(void);
-
 // Initialize SDL and create window/renderer
 bool init_sdl(void) {
   if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
@@ -206,11 +202,6 @@ bool init_sdl(void) {
   glBindTexture(GL_TEXTURE_2D, no_tex);
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xffffff00});
 
-  init_floor_shader();
-  init_things();
-  init_sky_geometry();
-  init_radial_menu();
-  
   return true;
 }
 

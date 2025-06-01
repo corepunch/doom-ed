@@ -210,6 +210,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   memcpy(viewdef.mvp, mvp, sizeof(mat4));
   memcpy(viewdef.viewpos, &player->x, sizeof(vec3));
   viewdef.frame = frame++;
+  viewdef.time = game->last_time;
   glm_frustum_planes(mvp, viewdef.frustum);
   
   glDepthMask(GL_TRUE);

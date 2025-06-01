@@ -25,10 +25,10 @@ windef_t sector_layout[] = {
 mapsector_t *selected_sector(game_t *game) {
   if (!g_game) {
     return NULL;
-  } else if (game->state.hover.sector != 0xFFFF) {
-    return &game->map.sectors[game->state.hover.sector];
-  } else if (game->state.selected.sector != 0xFFFF) {
-    return &game->map.sectors[game->state.selected.sector];
+  } else if (has_selection(game->state.hover, obj_sector)) {
+    return &game->map.sectors[game->state.hover.index];
+  } else if (has_selection(game->state.selected, obj_sector)) {
+    return &game->map.sectors[game->state.selected.index];
   } else {
     return NULL;
   }

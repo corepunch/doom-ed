@@ -17,6 +17,7 @@ enum {
   ID_THING_TYPE = 1000,
   ID_THING_POS_X,
   ID_THING_POS_Y,
+  ID_THING_ANGLE,
   ID_THING_SPRITE,
   ID_THING_EASY,
   ID_THING_NORMAL,
@@ -38,6 +39,8 @@ windef_t thing_layout[] = {
   { "EDITTEXT", "", ID_THING_POS_X, 50 },
   { "TEXT", "Position Y:", -1, LABEL_WIDTH },
   { "EDITTEXT", "", ID_THING_POS_Y, 50 },
+  { "TEXT", "Angle:", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_THING_ANGLE, 50 },
   { "SPRITE", "", ID_THING_SPRITE, 64, 64 },
   { "SPACE" },
   { "CHECKBOX", "Easy", ID_THING_EASY, 64 },
@@ -69,12 +72,10 @@ uint32_t thing_checkboxes[] = {
 };
 
 mapthing_t *selected_thing(game_t *game) {
-  if (!g_game) {
-    return NULL;
-  } else if (game->state.hover.thing != 0xFFFF) {
-    return &game->map.things[game->state.hover.thing];
-  } else if (game->state.selected.thing != 0xFFFF) {
-    return &game->map.things[game->state.selected.thing];
+  if (has_selection(game->state.hover, obj_thing)) {
+    return &game->map.things[game->state.hover.index];
+  } else if (has_selection(game->state.selected, obj_thing)) {
+    return &game->map.things[game->state.selected.index];
   } else {
     return NULL;
   }
@@ -91,12 +92,12 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return true;
     case WM_PAINT:
       if (editor->sel_mode == edit_things && (thing = selected_thing(g_game))) {
-        sprite_t *get_thing_sprite_name(int thing_type, int angle);
         sprite_t *spr = get_thing_sprite_name(thing->type, 0);
         set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
         set_window_item_text(win, ID_THING_TYPE, "%d", thing->height);
         set_window_item_text(win, ID_THING_POS_X, "%d", thing->x);
         set_window_item_text(win, ID_THING_POS_Y, "%d", thing->y);
+        set_window_item_text(win, ID_THING_ANGLE, "%d", thing->angle);
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
           window_t *checkbox = get_window_item(win, thing_checkboxes[i]);
           uint32_t value = thing->options&(1<<i);
@@ -121,6 +122,10 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         if (wparam == MAKEDWORD(ID_THING_POS_Y, EN_UPDATE)) {
           thing->y = atoi(((window_t *)lparam)->title);
+          invalidate_window(editor->window);
+        }
+        if (wparam == MAKEDWORD(ID_THING_ANGLE, EN_UPDATE)) {
+          thing->angle = atoi(((window_t *)lparam)->title);
           invalidate_window(editor->window);
         }
       }

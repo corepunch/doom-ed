@@ -51,7 +51,7 @@ typedef struct {
   GLuint vao;            // Vertex array object
   GLuint vbo;            // Vertex buffer object
   GLuint tmp;
-  sprite_t sprites[MAX_SPRITES];
+  sprite_t all_sprites[MAX_SPRITES];
   int num_sprites;
   mat4 projection;       // Orthographic projection matrix
   GLuint crosshair_texture; // Custom crosshair texture (if needed)
@@ -70,7 +70,7 @@ int load_sprite(const char *name) {
   int width, height, offsetx, offsety;
   GLuint texture = load_sprite_texture(cache_lump(name), &width, &height, &offsetx, &offsety);
   if (texture) {
-    sprite_t* sprite = &g_sprite_system.sprites[g_sprite_system.num_sprites];
+    sprite_t* sprite = &g_sprite_system.all_sprites[g_sprite_system.num_sprites];
     strncpy(sprite->name, name, 16);
     sprite->texture = texture;
     sprite->width = width;
@@ -295,8 +295,26 @@ sprite_t* find_sprite(const char* name) {
   sprite_system_t* sys = &g_sprite_system;
   
   for (int i = 0; i < sys->num_sprites; i++) {
-    if (strncmp(sys->sprites[i].name, name, 4) == 0) {
-      return &sys->sprites[i];
+    if (strncmp(sys->all_sprites[i].name, name, 4) == 0) {
+      return &sys->all_sprites[i];
+    }
+  }
+  
+//  for (int i = 0; i < sys->num_sprites; i++) {
+//    if (strncmp(sys->all_sprites[i].name, name, 4) == 0) {
+//      return &sys->all_sprites[i];
+//    }
+//  }
+  
+  return NULL;
+}
+
+sprite_t* find_sprite6(const char* name) {
+  sprite_system_t* sys = &g_sprite_system;
+  
+  for (int i = 0; i < sys->num_sprites; i++) {
+    if (strncmp(sys->all_sprites[i].name, name, 6) == 0) {
+      return &sys->all_sprites[i];
     }
   }
   
@@ -496,7 +514,7 @@ void draw_crosshair(float k) {
       
       // Add it to our sprite cache
       if (sys->num_sprites < MAX_SPRITES) {
-        sprite_t* new_sprite = &sys->sprites[sys->num_sprites];
+        sprite_t* new_sprite = &sys->all_sprites[sys->num_sprites];
         strncpy(new_sprite->name, "CROSSH", 16);
         new_sprite->texture = sys->crosshair_texture;
         new_sprite->width = CROSSHAIR_SIZE;
@@ -554,7 +572,7 @@ void cleanup_sprites(void) {
   
   // Delete textures
   for (int i = 0; i < sys->num_sprites; i++) {
-    glDeleteTextures(1, &sys->sprites[i].texture);
+    glDeleteTextures(1, &sys->all_sprites[i].texture);
   }
   
   // Delete shader program and buffers

@@ -270,7 +270,6 @@ void draw_line(map_data_t const *map, uint16_t i) {
 void draw_thing_outline(map_data_t const *map, uint16_t index) {
   if (index >= map->num_things) return;
   mapthing_t const *thing = &map->things[index];
-  sprite_t *get_thing_sprite_name(int thing_type, int angle);
   sprite_t *spr = get_thing_sprite_name(thing->type, 0);
   if (!spr) return;
   int x = thing->x;// - spr->offsetx;
@@ -416,54 +415,52 @@ draw_editor(window_t *win,
   
   sn.x = world[0];
   sn.y = world[1];
-  float dist = 100000;
-  for (int i = 0; i < map->num_linedefs; i++) {
-    float x, y, z;
-    float d = closest_point_on_line(world[0], world[1],
-                                    map->vertices[map->linedefs[i].start].x,
-                                    map->vertices[map->linedefs[i].start].y,
-                                    map->vertices[map->linedefs[i].end].x,
-                                    map->vertices[map->linedefs[i].end].y,
-                                    &x, &y, &z);
-    if (dist > d) {
-      sn.x = x;
-      sn.y = y;
-      dist = d;
-      ((editor_state_t*)editor)->hover.line = i;
-    }
-  }
   
-//  static int s = -1;
-//  if (s!=editor->hover.line) {
-//    printf("%d\n", editor->hover.line);
-//    s =editor->hover.line;
-//  }
-
-  if (editor->sel_mode == edit_vertices) {
-    for (int i = 0; i < map->num_vertices; i++) {
-      float dx = world[0] - map->vertices[i].x;
-      float dy = world[1] - map->vertices[i].y;
-      float d = dx*dx + dy*dy;
-      if (editor->grid_size * 8.0f > d) {
-        sn.x = map->vertices[i].x;
-        sn.y = map->vertices[i].y;
+  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
+    float dist = 100000;
+    for (int i = 0; i < map->num_linedefs; i++) {
+      float x, y, z;
+      float d = closest_point_on_line(world[0], world[1],
+                                      map->vertices[map->linedefs[i].start].x,
+                                      map->vertices[map->linedefs[i].start].y,
+                                      map->vertices[map->linedefs[i].end].x,
+                                      map->vertices[map->linedefs[i].end].y,
+                                      &x, &y, &z);
+      if (dist > d) {
+        sn.x = x;
+        sn.y = y;
         dist = d;
-        ((editor_state_t*)editor)->hover.line = -1;
+        ((editor_state_t*)editor)->hover.index = i;
+        ((editor_state_t*)editor)->hover.type = obj_line;
       }
     }
-  }
-
-  if (dist < editor->grid_size * 8.0f) {
+    
     if (editor->sel_mode == edit_vertices) {
-      draw_cursor(sn.x, sn.y);
+      for (int i = 0; i < map->num_vertices; i++) {
+        float dx = world[0] - map->vertices[i].x;
+        float dy = world[1] - map->vertices[i].y;
+        float d = dx*dx + dy*dy;
+        if (editor->grid_size * 8.0f > d) {
+          sn.x = map->vertices[i].x;
+          sn.y = map->vertices[i].y;
+          dist = d;
+          ((editor_state_t*)editor)->hover.index = -1;
+        }
+      }
     }
-  } else {
-    ((editor_state_t*)editor)->hover.line = -1;
-    if (editor->sel_mode == edit_vertices) {
-      // Snap to grid
-      snap_mouse_position(editor, world, &sn);
-      // Draw cursor at the snapped position
-//      draw_cursor(sn.x, sn.y);
+    
+    if (dist < editor->grid_size * 8.0f) {
+      if (editor->sel_mode == edit_vertices) {
+        draw_cursor(sn.x, sn.y);
+      }
+    } else {
+      ((editor_state_t*)editor)->hover.index = -1;
+      if (editor->sel_mode == edit_vertices) {
+        // Snap to grid
+        snap_mouse_position(editor, world, &sn);
+        // Draw cursor at the snapped position
+        draw_cursor(sn.x, sn.y);
+      }
     }
   }
 
@@ -474,39 +471,57 @@ draw_editor(window_t *win,
     case edit_vertices:
     case edit_lines:
       // If currently drawing, show line from last point to cursor
-      if (editor->dragging || editor->drawing) {
-        float x = map->vertices[editor->hover.point].x;
-        float y = map->vertices[editor->hover.point].y;
+      if ((editor->dragging || editor->drawing) && has_selection(editor->hover, obj_point)) {
+        float x = map->vertices[editor->hover.index].x;
+        float y = map->vertices[editor->hover.index].y;
         draw_line_ex(map, x, y, sn.x, sn.y);
       }
       glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      draw_line(map, editor->selected.line);
-      if (editor->selected.line == editor->hover.line) {
-        glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-      } else {
-        glUniform4ub(ui_prog_color, COLOR_HOVER);
+      if (has_selection(editor->selected, obj_line)) {
+        draw_line(map, editor->selected.index);
+        if (editor->selected.index == editor->hover.index &&
+            has_selection(editor->hover, obj_line))
+        {
+          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
+        } else {
+          glUniform4ub(ui_prog_color, COLOR_HOVER);
+        }
       }
-      draw_line(map, editor->hover.line);
+      if (has_selection(editor->hover, obj_line)) {
+        draw_line(map, editor->hover.index);
+      }
       break;
     case edit_sectors:
       glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      draw_sector_outline(map, editor->selected.sector);
-      if (editor->selected.sector == editor->hover.sector) {
-        glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-      } else {
-        glUniform4ub(ui_prog_color, COLOR_HOVER);
+      if (has_selection(editor->selected, obj_sector)) {
+        draw_sector_outline(map, editor->selected.index);
+        if (editor->selected.index == editor->hover.index &&
+            has_selection(editor->hover, obj_sector))
+        {
+          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
+        } else {
+          glUniform4ub(ui_prog_color, COLOR_HOVER);
+        }
       }
-      draw_sector_outline(map, editor->hover.sector);
+      if (has_selection(editor->hover, obj_sector)) {
+        draw_sector_outline(map, editor->hover.index);
+      }
       break;
     case edit_things:
       glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      draw_thing_outline(map, editor->selected.thing);
-      if (editor->selected.thing == editor->hover.thing) {
-        glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-      } else {
-        glUniform4ub(ui_prog_color, COLOR_HOVER);
+      if (has_selection(editor->selected, obj_thing)) {
+        draw_thing_outline(map, editor->selected.index);
+        if (editor->selected.index == editor->hover.index &&
+            has_selection(editor->hover, obj_thing))
+        {
+          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
+        } else {
+          glUniform4ub(ui_prog_color, COLOR_HOVER);
+        }
       }
-      draw_thing_outline(map, editor->hover.thing);
+      if (has_selection(editor->hover, obj_thing)) {
+        draw_thing_outline(map, editor->hover.index);
+      }
       break;
   }
   

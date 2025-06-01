@@ -412,6 +412,7 @@ typedef struct {
   player_t player;
   uint32_t frame;
   uint16_t portal;
+  uint32_t time;
 } viewdef_t;
 
 // Collection to store loaded textures
@@ -421,9 +422,8 @@ typedef struct texture_cache_s {
   mapside_texture_t textures[1];
 } texture_cache_t;
 
-
-
 enum {
+  edit_select,
   edit_vertices,
   edit_lines,
   edit_sectors,
@@ -432,9 +432,20 @@ enum {
   edit_modes
 };
 
+typedef enum {
+  obj_none,
+  obj_point,
+  obj_line,
+  obj_sector,
+  obj_thing,
+} objtype_t;
+
 typedef struct {
-  uint16_t point, line, sector, thing;
+  objtype_t type;
+  uint16_t index;
 } editor_selection_t;
+
+#define has_selection(s, t) (s.type == t && s.index != 0xFFFF)
 
 typedef struct {
   struct window_s *window;

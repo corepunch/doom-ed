@@ -3,6 +3,10 @@
 #include "console.h"
 #include "editor.h"
 
+void init_floor_shader(void);
+void init_sky_geometry(void);
+bool init_radial_menu(void);
+
 result_t win_desktop(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_tray(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
@@ -73,17 +77,21 @@ int main(int argc, char* argv[]) {
     return 1;
   }
   
+  init_floor_shader();
+  init_sky_geometry();
+  init_radial_menu();
   init_console();
   load_console_font();
   init_sprites();
+  init_things();
   init_intermission();
   init_windows();
   
   allocate_mapside_textures();
   allocate_flat_textures();
 
-  new_map();
-//  open_map("MAP01");
+//  new_map();
+  open_map("MAP01");
   
   run();
 

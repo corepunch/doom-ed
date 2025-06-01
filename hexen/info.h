@@ -3180,13 +3180,12 @@ typedef enum {
 
 typedef struct
 {
-  spritenum_t  sprite;
+  spritenum_t sprite;
   long      frame;
   long      tics;
   void      (*action) (void);
-  statenum_t    nextstate;
+  statenum_t nextstate;
   long      misc1, misc2;
-  void      *cache;
 } state_t;
 
 extern state_t  states[NUMSTATES];
