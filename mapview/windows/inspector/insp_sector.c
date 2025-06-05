@@ -51,6 +51,7 @@ mapsector_t *selected_sector(game_t *game) {
 result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case WM_PAINT:
+      draw_text_small("Nothing selected", 5, 5, COLOR_DARK_EDGE);
       draw_text_small("Nothing selected", 4, 4, COLOR_TEXT_NORMAL);
       return true;
     default:

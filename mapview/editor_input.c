@@ -572,6 +572,15 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //  0xFF7A4C88,
 //};
 
+
+static int buttons[] = {
+  edit_select,
+  edit_vertices,
+  edit_things,
+  edit_sounds,
+  -1
+};
+
 result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   switch (msg) {
@@ -579,13 +588,17 @@ result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       win->userdata = lparam;
       return true;
     case WM_PAINT:
-      for (int i = 0; i < edit_modes; i++) {
-        draw_icon16(i, i*16, 0, editor->sel_mode == i ? -1 : 0x80ffffff);
+      for (int i = 0; buttons[i] != -1; i++) {
+        uint32_t col = editor->sel_mode == buttons[i] ? COLOR_TEXT_SUCCESS : COLOR_TEXT_NORMAL;
+        draw_icon16(buttons[i], i * 16 + 1, 1, COLOR_DARK_EDGE);
+        draw_icon16(buttons[i], i * 16, 0, col);
       }
       return true;
     case WM_LBUTTONUP:
-      if (LOWORD(wparam) / 16 < 5) {
-        set_selection_mode(editor, LOWORD(wparam) / 16);
+      for (int i = 0; buttons[i] != -1; i++) {
+        if (LOWORD(wparam) > i * 16 && LOWORD(wparam) < (i+1) * 16) {
+          set_selection_mode(editor, buttons[i]);
+        }
       }
       invalidate_window(win);
       return true;

@@ -64,6 +64,7 @@ typedef enum {
 } ed_icon_t;
 
 typedef enum {
+  icon16_select,
   icon16_points,
   icon16_lines,
   icon16_sectors,
