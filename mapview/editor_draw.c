@@ -292,7 +292,7 @@ void draw_thing_outline(map_data_t const *map, uint16_t index) {
 void draw_vertex_outline(map_data_t const *map, uint16_t index) {
   if (index >= map->num_vertices) return;
   mapvertex_t const *vertex = &map->vertices[index];
-  draw_square(map, vertex->x, vertex->y, 10, 10);
+  draw_square(map, vertex->x, vertex->y, 8, 8);
 }
 
 void draw_sector_outline(map_data_t const *map, uint16_t index) {
@@ -447,44 +447,42 @@ draw_editor(window_t *win,
 //    goto draw_player;
 //  }
   
-//  vec3 world;
-//  get_mouse_position(win, editor, editor->cursor, mvp, world);
-  
-  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
-    if (editor->sel_mode == edit_vertices) {
-      draw_cursor(editor->sn.x, editor->sn.y);
-    }
+//  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
+  if (editor->sel_mode == edit_vertices) {
+    draw_cursor(editor->sn.x, editor->sn.y);
+  }
 //    } else {
 //      ((editor_state_t*)editor)->hover.index = -1;
 //      if (editor->sel_mode == edit_vertices) {
 //        // Snap to grid
-////        snap_mouse_position(editor, world, &editor->sn);
+//        snap_mouse_position(editor, world, &editor->sn);
 //        // Draw cursor at the snapped position
-////        draw_cursor(editor->sn.x, editor->sn.y);
+//        draw_cursor(editor->sn.x, editor->sn.y);
 //      }
 //    }
-  }
+//  }
 
   glBindTexture(GL_TEXTURE_2D, white_tex);
-  bool hovered_selected = !memcmp(&editor->hover, &editor->selected, sizeof(editor->hover));
+  bool sel = !memcmp(&editor->hover, &editor->selected, sizeof(editor->hover));
 
   draw_selection(&editor->selected, map, COLOR_SELECTED);
-  draw_selection(&editor->hover, map, hovered_selected ? COLOR_SELECTED_HOVER : COLOR_HOVER);
+  draw_selection(&editor->hover, map, sel ? COLOR_SELECTED_HOVER : COLOR_HOVER);
   
   switch (editor->sel_mode) {
     case edit_vertices:
     case edit_lines:
       // If currently drawing, show line from last point to cursor
-      if ((editor->dragging || editor->drawing) && has_selection(editor->hover, obj_point)) {
-        float x = map->vertices[editor->hover.index].x;
-        float y = map->vertices[editor->hover.index].y;
+      if ((editor->dragging || editor->drawing) &&
+          has_selection(editor->selected, obj_point))
+      {
+        float x = map->vertices[editor->selected.index].x;
+        float y = map->vertices[editor->selected.index].y;
         draw_line_ex(map, x, y, editor->sn.x, editor->sn.y);
       }
       break;
   }
   
 draw_player:
-
   draw_player_icon(editor, player);
 }
 

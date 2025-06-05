@@ -462,7 +462,7 @@ void handle_windows(void) {
           int16_t y = LOCAL_Y(event.motion, win);
           int16_t dx = event.motion.xrel;
           int16_t dy = event.motion.yrel;
-          if (y >= 0) {
+          if (y >= 0 && (win == _captured || win == _focused)) {
             send_message(win, WM_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
           }
         }
