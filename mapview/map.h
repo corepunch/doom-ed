@@ -576,6 +576,8 @@ int get_message(SDL_Event *evt);
 void dispatch_message(SDL_Event *evt);
 void repost_messages(void);
 bool is_window(window_t *win);
+void end_dialog(window_t *win, uint32_t code);
+uint32_t show_dialog(char const *, const rect_t*, struct window_s *, winproc_t, void *param);
 
 extern window_t *g_inspector;
 extern game_t *g_game;

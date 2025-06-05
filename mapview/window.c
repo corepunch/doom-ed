@@ -522,7 +522,7 @@ void dispatch_message(SDL_Event *evt) {
         int b = (_dragging->frame.x + _dragging->frame.w - CONTROL_BUTTON_PADDING - x) / CONTROL_BUTTON_WIDTH;
         if (b == 0) {
           if (_dragging->flags & WINDOW_DIALOG) {
-            destroy_window(_dragging);
+            end_dialog(_dragging, -1);
           } else {
             show_window(_dragging, false);
           }
@@ -542,6 +542,7 @@ void dispatch_message(SDL_Event *evt) {
                  (win = find_window(SCALE_POINT(evt->button.x),
                                     SCALE_POINT(evt->button.y))))
       {
+        set_focus(win);
         if (SCALE_POINT(evt->button.y) >= win->frame.y || win == _captured) {
           int x = LOCAL_X(evt->button, win);
           int y = LOCAL_Y(evt->button, win);
@@ -561,7 +562,6 @@ void dispatch_message(SDL_Event *evt) {
               //              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
           }
         }
-        set_focus(win);
       }
       break;
   }
@@ -1189,4 +1189,31 @@ bool is_window(window_t *win) {
     }
   }
   return false;
+}
+
+static uint32_t _return_code;
+void end_dialog(window_t *win, uint32_t code) {
+  _return_code = code;
+  destroy_window(win);
+}
+
+uint32_t
+show_dialog(char const *title,
+            const rect_t *frame,
+            struct window_s *owner,
+            winproc_t proc,
+            void *param)
+{
+  extern bool running;
+  SDL_Event event;
+  uint32_t flags = /*WINDOW_VSCROLL|*/WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
+  window_t *dlg = create_window("Things", flags, frame, owner, proc, param);
+  show_window(dlg, true);
+  while (running && is_window(dlg)) {
+    while (get_message(&event)) {
+      dispatch_message(&event);
+    }
+    repost_messages();
+  }
+  return _return_code;
 }

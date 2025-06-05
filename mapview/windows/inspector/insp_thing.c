@@ -87,18 +87,8 @@ result_t win_things(window_t *, uint32_t, uint32_t, void *);
 
 void select_thing_type(void) {
   rect_t rect = {96, 96, 128, 256};
-  window_t *dlg = create_window("Things", WINDOW_VSCROLL|WINDOW_DIALOG, &rect, NULL, win_things, NULL);
-  show_window(dlg, true);
-
-  SDL_Event event;
-  extern bool running;
-  while (running && is_window(dlg)) {
-    while (get_message(&event)) {
-      dispatch_message(&event);
-    }
-    repost_messages();
-  }
-  printf("closed\n");
+  uint32_t ret = show_dialog("Things", &rect, NULL, win_things, NULL);
+  printf("closed %d\n", ret);
 }
 
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {

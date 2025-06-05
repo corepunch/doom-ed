@@ -408,14 +408,18 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       get_texture_at_point(win->userdata, LOWORD(wparam), HIWORD(wparam));
       if (texture_idx >= 0) {
         mobjinfo_t const *mobj = &ed_objs[texture_idx];
-//        printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
+        // printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
+
         if (g_game && has_selection(editor->selected, obj_thing)) {
           g_game->map.things[editor->selected.index].type = mobj->doomednum;
           invalidate_window(editor->window);
         }
         
         editor->selected_thing_type = mobj->doomednum;
-//        memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
+        // memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
+        
+        end_dialog(win, mobj->doomednum);
+        return true;
       }
       invalidate_window(win);
       return true;
