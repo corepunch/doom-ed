@@ -18,6 +18,7 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_stack(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 window_t *g_inspector = NULL;
 
@@ -36,7 +37,9 @@ void init_windows(void) {
   window_t *stackview = create_window("Sidebar", WINDOW_NOFILL, MAKERECT(screen_width-160, 16, 155, 320), NULL, win_stack, NULL);
   show_window(stackview, true);
   send_message(stackview, ST_ADDWINDOW, 0, create_window("Toolbar", WINDOW_NOTRAYBUTTON, MAKERECT(16, 16, 150, 16), NULL, win_toolbar, NULL));
-  send_message(stackview, ST_ADDWINDOW, 0, create_window("Inspector", WINDOW_NOTRAYBUTTON, MAKERECT(200, 20, 150, 300), NULL, win_sector, NULL));
+  
+  g_inspector = create_window("Inspector", WINDOW_NOTRAYBUTTON, MAKERECT(200, 20, 150, 300), NULL, win_dummy, NULL);
+  send_message(stackview, ST_ADDWINDOW, 0, g_inspector);
 }
 
 int main(int argc, char* argv[]) {

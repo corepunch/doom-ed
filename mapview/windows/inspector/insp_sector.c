@@ -48,9 +48,19 @@ mapsector_t *selected_sector(game_t *game) {
 //  send_message(cb, CB_SETCURSEL, 2, NULL);
 //}
 
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  switch (msg) {
+    case WM_PAINT:
+      draw_text_small("Nothing selected", 4, 4, COLOR_TEXT_NORMAL);
+      return true;
+    default:
+      return false;
+  }
+}
+
 result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
-  mapsector_t *sector;
+  mapsector_t *sector = selected_sector(g_game);
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
@@ -59,7 +69,7 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //      init_combobox(get_window_item(win, ID_TEST_COMBOBOX));
       return true;
     case WM_PAINT:
-      if (editor->sel_mode == edit_sectors && (sector = selected_sector(g_game))) {
+      if (sector) {
         //        sprite_t *spr = get_thing_sprite_name(thing->type, 0);
         set_window_item_text(win, ID_SECTOR_FLOOR_HEIGHT, "%d", sector->floorheight);
         set_window_item_text(win, ID_SECTOR_FLOOR_IMAGE, sector->floorpic);
@@ -74,7 +84,7 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       }
       return false;
     case WM_COMMAND:
-      if (editor->sel_mode == edit_sectors && (sector = selected_sector(g_game))) {
+      if (sector) {
 //        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
 //          if (wparam == MAKEDWORD(checkboxes[i], BN_CLICKED)) {
 //            if (send_message(lparam, BM_GETCHECK, 0, NULL)) {

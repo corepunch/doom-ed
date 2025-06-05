@@ -165,16 +165,17 @@ snap_mouse_position(editor_state_t const *editor,
 void draw_window_controls(window_t *win);
 void get_editor_mvp(editor_state_t const *, mat4);
 
-#define ICON_STEP 12
-
-static int icon_x(window_t const *win, int i) {
-  return win->frame.x + 4 + i * ICON_STEP;
-}
+//#define ICON_STEP 12
+//static int icon_x(window_t const *win, int i) {
+//  return win->frame.x + 4 + i * ICON_STEP;
+//}
 
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_vertex(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void set_selection_mode(editor_state_t *editor, int mode) {
   switch ((editor->sel_mode = mode)) {
@@ -189,6 +190,23 @@ void set_selection_mode(editor_state_t *editor, int mode) {
   invalidate_window(g_inspector);
 }
 
+static void update_inspector(editor_state_t *editor, objtype_t type) {
+  winproc_t proc = NULL;
+  switch (type) {
+    case obj_thing: proc = win_thing; break;
+    case obj_sector: proc = win_sector; break;
+    case obj_line: proc = win_line; break;
+    case obj_point: proc = win_vertex; break;
+    default: proc = win_dummy; break;
+  }
+  if (g_inspector->proc != proc) {
+    g_inspector->proc = proc;
+    clear_window_children(g_inspector);
+    post_message(g_inspector, WM_CREATE, 0, editor);
+    invalidate_window(g_inspector);
+  }
+}
+
 static void editor_reset_input(editor_state_t *editor) {
   editor->drawing = false;
   editor->dragging = false;
@@ -199,8 +217,10 @@ static void editor_reset_input(editor_state_t *editor) {
 
 static void hover_sector(game_t *const *game, editor_selection_t *hover, float *world_1) {
   mapsector_t const *sec = find_player_sector(&(*game)->map, world_1[0], world_1[1]);
-  hover->index = sec ? (int)(sec - (*game)->map.sectors) : -1;
-  hover->type = obj_sector;
+  if (sec) {
+    hover->index = (int)(sec - (*game)->map.sectors);
+    hover->type = obj_sector;
+  }
 }
 
 static void hover_thing(game_t *game, editor_selection_t *hover, float *world_1) {
@@ -312,6 +332,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           hover_line(game, &editor->hover, world_1);
           hover_vertex(game, &editor->hover, world_1);
           hover_thing(game, &editor->hover, world_1);
+//          update_inspector(editor, editor->hover.type);
         }
       }
       invalidate_window(win);
@@ -345,8 +366,12 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     case WM_LBUTTONUP:
       if (editor->move_camera == 2) {
         editor->move_camera = 1;
+      } else if (editor->sel_mode == edit_select) {
+        memcpy(&editor->selected, &editor->hover, sizeof(editor_selection_t));
+        update_inspector(editor, editor->selected.type);
+      } else {
+//        editor->move_thing = 0;
       }
-      editor->move_thing = 0;
       return true;
     case WM_LBUTTONDOWN:
       if (editor->move_camera > 0) {

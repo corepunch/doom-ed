@@ -57,9 +57,7 @@ windef_t line_layout[] = {
 };
 
 maplinedef_t *selected_line(game_t *game) {
-  if (!g_game) {
-    return NULL;
-  } else if (has_selection(game->state.hover, obj_line)) {
+  if (has_selection(game->state.hover, obj_line)) {
     return &game->map.linedefs[game->state.hover.index];
   } else if (has_selection(game->state.selected, obj_line)) {
     return &game->map.linedefs[game->state.selected.index];
@@ -70,7 +68,7 @@ maplinedef_t *selected_line(game_t *game) {
 
 result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
-  maplinedef_t *line;
+  maplinedef_t *line = selected_line(g_game);
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
@@ -78,7 +76,7 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       load_window_children(win, line_layout);
       return true;
     case WM_PAINT:
-      if (editor->sel_mode == edit_lines && (line = selected_line(g_game))) {
+      if (line) {
         set_window_item_text(win, ID_LINE_TYPE, "%d", line->special);
         set_window_item_text(win, ID_LINE_START, "%d", line->start);
         set_window_item_text(win, ID_LINE_END, "%d", line->end);
@@ -104,7 +102,7 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
       return false;
     case WM_COMMAND:
-      if (editor->sel_mode == edit_lines && (line = selected_line(g_game))) {
+      if (line) {
 #define SET_OFFSET(ID, SIDE, OFFSET) \
         if (wparam == MAKEDWORD(ID, EN_UPDATE) && line->sidenum[SIDE] != 0xFFFF && g_game) { \
           mapsidedef_t *side = &g_game->map.sidedefs[line->sidenum[SIDE]]; \

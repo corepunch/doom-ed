@@ -102,10 +102,31 @@ bool init_sdl(void) {
     return false;
   }
   
-  window = SDL_CreateWindow("DOOM Wireframe Renderer",
-                            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                            SCREEN_WIDTH, SCREEN_HEIGHT,
-                            SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
+  int numDisplays = SDL_GetNumVideoDisplays();
+  if (numDisplays < 2) {
+    printf("Only %d display(s) found. Need at least 2.\n", numDisplays);
+    SDL_Quit();
+    return 1;
+  }
+  
+  SDL_Rect bounds;
+  if (SDL_GetDisplayBounds(1, &bounds) != 0) {
+    SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
+    // fallback to display 0 or handle error
+  }
+  
+  // Centered position on display 1
+  int w = SCREEN_WIDTH;
+  int h = SCREEN_HEIGHT;
+  int x = bounds.x + (bounds.w - w) / 2;
+  int y = bounds.y + (bounds.h - h) / 2;
+  
+  window = SDL_CreateWindow("DOOM Wireframe Renderer", x, y, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS);
+
+//  window = SDL_CreateWindow("DOOM Wireframe Renderer",
+//                            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+//                            SCREEN_WIDTH, SCREEN_HEIGHT,
+//                            SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
   if (!window) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
     return false;

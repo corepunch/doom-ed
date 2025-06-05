@@ -144,15 +144,24 @@ static void draw_floors_editor(map_data_t const *map) {
 }
 
 // Draw walls with different colors based on whether they're one-sided or two-sided
-static void draw_walls_editor(map_data_t const *map) {
+static void
+draw_walls_editor(editor_state_t const *editor,
+                  map_data_t const *map)
+{
 #if 1
   glBindTexture(GL_TEXTURE_2D, white_tex); // Use default 1x1 white texture
   glUniform4f(ui_prog_color, 1.0f, 1.0f, 1.0f, 1.0f);
   glBindVertexArray(map->walls.vao);
   glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
-  
+
+  glBindVertexArray(editor->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
+  glVertexAttribPointer(0, 2, GL_SHORT, GL_FALSE, 4, map->vertices);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+  glDisableVertexAttribArray(3);
   glPointSize(3.0f);
-  glDrawArrays(GL_POINTS, 0, map->walls.num_vertices);
+  glDrawArrays(GL_POINTS, 0, map->num_vertices);
   glPointSize(1.0f);
 #else
   // Draw each linedef
@@ -419,7 +428,7 @@ draw_editor(window_t *win,
   draw_floors_editor(map);
 
   // Draw existing walls
-  draw_walls_editor(map);
+  draw_walls_editor(editor, map);
 
   glBindVertexArray(editor->vao);
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);

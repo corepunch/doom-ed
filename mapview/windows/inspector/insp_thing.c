@@ -83,7 +83,7 @@ mapthing_t *selected_thing(game_t *game) {
 
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
-  mapthing_t *thing;
+  mapthing_t *thing = selected_thing(g_game);
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
@@ -91,7 +91,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       load_window_children(win, thing_layout);
       return true;
     case WM_PAINT:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(g_game))) {
+      if (thing) {
         sprite_t *spr = get_thing_sprite_name(thing->type, 0);
         set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
         set_window_item_text(win, ID_THING_TYPE, "%d", thing->height);
@@ -106,7 +106,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
       return false;
     case WM_COMMAND:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(g_game))) {
+      if (thing) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
           if (wparam == MAKEDWORD(thing_checkboxes[i], BN_CLICKED)) {
             if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
