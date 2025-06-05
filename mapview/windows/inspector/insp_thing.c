@@ -1,3 +1,5 @@
+#include <SDL2/SDL.h>
+
 #include "../../editor.h"
 #include "../../sprites.h"
 
@@ -81,6 +83,24 @@ mapthing_t *selected_thing(game_t *game) {
   }
 }
 
+result_t win_things(window_t *, uint32_t, uint32_t, void *);
+
+void select_thing_type(void) {
+  rect_t rect = {96, 96, 128, 256};
+  window_t *dlg = create_window("Things", WINDOW_VSCROLL|WINDOW_DIALOG, &rect, NULL, win_things, NULL);
+  show_window(dlg, true);
+
+  SDL_Event event;
+  extern bool running;
+  while (running && is_window(dlg)) {
+    while (get_message(&event)) {
+      dispatch_message(&event);
+    }
+    repost_messages();
+  }
+  printf("closed\n");
+}
+
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   mapthing_t *thing = selected_thing(g_game);
@@ -116,17 +136,22 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             }
           }
         }
-        if (wparam == MAKEDWORD(ID_THING_POS_X, EN_UPDATE)) {
-          thing->x = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
-        }
-        if (wparam == MAKEDWORD(ID_THING_POS_Y, EN_UPDATE)) {
-          thing->y = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
-        }
-        if (wparam == MAKEDWORD(ID_THING_ANGLE, EN_UPDATE)) {
-          thing->angle = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
+        switch (wparam) {
+          case MAKEDWORD(ID_THING_POS_X, EN_UPDATE):
+            thing->x = atoi(((window_t *)lparam)->title);
+            invalidate_window(editor->window);
+            break;
+          case MAKEDWORD(ID_THING_POS_Y, EN_UPDATE):
+            thing->y = atoi(((window_t *)lparam)->title);
+            invalidate_window(editor->window);
+            break;
+          case MAKEDWORD(ID_THING_ANGLE, EN_UPDATE):
+            thing->angle = atoi(((window_t *)lparam)->title);
+            invalidate_window(editor->window);
+            break;
+          case MAKEDWORD(ID_THING_SPRITE, BN_CLICKED):
+            select_thing_type();
+            break;
         }
       }
       return true;

@@ -408,175 +408,181 @@ window_t* find_prev_tab_stop(window_t* win) {
   return it;
 }
 
-void handle_windows(void) {
+void dispatch_message(SDL_Event *evt) {
   extern bool running;
-  SDL_Event event;
   window_t *win;
-  
-  while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-      case SDL_QUIT:
-        running = false;
-        break;
-      case SDL_TEXTINPUT:
-        send_message(_focused, WM_TEXTINPUT, 0, event.text.text);
-        break;
-      case SDL_KEYDOWN:
-        if (_focused && !send_message(_focused, WM_KEYDOWN, event.key.keysym.scancode, NULL)) {
-          switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_TAB:
-              if (event.key.keysym.mod & KMOD_SHIFT) {
-                set_focus(find_prev_tab_stop(_focused));
-              } else {
-                set_focus(find_next_tab_stop(_focused, false));
-              }
-              break;
-            default:
-              break;
-          }
+  switch (evt->type) {
+    case SDL_QUIT:
+      running = false;
+      break;
+    case SDL_TEXTINPUT:
+      send_message(_focused, WM_TEXTINPUT, 0, evt->text.text);
+      break;
+    case SDL_KEYDOWN:
+      if (_focused && !send_message(_focused, WM_KEYDOWN, evt->key.keysym.scancode, NULL)) {
+        switch (evt->key.keysym.scancode) {
+          case SDL_SCANCODE_TAB:
+            if (evt->key.keysym.mod & KMOD_SHIFT) {
+              set_focus(find_prev_tab_stop(_focused));
+            } else {
+              set_focus(find_next_tab_stop(_focused, false));
+            }
+            break;
+          default:
+            break;
         }
-        break;
-      case SDL_KEYUP:
-        send_message(_focused, WM_KEYUP, event.key.keysym.scancode, NULL);
-        break;
-      case SDL_JOYAXISMOTION:
-        send_message(_focused, WM_JOYAXISMOTION, MAKEDWORD(event.jaxis.axis, event.jaxis.value), NULL);
-        break;
-      case SDL_JOYBUTTONDOWN:
-        send_message(_focused, WM_JOYBUTTONDOWN, event.jbutton.button, NULL);
-        break;
-      case SDL_MOUSEMOTION:
-        if (_dragging) {
-          move_window(_dragging,
-                      SCALE_POINT(event.motion.x) - drag_anchor[0],
-                      SCALE_POINT(event.motion.y) - drag_anchor[1]);
-        } else if (_resizing) {
-          int new_w = SCALE_POINT(event.motion.x) - _resizing->frame.x;
-          int new_h = SCALE_POINT(event.motion.y) - _resizing->frame.y;
-          resize_window(_resizing, new_w, new_h);
-        } else if (((win = _captured) ||
-                   (win = find_window(SCALE_POINT(event.motion.x),
-                                      SCALE_POINT(event.motion.y)))))
-        {
-          int16_t x = LOCAL_X(event.motion, win);
-          int16_t y = LOCAL_Y(event.motion, win);
-          int16_t dx = event.motion.xrel;
-          int16_t dy = event.motion.yrel;
-          if (y >= 0 && (win == _captured || win == _focused)) {
-            send_message(win, WM_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
-          }
+      }
+      break;
+    case SDL_KEYUP:
+      send_message(_focused, WM_KEYUP, evt->key.keysym.scancode, NULL);
+      break;
+    case SDL_JOYAXISMOTION:
+      send_message(_focused, WM_JOYAXISMOTION, MAKEDWORD(evt->jaxis.axis, evt->jaxis.value), NULL);
+      break;
+    case SDL_JOYBUTTONDOWN:
+      send_message(_focused, WM_JOYBUTTONDOWN, evt->jbutton.button, NULL);
+      break;
+    case SDL_MOUSEMOTION:
+      if (_dragging) {
+        move_window(_dragging,
+                    SCALE_POINT(evt->motion.x) - drag_anchor[0],
+                    SCALE_POINT(evt->motion.y) - drag_anchor[1]);
+      } else if (_resizing) {
+        int new_w = SCALE_POINT(evt->motion.x) - _resizing->frame.x;
+        int new_h = SCALE_POINT(evt->motion.y) - _resizing->frame.y;
+        resize_window(_resizing, new_w, new_h);
+      } else if (((win = _captured) ||
+                  (win = find_window(SCALE_POINT(evt->motion.x),
+                                     SCALE_POINT(evt->motion.y)))))
+      {
+        int16_t x = LOCAL_X(evt->motion, win);
+        int16_t y = LOCAL_Y(evt->motion, win);
+        int16_t dx = evt->motion.xrel;
+        int16_t dy = evt->motion.yrel;
+        if (y >= 0 && (win == _captured || win == _focused)) {
+          send_message(win, WM_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
         }
-        if (_tracked && !CONTAINS(SCALE_POINT(event.motion.x),
-                                  SCALE_POINT(event.motion.y),
-                                  _tracked->frame.x, _tracked->frame.y,
-                                  _tracked->frame.w, _tracked->frame.h))
-        {
-          track_mouse(NULL);
-        }
-        break;
-      case SDL_MOUSEWHEEL:
-        if ((win = _captured) ||
-            (win = find_window(SCALE_POINT(event.wheel.mouseX),
-                               SCALE_POINT(event.wheel.mouseY))))
-        {
-          send_message(win, WM_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
-        }
-        break;
-      case SDL_MOUSEBUTTONDOWN:
-        if ((win = _captured) ||
-            (win = find_window(SCALE_POINT(event.button.x),
-                               SCALE_POINT(event.button.y))))
-        {
-          if (win->parent) {
-            set_focus(win);
-          } else {
-            move_to_top(win);
-          }
-          int x = LOCAL_X(event.button, win);
-          int y = LOCAL_Y(event.button, win);
-          if (x >= win->frame.w - RESIZE_HANDLE &&
-              y >= win->frame.h - RESIZE_HANDLE &&
-              !win->parent &&
-              !(win->flags&WINDOW_NORESIZE) &&
-              win != _captured)
-          {
-            _resizing = win;
-          } else if (SCALE_POINT(event.button.y) < win->frame.y && !win->parent && win != _captured) {
-            _dragging = win;
-            drag_anchor[0] = SCALE_POINT(event.button.x) - win->frame.x;
-            drag_anchor[1] = SCALE_POINT(event.button.y) - win->frame.y;
-          } else if (win == _focused) {
-            int msg = 0;
-            switch (event.button.button) {
-              case 1: msg = WM_LBUTTONDOWN; break;
-              case 3: msg = WM_RBUTTONDOWN; break;
-            }
-            if (!handle_mouse(msg, win, x, y)) {
-              send_message(win, msg, MAKEDWORD(x, y), NULL);
-            }
-          }
-        }
-        break;
-        
-      case SDL_MOUSEBUTTONUP:
-        if (_dragging) {
-          int x = SCALE_POINT(event.button.x);
-          int y = SCALE_POINT(event.button.y);
-          int b = (_dragging->frame.x + _dragging->frame.w - CONTROL_BUTTON_PADDING - x) / CONTROL_BUTTON_WIDTH;
-          if (b == 0) {
-            show_window(_dragging, false);
-            _dragging = NULL;
-          } else {
-            switch (event.button.button) {
-              case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
-                // case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
-            }
-            set_focus(_dragging);
-            _dragging = NULL;
-          }
-        } else if (_resizing) {
-          set_focus(_resizing);
-          _resizing = NULL;
-        } else if ((win = _captured) ||
-                   (win = find_window(SCALE_POINT(event.button.x),
-                                      SCALE_POINT(event.button.y))))
-        {
-          if (SCALE_POINT(event.button.y) >= win->frame.y || win == _captured) {
-            int x = LOCAL_X(event.button, win);
-            int y = LOCAL_Y(event.button, win);
-            int msg = 0;
-            switch (event.button.button) {
-              case 1: msg = WM_LBUTTONUP; break;
-              case 3: msg = WM_RBUTTONUP; break;
-            }
-            if (!handle_mouse(msg, win, x, y)) {
-              send_message(win, msg, MAKEDWORD(x, y), NULL);
-            }
-          } else {
-            int x = SCALE_POINT(event.button.x);
-            int y = SCALE_POINT(event.button.y);
-            switch (event.button.button) {
-              case 1: send_message(win, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
-//              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
-            }
-          }
+      }
+      if (_tracked && !CONTAINS(SCALE_POINT(evt->motion.x),
+                                SCALE_POINT(evt->motion.y),
+                                _tracked->frame.x, _tracked->frame.y,
+                                _tracked->frame.w, _tracked->frame.h))
+      {
+        track_mouse(NULL);
+      }
+      break;
+    case SDL_MOUSEWHEEL:
+      if ((win = _captured) ||
+          (win = find_window(SCALE_POINT(evt->wheel.mouseX),
+                             SCALE_POINT(evt->wheel.mouseY))))
+      {
+        send_message(win, WM_WHEEL, MAKEDWORD(-evt->wheel.x * SCROLL_SENSITIVITY, evt->wheel.y * SCROLL_SENSITIVITY), NULL);
+      }
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      if ((win = _captured) ||
+          (win = find_window(SCALE_POINT(evt->button.x),
+                             SCALE_POINT(evt->button.y))))
+      {
+        if (win->parent) {
           set_focus(win);
+        } else {
+          move_to_top(win);
         }
-        break;
-    }
+        int x = LOCAL_X(evt->button, win);
+        int y = LOCAL_Y(evt->button, win);
+        if (x >= win->frame.w - RESIZE_HANDLE &&
+            y >= win->frame.h - RESIZE_HANDLE &&
+            !win->parent &&
+            !(win->flags&WINDOW_NORESIZE) &&
+            win != _captured)
+        {
+          _resizing = win;
+        } else if (SCALE_POINT(evt->button.y) < win->frame.y && !win->parent && win != _captured) {
+          _dragging = win;
+          drag_anchor[0] = SCALE_POINT(evt->button.x) - win->frame.x;
+          drag_anchor[1] = SCALE_POINT(evt->button.y) - win->frame.y;
+        } else if (win == _focused) {
+          int msg = 0;
+          switch (evt->button.button) {
+            case 1: msg = WM_LBUTTONDOWN; break;
+            case 3: msg = WM_RBUTTONDOWN; break;
+          }
+          if (!handle_mouse(msg, win, x, y)) {
+            send_message(win, msg, MAKEDWORD(x, y), NULL);
+          }
+        }
+      }
+      break;
+      
+    case SDL_MOUSEBUTTONUP:
+      if (_dragging) {
+        int x = SCALE_POINT(evt->button.x);
+        int y = SCALE_POINT(evt->button.y);
+        int b = (_dragging->frame.x + _dragging->frame.w - CONTROL_BUTTON_PADDING - x) / CONTROL_BUTTON_WIDTH;
+        if (b == 0) {
+          if (_dragging->flags & WINDOW_DIALOG) {
+            destroy_window(_dragging);
+          } else {
+            show_window(_dragging, false);
+          }
+          _dragging = NULL;
+        } else {
+          switch (evt->button.button) {
+            case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
+              // case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+          }
+          set_focus(_dragging);
+          _dragging = NULL;
+        }
+      } else if (_resizing) {
+        set_focus(_resizing);
+        _resizing = NULL;
+      } else if ((win = _captured) ||
+                 (win = find_window(SCALE_POINT(evt->button.x),
+                                    SCALE_POINT(evt->button.y))))
+      {
+        if (SCALE_POINT(evt->button.y) >= win->frame.y || win == _captured) {
+          int x = LOCAL_X(evt->button, win);
+          int y = LOCAL_Y(evt->button, win);
+          int msg = 0;
+          switch (evt->button.button) {
+            case 1: msg = WM_LBUTTONUP; break;
+            case 3: msg = WM_RBUTTONUP; break;
+          }
+          if (!handle_mouse(msg, win, x, y)) {
+            send_message(win, msg, MAKEDWORD(x, y), NULL);
+          }
+        } else {
+          int x = SCALE_POINT(evt->button.x);
+          int y = SCALE_POINT(evt->button.y);
+          switch (evt->button.button) {
+            case 1: send_message(win, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
+              //              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+          }
+        }
+        set_focus(win);
+      }
+      break;
   }
+}
 
+int get_message(SDL_Event *evt) {
+  return SDL_PollEvent(evt);
+}
+
+void repost_messages(void) {
   for (uint8_t write = queue.write; queue.read != write;) {
     msg_t *m = &queue.messages[queue.read++];
     if (m->target == NULL) continue;
     if (m->msg == WM_REFRESHSTENCIL) {
       repaint_stencil();
-//      glStencilFunc(GL_EQUAL, 0, 0xFF);
-//      draw_wallpaper();
       continue;
     }
     send_message(m->target, m->msg, m->wparam, m->lparam);
   }
+  glFlush();
+  // SDL_GL_SwapWindow(window);
 }
 
 void draw_windows(bool rich) {
@@ -1022,6 +1028,9 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
                   tex->height * scale);
       }
       return true;
+    case WM_LBUTTONUP:
+      send_message(win->parent, WM_COMMAND, MAKEDWORD(win->id, BN_CLICKED), NULL);
+      return true;
   }
   return false;
 }
@@ -1171,4 +1180,13 @@ void show_window(window_t *win, bool visible) {
   }
   win->visible = visible;
   post_message(win, WM_SHOWWINDOW, visible, NULL);
+}
+
+bool is_window(window_t *win) {
+  for (window_t *it = windows; it; it = it->next) {
+    if (it == win) {
+      return true;
+    }
+  }
+  return false;
 }

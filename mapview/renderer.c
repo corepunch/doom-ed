@@ -239,23 +239,11 @@ void cleanup(void) {
 int run(void) {
   // Main game loop
   while (running) {
-    mode = false;
-    // Calculate delta time for smooth movement
-
-//    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-    void draw_intermission(void);
-    void handle_intermission_input(float delta_time);
-
-    handle_windows();
-
-//    SDL_GL_SwapWindow(window);
-    
-    glFlush();
-    
-    // Cap frame rate
-//    SDL_Delay(16);  // ~60 FPS
+    SDL_Event event;
+    while (get_message(&event)) {
+      dispatch_message(&event);
+    }
+    repost_messages();
   }
   
   // Clean up

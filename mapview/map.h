@@ -497,16 +497,17 @@ typedef struct {
 // Transparency helpers (if needed)
 #define COLOR_TRANSPARENT    0x00000000  // fully transparent
 
-#define WINDOW_NOTITLE 1
-#define WINDOW_TRANSPARENT 2
-#define WINDOW_VSCROLL 4
-#define WINDOW_HSCROLL 8
-#define WINDOW_NORESIZE 16
-#define WINDOW_NOFILL 32
-#define WINDOW_ALWAYSONTOP 64
-#define WINDOW_ALWAYSINBACK 128
-#define WINDOW_HIDDEN 256
-#define WINDOW_NOTRAYBUTTON 512
+#define WINDOW_NOTITLE (1 << 0)
+#define WINDOW_TRANSPARENT (1 << 1)
+#define WINDOW_VSCROLL (1 << 2)
+#define WINDOW_HSCROLL (1 << 3)
+#define WINDOW_NORESIZE (1 << 4)
+#define WINDOW_NOFILL (1 << 5)
+#define WINDOW_ALWAYSONTOP (1 << 6)
+#define WINDOW_ALWAYSINBACK (1 << 7)
+#define WINDOW_HIDDEN (1 << 8)
+#define WINDOW_NOTRAYBUTTON (1 << 9)
+#define WINDOW_DIALOG (1 << 10)
 
 #define TITLEBAR_HEIGHT 12
 #define WINDOW_PADDING 4
@@ -569,6 +570,12 @@ window_t *get_window_item(window_t const *win, uint32_t id);
 void track_mouse(window_t *win);
 void set_capture(window_t *win);
 void set_focus(window_t* win);
+
+typedef union SDL_Event SDL_Event;
+int get_message(SDL_Event *evt);
+void dispatch_message(SDL_Event *evt);
+void repost_messages(void);
+bool is_window(window_t *win);
 
 extern window_t *g_inspector;
 extern game_t *g_game;
