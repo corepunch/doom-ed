@@ -114,7 +114,6 @@ typedef struct {
 int compare_textures_by_area(const void* a, const void* b) {
   const texture_sort_entry_t* tex_a = (const texture_sort_entry_t*)a;
   const texture_sort_entry_t* tex_b = (const texture_sort_entry_t*)b;
-  
   // Sort by area (descending)
   if (tex_b->area == tex_a->area) {
     return strcmp(tex_a->name, tex_b->name);

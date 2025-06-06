@@ -28,7 +28,7 @@ ed_thinggroup_t ed_thinggroups[] = {
   { '-', 0xF0BD, "OTHER" },
 };
 
-ed_thing_t ed_thins[] = {
+ed_thing_t ed_things[] = {
   { 1,'p', "-", 16, "PLAY", "Player 1 start"},
   { 2,'p', "-", 16, "CLER", "Player 2 start"},
   { 3,'p', "-", 16, "CLER", "Player 3 start"},
@@ -249,23 +249,23 @@ ed_thing_t ed_thins[] = {
   { 90,'n', "c",   5, "ICT2", "Ice Stalactite Medium"},
   { 91,'n', "c",   4, "ICT3", "Ice Stalactite Small"},
   { 92,'n', "c",   4, "ICT4", "Ice Stalactite Tiny"},
-  { 118,'-', "-",   32, "NULL", "Bridge"},
+  { 118,'-', "-",   32, NULL, "Bridge"},
   { 9001,'-', "n",   20, "_MSP", "Map spot"},
   { 9013,'-', "n",   20, "_MSP", "Map spot /gravity"},
-  { 3000,'-', "nv", 8, "NULL", "Polyobject anchor"},
-  { 3001,'-', "npv", 8, "NULL", "Polyobject spot"},
-  { 3002,'-', "npv", 8, "NULL", "Polyobject spot /crush"},
-  { 1400,'s', "n", 8, "NULL", "Sndtype Stone"},
-  { 1401,'s', "n", 8, "NULL", "Sndtype Heavy"},
-  { 1402,'s', "n", 8, "NULL", "Sndtype Metal Sfx"},
-  { 1403,'s', "n", 8, "NULL", "Sndtype Creak Sfx"},
-  { 1404,'s', "n", 8, "NULL", "Sndtype Silent"},
-  { 1405,'s', "n", 8, "NULL", "Sndtype Lava"},
-  { 1406,'s', "n", 8, "NULL", "Sndtype Water"},
-  { 1407,'s', "n", 8, "NULL", "Sndtype Ice"},
-  { 1408,'s', "n", 8, "NULL", "Sndtype Earth"},
-  { 1409,'s', "n", 8, "NULL", "Sndtype Metal2"},
-  { 1410,'s', "nv", 8, "NULL", "Wind Sound"},
+  { 3000,'-', "nv", 8, NULL, "Polyobject anchor"},
+  { 3001,'-', "npv", 8, NULL, "Polyobject spot"},
+  { 3002,'-', "npv", 8, NULL, "Polyobject spot /crush"},
+  { 1400,'s', "n", 8, NULL, "Sndtype Stone"},
+  { 1401,'s', "n", 8, NULL, "Sndtype Heavy"},
+  { 1402,'s', "n", 8, NULL, "Sndtype Metal Sfx"},
+  { 1403,'s', "n", 8, NULL, "Sndtype Creak Sfx"},
+  { 1404,'s', "n", 8, NULL, "Sndtype Silent"},
+  { 1405,'s', "n", 8, NULL, "Sndtype Lava"},
+  { 1406,'s', "n", 8, NULL, "Sndtype Water"},
+  { 1407,'s', "n", 8, NULL, "Sndtype Ice"},
+  { 1408,'s', "n", 8, NULL, "Sndtype Earth"},
+  { 1409,'s', "n", 8, NULL, "Sndtype Metal2"},
+  { 1410,'s', "nv", 8, NULL, "Wind Sound"},
   { 113,'-', "n",  20, "LEF1", "Leaf spawner"},
   { 10000,'-', "nl", 20, "FOGM", "Fog spawner" }, // 1  speed  spread  frequency  lifetime
   { 10001,'-', "n",  20, "FOGS", "Fog /small"  }, //1  speed  -  -  lifetime  moving
@@ -276,5 +276,4 @@ ed_thing_t ed_thins[] = {
   { 10501,'-', "nl", 20, "FFSM", "Flame Small" },
   { 10502,'-', "nl", 20, "FFLG", "Flame Large /temp" },
   { 10503,'-', "nl", 20, "FFLG", "Flame Large" },
-  { 0 },
 };
