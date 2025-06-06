@@ -5,6 +5,7 @@ enum {
   ID_SECTOR_FLOOR_IMAGE,
   ID_SECTOR_CEILING_HEIGHT,
   ID_SECTOR_CEILING_IMAGE,
+  ID_SECTOR_LIGHT_LEVEL,
   ID_TEST_COMBOBOX,
   ID_SECTOR_IDENT,
 };
@@ -12,6 +13,8 @@ enum {
 windef_t sector_layout[] = {
   { "TEXT", "Sector#", -1, LABEL_WIDTH },
   { "EDITTEXT", "", ID_SECTOR_IDENT, 50 },
+  { "TEXT", "Light lvl:", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_SECTOR_LIGHT_LEVEL, 50 },
   { "TEXT", "Floor Hgt:", -1, LABEL_WIDTH },
   { "EDITTEXT", "", ID_SECTOR_FLOOR_HEIGHT, 50 },
   { "TEXT", "Ceiling Hgt:", -1, LABEL_WIDTH },
@@ -71,45 +74,30 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return true;
     case WM_PAINT:
       if (sector) {
-        //        sprite_t *spr = get_thing_sprite_name(thing->type, 0);
+        set_window_item_text(win, ID_SECTOR_LIGHT_LEVEL, "%d", sector->lightlevel);
         set_window_item_text(win, ID_SECTOR_FLOOR_HEIGHT, "%d", sector->floorheight);
         set_window_item_text(win, ID_SECTOR_FLOOR_IMAGE, sector->floorpic);
         set_window_item_text(win, ID_SECTOR_CEILING_HEIGHT, "%d", sector->ceilingheight);
         set_window_item_text(win, ID_SECTOR_CEILING_IMAGE, sector->ceilingpic);
-        //        set_window_item_text(win, ID_THING_POS_Y, "%d", thing->y);
-        //        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
-        //          window_t *checkbox = get_window_item(win, checkboxes[i]);
-        //          uint32_t value = thing->options&(1<<i);
-        //          send_message(checkbox, BM_SETCHECK, value, NULL);
-        //        }
       }
       return false;
     case WM_COMMAND:
       if (sector) {
-//        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
-//          if (wparam == MAKEDWORD(checkboxes[i], BN_CLICKED)) {
-//            if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
-//              thing->options |= 1 << i;
-//            } else {
-//              thing->options &= ~(1 << i);
-//            }
-//          }
-//        }
-        if (wparam == MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE)) {
-          sector->floorheight = atoi(((window_t *)lparam)->title);
-          if (g_game) {
-            build_wall_vertex_buffer(&g_game->map);
-            build_floor_vertex_buffer(&g_game->map);
-            invalidate_window(editor->window);
-          }
+        switch (wparam) {
+          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, EN_UPDATE):
+            sector->lightlevel = atoi(((window_t *)lparam)->title);
+            break;
+          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE):
+            sector->floorheight = atoi(((window_t *)lparam)->title);
+            break;
+          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE):
+            sector->ceilingheight = atoi(((window_t *)lparam)->title);
+            break;
         }
-        if (wparam == MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE)) {
-          sector->ceilingheight = atoi(((window_t *)lparam)->title);
-          if (g_game) {
-            build_wall_vertex_buffer(&g_game->map);
-            build_floor_vertex_buffer(&g_game->map);
-            invalidate_window(editor->window);
-          }
+        if (g_game) {
+          build_wall_vertex_buffer(&g_game->map);
+          build_floor_vertex_buffer(&g_game->map);
+          invalidate_window(editor->window);
         }
       }
       return true;

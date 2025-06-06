@@ -1216,7 +1216,7 @@ show_dialog(char const *title,
 {
   extern bool running;
   SDL_Event event;
-  uint32_t flags = /*WINDOW_VSCROLL|*/WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
+  uint32_t flags = WINDOW_VSCROLL|WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
   window_t *dlg = create_window("Things", flags, frame, NULL, proc, param);
   enable_window(owner, false);
   show_window(dlg, true);

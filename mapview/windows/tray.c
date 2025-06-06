@@ -38,7 +38,7 @@ static void on_win_destroyed(window_t *win, uint32_t msg, uint32_t wparam, void 
       }
     }
     if (!button) {
-      printf("Can't find button for window %s\n", win->title);
+//      printf("Can't find button for window %s\n", win->title);
       return;
     }
     for (window_t *it = button->next; it; it = it->next) {

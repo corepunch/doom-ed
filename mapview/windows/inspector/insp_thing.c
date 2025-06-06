@@ -85,15 +85,19 @@ mapthing_t *selected_thing(game_t *game) {
 
 result_t win_things(window_t *, uint32_t, uint32_t, void *);
 
-void select_thing_type(window_t *owner) {
-  rect_t rect = {96, 96, 128, 256};
-  uint32_t ret = show_dialog("Things", &rect, owner, win_things, NULL);
-  printf("closed %d\n", ret);
+rect_t shrink_rect(rect_t const *rect) {
+  return (rect_t){rect->x+8,rect->y+8,rect->w-16,rect->h-16};
+}
+
+uint16_t select_thing_type(window_t *owner) {
+  rect_t rect = shrink_rect(&owner->frame);
+  return show_dialog("Things", &rect, owner, win_things, NULL);
 }
 
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   mapthing_t *thing = selected_thing(g_game);
+  uint16_t tmp;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
@@ -140,7 +144,10 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             invalidate_window(editor->window);
             break;
           case MAKEDWORD(ID_THING_SPRITE, BN_CLICKED):
-            select_thing_type(win);
+            if ((tmp = select_thing_type(win)) != 0xFFFF) {
+              thing->type = tmp;
+              invalidate_window(editor->window);
+            }
             break;
         }
       }
