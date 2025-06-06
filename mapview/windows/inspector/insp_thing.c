@@ -85,9 +85,9 @@ mapthing_t *selected_thing(game_t *game) {
 
 result_t win_things(window_t *, uint32_t, uint32_t, void *);
 
-void select_thing_type(void) {
+void select_thing_type(window_t *owner) {
   rect_t rect = {96, 96, 128, 256};
-  uint32_t ret = show_dialog("Things", &rect, NULL, win_things, NULL);
+  uint32_t ret = show_dialog("Things", &rect, owner, win_things, NULL);
   printf("closed %d\n", ret);
 }
 
@@ -140,7 +140,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             invalidate_window(editor->window);
             break;
           case MAKEDWORD(ID_THING_SPRITE, BN_CLICKED):
-            select_thing_type();
+            select_thing_type(win);
             break;
         }
       }

@@ -546,6 +546,7 @@ typedef struct window_s {
   bool pressed;
   bool value;
   bool visible;
+  bool disabled;
   char title[64];
   int cursor_pos;
   void *userdata;
@@ -570,6 +571,7 @@ window_t *get_window_item(window_t const *win, uint32_t id);
 void track_mouse(window_t *win);
 void set_capture(window_t *win);
 void set_focus(window_t* win);
+void enable_window(window_t *win, bool enable);
 
 typedef union SDL_Event SDL_Event;
 int get_message(SDL_Event *evt);

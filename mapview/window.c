@@ -163,7 +163,7 @@ void push_window(window_t *win, window_t **windows)  {
 window_t*
 create_window(char const *title,
               flags_t flags,
-              const rect_t *frame,
+              rect_t const *frame,
               window_t *parent,
               winproc_t proc,
               void *lparam)
@@ -455,6 +455,7 @@ void dispatch_message(SDL_Event *evt) {
                   (win = find_window(SCALE_POINT(evt->motion.x),
                                      SCALE_POINT(evt->motion.y)))))
       {
+        if (win->disabled) return;
         int16_t x = LOCAL_X(evt->motion, win);
         int16_t y = LOCAL_Y(evt->motion, win);
         int16_t dx = evt->motion.xrel;
@@ -476,6 +477,7 @@ void dispatch_message(SDL_Event *evt) {
           (win = find_window(SCALE_POINT(evt->wheel.mouseX),
                              SCALE_POINT(evt->wheel.mouseY))))
       {
+        if (win->disabled) return;
         send_message(win, WM_WHEEL, MAKEDWORD(-evt->wheel.x * SCROLL_SENSITIVITY, evt->wheel.y * SCROLL_SENSITIVITY), NULL);
       }
       break;
@@ -484,6 +486,7 @@ void dispatch_message(SDL_Event *evt) {
           (win = find_window(SCALE_POINT(evt->button.x),
                              SCALE_POINT(evt->button.y))))
       {
+        if (win->disabled) return;
         if (win->parent) {
           set_focus(win);
         } else {
@@ -542,6 +545,7 @@ void dispatch_message(SDL_Event *evt) {
                  (win = find_window(SCALE_POINT(evt->button.x),
                                     SCALE_POINT(evt->button.y))))
       {
+        if (win->disabled) return;
         set_focus(win);
         if (SCALE_POINT(evt->button.y) >= win->frame.y || win == _captured) {
           int x = LOCAL_X(evt->button, win);
@@ -680,6 +684,12 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           }
           break;
       }
+    }
+    if (win->disabled && msg == WM_PAINT) {
+      uint32_t col = (COLOR_PANEL_BG & 0x00FFFFFF) | 0x80000000;
+      set_viewport(&(window_t){0, 0, screen_width, screen_height});
+      set_projection(0, 0, screen_width, screen_height);
+      fill_rect(col, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
     }
   }
   return value;
@@ -1207,7 +1217,8 @@ show_dialog(char const *title,
   extern bool running;
   SDL_Event event;
   uint32_t flags = /*WINDOW_VSCROLL|*/WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
-  window_t *dlg = create_window("Things", flags, frame, owner, proc, param);
+  window_t *dlg = create_window("Things", flags, frame, NULL, proc, param);
+  enable_window(owner, false);
   show_window(dlg, true);
   while (running && is_window(dlg)) {
     while (get_message(&event)) {
@@ -1215,5 +1226,14 @@ show_dialog(char const *title,
     }
     repost_messages();
   }
+  enable_window(owner, true);
   return _return_code;
+}
+
+void enable_window(window_t *win, bool enable) {
+  if (!enable && _focused == win) {
+    set_focus(NULL);
+  }
+  win->disabled = !enable;
+  invalidate_window(win);
 }

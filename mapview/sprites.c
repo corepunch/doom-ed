@@ -608,18 +608,20 @@ void push_sprite_args(int tex, int x, int y, int w, int h, float alpha) {
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
   sprite_system_t* sys = &g_sprite_system;
   
-  // Enable blending for transparency
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  
-  // Disable depth testing for UI elements
-  glDisable(GL_DEPTH_TEST);
-  
   push_sprite_args(tex, x, y, w, h, alpha);
   
   // Bind VAO and draw
   glBindVertexArray(sys->vao);
-  glDisable(GL_BLEND);
+//  if (alpha == 1) {
+//    glDisable(GL_BLEND);
+//  } else {
+    // Enable blending for transparency
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+//  }
+  // Disable depth testing for UI elements
+  glDisable(GL_DEPTH_TEST);
+  
   glDrawArrays(type?GL_LINE_LOOP:GL_TRIANGLE_FAN, 0, 4);
   
   // Reset state
