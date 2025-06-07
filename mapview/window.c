@@ -632,6 +632,8 @@ void draw_window_controls(window_t *win) {
   }
 }
 
+#define TB_SPACING 18
+
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (!win) return false;
   rect_t const *frame = &win->frame;
@@ -663,8 +665,8 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           for (int i = 0; i < win->num_toolbar_buttons; i++) {
             toolbar_button_t const *but = &win->toolbar_buttons[i];
             uint32_t col = but->active ? COLOR_TEXT_SUCCESS : COLOR_TEXT_NORMAL;
-            draw_icon16(but->icon, rect.x + i * 16 + 2, rect.y + 2, COLOR_DARK_EDGE);
-            draw_icon16(but->icon, rect.x + i * 16 + 1, rect.y + 1, col);
+            draw_icon16(but->icon, rect.x + i * TB_SPACING + 2, rect.y + 2, COLOR_DARK_EDGE);
+            draw_icon16(but->icon, rect.x + i * TB_SPACING + 1, rect.y + 1, col);
           }
         }
         break;
@@ -720,7 +722,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             int _y = win->frame.y - TOOLBAR_HEIGHT + 2;
             for (int i = 0; i < win->num_toolbar_buttons; i++) {
               toolbar_button_t *but = &win->toolbar_buttons[i];
-              if (CONTAINS(x, y, _x + i * 16, _y, 16, 16)) {
+              if (CONTAINS(x, y, _x + i * TB_SPACING, _y, 16, 16)) {
                 send_message(win, TB_BUTTONCLICK, but->ident, but);
               }
             }
