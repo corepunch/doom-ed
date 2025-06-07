@@ -144,15 +144,24 @@ static void draw_floors_editor(map_data_t const *map) {
 }
 
 // Draw walls with different colors based on whether they're one-sided or two-sided
-static void draw_walls_editor(map_data_t const *map) {
+static void
+draw_walls_editor(editor_state_t const *editor,
+                  map_data_t const *map)
+{
 #if 1
   glBindTexture(GL_TEXTURE_2D, white_tex); // Use default 1x1 white texture
   glUniform4f(ui_prog_color, 1.0f, 1.0f, 1.0f, 1.0f);
   glBindVertexArray(map->walls.vao);
   glDrawArrays(GL_LINES, 0, map->walls.num_vertices);
-  
+
+  glBindVertexArray(editor->vao);
+  glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
+  glVertexAttribPointer(0, 2, GL_SHORT, GL_FALSE, 4, map->vertices);
+  glDisableVertexAttribArray(1);
+  glDisableVertexAttribArray(2);
+  glDisableVertexAttribArray(3);
   glPointSize(3.0f);
-  glDrawArrays(GL_POINTS, 0, map->walls.num_vertices);
+  glDrawArrays(GL_POINTS, 0, map->num_vertices);
   glPointSize(1.0f);
 #else
   // Draw each linedef
@@ -226,8 +235,6 @@ static void draw_cursor(int x, int y) {
   glDrawArrays(GL_LINES, 0, 4);
 }
 
-mapvertex_t sn;
-
 void get_mouse_position(window_t *, editor_state_t const *, int16_t const *screen, mat4 const, vec3);
 void snap_mouse_position(editor_state_t const *, vec2 const, mapvertex_t *);
 void get_editor_mvp(editor_state_t const *editor, mat4 mvp) {
@@ -267,19 +274,25 @@ void draw_line(map_data_t const *map, uint16_t i) {
     map->vertices[map->linedefs[i].end].y);
 }
 
+void draw_square(map_data_t const *map, int x, int y, int w, int h) {
+  draw_line_ex(map, x - w, y - h, x + w, y - h);
+  draw_line_ex(map, x + w, y - h, x + w, y + h);
+  draw_line_ex(map, x - w, y + h, x + w, y + h);
+  draw_line_ex(map, x - w, y - h, x - w, y + h);
+}
+
 void draw_thing_outline(map_data_t const *map, uint16_t index) {
   if (index >= map->num_things) return;
   mapthing_t const *thing = &map->things[index];
   sprite_t *spr = get_thing_sprite_name(thing->type, 0);
   if (!spr) return;
-  int x = thing->x;// - spr->offsetx;
-  int y = thing->y;// - spr->offsety;
-  int w = spr->width/2;
-  int h = spr->height/2;
-  draw_line_ex(map, x - w, y - h, x + w, y - h);
-  draw_line_ex(map, x + w, y - h, x + w, y + h);
-  draw_line_ex(map, x - w, y + h, x + w, y + h);
-  draw_line_ex(map, x - w, y - h, x - w, y + h);
+  draw_square(map, thing->x, thing->y, spr->width/2, spr->height/2);
+}
+
+void draw_vertex_outline(map_data_t const *map, uint16_t index) {
+  if (index >= map->num_vertices) return;
+  mapvertex_t const *vertex = &map->vertices[index];
+  draw_square(map, vertex->x, vertex->y, 8, 8);
 }
 
 void draw_sector_outline(map_data_t const *map, uint16_t index) {
@@ -361,6 +374,30 @@ static viewdef_t setup_matrix(vec4 *mvp, const player_t *player) {
   return viewdef;
 }
 
+static void
+draw_selection(const editor_selection_t *selected,
+               const map_data_t *map,
+               uint32_t color)
+{
+  glUniform4ub(ui_prog_color, color);
+  switch (selected->type) {
+    case obj_line:
+      draw_line(map, selected->index);
+      break;
+    case edit_sectors:
+      draw_sector_outline(map, selected->index);
+      break;
+    case edit_things:
+      draw_thing_outline(map, selected->index);
+      break;
+    case edit_vertices:
+      draw_vertex_outline(map, selected->index);
+      break;
+    default:
+      break;
+  }
+}
+
 // Draw the editor UI
 void
 draw_editor(window_t *win,
@@ -391,7 +428,7 @@ draw_editor(window_t *win,
   draw_floors_editor(map);
 
   // Draw existing walls
-  draw_walls_editor(map);
+  draw_walls_editor(editor, map);
 
   glBindVertexArray(editor->vao);
   glBindBuffer(GL_ARRAY_BUFFER, editor->vbo);
@@ -410,123 +447,42 @@ draw_editor(window_t *win,
 //    goto draw_player;
 //  }
   
-  vec3 world;
-  get_mouse_position(win, editor, editor->cursor, mvp, world);
-  
-  sn.x = world[0];
-  sn.y = world[1];
-  
-  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
-    float dist = 100000;
-    for (int i = 0; i < map->num_linedefs; i++) {
-      float x, y, z;
-      float d = closest_point_on_line(world[0], world[1],
-                                      map->vertices[map->linedefs[i].start].x,
-                                      map->vertices[map->linedefs[i].start].y,
-                                      map->vertices[map->linedefs[i].end].x,
-                                      map->vertices[map->linedefs[i].end].y,
-                                      &x, &y, &z);
-      if (dist > d) {
-        sn.x = x;
-        sn.y = y;
-        dist = d;
-        ((editor_state_t*)editor)->hover.index = i;
-        ((editor_state_t*)editor)->hover.type = obj_line;
-      }
-    }
-    
-    if (editor->sel_mode == edit_vertices) {
-      for (int i = 0; i < map->num_vertices; i++) {
-        float dx = world[0] - map->vertices[i].x;
-        float dy = world[1] - map->vertices[i].y;
-        float d = dx*dx + dy*dy;
-        if (editor->grid_size * 8.0f > d) {
-          sn.x = map->vertices[i].x;
-          sn.y = map->vertices[i].y;
-          dist = d;
-          ((editor_state_t*)editor)->hover.index = -1;
-        }
-      }
-    }
-    
-    if (dist < editor->grid_size * 8.0f) {
-      if (editor->sel_mode == edit_vertices) {
-        draw_cursor(sn.x, sn.y);
-      }
-    } else {
-      ((editor_state_t*)editor)->hover.index = -1;
-      if (editor->sel_mode == edit_vertices) {
-        // Snap to grid
-        snap_mouse_position(editor, world, &sn);
-        // Draw cursor at the snapped position
-        draw_cursor(sn.x, sn.y);
-      }
-    }
+//  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
+  if (editor->sel_mode == edit_vertices) {
+    draw_cursor(editor->sn.x, editor->sn.y);
   }
+//    } else {
+//      ((editor_state_t*)editor)->hover.index = -1;
+//      if (editor->sel_mode == edit_vertices) {
+//        // Snap to grid
+//        snap_mouse_position(editor, world, &editor->sn);
+//        // Draw cursor at the snapped position
+//        draw_cursor(editor->sn.x, editor->sn.y);
+//      }
+//    }
+//  }
 
-  glUniform4ub(ui_prog_color, COLOR_HOVER);
   glBindTexture(GL_TEXTURE_2D, white_tex);
+  bool sel = !memcmp(&editor->hover, &editor->selected, sizeof(editor->hover));
+
+  draw_selection(&editor->selected, map, COLOR_SELECTED);
+  draw_selection(&editor->hover, map, sel ? COLOR_SELECTED_HOVER : COLOR_HOVER);
   
   switch (editor->sel_mode) {
     case edit_vertices:
     case edit_lines:
       // If currently drawing, show line from last point to cursor
-      if ((editor->dragging || editor->drawing) && has_selection(editor->hover, obj_point)) {
-        float x = map->vertices[editor->hover.index].x;
-        float y = map->vertices[editor->hover.index].y;
-        draw_line_ex(map, x, y, sn.x, sn.y);
-      }
-      glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      if (has_selection(editor->selected, obj_line)) {
-        draw_line(map, editor->selected.index);
-        if (editor->selected.index == editor->hover.index &&
-            has_selection(editor->hover, obj_line))
-        {
-          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-        } else {
-          glUniform4ub(ui_prog_color, COLOR_HOVER);
-        }
-      }
-      if (has_selection(editor->hover, obj_line)) {
-        draw_line(map, editor->hover.index);
-      }
-      break;
-    case edit_sectors:
-      glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      if (has_selection(editor->selected, obj_sector)) {
-        draw_sector_outline(map, editor->selected.index);
-        if (editor->selected.index == editor->hover.index &&
-            has_selection(editor->hover, obj_sector))
-        {
-          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-        } else {
-          glUniform4ub(ui_prog_color, COLOR_HOVER);
-        }
-      }
-      if (has_selection(editor->hover, obj_sector)) {
-        draw_sector_outline(map, editor->hover.index);
-      }
-      break;
-    case edit_things:
-      glUniform4ub(ui_prog_color, COLOR_SELECTED);
-      if (has_selection(editor->selected, obj_thing)) {
-        draw_thing_outline(map, editor->selected.index);
-        if (editor->selected.index == editor->hover.index &&
-            has_selection(editor->hover, obj_thing))
-        {
-          glUniform4ub(ui_prog_color, COLOR_SELECTED_HOVER);
-        } else {
-          glUniform4ub(ui_prog_color, COLOR_HOVER);
-        }
-      }
-      if (has_selection(editor->hover, obj_thing)) {
-        draw_thing_outline(map, editor->hover.index);
+      if ((editor->dragging || editor->drawing) &&
+          has_selection(editor->selected, obj_point))
+      {
+        float x = map->vertices[editor->selected.index].x;
+        float y = map->vertices[editor->selected.index].y;
+        draw_line_ex(map, x, y, editor->sn.x, editor->sn.y);
       }
       break;
   }
   
 draw_player:
-
   draw_player_icon(editor, player);
 }
 

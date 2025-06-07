@@ -5,6 +5,7 @@ enum {
   ID_SECTOR_FLOOR_IMAGE,
   ID_SECTOR_CEILING_HEIGHT,
   ID_SECTOR_CEILING_IMAGE,
+  ID_SECTOR_LIGHT_LEVEL,
   ID_TEST_COMBOBOX,
   ID_SECTOR_IDENT,
 };
@@ -12,6 +13,8 @@ enum {
 windef_t sector_layout[] = {
   { "TEXT", "Sector#", -1, LABEL_WIDTH },
   { "EDITTEXT", "", ID_SECTOR_IDENT, 50 },
+  { "TEXT", "Light lvl:", -1, LABEL_WIDTH },
+  { "EDITTEXT", "", ID_SECTOR_LIGHT_LEVEL, 50 },
   { "TEXT", "Floor Hgt:", -1, LABEL_WIDTH },
   { "EDITTEXT", "", ID_SECTOR_FLOOR_HEIGHT, 50 },
   { "TEXT", "Ceiling Hgt:", -1, LABEL_WIDTH },
@@ -48,9 +51,41 @@ mapsector_t *selected_sector(game_t *game) {
 //  send_message(cb, CB_SETCURSEL, 2, NULL);
 //}
 
+static toolbar_button_t but[] = {
+  { icon16_select, edit_select },
+  { icon16_points, edit_vertices },
+  { icon16_things, edit_things },
+  { icon16_sounds, edit_sounds },
+};
+
+void set_selection_mode(editor_state_t *editor, int mode);
+
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  editor_state_t *editor = get_editor();
+  switch (msg) {
+    case WM_CREATE:
+      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);      
+      return true;
+    case WM_PAINT:
+      draw_text_small("Nothing selected", 5, 5, COLOR_DARK_EDGE);
+      draw_text_small("Nothing selected", 4, 4, COLOR_TEXT_NORMAL);
+      return true;
+    case TB_BUTTONCLICK:
+      for (int i = 0; i < win->num_toolbar_buttons; i++) {
+        toolbar_button_t *but = &win->toolbar_buttons[i];
+        but->active = (but->ident == wparam);
+      }
+      set_selection_mode(editor, wparam);
+      invalidate_window(win);
+      return true;
+    default:
+      return false;
+  }
+}
+
 result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
-  mapsector_t *sector;
+  mapsector_t *sector = selected_sector(g_game);
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
@@ -59,49 +94,34 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //      init_combobox(get_window_item(win, ID_TEST_COMBOBOX));
       return true;
     case WM_PAINT:
-      if (editor->sel_mode == edit_sectors && (sector = selected_sector(g_game))) {
-        //        sprite_t *spr = get_thing_sprite_name(thing->type, 0);
+      if (sector) {
+        set_window_item_text(win, ID_SECTOR_LIGHT_LEVEL, "%d", sector->lightlevel);
         set_window_item_text(win, ID_SECTOR_FLOOR_HEIGHT, "%d", sector->floorheight);
         set_window_item_text(win, ID_SECTOR_FLOOR_IMAGE, sector->floorpic);
         set_window_item_text(win, ID_SECTOR_CEILING_HEIGHT, "%d", sector->ceilingheight);
         set_window_item_text(win, ID_SECTOR_CEILING_IMAGE, sector->ceilingpic);
-        //        set_window_item_text(win, ID_THING_POS_Y, "%d", thing->y);
-        //        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
-        //          window_t *checkbox = get_window_item(win, checkboxes[i]);
-        //          uint32_t value = thing->options&(1<<i);
-        //          send_message(checkbox, BM_SETCHECK, value, NULL);
-        //        }
       }
       return false;
     case WM_COMMAND:
-      if (editor->sel_mode == edit_sectors && (sector = selected_sector(g_game))) {
-//        for (int i = 0; i < sizeof(checkboxes)/sizeof(*checkboxes); i++) {
-//          if (wparam == MAKEDWORD(checkboxes[i], BN_CLICKED)) {
-//            if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
-//              thing->options |= 1 << i;
-//            } else {
-//              thing->options &= ~(1 << i);
-//            }
-//          }
-//        }
-        if (wparam == MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE)) {
-          sector->floorheight = atoi(((window_t *)lparam)->title);
-          if (g_game) {
-            build_wall_vertex_buffer(&g_game->map);
-            build_floor_vertex_buffer(&g_game->map);
-            invalidate_window(editor->window);
-          }
+      if (sector) {
+        switch (wparam) {
+          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, EN_UPDATE):
+            sector->lightlevel = atoi(((window_t *)lparam)->title);
+            break;
+          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE):
+            sector->floorheight = atoi(((window_t *)lparam)->title);
+            break;
+          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE):
+            sector->ceilingheight = atoi(((window_t *)lparam)->title);
+            break;
         }
-        if (wparam == MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE)) {
-          sector->ceilingheight = atoi(((window_t *)lparam)->title);
-          if (g_game) {
-            build_wall_vertex_buffer(&g_game->map);
-            build_floor_vertex_buffer(&g_game->map);
-            invalidate_window(editor->window);
-          }
+        if (g_game) {
+          build_wall_vertex_buffer(&g_game->map);
+          build_floor_vertex_buffer(&g_game->map);
+          invalidate_window(editor->window);
         }
       }
       return true;
   }
-  return false;
+  return win_dummy(win, msg, wparam, lparam);
 }

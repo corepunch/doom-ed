@@ -51,7 +51,7 @@ void build_wall_vertex_buffer(map_data_t *map) {
     glGenVertexArrays(1, &map->walls.vao);
     glGenBuffers(1, &map->walls.vbo);
   }
-  
+
   // Loop through all linedefs
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t const *linedef = &map->linedefs[i];

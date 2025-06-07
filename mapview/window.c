@@ -80,8 +80,19 @@ static void draw_bevel(rect_t const *r) {
   fill_rect(COLOR_FLARE, r->x-1, r->y-1, 1, 1);
 }
 
+static int titlebar_height(window_t const *win) {
+  int t = 0;
+  if (!(win->flags&WINDOW_NOTITLE)) {
+    t += TITLEBAR_HEIGHT;
+  }
+  if (win->flags&WINDOW_TOOLBAR) {
+    t += TOOLBAR_HEIGHT;
+  }
+  return t;
+}
+
 static void draw_panel(window_t const *win) {
-  int t = (win->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
+  int t = titlebar_height(win);
   int x = win->frame.x, y = win->frame.y-t;
   int w = win->frame.w, h = win->frame.h+t;
   bool active = _focused == win;
@@ -127,7 +138,7 @@ void set_viewport(window_t const *win) {
 
 static void paint_window_stencil(window_t const *w) {
   int p = 1;
-  int t = (w->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
+  int t = titlebar_height(w);
   glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
   draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
@@ -163,7 +174,7 @@ void push_window(window_t *win, window_t **windows)  {
 window_t*
 create_window(char const *title,
               flags_t flags,
-              const rect_t *frame,
+              rect_t const *frame,
               window_t *parent,
               winproc_t proc,
               void *lparam)
@@ -291,6 +302,7 @@ void destroy_window(window_t *win) {
   if (_tracked == win) track_mouse(NULL);
   if (_dragging == win) _dragging = NULL;
   if (_resizing == win) _resizing = NULL;
+  if (win->toolbar_buttons) free(win->toolbar_buttons);
   remove_from_global_list(win);
   remove_from_global_hooks(win);
   remove_from_global_queue(win);
@@ -305,10 +317,12 @@ window_t *find_window(int x, int y) {
   window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
     if (!win->visible) continue;
-    int t = win->flags & WINDOW_NOTITLE ? 0 : TITLEBAR_HEIGHT;
+    int t = titlebar_height(win);
     if (CONTAINS(x, y, win->frame.x, win->frame.y-t, win->frame.w, win->frame.h+t)) {
       last = win;
-      send_message(win, WM_HITTEST, MAKEDWORD(x - win->frame.x, y - win->frame.y), &last);
+      if (!win->disabled) {
+        send_message(win, WM_HITTEST, MAKEDWORD(x - win->frame.x, y - win->frame.y), &last);
+      }
     }
   }
   return last;
@@ -408,175 +422,185 @@ window_t* find_prev_tab_stop(window_t* win) {
   return it;
 }
 
-void handle_windows(void) {
+void dispatch_message(SDL_Event *evt) {
   extern bool running;
-  SDL_Event event;
   window_t *win;
-  
-  while (SDL_PollEvent(&event)) {
-    switch (event.type) {
-      case SDL_QUIT:
-        running = false;
-        break;
-      case SDL_TEXTINPUT:
-        send_message(_focused, WM_TEXTINPUT, 0, event.text.text);
-        break;
-      case SDL_KEYDOWN:
-        if (_focused && !send_message(_focused, WM_KEYDOWN, event.key.keysym.scancode, NULL)) {
-          switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_TAB:
-              if (event.key.keysym.mod & KMOD_SHIFT) {
-                set_focus(find_prev_tab_stop(_focused));
-              } else {
-                set_focus(find_next_tab_stop(_focused, false));
-              }
-              break;
-            default:
-              break;
-          }
+  switch (evt->type) {
+    case SDL_QUIT:
+      running = false;
+      break;
+    case SDL_TEXTINPUT:
+      send_message(_focused, WM_TEXTINPUT, 0, evt->text.text);
+      break;
+    case SDL_KEYDOWN:
+      if (_focused && !send_message(_focused, WM_KEYDOWN, evt->key.keysym.scancode, NULL)) {
+        switch (evt->key.keysym.scancode) {
+          case SDL_SCANCODE_TAB:
+            if (evt->key.keysym.mod & KMOD_SHIFT) {
+              set_focus(find_prev_tab_stop(_focused));
+            } else {
+              set_focus(find_next_tab_stop(_focused, false));
+            }
+            break;
+          default:
+            break;
         }
-        break;
-      case SDL_KEYUP:
-        send_message(_focused, WM_KEYUP, event.key.keysym.scancode, NULL);
-        break;
-      case SDL_JOYAXISMOTION:
-        send_message(_focused, WM_JOYAXISMOTION, MAKEDWORD(event.jaxis.axis, event.jaxis.value), NULL);
-        break;
-      case SDL_JOYBUTTONDOWN:
-        send_message(_focused, WM_JOYBUTTONDOWN, event.jbutton.button, NULL);
-        break;
-      case SDL_MOUSEMOTION:
-        if (_dragging) {
-          move_window(_dragging,
-                      SCALE_POINT(event.motion.x) - drag_anchor[0],
-                      SCALE_POINT(event.motion.y) - drag_anchor[1]);
-        } else if (_resizing) {
-          int new_w = SCALE_POINT(event.motion.x) - _resizing->frame.x;
-          int new_h = SCALE_POINT(event.motion.y) - _resizing->frame.y;
-          resize_window(_resizing, new_w, new_h);
-        } else if (((win = _captured) ||
-                   (win = find_window(SCALE_POINT(event.motion.x),
-                                      SCALE_POINT(event.motion.y)))))
-        {
-          int16_t x = LOCAL_X(event.motion, win);
-          int16_t y = LOCAL_Y(event.motion, win);
-          int16_t dx = event.motion.xrel;
-          int16_t dy = event.motion.yrel;
-          if (y >= 0) {
-            send_message(win, WM_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
-          }
+      }
+      break;
+    case SDL_KEYUP:
+      send_message(_focused, WM_KEYUP, evt->key.keysym.scancode, NULL);
+      break;
+    case SDL_JOYAXISMOTION:
+      send_message(_focused, WM_JOYAXISMOTION, MAKEDWORD(evt->jaxis.axis, evt->jaxis.value), NULL);
+      break;
+    case SDL_JOYBUTTONDOWN:
+      send_message(_focused, WM_JOYBUTTONDOWN, evt->jbutton.button, NULL);
+      break;
+    case SDL_MOUSEMOTION:
+      if (_dragging) {
+        move_window(_dragging,
+                    SCALE_POINT(evt->motion.x) - drag_anchor[0],
+                    SCALE_POINT(evt->motion.y) - drag_anchor[1]);
+      } else if (_resizing) {
+        int new_w = SCALE_POINT(evt->motion.x) - _resizing->frame.x;
+        int new_h = SCALE_POINT(evt->motion.y) - _resizing->frame.y;
+        resize_window(_resizing, new_w, new_h);
+      } else if (((win = _captured) ||
+                  (win = find_window(SCALE_POINT(evt->motion.x),
+                                     SCALE_POINT(evt->motion.y)))))
+      {
+        if (win->disabled) return;
+        int16_t x = LOCAL_X(evt->motion, win);
+        int16_t y = LOCAL_Y(evt->motion, win);
+        int16_t dx = evt->motion.xrel;
+        int16_t dy = evt->motion.yrel;
+        if (y >= 0 && (win == _captured || win == _focused)) {
+          send_message(win, WM_MOUSEMOVE, MAKEDWORD(x, y), (void*)(intptr_t)MAKEDWORD(dx, dy));
         }
-        if (_tracked && !CONTAINS(SCALE_POINT(event.motion.x),
-                                  SCALE_POINT(event.motion.y),
-                                  _tracked->frame.x, _tracked->frame.y,
-                                  _tracked->frame.w, _tracked->frame.h))
-        {
-          track_mouse(NULL);
-        }
-        break;
-      case SDL_MOUSEWHEEL:
-        if ((win = _captured) ||
-            (win = find_window(SCALE_POINT(event.wheel.mouseX),
-                               SCALE_POINT(event.wheel.mouseY))))
-        {
-          send_message(win, WM_WHEEL, MAKEDWORD(-event.wheel.x * SCROLL_SENSITIVITY, event.wheel.y * SCROLL_SENSITIVITY), NULL);
-        }
-        break;
-      case SDL_MOUSEBUTTONDOWN:
-        if ((win = _captured) ||
-            (win = find_window(SCALE_POINT(event.button.x),
-                               SCALE_POINT(event.button.y))))
-        {
-          if (win->parent) {
-            set_focus(win);
-          } else {
-            move_to_top(win);
-          }
-          int x = LOCAL_X(event.button, win);
-          int y = LOCAL_Y(event.button, win);
-          if (x >= win->frame.w - RESIZE_HANDLE &&
-              y >= win->frame.h - RESIZE_HANDLE &&
-              !win->parent &&
-              !(win->flags&WINDOW_NORESIZE) &&
-              win != _captured)
-          {
-            _resizing = win;
-          } else if (SCALE_POINT(event.button.y) < win->frame.y && !win->parent && win != _captured) {
-            _dragging = win;
-            drag_anchor[0] = SCALE_POINT(event.button.x) - win->frame.x;
-            drag_anchor[1] = SCALE_POINT(event.button.y) - win->frame.y;
-          } else if (win == _focused) {
-            int msg = 0;
-            switch (event.button.button) {
-              case 1: msg = WM_LBUTTONDOWN; break;
-              case 3: msg = WM_RBUTTONDOWN; break;
-            }
-            if (!handle_mouse(msg, win, x, y)) {
-              send_message(win, msg, MAKEDWORD(x, y), NULL);
-            }
-          }
-        }
-        break;
-        
-      case SDL_MOUSEBUTTONUP:
-        if (_dragging) {
-          int x = SCALE_POINT(event.button.x);
-          int y = SCALE_POINT(event.button.y);
-          int b = (_dragging->frame.x + _dragging->frame.w - CONTROL_BUTTON_PADDING - x) / CONTROL_BUTTON_WIDTH;
-          if (b == 0) {
-            show_window(_dragging, false);
-            _dragging = NULL;
-          } else {
-            switch (event.button.button) {
-              case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
-                // case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
-            }
-            set_focus(_dragging);
-            _dragging = NULL;
-          }
-        } else if (_resizing) {
-          set_focus(_resizing);
-          _resizing = NULL;
-        } else if ((win = _captured) ||
-                   (win = find_window(SCALE_POINT(event.button.x),
-                                      SCALE_POINT(event.button.y))))
-        {
-          if (SCALE_POINT(event.button.y) >= win->frame.y || win == _captured) {
-            int x = LOCAL_X(event.button, win);
-            int y = LOCAL_Y(event.button, win);
-            int msg = 0;
-            switch (event.button.button) {
-              case 1: msg = WM_LBUTTONUP; break;
-              case 3: msg = WM_RBUTTONUP; break;
-            }
-            if (!handle_mouse(msg, win, x, y)) {
-              send_message(win, msg, MAKEDWORD(x, y), NULL);
-            }
-          } else {
-            int x = SCALE_POINT(event.button.x);
-            int y = SCALE_POINT(event.button.y);
-            switch (event.button.button) {
-              case 1: send_message(win, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
-//              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
-            }
-          }
+      }
+      if (_tracked && !CONTAINS(SCALE_POINT(evt->motion.x),
+                                SCALE_POINT(evt->motion.y),
+                                _tracked->frame.x, _tracked->frame.y,
+                                _tracked->frame.w, _tracked->frame.h))
+      {
+        track_mouse(NULL);
+      }
+      break;
+    case SDL_MOUSEWHEEL:
+      if ((win = _captured) ||
+          (win = find_window(SCALE_POINT(evt->wheel.mouseX),
+                             SCALE_POINT(evt->wheel.mouseY))))
+      {
+        if (win->disabled) return;
+        send_message(win, WM_WHEEL, MAKEDWORD(-evt->wheel.x * SCROLL_SENSITIVITY, evt->wheel.y * SCROLL_SENSITIVITY), NULL);
+      }
+      break;
+    case SDL_MOUSEBUTTONDOWN:
+      if ((win = _captured) ||
+          (win = find_window(SCALE_POINT(evt->button.x),
+                             SCALE_POINT(evt->button.y))))
+      {
+        if (win->disabled) return;
+        if (win->parent) {
           set_focus(win);
+        } else {
+          move_to_top(win);
         }
-        break;
-    }
+        int x = LOCAL_X(evt->button, win);
+        int y = LOCAL_Y(evt->button, win);
+        if (x >= win->frame.w - RESIZE_HANDLE &&
+            y >= win->frame.h - RESIZE_HANDLE &&
+            !win->parent &&
+            !(win->flags&WINDOW_NORESIZE) &&
+            win != _captured)
+        {
+          _resizing = win;
+        } else if (SCALE_POINT(evt->button.y) < win->frame.y && !win->parent && win != _captured) {
+          _dragging = win;
+          drag_anchor[0] = SCALE_POINT(evt->button.x) - win->frame.x;
+          drag_anchor[1] = SCALE_POINT(evt->button.y) - win->frame.y;
+        } else if (win == _focused) {
+          int msg = 0;
+          switch (evt->button.button) {
+            case 1: msg = WM_LBUTTONDOWN; break;
+            case 3: msg = WM_RBUTTONDOWN; break;
+          }
+          if (!handle_mouse(msg, win, x, y)) {
+            send_message(win, msg, MAKEDWORD(x, y), NULL);
+          }
+        }
+      }
+      break;
+      
+    case SDL_MOUSEBUTTONUP:
+      if (_dragging) {
+        int x = SCALE_POINT(evt->button.x);
+        int y = SCALE_POINT(evt->button.y);
+        int b = (_dragging->frame.x + _dragging->frame.w - CONTROL_BUTTON_PADDING - x) / CONTROL_BUTTON_WIDTH;
+        if (b == 0) {
+          if (_dragging->flags & WINDOW_DIALOG) {
+            end_dialog(_dragging, -1);
+          } else {
+            show_window(_dragging, false);
+          }
+          _dragging = NULL;
+        } else {
+          switch (evt->button.button) {
+            case 1: send_message(_dragging, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
+              // case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+          }
+          set_focus(_dragging);
+          _dragging = NULL;
+        }
+      } else if (_resizing) {
+        set_focus(_resizing);
+        _resizing = NULL;
+      } else if ((win = _captured) ||
+                 (win = find_window(SCALE_POINT(evt->button.x),
+                                    SCALE_POINT(evt->button.y))))
+      {
+        if (win->disabled) return;
+        set_focus(win);
+        if (SCALE_POINT(evt->button.y) >= win->frame.y || win == _captured) {
+          int x = LOCAL_X(evt->button, win);
+          int y = LOCAL_Y(evt->button, win);
+          int msg = 0;
+          switch (evt->button.button) {
+            case 1: msg = WM_LBUTTONUP; break;
+            case 3: msg = WM_RBUTTONUP; break;
+          }
+          if (!handle_mouse(msg, win, x, y)) {
+            send_message(win, msg, MAKEDWORD(x, y), NULL);
+          }
+        } else {
+          int x = SCALE_POINT(evt->button.x);
+          int y = SCALE_POINT(evt->button.y);
+          switch (evt->button.button) {
+            case 1: send_message(win, WM_NCLBUTTONUP, MAKEDWORD(x, y), NULL); break;
+              //              case 3: send_message(win, WM_NCRBUTTONDOWN, MAKEDWORD(x, y), NULL); break;
+          }
+        }
+      }
+      break;
   }
+}
 
+int get_message(SDL_Event *evt) {
+  return SDL_PollEvent(evt);
+}
+
+void repost_messages(void) {
   for (uint8_t write = queue.write; queue.read != write;) {
     msg_t *m = &queue.messages[queue.read++];
     if (m->target == NULL) continue;
     if (m->msg == WM_REFRESHSTENCIL) {
       repaint_stencil();
-//      glStencilFunc(GL_EQUAL, 0, 0xFF);
-//      draw_wallpaper();
       continue;
     }
     send_message(m->target, m->msg, m->wparam, m->lparam);
   }
+  glFlush();
+  // SDL_GL_SwapWindow(window);
 }
 
 void draw_windows(bool rich) {
@@ -588,24 +612,27 @@ void draw_windows(bool rich) {
 }
 
 int window_title_bar_y(window_t const *win) {
-  return win->frame.y + 2 - TITLEBAR_HEIGHT;
+  return win->frame.y + 2 - titlebar_height(win);
 }
 
 void draw_window_controls(window_t *win) {
   rect_t r = win->frame;
-  fill_rect(COLOR_PANEL_DARK_BG, r.x, r.y-TITLEBAR_HEIGHT, r.w, TITLEBAR_HEIGHT);
-//  draw_bevel(MAKERECT(r.x+1, r.y+1-TITLEBAR_HEIGHT, r.w-2, TITLEBAR_HEIGHT-2));
+  int t = titlebar_height(win);
+  fill_rect(COLOR_PANEL_DARK_BG, r.x, r.y-t, r.w, t);
+//  draw_bevel(MAKERECT(r.x+1, r.y+1-t, r.w-2, t-2));
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
-  // draw_button(frame->x+frame->w-11, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
-  // draw_button(frame->x+frame->w-11-12, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
-  // draw_rect(icon3_tex, frame->x+2, frame->y+2-TITLEBAR_HEIGHT, 8, 8);
+  // draw_button(frame->x+frame->w-11, frame->y-t+1, 10, 10, false);
+  // draw_button(frame->x+frame->w-11-12, frame->y-t+1, 10, 10, false);
+  // draw_rect(icon3_tex, frame->x+2, frame->y+2-t, 8, 8);
   for (int i = 0; i < 1; i++) {
     int x = win->frame.x + win->frame.w - (i+1)*CONTROL_BUTTON_WIDTH - CONTROL_BUTTON_PADDING;
     int y = window_title_bar_y(win);
     draw_icon8(icon8_minus + i, x, y, COLOR_TEXT_NORMAL);
   }
 }
+
+#define TB_SPACING 18
 
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (!win) return false;
@@ -628,10 +655,19 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         if (!(win->flags&WINDOW_NOTITLE)) {
           draw_window_controls(win);
-        }
-        if (!(win->flags&WINDOW_NOTITLE)) {
-          // fill_rect(0x40ffffff, frame->x+frame->w-TITLEBAR_HEIGHT, frame->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
           draw_text_small(win->title, frame->x+2, window_title_bar_y(win), -1);
+        }
+        if (win->flags&WINDOW_TOOLBAR) {
+          int t = TOOLBAR_HEIGHT;
+          rect_t rect = {win->frame.x+1, win->frame.y-t+1, win->frame.w-2, t-2};
+          draw_bevel(&rect);
+          fill_rect(COLOR_PANEL_BG, rect.x, rect.y, rect.w, rect.h);
+          for (int i = 0; i < win->num_toolbar_buttons; i++) {
+            toolbar_button_t const *but = &win->toolbar_buttons[i];
+            uint32_t col = but->active ? COLOR_TEXT_SUCCESS : COLOR_TEXT_NORMAL;
+            draw_icon16(but->icon, rect.x + i * TB_SPACING + 2, rect.y + 2, COLOR_DARK_EDGE);
+            draw_icon16(but->icon, rect.x + i * TB_SPACING + 1, rect.y + 1, col);
+          }
         }
         break;
       case WM_PAINT:
@@ -641,6 +677,11 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
                        root->scroll[1],
                        root->frame.w + root->scroll[0],
                        root->frame.h + root->scroll[1]);
+        break;
+      case TB_ADDBUTTONS:
+        win->num_toolbar_buttons = wparam;
+        win->toolbar_buttons = malloc(sizeof(toolbar_button_t)*wparam);
+        memcpy(win->toolbar_buttons, lparam, sizeof(toolbar_button_t)*wparam);
         break;
     }
     if (!(value = win->proc(win, msg, wparam, lparam))) {
@@ -673,7 +714,27 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             }
           }
           break;
+        case WM_NCLBUTTONUP:
+          if (win->flags&WINDOW_TOOLBAR) {
+            uint16_t x = LOWORD(wparam);
+            uint16_t y = HIWORD(wparam);
+            int _x = win->frame.x + 2;
+            int _y = win->frame.y - TOOLBAR_HEIGHT + 2;
+            for (int i = 0; i < win->num_toolbar_buttons; i++) {
+              toolbar_button_t *but = &win->toolbar_buttons[i];
+              if (CONTAINS(x, y, _x + i * TB_SPACING, _y, 16, 16)) {
+                send_message(win, TB_BUTTONCLICK, but->ident, but);
+              }
+            }
+          }
+          break;
       }
+    }
+    if (win->disabled && msg == WM_PAINT) {
+      uint32_t col = (COLOR_PANEL_BG & 0x00FFFFFF) | 0x80000000;
+      set_viewport(&(window_t){0, 0, screen_width, screen_height});
+      set_projection(0, 0, screen_width, screen_height);
+      fill_rect(col, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
     }
   }
   return value;
@@ -706,6 +767,9 @@ result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     case WM_PAINT:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.h, win->pressed);
+      if (!win->pressed) {
+        draw_text_small(win->title, win->frame.x+4, win->frame.y+4, COLOR_DARK_EDGE);
+      }
       draw_text_small(win->title, win->frame.x+((win->pressed)?4:3), win->frame.y+((win->pressed)?4:3), COLOR_TEXT_NORMAL);
       return true;
     case WM_LBUTTONDOWN:
@@ -993,6 +1057,17 @@ result_t win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
+rect_t fit_sprite(sprite_t const *spr, rect_t const *target) {
+  float scale = fminf(1, fminf(((float)target->w) / spr->width,
+                               ((float)target->h) / spr->height));
+  return (rect_t) {
+    target->x+(target->w-spr->width*scale)/2,
+    target->y+(target->h-spr->height*scale)/2,
+    spr->width * scale,
+    spr->height * scale
+  };
+}
+
 result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   sprite_t const *spr;
   mapside_texture_t const *tex;
@@ -1002,13 +1077,8 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.w, true);
       if (!*win->title) return false;
       if ((spr = find_sprite(win->title))) {
-        float scale = fminf(1, fminf(((float)win->frame.w) / spr->width,
-                                     ((float)win->frame.h) / spr->height));
-        draw_rect(spr->texture,
-                  win->frame.x+(win->frame.w-spr->width*scale)/2,
-                  win->frame.y+(win->frame.h-spr->height*scale)/2,
-                  spr->width * scale,
-                  spr->height * scale);
+        rect_t r = fit_sprite(spr, &win->frame);
+        draw_rect(spr->texture, r.x, r.y, r.w, r.h);
       } else if ((tex = get_flat_texture(win->title))||(tex = get_texture(win->title))) {
         float scale = fminf(1, fminf(((float)win->frame.w) / tex->width,
                                      ((float)win->frame.h) / tex->height));
@@ -1019,6 +1089,9 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
                   tex->height * scale);
       }
       return true;
+    case WM_LBUTTONUP:
+      send_message(win->parent, WM_COMMAND, MAKEDWORD(win->id, BN_CLICKED), NULL);
+      return true;
   }
   return false;
 }
@@ -1027,64 +1100,6 @@ typedef struct {
   window_t *items[16];
   uint8_t num_items;
 } stack_data_t;
-
-result_t win_stack(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  stack_data_t *data = win->userdata;
-  switch (msg) {
-    case WM_CREATE:
-      data = malloc(sizeof(stack_data_t));
-      memset(data, 0, sizeof(stack_data_t));
-      win->userdata = data;
-      return true;
-    case WM_DESTROY:
-      free(win->userdata);
-      return true;
-    case WM_NCPAINT:
-      for (int i = 0; i < data->num_items; i++) {
-        send_message(data->items[i], WM_NCPAINT, 0, NULL);
-      }
-      return false;
-    case WM_PAINT:
-      for (int i = 0; i < data->num_items; i++) {
-        send_message(data->items[i], WM_PAINT, 0, NULL);
-      }
-      return true;
-    case WM_PAINTSTENCIL:
-      paint_window_stencil(win);
-      for (int i = 0; i < data->num_items; i++) {
-        paint_window_stencil(data->items[i]);
-      }
-      return true;
-    case WM_HITTEST:
-      for (int i = 0, y = 1; i < data->num_items; i++) {
-        window_t *item = data->items[i];
-        int bottom = y + item->frame.h + 2;
-        int mx = LOWORD(wparam), my = HIWORD(wparam);
-        if (my > y && my < bottom) {
-          *((window_t **)lparam) = item;
-          uint32_t wparam = MAKEDWORD(mx, my - item->frame.y + win->frame.y);
-          send_message(item, WM_HITTEST, wparam, lparam);
-        }
-        y = bottom;
-      }
-      return true;
-    case ST_ADDWINDOW:
-      data->items[data->num_items] = lparam;
-      data->items[data->num_items]->flags |= WINDOW_NOTITLE | WINDOW_NORESIZE;
-      data->num_items++;
-      post_message(win, WM_REFRESHSTENCIL, 0, NULL);
-      // fall through
-    case WM_RESIZE:
-      for (int i = 0, y = win->frame.y + 1; i < data->num_items; i++) {
-        window_t *item = data->items[i];
-        move_window(item, win->frame.x + 1, y);
-        resize_window(item, win->frame.w-2, item->frame.h);
-        y += item->frame.h + 2;
-      }
-      return true;
-  }
-  return false;
-}
 
 window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent) {
   winproc_t proc = NULL;
@@ -1168,4 +1183,50 @@ void show_window(window_t *win, bool visible) {
   }
   win->visible = visible;
   post_message(win, WM_SHOWWINDOW, visible, NULL);
+}
+
+bool is_window(window_t *win) {
+  for (window_t *it = windows; it; it = it->next) {
+    if (it == win) {
+      return true;
+    }
+  }
+  return false;
+}
+
+static uint32_t _return_code;
+void end_dialog(window_t *win, uint32_t code) {
+  _return_code = code;
+  destroy_window(win);
+}
+
+uint32_t
+show_dialog(char const *title,
+            const rect_t *frame,
+            struct window_s *owner,
+            winproc_t proc,
+            void *param)
+{
+  extern bool running;
+  SDL_Event event;
+  uint32_t flags = WINDOW_VSCROLL|WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
+  window_t *dlg = create_window("Things", flags, frame, NULL, proc, param);
+  enable_window(owner, false);
+  show_window(dlg, true);
+  while (running && is_window(dlg)) {
+    while (get_message(&event)) {
+      dispatch_message(&event);
+    }
+    repost_messages();
+  }
+  enable_window(owner, true);
+  return _return_code;
+}
+
+void enable_window(window_t *win, bool enable) {
+  if (!enable && _focused == win) {
+    set_focus(NULL);
+  }
+  win->disabled = !enable;
+  invalidate_window(win);
 }

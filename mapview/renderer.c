@@ -102,10 +102,31 @@ bool init_sdl(void) {
     return false;
   }
   
-  window = SDL_CreateWindow("DOOM Wireframe Renderer",
-                            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                            SCREEN_WIDTH, SCREEN_HEIGHT,
-                            SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
+  int numDisplays = SDL_GetNumVideoDisplays();
+  if (numDisplays < 2) {
+    printf("Only %d display(s) found. Need at least 2.\n", numDisplays);
+    SDL_Quit();
+    return 1;
+  }
+  
+  SDL_Rect bounds;
+  if (SDL_GetDisplayBounds(1, &bounds) != 0) {
+    SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
+    // fallback to display 0 or handle error
+  }
+  
+  // Centered position on display 1
+  int w = SCREEN_WIDTH;
+  int h = SCREEN_HEIGHT;
+  int x = bounds.x + (bounds.w - w) / 2;
+  int y = bounds.y + (bounds.h - h) / 2;
+  
+  window = SDL_CreateWindow("DOOM Wireframe Renderer", x, y, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS);
+
+//  window = SDL_CreateWindow("DOOM Wireframe Renderer",
+//                            SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+//                            SCREEN_WIDTH, SCREEN_HEIGHT,
+//                            SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
   if (!window) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
     return false;
@@ -218,23 +239,11 @@ void cleanup(void) {
 int run(void) {
   // Main game loop
   while (running) {
-    mode = false;
-    // Calculate delta time for smooth movement
-
-//    glClearColor(0.825f, 0.590f, 0.425f, 1.0f);
-//    glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-
-    void draw_intermission(void);
-    void handle_intermission_input(float delta_time);
-
-    handle_windows();
-
-//    SDL_GL_SwapWindow(window);
-    
-    glFlush();
-    
-    // Cap frame rate
-//    SDL_Delay(16);  // ~60 FPS
+    SDL_Event event;
+    while (get_message(&event)) {
+      dispatch_message(&event);
+    }
+    repost_messages();
   }
   
   // Clean up

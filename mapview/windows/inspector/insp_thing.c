@@ -1,3 +1,5 @@
+#include <SDL2/SDL.h>
+
 #include "../../editor.h"
 #include "../../sprites.h"
 
@@ -81,9 +83,23 @@ mapthing_t *selected_thing(game_t *game) {
   }
 }
 
+result_t win_things(window_t *, uint32_t, uint32_t, void *);
+
+rect_t shrink_rect(rect_t const *rect) {
+  return (rect_t){rect->x+8,rect->y+8,THING_SIZE*3,rect->h-16};
+}
+
+uint16_t select_thing_type(window_t *owner) {
+  rect_t rect = shrink_rect(&owner->frame);
+  return show_dialog("Things", &rect, owner, win_things, NULL);
+}
+
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
-  mapthing_t *thing;
+  mapthing_t *thing = selected_thing(g_game);
+  uint16_t tmp;
   switch (msg) {
     case WM_CREATE:
       win->userdata = lparam;
@@ -91,7 +107,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       load_window_children(win, thing_layout);
       return true;
     case WM_PAINT:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(g_game))) {
+      if (thing) {
         sprite_t *spr = get_thing_sprite_name(thing->type, 0);
         set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
         set_window_item_text(win, ID_THING_TYPE, "%d", thing->height);
@@ -106,7 +122,7 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
       return false;
     case WM_COMMAND:
-      if (editor->sel_mode == edit_things && (thing = selected_thing(g_game))) {
+      if (thing) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
           if (wparam == MAKEDWORD(thing_checkboxes[i], BN_CLICKED)) {
             if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
@@ -116,20 +132,28 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             }
           }
         }
-        if (wparam == MAKEDWORD(ID_THING_POS_X, EN_UPDATE)) {
-          thing->x = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
-        }
-        if (wparam == MAKEDWORD(ID_THING_POS_Y, EN_UPDATE)) {
-          thing->y = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
-        }
-        if (wparam == MAKEDWORD(ID_THING_ANGLE, EN_UPDATE)) {
-          thing->angle = atoi(((window_t *)lparam)->title);
-          invalidate_window(editor->window);
+        switch (wparam) {
+          case MAKEDWORD(ID_THING_POS_X, EN_UPDATE):
+            thing->x = atoi(((window_t *)lparam)->title);
+            invalidate_window(editor->window);
+            break;
+          case MAKEDWORD(ID_THING_POS_Y, EN_UPDATE):
+            thing->y = atoi(((window_t *)lparam)->title);
+            invalidate_window(editor->window);
+            break;
+          case MAKEDWORD(ID_THING_ANGLE, EN_UPDATE):
+            thing->angle = atoi(((window_t *)lparam)->title);
+            invalidate_window(editor->window);
+            break;
+          case MAKEDWORD(ID_THING_SPRITE, BN_CLICKED):
+            if ((tmp = select_thing_type(win)) != 0xFFFF) {
+              thing->type = tmp;
+              invalidate_window(editor->window);
+            }
+            break;
         }
       }
       return true;
   }
-  return false;
+  return win_dummy(win, msg, wparam, lparam);
 }

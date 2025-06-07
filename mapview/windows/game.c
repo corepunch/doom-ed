@@ -35,11 +35,21 @@ void init_player(map_data_t const *map, player_t *player) {
 
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
+
+static rect_t *new_frame(void) {
+  static uint8_t counter = 0;
+  static rect_t rect = { 0, 0, 400, 400 };
+  rect.x = counter+32;
+  rect.y = counter+32;
+  counter += 16;
+  return &rect;
+}
+
 void new_map(void) {
   game_t *gm = malloc(sizeof(game_t));
   memset(gm, 0, sizeof(game_t));
   gm->last_time = SDL_GetTicks();
-  show_window(create_window("New map", 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
+  show_window(create_window("New map", 0, new_frame(), NULL, win_editor, gm), true);
   init_editor(&gm->state);
   g_game = gm;
 }
@@ -67,7 +77,7 @@ void open_map(const char *mapname) {
 
   init_editor(&gm->state);
 
-  show_window(create_window(mapname, 0, MAKERECT(32, 128, 320, 320), NULL, win_editor, gm), true);
+  show_window(create_window(mapname, 0, new_frame(), NULL, win_editor, gm), true);
   
   g_game = gm;
 }

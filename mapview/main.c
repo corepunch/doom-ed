@@ -15,9 +15,8 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_toolbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_stack(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 window_t *g_inspector = NULL;
 
@@ -28,15 +27,13 @@ void init_windows(void) {
   show_window(create_window("Desktop", WINDOW_NOTITLE|WINDOW_ALWAYSINBACK|WINDOW_NOTRAYBUTTON, MAKERECT(0, 0, screen_width, screen_height), NULL, win_desktop, NULL), true);
   show_window(create_window("Tray", WINDOW_NOTITLE|WINDOW_NOTRAYBUTTON, MAKERECT(0, 0, 0, 0), NULL, win_tray, NULL), true);
 //  create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
-  create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, 128, 256), NULL, win_things, NULL);
+  show_window(create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, THING_SIZE*3, 256), NULL, win_things, NULL), true);
   create_window("Project", WINDOW_VSCROLL, MAKERECT(4, 20, 128, 256), NULL, win_project, NULL);
   //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, NULL);
 //  create_window("Inspector", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, NULL);
   
-  window_t *stackview = create_window("Sidebar", WINDOW_NOFILL, MAKERECT(screen_width-160, 16, 155, 320), NULL, win_stack, NULL);
-  show_window(stackview, true);
-  send_message(stackview, ST_ADDWINDOW, 0, create_window("Toolbar", WINDOW_NOTRAYBUTTON, MAKERECT(16, 16, 150, 16), NULL, win_toolbar, NULL));
-  send_message(stackview, ST_ADDWINDOW, 0, create_window("Inspector", WINDOW_NOTRAYBUTTON, MAKERECT(200, 20, 150, 300), NULL, win_sector, NULL));
+  g_inspector = create_window("Inspector", WINDOW_TOOLBAR, MAKERECT(screen_width-200, 40, 150, 300), NULL, win_dummy, NULL);
+  show_window(g_inspector, true);
 }
 
 int main(int argc, char* argv[]) {
