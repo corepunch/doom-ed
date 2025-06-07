@@ -141,6 +141,8 @@ enum {
   CB_SETCURSEL,
   CB_GETLBTEXT,
   ST_ADDWINDOW,
+  TB_ADDBUTTONS,
+  TB_BUTTONCLICK,
 };
 
 #define CB_ERR -1
@@ -508,8 +510,10 @@ typedef struct {
 #define WINDOW_HIDDEN (1 << 8)
 #define WINDOW_NOTRAYBUTTON (1 << 9)
 #define WINDOW_DIALOG (1 << 10)
+#define WINDOW_TOOLBAR (1 << 11)
 
 #define TITLEBAR_HEIGHT 12
+#define TOOLBAR_HEIGHT 20
 #define WINDOW_PADDING 4
 #define LINE_PADDING 5
 #define CONTROL_HEIGHT 10
@@ -518,6 +522,7 @@ typedef struct {
 #define BUTTON_HEIGHT 13
 #define CONTROL_BUTTON_WIDTH 8
 #define CONTROL_BUTTON_PADDING 2
+#define THING_SIZE 48
 
 struct window_s;
 typedef uint32_t flags_t;
@@ -532,6 +537,12 @@ typedef struct {
   int w, h;
   flags_t flags;
 } windef_t;
+
+typedef struct {
+  int icon;
+  int ident;
+  bool active;
+} toolbar_button_t;
 
 typedef struct window_s {
   rect_t frame;
@@ -549,6 +560,8 @@ typedef struct window_s {
   bool disabled;
   char title[64];
   int cursor_pos;
+  int num_toolbar_buttons;
+  toolbar_button_t *toolbar_buttons;
   void *userdata;
   void *userdata2;
   struct window_s *next;

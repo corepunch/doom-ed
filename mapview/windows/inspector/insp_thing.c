@@ -86,13 +86,15 @@ mapthing_t *selected_thing(game_t *game) {
 result_t win_things(window_t *, uint32_t, uint32_t, void *);
 
 rect_t shrink_rect(rect_t const *rect) {
-  return (rect_t){rect->x+8,rect->y+8,rect->w-16,rect->h-16};
+  return (rect_t){rect->x+8,rect->y+8,THING_SIZE*3,rect->h-16};
 }
 
 uint16_t select_thing_type(window_t *owner) {
   rect_t rect = shrink_rect(&owner->frame);
   return show_dialog("Things", &rect, owner, win_things, NULL);
 }
+
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
@@ -153,5 +155,5 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
       return true;
   }
-  return false;
+  return win_dummy(win, msg, wparam, lparam);
 }

@@ -22,87 +22,71 @@ get_layout_item(struct texture_layout_s* layout,
 
 int get_texture_at_point(struct texture_layout_s* layout, int x, int y);
 
-sprite_t const *get_thing_sprite(int index, ed_thing_t const *things) {
-  static sprite_t empty = {
-    .name = "EMPTY",
-    .width = 8,
-    .height = 8,
-    .texture = 1,
-  };
-  if (things[index].sprite) {
-    sprite_t const *spr = find_sprite(things[index].sprite);
-    return spr ? spr : &empty;
-  } else {
-    return &empty;
-  }
-}
-
-texdef_t get_mobj_size(int index, void *_things) {
-  //  mobjinfo_t const *mobj = &((mobjinfo_t const *)_things)[index];
-  sprite_t const *spr = get_thing_sprite(index, _things);
-  if (spr) {
-    float scale = fminf(1,fminf(((float)THUMBNAIL_SIZE) / spr->width,
-                                ((float)THUMBNAIL_SIZE) / spr->height));
-    return (texdef_t){
-      .name = spr->name,
-      .width = spr->width * scale,
-      .height = spr->height * scale
-    };
-  } else {
-    return (texdef_t){0};
-  }
-}
-
 #define NUM_THINGS (sizeof(ed_things)/sizeof(*ed_things))
+
+rect_t fit_sprite(sprite_t const *spr, rect_t const *target);
 
 result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern mobjinfo_t mobjinfo[NUMMOBJTYPES];
   extern state_t states[NUMSTATES];
   extern char *sprnames[NUMSPRITES];
   int texture_idx;
-  editor_state_t *editor = get_editor();
+//  editor_state_t *editor = get_editor();
   switch (msg) {
     case WM_CREATE:
+      win->flags |= WINDOW_TOOLBAR;
       win->userdata2 = lparam;
-      win->userdata = layout(NUM_THINGS, win->frame.w, get_mobj_size, ed_things);
+//      win->userdata = layout(NUM_THINGS, win->frame.w, get_mobj_size, win);
+    {
+      toolbar_button_t but[8]={0};
+      for (int i = 0; i < 8; i++) {
+        but[i].icon = 16+i;
+        but[i].ident = i;
+        but[i].active = win->cursor_pos == i;
+      }
+      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);
+    }
+//      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);
       break;
     case WM_PAINT:
-      for (int i = 0; i < NUM_THINGS; i++) {
-        int mobjindex;
-        int pos = get_layout_item(win->userdata, i, &mobjindex);
-        if (mobjindex == -1) continue;
-        sprite_t const *spr = get_thing_sprite(mobjindex, ed_things);
-        if (spr) {
-          float scale = fminf(1,fminf(((float)THUMBNAIL_SIZE) / spr->width,
-                                      ((float)THUMBNAIL_SIZE) / spr->height));
-          draw_rect(spr->texture,LOWORD(pos),HIWORD(pos),spr->width * scale,spr->height * scale);
-          ed_thing_t const *mobj = &ed_things[mobjindex];
-          if (editor->selected_thing_type == mobj->doomednum) {
-            extern int selection_tex;
-            draw_rect_ex(selection_tex, LOWORD(pos), HIWORD(pos), spr->width * scale, spr->height * scale, true, 1);
-          }
+      for (int i = 0, j = 0; i < NUM_THINGS; i++) {
+        sprite_t *spr = ed_things[i].sprite ? find_sprite(ed_things[i].sprite) : NULL;
+        if (spr && ed_things[i].code1 == ed_thinggroups[win->cursor_pos].code) {
+          uint16_t n = win->frame.w / THING_SIZE;
+          uint16_t x = (j % n) * THING_SIZE;
+          uint16_t y = (j / n) * THING_SIZE;
+          rect_t r = fit_sprite(spr, &(rect_t){ x, y, THING_SIZE, THING_SIZE });
+          draw_rect(spr->texture, r.x, r.y, r.w, r.h);
+          j++;
         }
       }
       break;
     case WM_RESIZE:
-      free(win->userdata);
-      win->userdata = layout(NUM_THINGS, win->frame.w, get_mobj_size, ed_things);
+      invalidate_window(win);
       return true;
     case WM_LBUTTONUP:
-      if ((texture_idx=get_texture_at_point(win->userdata,
-                                            LOWORD(wparam),
-                                            HIWORD(wparam))) >= 0)
-      {
-        ed_thing_t const *mobj = &ed_things[texture_idx];
-        // printf("%d %s\n", texture_idx, get_thing_sprite(texture_idx, ed_objs)->name);
-        // if (g_game && has_selection(editor->selected, obj_thing)) {
-        //   g_game->map.things[editor->selected.index].type = mobj->doomednum;
-        //   invalidate_window(editor->window);
-        // }
-        // editor->selected_thing_type = mobj->doomednum;
-        // memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));
-        end_dialog(win, mobj->doomednum);
-        return true;
+      for (int i = 0, j = 0; i < NUM_THINGS; i++) {
+        sprite_t *spr = ed_things[i].sprite ? find_sprite(ed_things[i].sprite) : NULL;
+        if (spr && ed_things[i].code1 == ed_thinggroups[win->cursor_pos].code) {
+          uint16_t n = win->frame.w / THING_SIZE;
+          uint16_t x = (j % n) * THING_SIZE;
+          uint16_t y = (j / n) * THING_SIZE;
+          if (LOWORD(wparam) >= x && HIWORD(wparam) >= y &&
+              LOWORD(wparam) < x + THING_SIZE &&
+              HIWORD(wparam) < y + THING_SIZE)
+          {
+            end_dialog(win, ed_things[i].doomednum);
+            return true;
+          }
+          j++;
+        }
+      }
+      return true;
+    case TB_BUTTONCLICK:
+      free(win->userdata);
+      win->cursor_pos = wparam;
+      for (int i = 0; i < win->num_toolbar_buttons; i++) {
+        win->toolbar_buttons[i].active = wparam == i;
       }
       invalidate_window(win);
       return true;

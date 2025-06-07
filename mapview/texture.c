@@ -408,7 +408,7 @@ load_flat_texture(texname_t const floorpic)
   // Convert color indices to RGBA using palette
   for (int i = 0; i < width * height; i++) {
     uint8_t index = raw_flat[i];
-    flat_data[i * 4] = palette[index].r;     // R
+    flat_data[i * 4 + 0] = palette[index].r; // R
     flat_data[i * 4 + 1] = palette[index].g; // G
     flat_data[i * 4 + 2] = palette[index].b; // B
     flat_data[i * 4 + 3] = 255;              // A (always opaque)

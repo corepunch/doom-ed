@@ -66,6 +66,8 @@ maplinedef_t *selected_line(game_t *game) {
   }
 }
 
+result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
 result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   maplinedef_t *line = selected_line(g_game);
@@ -118,5 +120,5 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       }
       return true;
   }
-  return false;
+  return win_dummy(win, msg, wparam, lparam);
 }

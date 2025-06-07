@@ -51,11 +51,32 @@ mapsector_t *selected_sector(game_t *game) {
 //  send_message(cb, CB_SETCURSEL, 2, NULL);
 //}
 
+static toolbar_button_t but[] = {
+  { icon16_select, edit_select },
+  { icon16_points, edit_vertices },
+  { icon16_things, edit_things },
+  { icon16_sounds, edit_sounds },
+};
+
+void set_selection_mode(editor_state_t *editor, int mode);
+
 result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  editor_state_t *editor = get_editor();
   switch (msg) {
+    case WM_CREATE:
+      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);      
+      return true;
     case WM_PAINT:
       draw_text_small("Nothing selected", 5, 5, COLOR_DARK_EDGE);
       draw_text_small("Nothing selected", 4, 4, COLOR_TEXT_NORMAL);
+      return true;
+    case TB_BUTTONCLICK:
+      for (int i = 0; i < win->num_toolbar_buttons; i++) {
+        toolbar_button_t *but = &win->toolbar_buttons[i];
+        but->active = (but->ident == wparam);
+      }
+      set_selection_mode(editor, wparam);
+      invalidate_window(win);
       return true;
     default:
       return false;
@@ -102,5 +123,5 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       }
       return true;
   }
-  return false;
+  return win_dummy(win, msg, wparam, lparam);
 }

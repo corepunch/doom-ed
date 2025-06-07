@@ -78,7 +78,7 @@ void open_map(const char *mapname) {
   init_editor(&gm->state);
 
   show_window(create_window(mapname, 0, new_frame(), NULL, win_editor, gm), true);
-
+  
   g_game = gm;
 }
 

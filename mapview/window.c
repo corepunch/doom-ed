@@ -80,8 +80,19 @@ static void draw_bevel(rect_t const *r) {
   fill_rect(COLOR_FLARE, r->x-1, r->y-1, 1, 1);
 }
 
+static int titlebar_height(window_t const *win) {
+  int t = 0;
+  if (!(win->flags&WINDOW_NOTITLE)) {
+    t += TITLEBAR_HEIGHT;
+  }
+  if (win->flags&WINDOW_TOOLBAR) {
+    t += TOOLBAR_HEIGHT;
+  }
+  return t;
+}
+
 static void draw_panel(window_t const *win) {
-  int t = (win->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
+  int t = titlebar_height(win);
   int x = win->frame.x, y = win->frame.y-t;
   int w = win->frame.w, h = win->frame.h+t;
   bool active = _focused == win;
@@ -127,7 +138,7 @@ void set_viewport(window_t const *win) {
 
 static void paint_window_stencil(window_t const *w) {
   int p = 1;
-  int t = (w->flags&WINDOW_NOTITLE)?0:TITLEBAR_HEIGHT;
+  int t = titlebar_height(w);
   glStencilFunc(GL_ALWAYS, w->id, 0xFF);            // Always pass
   glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE); // Replace stencil with window ID
   draw_rect(1, w->frame.x-p, w->frame.y-t-p, w->frame.w+p*2, w->frame.h+t+p*2);
@@ -291,6 +302,7 @@ void destroy_window(window_t *win) {
   if (_tracked == win) track_mouse(NULL);
   if (_dragging == win) _dragging = NULL;
   if (_resizing == win) _resizing = NULL;
+  if (win->toolbar_buttons) free(win->toolbar_buttons);
   remove_from_global_list(win);
   remove_from_global_hooks(win);
   remove_from_global_queue(win);
@@ -305,10 +317,12 @@ window_t *find_window(int x, int y) {
   window_t *last = NULL;
   for (window_t *win = windows; win; win = win->next) {
     if (!win->visible) continue;
-    int t = win->flags & WINDOW_NOTITLE ? 0 : TITLEBAR_HEIGHT;
+    int t = titlebar_height(win);
     if (CONTAINS(x, y, win->frame.x, win->frame.y-t, win->frame.w, win->frame.h+t)) {
       last = win;
-      send_message(win, WM_HITTEST, MAKEDWORD(x - win->frame.x, y - win->frame.y), &last);
+      if (!win->disabled) {
+        send_message(win, WM_HITTEST, MAKEDWORD(x - win->frame.x, y - win->frame.y), &last);
+      }
     }
   }
   return last;
@@ -598,18 +612,19 @@ void draw_windows(bool rich) {
 }
 
 int window_title_bar_y(window_t const *win) {
-  return win->frame.y + 2 - TITLEBAR_HEIGHT;
+  return win->frame.y + 2 - titlebar_height(win);
 }
 
 void draw_window_controls(window_t *win) {
   rect_t r = win->frame;
-  fill_rect(COLOR_PANEL_DARK_BG, r.x, r.y-TITLEBAR_HEIGHT, r.w, TITLEBAR_HEIGHT);
-//  draw_bevel(MAKERECT(r.x+1, r.y+1-TITLEBAR_HEIGHT, r.w-2, TITLEBAR_HEIGHT-2));
+  int t = titlebar_height(win);
+  fill_rect(COLOR_PANEL_DARK_BG, r.x, r.y-t, r.w, t);
+//  draw_bevel(MAKERECT(r.x+1, r.y+1-t, r.w-2, t-2));
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
-  // draw_button(frame->x+frame->w-11, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
-  // draw_button(frame->x+frame->w-11-12, frame->y-TITLEBAR_HEIGHT+1, 10, 10, false);
-  // draw_rect(icon3_tex, frame->x+2, frame->y+2-TITLEBAR_HEIGHT, 8, 8);
+  // draw_button(frame->x+frame->w-11, frame->y-t+1, 10, 10, false);
+  // draw_button(frame->x+frame->w-11-12, frame->y-t+1, 10, 10, false);
+  // draw_rect(icon3_tex, frame->x+2, frame->y+2-t, 8, 8);
   for (int i = 0; i < 1; i++) {
     int x = win->frame.x + win->frame.w - (i+1)*CONTROL_BUTTON_WIDTH - CONTROL_BUTTON_PADDING;
     int y = window_title_bar_y(win);
@@ -638,10 +653,19 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         if (!(win->flags&WINDOW_NOTITLE)) {
           draw_window_controls(win);
-        }
-        if (!(win->flags&WINDOW_NOTITLE)) {
-          // fill_rect(0x40ffffff, frame->x+frame->w-TITLEBAR_HEIGHT, frame->y-TITLEBAR_HEIGHT, TITLEBAR_HEIGHT, TITLEBAR_HEIGHT);
           draw_text_small(win->title, frame->x+2, window_title_bar_y(win), -1);
+        }
+        if (win->flags&WINDOW_TOOLBAR) {
+          int t = TOOLBAR_HEIGHT;
+          rect_t rect = {win->frame.x+1, win->frame.y-t+1, win->frame.w-2, t-2};
+          draw_bevel(&rect);
+          fill_rect(COLOR_PANEL_BG, rect.x, rect.y, rect.w, rect.h);
+          for (int i = 0; i < win->num_toolbar_buttons; i++) {
+            toolbar_button_t const *but = &win->toolbar_buttons[i];
+            uint32_t col = but->active ? COLOR_TEXT_SUCCESS : COLOR_TEXT_NORMAL;
+            draw_icon16(but->icon, rect.x + i * 16 + 2, rect.y + 2, COLOR_DARK_EDGE);
+            draw_icon16(but->icon, rect.x + i * 16 + 1, rect.y + 1, col);
+          }
         }
         break;
       case WM_PAINT:
@@ -651,6 +675,11 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
                        root->scroll[1],
                        root->frame.w + root->scroll[0],
                        root->frame.h + root->scroll[1]);
+        break;
+      case TB_ADDBUTTONS:
+        win->num_toolbar_buttons = wparam;
+        win->toolbar_buttons = malloc(sizeof(toolbar_button_t)*wparam);
+        memcpy(win->toolbar_buttons, lparam, sizeof(toolbar_button_t)*wparam);
         break;
     }
     if (!(value = win->proc(win, msg, wparam, lparam))) {
@@ -680,6 +709,20 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             uint16_t x = LOWORD(wparam), y = HIWORD(wparam);
             if (!item->notabstop && CONTAINS(x, y, r.x, r.y, r.w, r.h)) {
               *(window_t **)lparam = item;
+            }
+          }
+          break;
+        case WM_NCLBUTTONUP:
+          if (win->flags&WINDOW_TOOLBAR) {
+            uint16_t x = LOWORD(wparam);
+            uint16_t y = HIWORD(wparam);
+            int _x = win->frame.x + 2;
+            int _y = win->frame.y - TOOLBAR_HEIGHT + 2;
+            for (int i = 0; i < win->num_toolbar_buttons; i++) {
+              toolbar_button_t *but = &win->toolbar_buttons[i];
+              if (CONTAINS(x, y, _x + i * 16, _y, 16, 16)) {
+                send_message(win, TB_BUTTONCLICK, but->ident, but);
+              }
             }
           }
           break;
@@ -1012,6 +1055,17 @@ result_t win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   return false;
 }
 
+rect_t fit_sprite(sprite_t const *spr, rect_t const *target) {
+  float scale = fminf(1, fminf(((float)target->w) / spr->width,
+                               ((float)target->h) / spr->height));
+  return (rect_t) {
+    target->x+(target->w-spr->width*scale)/2,
+    target->y+(target->h-spr->height*scale)/2,
+    spr->width * scale,
+    spr->height * scale
+  };
+}
+
 result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   sprite_t const *spr;
   mapside_texture_t const *tex;
@@ -1021,13 +1075,8 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       draw_button(win->frame.x, win->frame.y, win->frame.w, win->frame.w, true);
       if (!*win->title) return false;
       if ((spr = find_sprite(win->title))) {
-        float scale = fminf(1, fminf(((float)win->frame.w) / spr->width,
-                                     ((float)win->frame.h) / spr->height));
-        draw_rect(spr->texture,
-                  win->frame.x+(win->frame.w-spr->width*scale)/2,
-                  win->frame.y+(win->frame.h-spr->height*scale)/2,
-                  spr->width * scale,
-                  spr->height * scale);
+        rect_t r = fit_sprite(spr, &win->frame);
+        draw_rect(spr->texture, r.x, r.y, r.w, r.h);
       } else if ((tex = get_flat_texture(win->title))||(tex = get_texture(win->title))) {
         float scale = fminf(1, fminf(((float)win->frame.w) / tex->width,
                                      ((float)win->frame.h) / tex->height));
@@ -1049,64 +1098,6 @@ typedef struct {
   window_t *items[16];
   uint8_t num_items;
 } stack_data_t;
-
-result_t win_stack(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
-  stack_data_t *data = win->userdata;
-  switch (msg) {
-    case WM_CREATE:
-      data = malloc(sizeof(stack_data_t));
-      memset(data, 0, sizeof(stack_data_t));
-      win->userdata = data;
-      return true;
-    case WM_DESTROY:
-      free(win->userdata);
-      return true;
-    case WM_NCPAINT:
-      for (int i = 0; i < data->num_items; i++) {
-        send_message(data->items[i], WM_NCPAINT, 0, NULL);
-      }
-      return false;
-    case WM_PAINT:
-      for (int i = 0; i < data->num_items; i++) {
-        send_message(data->items[i], WM_PAINT, 0, NULL);
-      }
-      return true;
-    case WM_PAINTSTENCIL:
-      paint_window_stencil(win);
-      for (int i = 0; i < data->num_items; i++) {
-        paint_window_stencil(data->items[i]);
-      }
-      return true;
-    case WM_HITTEST:
-      for (int i = 0, y = 1; i < data->num_items; i++) {
-        window_t *item = data->items[i];
-        int bottom = y + item->frame.h + 2;
-        int mx = LOWORD(wparam), my = HIWORD(wparam);
-        if (my > y && my < bottom) {
-          *((window_t **)lparam) = item;
-          uint32_t wparam = MAKEDWORD(mx, my - item->frame.y + win->frame.y);
-          send_message(item, WM_HITTEST, wparam, lparam);
-        }
-        y = bottom;
-      }
-      return true;
-    case ST_ADDWINDOW:
-      data->items[data->num_items] = lparam;
-      data->items[data->num_items]->flags |= WINDOW_NOTITLE | WINDOW_NORESIZE;
-      data->num_items++;
-      post_message(win, WM_REFRESHSTENCIL, 0, NULL);
-      // fall through
-    case WM_RESIZE:
-      for (int i = 0, y = win->frame.y + 1; i < data->num_items; i++) {
-        window_t *item = data->items[i];
-        move_window(item, win->frame.x + 1, y);
-        resize_window(item, win->frame.w-2, item->frame.h);
-        y += item->frame.h + 2;
-      }
-      return true;
-  }
-  return false;
-}
 
 window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent) {
   winproc_t proc = NULL;
