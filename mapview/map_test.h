@@ -1,5 +1,5 @@
-#ifndef __MAP_TEST__
-#define __MAP_TEST__
+#ifndef MAP_TEST_H_
+#define MAP_TEST_H_
 
 #include <stdio.h>
 #include <stdlib.h>
