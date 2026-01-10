@@ -191,7 +191,17 @@ int triangulate_sector(mapvertex_t *vertices, int vertex_count, wall_vertex_t *o
   int out_vertex_count = 0;
   for (int i = 0; i < triangle_index_count; i++) {
     int idx = triangle_indices[i];
-    wall_vertex_t wall_vertex = {vertices[idx].x, vertices[idx].y, 0, 0, 0};
+    wall_vertex_t wall_vertex = {
+      .x = vertices[idx].x,
+      .y = vertices[idx].y,
+      .z = 0,
+      .u = 0,
+      .v = 0,
+      .nx = 0,
+      .ny = 0,
+      .nz = 0,
+      .color = {0, 0, 0, 0}
+    };
     out_vertices[out_vertex_count++] = wall_vertex;
   }
   
