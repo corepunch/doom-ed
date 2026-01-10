@@ -1,5 +1,6 @@
 #include "map.h"
 #include <math.h>
+#include <stdlib.h>  // For malloc/free
 
 // Maximum expected number of vertices in a sector
 #define MAX_VERTICES 1024
