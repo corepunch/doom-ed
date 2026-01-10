@@ -161,7 +161,7 @@ static void test_large_polygon(void) {
   mapvertex_t vertices[16];
   // Create a circular-ish polygon with 16 vertices
   for (int i = 0; i < 16; i++) {
-    float angle = (float)i * 2.0f * 3.14159f / 16.0f;
+    float angle = (float)i * 2.0f * M_PI / 16.0f;
     vertices[i].x = (int)(100.0f + 80.0f * cos(angle));
     vertices[i].y = (int)(100.0f + 80.0f * sin(angle));
   }
