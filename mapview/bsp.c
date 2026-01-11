@@ -43,6 +43,14 @@ static int R_PointOnSide(float x, float y, mapnode_t const *node) {
   return 1;    // back side
 }
 
+// Bounding box coordinates
+enum {
+  BOXTOP = 1,
+  BOXBOTTOM = 0,
+  BOXLEFT = 2,
+  BOXRIGHT = 3
+};
+
 //
 // R_CheckBBox
 // Checks BSP node/subtree bounding box.
@@ -54,10 +62,10 @@ static bool R_CheckBBox(float viewx, float viewy, int16_t const *bbox) {
   // A more complete implementation would use proper frustum culling.
   
   // For now, just do a simple distance check
-  float min_x = bbox[2];  // BOXLEFT
-  float max_x = bbox[3];  // BOXRIGHT
-  float min_y = bbox[0];  // BOXBOTTOM
-  float max_y = bbox[1];  // BOXTOP
+  float min_x = bbox[BOXLEFT];
+  float max_x = bbox[BOXRIGHT];
+  float min_y = bbox[BOXBOTTOM];
+  float max_y = bbox[BOXTOP];
   
   // Check if player is inside bounding box (always visible)
   if (viewx >= min_x && viewx <= max_x &&
@@ -182,6 +190,14 @@ static void R_RenderBSPNode(map_data_t const *map, int bspnum, viewdef_t const *
 }
 
 //
+// has_bsp_data
+// Check if the map has valid BSP data for rendering.
+//
+static inline bool has_bsp_data(map_data_t const *map) {
+  return map->num_nodes > 0 && map->num_subsectors > 0 && map->num_segs > 0;
+}
+
+//
 // draw_bsp
 // Main entry point for BSP-based rendering.
 // Traverses the BSP tree and draws all visible sectors.
@@ -191,7 +207,7 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef) {
     return;
   
   // Check if we have BSP data
-  if (map->num_nodes == 0 || map->num_subsectors == 0 || map->num_segs == 0) {
+  if (!has_bsp_data(map)) {
     // No BSP data - fall back to portal-based rendering
     // This happens with manually created maps
     extern void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);

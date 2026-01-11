@@ -170,7 +170,7 @@ void test_bsp_traversal(void) {
       .dx = 0,
       .dy = 100,
       .children = {
-        NF_SUBSECTOR | 0,  // Left subsector (x < 100)
+        NF_SUBSECTOR,      // Left subsector (x < 100)
         NF_SUBSECTOR | 1   // Right subsector (x > 100)
       }
     }
