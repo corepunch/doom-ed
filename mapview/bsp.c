@@ -1,0 +1,207 @@
+#include <OpenGL/gl3.h>
+#include <cglm/cglm.h>
+#include <cglm/struct.h>
+#include <stdbool.h>
+#include <math.h>
+#include "map.h"
+
+// Forward declarations
+void draw_walls(map_data_t const *map,
+                mapsector_t const *sector,
+                viewdef_t const *viewdef);
+
+//
+// R_PointOnSide
+// Traverse a BSP node.
+// Returns true if point is on back side.
+//
+static int R_PointOnSide(float x, float y, mapnode_t const *node) {
+  float dx, dy;
+  float left, right;
+  
+  if (!node->dx) {
+    if (x <= node->x)
+      return node->dy > 0;
+    return node->dy < 0;
+  }
+  
+  if (!node->dy) {
+    if (y <= node->y)
+      return node->dx < 0;
+    return node->dx > 0;
+  }
+  
+  dx = (x - node->x);
+  dy = (y - node->y);
+  
+  // Cross product to determine which side
+  left = node->dy * dx;
+  right = dy * node->dx;
+  
+  if (right < left)
+    return 0;  // front side
+  return 1;    // back side
+}
+
+//
+// R_CheckBBox
+// Checks BSP node/subtree bounding box.
+// Returns true if some part of the bbox might be visible.
+//
+static bool R_CheckBBox(float viewx, float viewy, int16_t const *bbox) {
+  // Simple frustum check - check if any corner of the bounding box
+  // could be visible. This is a simplified version.
+  // A more complete implementation would use proper frustum culling.
+  
+  // For now, just do a simple distance check
+  float min_x = bbox[2];  // BOXLEFT
+  float max_x = bbox[3];  // BOXRIGHT
+  float min_y = bbox[0];  // BOXBOTTOM
+  float max_y = bbox[1];  // BOXTOP
+  
+  // Check if player is inside bounding box (always visible)
+  if (viewx >= min_x && viewx <= max_x &&
+      viewy >= min_y && viewy <= max_y) {
+    return true;
+  }
+  
+  // For now, accept everything as potentially visible
+  // A proper implementation would use the view frustum
+  return true;
+}
+
+//
+// R_Subsector
+// Draw all segs in a subsector.
+//
+static void R_Subsector(map_data_t const *map, int num, viewdef_t const *viewdef) {
+  if (num >= map->num_subsectors)
+    return;
+  
+  mapsubsector_t const *sub = &map->subsectors[num];
+  
+  // Get the first seg to determine which sector this subsector belongs to
+  if (sub->numsegs == 0)
+    return;
+  
+  mapseg_t const *seg = &map->segs[sub->firstseg];
+  
+  // Find the sector this subsector belongs to
+  if (seg->linedef >= map->num_linedefs)
+    return;
+  
+  maplinedef_t const *linedef = &map->linedefs[seg->linedef];
+  if (linedef->sidenum[seg->side] >= map->num_sidedefs)
+    return;
+  
+  mapsidedef_t const *sidedef = &map->sidedefs[linedef->sidenum[seg->side]];
+  if (sidedef->sector >= map->num_sectors)
+    return;
+  
+  mapsector_t const *sector = &map->sectors[sidedef->sector];
+  
+  // Check if we've already drawn this sector in this frame
+  uint32_t sector_index = sector - map->sectors;
+  if (map->floors.sectors[sector_index].frame == viewdef->frame)
+    return;
+  
+  // Mark this sector as drawn in this frame
+  map->floors.sectors[sector_index].frame = viewdef->frame;
+  
+  // Draw the sector's floor and ceiling
+  extern GLuint world_prog;
+  extern int world_prog_mvp;
+  extern int world_prog_viewPos;
+  extern int pixel;
+  
+  glDisable(GL_BLEND);
+  glBindVertexArray(map->floors.vao);
+  
+  glUniformMatrix4fv(world_prog_mvp, 1, GL_FALSE, viewdef->mvp[0]);
+  glUniform3fv(world_prog_viewPos, 1, viewdef->viewpos);
+  
+  mapsector2_t const *sec = &map->floors.sectors[sector_index];
+  float light = sector->lightlevel / 255.0f;
+  
+  // Draw floor
+  glCullFace(GL_BACK);
+  if (CHECK_PIXEL(pixel, FLOOR, sector_index)) {
+    draw_textured_surface(&sec->floor, HIGHLIGHT(light), GL_TRIANGLES);
+  } else {
+    draw_textured_surface(&sec->floor, light, GL_TRIANGLES);
+  }
+  
+  // Draw ceiling
+  glCullFace(GL_FRONT);
+  if (CHECK_PIXEL(pixel, CEILING, sector_index)) {
+    draw_textured_surface(&sec->ceiling, HIGHLIGHT(light), GL_TRIANGLES);
+  } else {
+    draw_textured_surface(&sec->ceiling, light, GL_TRIANGLES);
+  }
+  glCullFace(GL_BACK);
+  
+  // Draw walls for this sector
+  draw_walls(map, sector, viewdef);
+}
+
+//
+// R_RenderBSPNode
+// Renders all subsectors below a given node,
+// traversing subtree recursively.
+//
+static void R_RenderBSPNode(map_data_t const *map, int bspnum, viewdef_t const *viewdef) {
+  // Check for leaf node (subsector)
+  if (bspnum & NF_SUBSECTOR) {
+    int subsector_num;
+    if (bspnum == -1)
+      subsector_num = 0;
+    else
+      subsector_num = bspnum & (~NF_SUBSECTOR);
+    
+    R_Subsector(map, subsector_num, viewdef);
+    return;
+  }
+  
+  // Not a leaf - it's a BSP node
+  if (bspnum >= map->num_nodes)
+    return;
+  
+  mapnode_t const *bsp = &map->nodes[bspnum];
+  
+  // Decide which side the view point is on
+  int side = R_PointOnSide(viewdef->viewpos[0], viewdef->viewpos[1], bsp);
+  
+  // Recursively divide front space (side we're on)
+  R_RenderBSPNode(map, bsp->children[side], viewdef);
+  
+  // Check if back space might be visible
+  if (R_CheckBBox(viewdef->viewpos[0], viewdef->viewpos[1], bsp->bbox[side^1])) {
+    // Recursively divide back space
+    R_RenderBSPNode(map, bsp->children[side^1], viewdef);
+  }
+}
+
+//
+// draw_bsp
+// Main entry point for BSP-based rendering.
+// Traverses the BSP tree and draws all visible sectors.
+//
+void draw_bsp(map_data_t const *map, viewdef_t const *viewdef) {
+  if (!map || !viewdef)
+    return;
+  
+  // Check if we have BSP data
+  if (map->num_nodes == 0 || map->num_subsectors == 0 || map->num_segs == 0) {
+    // No BSP data - fall back to drawing all sectors
+    // This happens with manually created maps
+    for (int i = 0; i < map->num_sectors; i++) {
+      if (map->floors.sectors[i].frame != viewdef->frame) {
+        R_Subsector(map, i, viewdef);
+      }
+    }
+    return;
+  }
+  
+  // Start traversal from the root node (last node in the array)
+  R_RenderBSPNode(map, map->num_nodes - 1, viewdef);
+}
