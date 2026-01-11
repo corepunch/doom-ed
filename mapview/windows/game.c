@@ -253,12 +253,8 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   viewdef.player = *player;
   viewdef.frame = frame++;
   
-  // Use BSP-based rendering if available, otherwise fall back to portal rendering
-  if (map->num_nodes > 0 && map->num_subsectors > 0) {
-    draw_bsp(map, &viewdef);
-  } else {
-    draw_floors(map, sector, &viewdef);
-  }
+  // Use BSP-based rendering (with automatic fallback for maps without BSP data)
+  draw_bsp(map, &viewdef);
 #endif
   draw_things(map, &viewdef, true);
   

@@ -192,12 +192,26 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef) {
   
   // Check if we have BSP data
   if (map->num_nodes == 0 || map->num_subsectors == 0 || map->num_segs == 0) {
-    // No BSP data - fall back to drawing all sectors
+    // No BSP data - fall back to portal-based rendering
     // This happens with manually created maps
+    extern void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);
+    
+    // Find the player's sector and start rendering from there
+    mapsector_t const *player_sector = NULL;
     for (int i = 0; i < map->num_sectors; i++) {
-      if (map->floors.sectors[i].frame != viewdef->frame) {
-        R_Subsector(map, i, viewdef);
+      if (point_in_sector(map, viewdef->viewpos[0], viewdef->viewpos[1], i)) {
+        player_sector = &map->sectors[i];
+        break;
       }
+    }
+    
+    // Fall back to rendering from first sector if player sector not found
+    if (!player_sector && map->num_sectors > 0) {
+      player_sector = &map->sectors[0];
+    }
+    
+    if (player_sector) {
+      draw_floors(map, player_sector, viewdef);
     }
     return;
   }
