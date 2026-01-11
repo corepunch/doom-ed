@@ -5,3 +5,7 @@ DerivedData/
 # macOS Finder metadata
 .DS_Store
 
+# Test binaries
+mapview/triangulate_test
+*.o
+
