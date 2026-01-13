@@ -42,7 +42,8 @@ TESTS_DIR = tests
 
 # UI Framework source files
 UI_FRAMEWORK_SRCS = $(UI_FRAMEWORK_DIR)/ui_window.c \
-                    $(UI_FRAMEWORK_DIR)/ui_sdl.c
+                    $(UI_FRAMEWORK_DIR)/ui_sdl.c \
+                    $(UI_FRAMEWORK_DIR)/commctl/commctl.c
 
 # Source files
 MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
