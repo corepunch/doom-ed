@@ -1,6 +1,10 @@
 # Ignore build artifacts
 Build/
 DerivedData/
+build/
+
+# Executables
+doom-ed
 
 # macOS Finder metadata
 .DS_Store
@@ -8,5 +12,10 @@ DerivedData/
 # Test binaries
 mapview/triangulate_test
 mapview/bsp_test
+triangulate_test
+bsp_test
 *.o
+
+# Build logs
+build.log
 
