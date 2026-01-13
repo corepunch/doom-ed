@@ -161,7 +161,7 @@ The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` dir
 ## Platform-Specific Considerations
 
 - **macOS**: Primary platform; uses Xcode project; SDL2 dylib included in repository
-- **Linux/Windows**: Build system not yet implemented (README mentions CMake but it's not present)
+- **Linux/Windows**: README.md describes CMake build instructions, but no CMakeLists.txt files exist in the repository currently
 - **Byte Order**: All WAD data is little-endian; handle conversions if needed on big-endian systems
 
 ## Performance Considerations
