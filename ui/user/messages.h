@@ -71,14 +71,19 @@ enum {
 #define TITLEBAR_HEIGHT   16
 #define TOOLBAR_HEIGHT    24
 #define RESIZE_HANDLE     8
+#define BUTTON_HEIGHT     13
 
-// UI colors (from COLOR_ constants)
-#define COLOR_LIGHT_EDGE     0xFFCCCCCC
-#define COLOR_DARK_EDGE      0xFF444444
-#define COLOR_PANEL_BG       0xFF888888
-#define COLOR_PANEL_DARK_BG  0xFF666666
-#define COLOR_FOCUSED        0xFFFF8800
-#define COLOR_FLARE          0xFFFFFFFF
+// UI colors (from sprites.h COLOR_ constants - will be moved to ui framework)
+#define COLOR_LIGHT_EDGE     0xff545454
+#define COLOR_DARK_EDGE      0xff1a1a1a
+#define COLOR_PANEL_BG       0xff3c3c3c
+#define COLOR_PANEL_DARK_BG  0xff2c2c2c
+#define COLOR_FOCUSED        0xff5EC4F3
+#define COLOR_FLARE          0xffffffff
+#define COLOR_TEXT_NORMAL    0xffc0c0c0
+#define COLOR_TEXT_DISABLED  0xff808080
+#define COLOR_TEXT_ERROR     0xffff4444
+#define COLOR_TEXT_SUCCESS   0xff44ff44
 
 // Macros for creating rectangles
 #define MAKERECT(X, Y, W, H) (&(rect_t){X, Y, W, H})

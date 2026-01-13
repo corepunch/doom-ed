@@ -10,6 +10,14 @@ typedef struct rect_s rect_t;
 typedef uint32_t flags_t;
 typedef uint32_t result_t;
 
+// Helper macros
+#ifndef MAX
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+#endif
+#ifndef MIN
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 // Window procedure callback type
 typedef result_t (*winproc_t)(window_t *, uint32_t, uint32_t, void *);
 
@@ -81,6 +89,13 @@ void invalidate_window(window_t *win);
 window_t *get_window_item(window_t const *win, uint32_t id);
 bool is_window(window_t *win);
 int window_title_bar_y(window_t const *win);
+window_t *get_root_window(window_t *window);
+window_t *find_window(int x, int y);
+
+// Global window focus/tracking state
+extern window_t *_focused;
+extern window_t *_tracked;
+extern window_t *_captured;
 
 // Window utility functions
 void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
