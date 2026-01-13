@@ -17,6 +17,10 @@
 typedef union SDL_Event SDL_Event;
 typedef struct SDL_Window SDL_Window;
 
+// UI Constants
+#define TITLEBAR_HEIGHT 12
+#define TOOLBAR_HEIGHT 20
+
 // Basic types from original code - keeping compatibility
 typedef struct {
   int16_t x, y, w, h;
@@ -181,6 +185,11 @@ int window_title_bar_y(window_t const *win);
 void move_to_top(window_t *win);
 window_t *find_next_tab_stop(window_t *win, bool allow_current);
 window_t *find_prev_tab_stop(window_t *win);
+
+// Additional window utilities
+window_t *find_window(int x, int y);
+window_t *get_root_window(window_t *window);
+bool do_windows_overlap(const window_t *a, const window_t *b);
 
 // Hooks
 void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata);

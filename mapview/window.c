@@ -60,28 +60,3 @@ window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent)
   win->id = def->id;
   return win;
 }
-
-// Helper: Show modal dialog
-static uint32_t _return_code;
-
-uint32_t show_dialog(char const *title,
-                     const rect_t *frame,
-                     struct window_s *owner,
-                     winproc_t proc,
-                     void *param)
-{
-  extern bool running;
-  SDL_Event event;
-  uint32_t flags = WINDOW_VSCROLL|WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
-  window_t *dlg = create_window("Things", flags, frame, NULL, proc, param);
-  enable_window(owner, false);
-  show_window(dlg, true);
-  while (running && is_window(dlg)) {
-    while (get_message(&event)) {
-      dispatch_message(&event);
-    }
-    repost_messages();
-  }
-  enable_window(owner, true);
-  return _return_code;
-}

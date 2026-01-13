@@ -568,8 +568,11 @@ bool is_window(window_t *win) {
   return false;
 }
 
+// Dialog support
+static uint32_t _return_code;
+
 void end_dialog(window_t *win, uint32_t code) {
-  // Dialog support stub
+  _return_code = code;
   if (win) {
     destroy_window(win);
   }
@@ -577,8 +580,20 @@ void end_dialog(window_t *win, uint32_t code) {
 
 uint32_t show_dialog(char const *title, const rect_t *rect, window_t *parent, 
                       winproc_t proc, void *param) {
-  // Dialog support stub
-  return 0;
+  extern bool running;
+  SDL_Event event;
+  uint32_t flags = WINDOW_VSCROLL|WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
+  window_t *dlg = create_window(title, flags, rect, NULL, proc, param);
+  if (parent) enable_window(parent, false);
+  show_window(dlg, true);
+  while (running && is_window(dlg)) {
+    while (get_message(&event)) {
+      dispatch_message(&event);
+    }
+    repost_messages();
+  }
+  if (parent) enable_window(parent, true);
+  return _return_code;
 }
 
 void enable_window(window_t *win, bool enable) {

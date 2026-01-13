@@ -6,6 +6,13 @@
 #include "ui_framework.h"
 #include <SDL2/SDL.h>
 
+// Include OpenGL headers for rendering
+#ifdef __APPLE__
+#include <OpenGL/gl.h>
+#else
+#include <GL/gl.h>
+#endif
+
 // External dependencies - low-level rendering primitives from application
 extern void fill_rect(int color, int x, int y, int w, int h);
 extern void draw_rect(int tex, int x, int y, int w, int h);
