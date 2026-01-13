@@ -50,7 +50,7 @@ gcc -o bsp_test bsp_test.c -I. -lm
 
 ### Style Guidelines
 
-- **Indentation**: Use spaces for indentation (observe existing code style)
+- **Indentation**: Use 2 spaces for indentation (no tabs)
 - **Naming**: Use snake_case for functions and variables
 - **Headers**: Include header guards in the format `#ifndef __FILENAME_H__`
 - **Comments**: Use meaningful comments for complex algorithms; avoid obvious comments
@@ -75,7 +75,7 @@ gcc -o bsp_test bsp_test.c -I. -lm
 
 ## Project Structure
 
-**Note**: The actual repository structure differs from what's described in README.md. Use the structure below:
+**Note**: The actual repository structure differs from what's described in README.md. The structure below reflects what currently exists. When adding new features, follow the existing structure rather than the README's aspirational layout.
 
 ```
 /
@@ -92,7 +92,7 @@ gcc -o bsp_test bsp_test.c -I. -lm
 └── mapview.xcodeproj/   # Xcode project files
 ```
 
-The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` directories that don't currently exist in the repository.
+The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` directories that don't currently exist. New code should follow the existing mapview/ structure.
 
 ## Important Implementation Details
 
@@ -174,8 +174,9 @@ The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` dir
 ## Documentation
 
 - Keep `README.md` updated with user-facing changes
-- Document algorithms in separate markdown files (e.g., `BSP_RENDERING.md`)
-- Update `TEST_README.md` when adding or modifying tests
+- Document algorithms in separate markdown files (e.g., `BSP_RENDERING.md`, `TRIANGULATION_IMPROVEMENTS.md`)
+  - Existing algorithm docs: `BSP_RENDERING.md`, `TRIANGULATION_IMPROVEMENTS.md`, `PR_SUMMARY.md`
+- Update `mapview/TEST_README.md` when adding or modifying tests
 - Add comments in code for complex algorithms or non-obvious logic
 
 ## When Making Changes
