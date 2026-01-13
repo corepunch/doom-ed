@@ -142,7 +142,6 @@ void get_view_matrix(map_data_t const *map, player_t const *player, float aspect
 
 void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);
 void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp);
-void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);  // BSP-based rendering
 
 int pixel = 0;
 
