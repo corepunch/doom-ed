@@ -29,6 +29,7 @@
 		7815CD662DCE0DC7000617A1 /* libhexen.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhexen.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		785D12A92DB8DDF300567DFE /* mapview */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mapview; sourceTree = BUILT_PRODUCTS_DIR; };
 		785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
+		0EAC1B3D79F6459488539B79 /* libui_framework.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libui_framework.a; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -78,6 +79,11 @@
 			path = mapview;
 			sourceTree = "<group>";
 		};
+		FB791BD9F82E4A12A323EB45 /* ui_framework */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = ui_framework;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -103,6 +109,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		25D901A5D543471B8AA3D607 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -110,6 +123,7 @@
 			isa = PBXGroup;
 			children = (
 				7815CD892DCE0E20000617A1 /* hexen */,
+				FB791BD9F82E4A12A323EB45 /* ui_framework */,
 				785D12AB2DB8DDF300567DFE /* mapview */,
 				785D12B62DB8E4D600567DFE /* Frameworks */,
 				785D12AA2DB8DDF300567DFE /* Products */,
@@ -123,6 +137,7 @@
 				785D12A92DB8DDF300567DFE /* mapview */,
 				7815CD462DCE0CA6000617A1 /* libdoom.dylib */,
 				7815CD662DCE0DC7000617A1 /* libhexen.dylib */,
+				0EAC1B3D79F6459488539B79 /* libui_framework.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -146,6 +161,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7815CD602DCE0DC7000617A1 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		8ED30BB6F72244ADAAF33D82 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -219,6 +241,28 @@
 			productReference = 785D12A92DB8DDF300567DFE /* mapview */;
 			productType = "com.apple.product-type.tool";
 		};
+		5952CECCB15948E6B601BFD6 /* ui_framework */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 12A70DDCDE6945F7A6FB7ADB /* Build configuration list for PBXNativeTarget "ui_framework" */;
+			buildPhases = (
+				8ED30BB6F72244ADAAF33D82 /* Headers */,
+				9F306C032E27494D8F314100 /* Sources */,
+				25D901A5D543471B8AA3D607 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				FB791BD9F82E4A12A323EB45 /* ui_framework */,
+			);
+			name = ui_framework;
+			packageProductDependencies = (
+			);
+			productName = ui_framework;
+			productReference = 0EAC1B3D79F6459488539B79 /* libui_framework.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -253,6 +297,7 @@
 				785D12A82DB8DDF300567DFE /* mapview */,
 				7815CD452DCE0CA6000617A1 /* doom */,
 				7815CD5F2DCE0DC7000617A1 /* hexen */,
+				5952CECCB15948E6B601BFD6 /* ui_framework */,
 			);
 		};
 /* End PBXProject section */
@@ -273,6 +318,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		785D12A52DB8DDF300567DFE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9F306C032E27494D8F314100 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -493,6 +545,40 @@
 			};
 			name = Release;
 		};
+		56797075FC454FA98707DD94 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/ui_framework",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		890AFBBE30D04ACB8F76F09A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				EXECUTABLE_PREFIX = lib;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SRCROOT)/ui_framework",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -528,6 +614,15 @@
 			buildConfigurations = (
 				785D12B12DB8DDF300567DFE /* Debug */,
 				785D12B22DB8DDF300567DFE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		12A70DDCDE6945F7A6FB7ADB /* Build configuration list for PBXNativeTarget "ui_framework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				56797075FC454FA98707DD94 /* Debug */,
+				890AFBBE30D04ACB8F76F09A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
