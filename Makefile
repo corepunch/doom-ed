@@ -38,6 +38,7 @@ DOOM_DIR = doom
 HEXEN_DIR = hexen
 BUILD_DIR = build
 TESTS_DIR = tests
+UI_DIR = ui
 
 # Source files
 MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
@@ -89,12 +90,22 @@ HEXEN_SRCS = $(HEXEN_DIR)/actions.c \
              $(HEXEN_DIR)/hu_stuff.c \
              $(HEXEN_DIR)/info.c
 
+# UI framework files
+UI_SRCS = $(UI_DIR)/commctl/button.c \
+          $(UI_DIR)/commctl/checkbox.c \
+          $(UI_DIR)/commctl/combobox.c \
+          $(UI_DIR)/commctl/edit.c \
+          $(UI_DIR)/commctl/label.c \
+          $(UI_DIR)/commctl/list.c \
+          $(UI_DIR)/commctl/sprite.c
+
 # Object files
 MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
+UI_OBJS = $(UI_SRCS:$(UI_DIR)/%.c=$(BUILD_DIR)/ui/%.o)
 
 # All object files for main executable
-OBJS = $(MAPVIEW_OBJS) $(HEXEN_OBJS)
+OBJS = $(MAPVIEW_OBJS) $(HEXEN_OBJS) $(UI_OBJS)
 
 # Targets
 .PHONY: all clean test triangulate_test bsp_test
@@ -122,6 +133,11 @@ $(BUILD_DIR)/mapview/windows/inspector/%.o: $(MAPVIEW_DIR)/windows/inspector/%.c
 $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
+
+# UI framework object file rules
+$(BUILD_DIR)/ui/commctl/%.o: $(UI_DIR)/commctl/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
 
 # Test targets
 test: triangulate_test bsp_test
