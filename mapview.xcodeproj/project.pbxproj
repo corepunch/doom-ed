@@ -56,6 +56,13 @@
 			);
 			target = 785D12A82DB8DDF300567DFE /* mapview */;
 		};
+		78F688A42F16EBEC00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				examples/helloworld.c,
+			);
+			target = 785D12A82DB8DDF300567DFE /* mapview */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -80,6 +87,9 @@
 		};
 		78F688952F16E59000FFD6E9 /* ui */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				78F688A42F16EBEC00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */,
+			);
 			path = ui;
 			sourceTree = "<group>";
 		};

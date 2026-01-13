@@ -4,8 +4,6 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#ifdef COMPILE_EXAMPLE
-
 // Include UI framework headers
 #include "../ui.h"
 
@@ -119,5 +117,3 @@ int main(int argc, char* argv[]) {
   printf("Goodbye!\n");
   return 0;
 }
-
-#endif
