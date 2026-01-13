@@ -36,6 +36,15 @@ typedef struct {
   bool active;
 } toolbar_button_t;
 
+// Window definition structure (for declarative window creation)
+typedef struct {
+  const char *classname;
+  const char *text;
+  uint32_t id;
+  int w, h;
+  flags_t flags;
+} windef_t;
+
 // Window structure
 struct window_s {
   rect_t frame;
@@ -62,18 +71,10 @@ struct window_s {
   struct window_s *parent;
 };
 
-// Window definition for creating windows
-typedef struct {
-  const char *classname;
-  const char *text;
-  uint32_t id;
-  int w, h;
-  flags_t flags;
-} windef_t;
-
 // Window management functions
 window_t *create_window(char const *title, flags_t flags, const rect_t* frame, 
                         window_t *parent, winproc_t proc, void *param);
+window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent);
 void show_window(window_t *win, bool visible);
 void destroy_window(window_t *win);
 void clear_window_children(window_t *win);

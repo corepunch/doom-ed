@@ -6,17 +6,6 @@
 #include "../user/messages.h"
 #include "../user/draw.h"
 
-// Icon enum - will be moved to proper place
-enum {
-  icon8_minus,
-  icon8_collapse,
-  icon8_maximize,
-  icon8_dropdown,
-  icon8_checkbox,
-  icon8_editor_helmet,
-  icon8_count,
-};
-
 // Helper function (will be moved to ui/user/window.c later)
 extern window_t *get_root_window(window_t *window);
 extern window_t *_focused;

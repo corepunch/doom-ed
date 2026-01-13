@@ -10,20 +10,6 @@
 #define MAX_COMBOBOX_STRINGS 256
 typedef char combobox_string_t[64];
 
-// Icon enum - will be moved to proper place
-enum {
-  icon8_minus,
-  icon8_collapse,
-  icon8_maximize,
-  icon8_dropdown,
-  icon8_checkbox,
-  icon8_editor_helmet,
-  icon8_count,
-};
-
-// Window flag (should be in messages.h or user.h)
-#define WINDOW_VSCROLL (1 << 4)
-
 // Forward declare list control procedure  
 extern result_t win_list(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 extern result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
