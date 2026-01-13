@@ -37,6 +37,7 @@ MAPVIEW_DIR = mapview
 DOOM_DIR = doom
 HEXEN_DIR = hexen
 BUILD_DIR = build
+TESTS_DIR = tests
 
 # Source files
 MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
@@ -128,11 +129,11 @@ test: triangulate_test bsp_test
 	@./triangulate_test
 	@./bsp_test
 
-triangulate_test: $(MAPVIEW_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate.c
-	$(CC) -DTEST_MODE -o $@ $^ -I$(MAPVIEW_DIR) -lm
+triangulate_test: $(TESTS_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate.c
+	$(CC) -DTEST_MODE -o $@ $^ -I$(MAPVIEW_DIR) -I$(TESTS_DIR) -lm
 
-bsp_test: $(MAPVIEW_DIR)/bsp_test.c
-	$(CC) -o $@ $^ -I$(MAPVIEW_DIR) -lm
+bsp_test: $(TESTS_DIR)/bsp_test.c
+	$(CC) -o $@ $^ -I$(MAPVIEW_DIR) -I$(TESTS_DIR) -lm
 
 # Clean
 clean:

@@ -6,7 +6,7 @@ This directory contains test files for the map rendering algorithms.
 
 ### Triangulation Tests
 - `triangulate_test.c` - Main test file with 11 comprehensive test cases
-- `triangulate.c` - Implementation file that uses `#ifdef TEST_MODE` for conditional compilation
+- `../mapview/triangulate.c` - Implementation file that uses `#ifdef TEST_MODE` for conditional compilation
 - `map_test.h` - Minimal header file with type definitions needed for testing
 
 ### BSP Traversal Tests
@@ -14,23 +14,31 @@ This directory contains test files for the map rendering algorithms.
 
 ## Building and Running Tests
 
-### Triangulation Tests
+### Using Makefile (Recommended)
 
-To compile and run the triangulation tests:
+From the project root directory:
 
 ```bash
-cd mapview
-gcc -DTEST_MODE -o triangulate_test triangulate_test.c triangulate.c -I. -lm
+make test
+```
+
+This will build and run all tests.
+
+### Triangulation Tests
+
+To compile and run the triangulation tests manually:
+
+```bash
+gcc -DTEST_MODE -o triangulate_test tests/triangulate_test.c mapview/triangulate.c -Imapview -Itests -lm
 ./triangulate_test
 ```
 
 ### BSP Tests
 
-To compile and run the BSP tests:
+To compile and run the BSP tests manually:
 
 ```bash
-cd mapview
-gcc -o bsp_test bsp_test.c -I. -lm
+gcc -o bsp_test tests/bsp_test.c -Imapview -Itests -lm
 ./bsp_test
 ```
 
