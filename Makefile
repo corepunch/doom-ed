@@ -11,11 +11,12 @@ UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
   # macOS
+  HOMEBREW_INCLUDES = -I/opt/homebrew/include -I/usr/local/opt/cglm/include
   GL_CFLAGS = -DGL_SILENCE_DEPRECATION
   GL_LDFLAGS = -framework OpenGL
-  SDL_CFLAGS = $(shell pkg-config --cflags sdl2 2>/dev/null || echo "-I/opt/homebrew/include -I/usr/local/opt/cglm/include")
+  SDL_CFLAGS = $(shell pkg-config --cflags sdl2 2>/dev/null || echo "$(HOMEBREW_INCLUDES)")
   SDL_LDFLAGS = $(shell pkg-config --libs sdl2 2>/dev/null || echo "-L/opt/homebrew/lib -lSDL2")
-  CGLM_CFLAGS = $(shell pkg-config --cflags cglm 2>/dev/null || echo "-I/opt/homebrew/include -I/usr/local/opt/cglm/include")
+  CGLM_CFLAGS = $(shell pkg-config --cflags cglm 2>/dev/null || echo "$(HOMEBREW_INCLUDES)")
   CGLM_LDFLAGS = $(shell pkg-config --libs cglm 2>/dev/null || echo "")
 else
   # Linux
@@ -73,13 +74,14 @@ MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
                $(MAPVIEW_DIR)/windows/things.c \
                $(MAPVIEW_DIR)/windows/tray.c
 
-# DOOM files (excluding actions.c, hu_stuff.c, info.c per Xcode config)
-DOOM_SRCS = $(DOOM_DIR)/d_englsh.h \
-            $(DOOM_DIR)/d_think.h \
-            $(DOOM_DIR)/info.h \
-            $(DOOM_DIR)/m_fixed.h \
-            $(DOOM_DIR)/p_mobj.h \
-            $(DOOM_DIR)/sounds.h
+# DOOM files (only headers are used, .c files excluded per Xcode config)
+# These are just listed for reference, not compiled
+DOOM_HEADERS = $(DOOM_DIR)/d_englsh.h \
+               $(DOOM_DIR)/d_think.h \
+               $(DOOM_DIR)/info.h \
+               $(DOOM_DIR)/m_fixed.h \
+               $(DOOM_DIR)/p_mobj.h \
+               $(DOOM_DIR)/sounds.h
 
 # HEXEN files (all included per Xcode config)
 HEXEN_SRCS = $(HEXEN_DIR)/actions.c \
