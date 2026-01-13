@@ -36,8 +36,13 @@ LDFLAGS += $(GL_LDFLAGS) $(SDL_LDFLAGS) $(CGLM_LDFLAGS)
 MAPVIEW_DIR = mapview
 DOOM_DIR = doom
 HEXEN_DIR = hexen
+UI_FRAMEWORK_DIR = ui_framework
 BUILD_DIR = build
 TESTS_DIR = tests
+
+# UI Framework source files
+UI_FRAMEWORK_SRCS = $(UI_FRAMEWORK_DIR)/ui_window.c \
+                    $(UI_FRAMEWORK_DIR)/ui_sdl.c
 
 # Source files
 MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
@@ -92,32 +97,48 @@ HEXEN_SRCS = $(HEXEN_DIR)/actions.c \
 # Object files
 MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
+UI_FRAMEWORK_OBJS = $(UI_FRAMEWORK_SRCS:$(UI_FRAMEWORK_DIR)/%.c=$(BUILD_DIR)/ui_framework/%.o)
+
+# UI Framework library
+UI_FRAMEWORK_LIB = $(BUILD_DIR)/libui_framework.a
 
 # All object files for main executable
 OBJS = $(MAPVIEW_OBJS) $(HEXEN_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test bsp_test
+.PHONY: all clean test triangulate_test bsp_test ui_framework
 
-all: doom-ed
+all: ui_framework doom-ed
 
-# Main executable
-doom-ed: $(OBJS)
+# UI Framework library
+ui_framework: $(UI_FRAMEWORK_LIB)
+
+$(UI_FRAMEWORK_LIB): $(UI_FRAMEWORK_OBJS)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LDFLAGS) -o $@
+	ar rcs $@ $(UI_FRAMEWORK_OBJS)
+	@echo "Built UI Framework library: $@"
+
+# Main executable - now depends on UI framework
+doom-ed: $(OBJS) $(UI_FRAMEWORK_LIB)
+	@mkdir -p $(dir $@)
+	$(CC) $(OBJS) $(UI_FRAMEWORK_LIB) $(LDFLAGS) -o $@
 
 # Object file rules
+$(BUILD_DIR)/ui_framework/%.o: $(UI_FRAMEWORK_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(UI_FRAMEWORK_DIR) -c $< -o $@
+
 $(BUILD_DIR)/mapview/%.o: $(MAPVIEW_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_FRAMEWORK_DIR) -c $< -o $@
 
 $(BUILD_DIR)/mapview/windows/%.o: $(MAPVIEW_DIR)/windows/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_FRAMEWORK_DIR) -c $< -o $@
 
 $(BUILD_DIR)/mapview/windows/inspector/%.o: $(MAPVIEW_DIR)/windows/inspector/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_FRAMEWORK_DIR) -c $< -o $@
 
 $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 	@mkdir -p $(dir $@)
@@ -139,4 +160,4 @@ bsp_test: $(TESTS_DIR)/bsp_test.c
 clean:
 	rm -rf $(BUILD_DIR) triangulate_test bsp_test doom-ed
 	rm -f $(MAPVIEW_DIR)/*.o $(MAPVIEW_DIR)/windows/*.o $(MAPVIEW_DIR)/windows/inspector/*.o
-	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o
+	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o $(UI_FRAMEWORK_DIR)/*.o
