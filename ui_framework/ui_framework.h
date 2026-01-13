@@ -10,6 +10,8 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Forward declaration for SDL
 typedef union SDL_Event SDL_Event;
@@ -199,5 +201,11 @@ result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
 result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
+// Global window state (exported from framework)
+extern window_t *windows;      // Top-level windows list
+extern window_t *_focused;     // Currently focused window
+extern window_t *_tracked;     // Mouse-tracked window
+extern window_t *_captured;    // Mouse-captured window
 
 #endif // __UI_FRAMEWORK_H__

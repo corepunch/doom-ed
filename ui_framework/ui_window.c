@@ -7,28 +7,16 @@
 
 #include "ui_framework.h"
 #include <SDL2/SDL.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdarg.h>
 #include <stdio.h>
+#include <stdarg.h>
 
-// Internal state
+// Internal structures
 typedef struct winhook_s {
   winhook_func_t func;
   uint32_t msg;
   void *userdata;
   struct winhook_s *next;
 } winhook_t;
-
-winhook_t *g_hooks = NULL;
-window_t *windows = NULL;
-window_t *_focused = NULL;
-window_t *_tracked = NULL;
-window_t *_captured = NULL;
-
-static window_t *_dragging = NULL;
-static window_t *_resizing = NULL;
-static int drag_anchor[2];
 
 typedef struct {
   window_t *target;
@@ -37,7 +25,15 @@ typedef struct {
   void *lparam;
 } msg_t;
 
-struct {
+// Global state - exported
+window_t *windows = NULL;
+window_t *_focused = NULL;
+window_t *_tracked = NULL;
+window_t *_captured = NULL;
+
+// Internal state
+static winhook_t *g_hooks = NULL;
+static struct {
   uint8_t read, write;
   msg_t messages[0x100];
 } queue = {0};
@@ -54,163 +50,231 @@ void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata) {
 }
 
 void invalidate_window(window_t *win) {
-  // Stub: would trigger repaint in full implementation
+  if (!win->parent) {
+    post_message(win, WM_NCPAINT, 0, NULL);
+  }
+  post_message(win, WM_PAINT, 0, NULL);
 }
 
-static void push_window(window_t *win, window_t **list) {
-  window_t *current = *list;
-  if (!current) {
+static void push_window(window_t *win, window_t **list)  {
+  if (!*list) {
     *list = win;
-    win->next = NULL;
-    return;
-  }
-  
-  if (win->flags & WINDOW_ALWAYSINBACK) {
-    // Insert at end
-    while (current->next && !(current->next->flags & WINDOW_ALWAYSINBACK)) {
-      current = current->next;
-    }
-    win->next = current->next;
-    current->next = win;
   } else {
-    // Insert at beginning
-    win->next = *list;
-    *list = win;
+    window_t *p = *list;
+    while (p->next) p = p->next;
+    p->next = win;
   }
 }
 
-static bool do_windows_overlap(const window_t *a, const window_t *b) {
-  return !(a->frame.x + a->frame.w < b->frame.x ||
-           a->frame.x > b->frame.x + b->frame.w ||
-           a->frame.y + a->frame.h < b->frame.y ||
-           a->frame.y > b->frame.y + b->frame.h);
+window_t *create_window(char const *title,
+                        flags_t flags,
+                        rect_t const *frame,
+                        window_t *parent,
+                        winproc_t proc,
+                        void *lparam)
+{
+  window_t *win = malloc(sizeof(window_t));
+  memset(win, 0, sizeof(window_t));
+  win->frame = *frame;
+  win->proc = proc;
+  win->flags = flags;
+  if (parent) {
+    win->id = ++parent->child_id;
+  } else {
+    bool used[256]={0};
+    for (window_t *w = windows; w; w = w->next) {
+      used[w->id] = true;
+    }
+    for (int i = 1; i < 256; i++) {
+      if (!used[i]) {
+        win->id = i;
+      }
+    }
+    if (win->id == 0) {
+      printf("Too many windows open\n");
+    }
+  }
+  win->parent = parent;
+  strncpy(win->title, title, sizeof(win->title));
+  _focused = win;
+  push_window(win, parent ? &parent->children : &windows);
+  send_message(win, WM_CREATE, 0, lparam);
+  if (parent) {
+    invalidate_window(win);
+  }
+  return win;
+}
+
+bool do_windows_overlap(const window_t *a, const window_t *b) {
+  if (!a->visible || !b->visible)
+    return false;
+  return a && b &&
+  a->frame.x < b->frame.x + b->frame.w && a->frame.x + a->frame.w > b->frame.x &&
+  a->frame.y < b->frame.y + b->frame.h && a->frame.y + a->frame.h > b->frame.y;
+}
+
+static void invalidate_overlaps(window_t *win) {
+  for (window_t *t = windows; t; t = t->next) {
+    if (t != win && do_windows_overlap(t, win)) {
+      invalidate_window(t);
+    }
+  }
 }
 
 void move_window(window_t *win, int x, int y) {
+  post_message(win, WM_RESIZE, 0, NULL);
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+
+  invalidate_overlaps(win);
+  invalidate_window(win);
+
   win->frame.x = x;
   win->frame.y = y;
 }
 
 void resize_window(window_t *win, int new_w, int new_h) {
-  win->frame.w = new_w;
-  win->frame.h = new_h;
+  post_message(win, WM_RESIZE, 0, NULL);
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+
+  invalidate_overlaps(win);
+  invalidate_window(win);
+
+  win->frame.w = new_w > 0 ? new_w : win->frame.w;
+  win->frame.h = new_h > 0 ? new_h : win->frame.h;
+}
+
+static void remove_from_global_list(window_t *win) {
+  if (win == windows) {
+    windows = win->next;
+  } else {
+    for (window_t *w=windows->next,*p=windows;w;w=w->next,p=p->next) {
+      if (w == win) {
+        p->next = w->next;
+        break;
+      }
+    }
+  }
+}
+
+static void remove_from_global_hooks(window_t *win) {
+  if (!g_hooks) return;
+  
+  while (g_hooks && g_hooks->userdata == win) {
+    winhook_t *h = g_hooks;
+    g_hooks = g_hooks->next;
+    free(h);
+  }
+  
+  if (!g_hooks) return;
+  
+  for (winhook_t *w=g_hooks->next,*p=g_hooks;w;w=w->next,p=p->next) {
+    if (w->userdata == win) {
+      winhook_t *h = w;
+      p->next = w->next;
+      free(h);
+    }
+  }
+}
+
+static void remove_from_global_queue(window_t *win) {
+  for (uint8_t w = queue.write, r = queue.read; r != w; r++) {
+    if (queue.messages[r].target == win) {
+      queue.messages[r].target = NULL;
+    }
+  }
 }
 
 void clear_window_children(window_t *win) {
-  window_t *child = win->children;
-  while (child) {
-    window_t *next = child->next;
-    destroy_window(child);
-    child = next;
+  for (window_t *item = win->children, *next = item ? item->next : NULL;
+       item; item = next, next = next?next->next:NULL) {
+    destroy_window(item);
   }
   win->children = NULL;
 }
 
 void destroy_window(window_t *win) {
-  if (!win) return;
-  
-  // Send WM_DESTROY message
+  post_message((window_t*)1, WM_REFRESHSTENCIL, 0, NULL);
+  invalidate_overlaps(win);
   send_message(win, WM_DESTROY, 0, NULL);
-  
-  // Destroy children first
+  if (_focused == win) set_focus(NULL);
+  if (_tracked == win) _tracked = NULL;
+  if (_captured == win) _captured = NULL;
   clear_window_children(win);
-  
-  // Remove from parent's children list
+  remove_from_global_hooks(win);
+  remove_from_global_queue(win);
   if (win->parent) {
-    window_t **current = &win->parent->children;
-    while (*current && *current != win) {
-      current = &(*current)->next;
-    }
-    if (*current) {
-      *current = win->next;
+    if (win->parent->children == win) {
+      win->parent->children = win->next;
+    } else {
+      window_t **p = &win->parent->children;
+      while (*p && *p != win) p = &(*p)->next;
+      if (*p) *p = win->next;
     }
   } else {
-    // Remove from top-level windows list
-    window_t **current = &windows;
-    while (*current && *current != win) {
-      current = &(*current)->next;
-    }
-    if (*current) {
-      *current = win->next;
-    }
+    remove_from_global_list(win);
   }
-  
-  // Free toolbar buttons if any
   if (win->toolbar_buttons) {
     free(win->toolbar_buttons);
   }
-  
-  // Clear focus if this window had it
-  if (_focused == win) {
-    _focused = NULL;
-  }
-  if (_tracked == win) {
-    _tracked = NULL;
-  }
-  if (_captured == win) {
-    _captured = NULL;
-  }
-  
   free(win);
 }
 
-static window_t *find_window(int x, int y) {
-  // Search from front to back
-  window_t *current = windows;
-  while (current) {
-    if (current->visible &&
-        x >= current->frame.x && x < current->frame.x + current->frame.w &&
-        y >= current->frame.y && y < current->frame.y + current->frame.h) {
-      return current;
+window_t *find_window(int x, int y) {
+  for (window_t *w = windows; w; w = w->next) {
+    if (!w->visible) continue;
+    if (x >= w->frame.x && x < w->frame.x + w->frame.w &&
+        y >= w->frame.y && y < w->frame.y + w->frame.h) {
+      return w;
     }
-    current = current->next;
   }
   return NULL;
 }
 
-static window_t *get_root_window(window_t *window) {
-  while (window && window->parent) {
-    window = window->parent;
-  }
+window_t *get_root_window(window_t *window) {
+  while (window && window->parent) window = window->parent;
   return window;
 }
 
 void track_mouse(window_t *win) {
-  _tracked = win;
+  if (_tracked != win) {
+    if (_tracked) {
+      send_message(_tracked, WM_MOUSELEAVE, 0, NULL);
+    }
+    _tracked = win;
+  }
 }
 
 void set_capture(window_t *win) {
   _captured = win;
 }
 
-void set_focus(window_t *win) {
+void set_focus(window_t* win) {
   if (_focused != win) {
+    if (_focused) {
+      send_message(_focused, WM_KILLFOCUS, 0, NULL);
+    }
     _focused = win;
-    // In full implementation, would send focus change messages
+    if (win) {
+      send_message(win, WM_SETFOCUS, 0, NULL);
+      // Move to top logic would go here if needed
+    }
   }
 }
 
 void dispatch_message(SDL_Event *evt) {
-  // This is a simplified version - full implementation in original window.c
-  // handles all SDL event types and converts them to window messages
-  
-  if (!evt) return;
-  
-  // Process hooks
-  winhook_t *hook = g_hooks;
-  while (hook) {
-    if (hook->msg == 0 || (evt->type == hook->msg)) {
+  // Simplified - full SDL event translation would go here
+  // This is a stub that applications can override
+  for (winhook_t *hook = g_hooks; hook; hook = hook->next) {
+    if (hook->msg == 0 || evt->type == hook->msg) {
       hook->func(NULL, evt->type, 0, evt, hook->userdata);
     }
-    hook = hook->next;
   }
 }
 
 int get_message(SDL_Event *evt) {
   if (queue.read != queue.write) {
-    msg_t *msg = &queue.messages[queue.read++];
-    // Convert internal message to SDL_Event (simplified)
-    return 1;
+    // Process queued messages first
+    return 0; // Stub
   }
   return SDL_PollEvent(evt);
 }
@@ -226,19 +290,19 @@ void repost_messages(void) {
 }
 
 int window_title_bar_y(window_t const *win) {
-  // Calculate title bar Y position
-  int t = 0;
-  if (!(win->flags & WINDOW_NOTITLE)) {
-    t += 16; // TITLEBAR_HEIGHT
-  }
-  if (win->flags & WINDOW_TOOLBAR) {
-    t += 16; // TOOLBAR_HEIGHT
-  }
-  return win->frame.y - t;
+  // Simplified calculation
+  return win->frame.y;
 }
 
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (!win || !win->proc) return 0;
+  
+  for (winhook_t *hook = g_hooks; hook; hook = hook->next) {
+    if (hook->msg == msg) {
+      hook->func(win, msg, wparam, lparam, hook->userdata);
+    }
+  }
+  
   return win->proc(win, msg, wparam, lparam);
 }
 
@@ -257,12 +321,8 @@ void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 window_t *get_window_item(window_t const *win, uint32_t id) {
   if (!win) return NULL;
   
-  window_t *child = win->children;
-  while (child) {
-    if (child->id == id) {
-      return child;
-    }
-    child = child->next;
+  for (window_t *item = win->children; item; item = item->next) {
+    if (item->id == id) return item;
   }
   return NULL;
 }
@@ -275,71 +335,51 @@ void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...) {
   va_start(args, fmt);
   vsnprintf(item->title, sizeof(item->title), fmt, args);
   va_end(args);
+  invalidate_window(item);
 }
 
 void load_window_children(window_t *win, windef_t const *def) {
-  // Stub: would create child windows from definition
+  // Stub - application should implement this
 }
 
 void show_window(window_t *win, bool visible) {
   if (!win) return;
-  win->visible = visible;
+  if (win->visible != visible) {
+    win->visible = visible;
+    if (visible) {
+      post_message(win, WM_SHOWWINDOW, 1, NULL);
+      invalidate_window(win);
+    } else {
+      post_message(win, WM_SHOWWINDOW, 0, NULL);
+    }
+  }
 }
 
 bool is_window(window_t *win) {
-  // Check if window is valid
-  window_t *current = windows;
-  while (current) {
-    if (current == win) return true;
-    current = current->next;
+  for (window_t *w = windows; w; w = w->next) {
+    if (w == win) return true;
   }
   return false;
 }
 
 void end_dialog(window_t *win, uint32_t code) {
-  // Stub: dialog support
+  // Dialog support stub
+  if (win) {
+    destroy_window(win);
+  }
 }
 
 uint32_t show_dialog(char const *title, const rect_t *rect, window_t *parent, 
                       winproc_t proc, void *param) {
-  // Stub: dialog support
+  // Dialog support stub
   return 0;
 }
 
 void enable_window(window_t *win, bool enable) {
   if (!win) return;
+  if (!enable && _focused == win) {
+    set_focus(NULL);
+  }
   win->disabled = !enable;
-}
-
-window_t *create_window(char const *title, flags_t flags, const rect_t *rect, 
-                         window_t *parent, winproc_t proc, void *param) {
-  window_t *win = calloc(1, sizeof(window_t));
-  if (!win) return NULL;
-  
-  if (rect) {
-    win->frame = *rect;
-  }
-  
-  win->flags = flags;
-  win->proc = proc;
-  win->visible = false;
-  win->parent = parent;
-  
-  if (title) {
-    strncpy(win->title, title, sizeof(win->title) - 1);
-  }
-  
-  // Add to parent's children or to top-level windows
-  if (parent) {
-    push_window(win, &parent->children);
-  } else {
-    push_window(win, &windows);
-  }
-  
-  // Send WM_CREATE message
-  if (proc) {
-    proc(win, WM_CREATE, 0, param);
-  }
-  
-  return win;
+  invalidate_window(win);
 }
