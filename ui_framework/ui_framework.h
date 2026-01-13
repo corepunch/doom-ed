@@ -213,4 +213,10 @@ extern window_t *_focused;     // Currently focused window
 extern window_t *_tracked;     // Mouse-tracked window
 extern window_t *_captured;    // Mouse-captured window
 
+// Drawing functions (ui_draw.c)
+void draw_button(int x, int y, int w, int h, bool pressed);
+void set_viewport(window_t const *win);
+void draw_windows(bool rich);
+void draw_window_controls(window_t *win);
+
 #endif // __UI_FRAMEWORK_H__
