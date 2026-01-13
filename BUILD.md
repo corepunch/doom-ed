@@ -4,6 +4,20 @@ This document describes how to build DOOM-ED using the provided Makefile on Linu
 
 ## Prerequisites
 
+### Clone with Submodules
+
+When cloning the repository, make sure to initialize the submodules to get the WAD files:
+
+```bash
+git clone --recurse-submodules https://github.com/corepunch/doom-ed.git
+```
+
+Or if you already cloned the repository:
+
+```bash
+git submodule update --init --recursive
+```
+
 ### Linux (Ubuntu/Debian)
 ```bash
 sudo apt-get install build-essential libsdl2-dev libcglm-dev
