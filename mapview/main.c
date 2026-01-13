@@ -87,8 +87,8 @@ int main(int argc, char* argv[]) {
   allocate_mapside_textures();
   allocate_flat_textures();
 
-//  new_map();
-  open_map("MAP01");
+  new_map();
+//  open_map("MAP01");
   
   run();
 
