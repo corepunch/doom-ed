@@ -128,7 +128,7 @@ test: triangulate_test bsp_test
 	@./triangulate_test
 	@./bsp_test
 
-triangulate_test: $(MAPVIEW_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate_standalone.c
+triangulate_test: $(MAPVIEW_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate.c
 	$(CC) -DTEST_MODE -o $@ $^ -I$(MAPVIEW_DIR) -lm
 
 bsp_test: $(MAPVIEW_DIR)/bsp_test.c
