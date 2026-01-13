@@ -4,6 +4,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#define SCREEN_WIDTH 1440
+#define SCREEN_HEIGHT 960
 
 #define LOWORD(l) ((uint16_t)(l & 0xFFFF))
 #define HIWORD(l) ((uint16_t)((l >> 16) & 0xFFFF))

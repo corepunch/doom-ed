@@ -57,7 +57,7 @@ typedef struct {
   GLuint crosshair_texture; // Custom crosshair texture (if needed)
 } sprite_system_t;
 
-int screen_width=640, screen_height=480;
+//int screen_width=640, screen_height=480;
 
 sprite_system_t g_sprite_system = {0};
 
@@ -142,8 +142,8 @@ bool init_sprites(void) {
 //  float offset_x = (width - render_width) / (2.0f * scale);
 //  black_bars = offset_x;
 //  glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, sys->projection);
-  screen_width = width/2;
-  screen_height = height/2;
+  int screen_width = width/2;
+  int screen_height = height/2;
   glm_ortho(0, screen_width, screen_height, 0, -1, 1, sys->projection);
   
   // Find and preload weapon sprites (starting with SHT)

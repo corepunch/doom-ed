@@ -9,10 +9,6 @@
 #include "editor.h"
 #include "../ui/ui.h"
 
-// Screen dimensions (defined here for compatibility)
-int screen_width = SCREEN_WIDTH;
-int screen_height = SCREEN_HEIGHT;
-
 // SDL window (defined here for compatibility)
 extern SDL_Window* window;
 

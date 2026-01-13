@@ -79,8 +79,6 @@ enum {
 
 
 // Constants for rendering
-#define SCREEN_WIDTH 1440
-#define SCREEN_HEIGHT 960
 #define FOV 90.0
 #define NEAR_Z 0.1
 #define FAR_Z 1000.0
