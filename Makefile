@@ -112,7 +112,7 @@ UI_OBJS = $(UI_SRCS:$(UI_DIR)/%.c=$(BUILD_DIR)/ui/%.o)
 OBJS = $(MAPVIEW_OBJS) $(HEXEN_OBJS) $(UI_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test bsp_test
+.PHONY: all clean test triangulate_test bsp_test ui-helloworld
 
 all: doom-ed
 
@@ -157,6 +157,21 @@ test: triangulate_test bsp_test
 	@./triangulate_test
 	@./bsp_test
 
+# UI Framework hello world example
+# Note: Currently requires mapview sprites.c for drawing functions
+# TODO: Extract drawing primitives to make UI framework fully standalone
+ui-helloworld: $(UI_OBJS)
+	@echo "=== Building UI Framework Hello World Example ==="
+	@mkdir -p $(BUILD_DIR)/ui/examples
+	@mkdir -p $(BUILD_DIR)/mapview
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/sprites.c -o $(BUILD_DIR)/mapview/sprites.o
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/font.c -o $(BUILD_DIR)/mapview/font.o
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/icons.c -o $(BUILD_DIR)/mapview/icons.o
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(UI_DIR)/examples/helloworld.c -o $(BUILD_DIR)/ui/examples/helloworld.o
+	$(CC) $(BUILD_DIR)/ui/examples/helloworld.o $(UI_OBJS) $(BUILD_DIR)/mapview/sprites.o $(BUILD_DIR)/mapview/font.o $(BUILD_DIR)/mapview/icons.o -o ui-helloworld $(LDFLAGS)
+	@echo "Built ui-helloworld executable"
+	@echo "Run with: ./ui-helloworld"
+
 triangulate_test: $(TESTS_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate.c
 	$(CC) -DTEST_MODE -o $@ $^ -I$(MAPVIEW_DIR) -I$(TESTS_DIR) -lm
 
@@ -165,6 +180,6 @@ bsp_test: $(TESTS_DIR)/bsp_test.c
 
 # Clean
 clean:
-	rm -rf $(BUILD_DIR) triangulate_test bsp_test doom-ed
+	rm -rf $(BUILD_DIR) triangulate_test bsp_test doom-ed ui-helloworld
 	rm -f $(MAPVIEW_DIR)/*.o $(MAPVIEW_DIR)/windows/*.o $(MAPVIEW_DIR)/windows/inspector/*.o
 	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o
