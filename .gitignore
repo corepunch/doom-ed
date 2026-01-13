@@ -10,8 +10,8 @@ doom-ed
 .DS_Store
 
 # Test binaries
-mapview/triangulate_test
-mapview/bsp_test
+tests/triangulate_test
+tests/bsp_test
 triangulate_test
 bsp_test
 *.o
