@@ -1,31 +1,33 @@
 # BSP-Based Rendering Implementation
 
 ## Overview
-This document describes the BSP (Binary Space Partitioning) based rendering system implemented to fix the visibility issues in the DOOM level renderer.
+This document describes the BSP (Binary Space Partitioning) based rendering system implemented to fix the visibility issues in the DOOM level renderer. The implementation follows the approach used in the original Doom and GZDoom engines.
 
 ## Problem Statement
 The original rendering code used a portal-based system that had issues with frame tracking, causing sectors to be incorrectly dropped or not rendered. The comment in the code indicated: "there are already added some pieces to filter out invisible sectors, but it's not working correctly, some sectors get dropped and so on. So currently it's just drawing everything."
 
 ## Solution
-We implemented a proper BSP tree traversal system that:
+We implemented a proper BSP tree traversal system based on the Doom/GZDoom approach that:
 1. Uses the BSP data already loaded from DOOM WAD files
 2. Correctly determines which sectors are visible from the player's viewpoint
-3. Efficiently culls invisible geometry using bounding box checks
+3. Efficiently culls invisible geometry using Doom's angle-based frustum culling
 4. Maintains proper frame tracking to avoid redrawing sectors
+5. Uses the same checkcoord lookup table and algorithm as original Doom
 
 ## Architecture
 
 ### Core Components
 
 #### 1. BSP Tree Traversal (`bsp.c`)
-The main rendering algorithm that traverses the BSP tree to determine visible sectors.
+The main rendering algorithm that traverses the BSP tree to determine visible sectors, following the Doom engine approach.
 
 **Key Functions:**
 - `draw_bsp()` - Entry point for BSP-based rendering
-- `R_RenderBSPNode()` - Recursively traverses BSP nodes
+- `R_RenderBSPNode()` - Recursively traverses BSP nodes (from Doom)
 - `R_Subsector()` - Renders a single subsector (leaf node)
-- `R_PointOnSide()` - Determines which side of a partition line a point is on
-- `R_CheckBBox()` - Checks if a bounding box might be visible
+- `R_PointOnSide()` - Determines which side of a partition line a point is on (from Doom)
+- `R_CheckBBox()` - Checks if a bounding box might be visible using Doom's algorithm
+- `R_PointToAngle()` - Calculates angle from one point to another
 
 #### 2. Integration (`windows/game.c`)
 The game rendering loop was updated to use BSP rendering instead of the flawed portal system.
@@ -80,7 +82,26 @@ else:
     point is on back side
 ```
 
-### 4. Frame Tracking
+### 4. Frustum Culling (Doom Algorithm)
+The bounding box visibility check uses Doom's original algorithm:
+
+1. **Determine box position** relative to view point (9 possible positions)
+2. **Select critical corners** using `checkcoord` lookup table
+3. **Calculate angles** from view point to corners
+4. **Check if outside FOV**: Both corners outside left or right clipping plane
+
+This is more sophisticated than simple distance checks because it:
+- Accounts for the player's view direction
+- Uses angle-based frustum culling (90-degree FOV)
+- Properly handles edge cases (player inside box, box behind player, etc.)
+
+**Key differences from simplified approach:**
+- Original implementation always returned `true` (no actual culling)
+- Doom approach uses `checkcoord` table to select relevant box corners based on view position
+- Calculates angles to corners and checks against field of view
+- Can reject entire BSP subtrees when they're outside the view frustum
+
+### 5. Frame Tracking
 Each sector tracks the last frame number it was rendered in. This prevents:
 - Rendering the same sector multiple times in one frame
 - Overdraw and performance issues
@@ -132,17 +153,19 @@ gcc -o bsp_test bsp_test.c -lm
 5. **Comprehensive tests**: 5 test cases covering core functionality
 
 ### Comparison with Original DOOM Code
-Our implementation is inspired by the original DOOM source code but adapted for:
-- Modern C standards
-- OpenGL rendering (instead of software rasterization)
-- Integration with existing codebase
-- Simplified clipping (since OpenGL handles projection)
+Our implementation follows the original DOOM source code approach with these key features:
+- **Same BSP traversal algorithm** as Doom/GZDoom
+- **Same R_PointOnSide logic** for partition line testing
+- **Same checkcoord lookup table** for bounding box culling
+- **Angle-based frustum culling** matching Doom's approach
+- **Modern C standards** and integration with OpenGL rendering
+- **Simplified screen column clipping** (OpenGL handles projection)
 
 ## Future Improvements
 
 Potential enhancements:
-1. **Frustum Culling**: Proper view frustum checks in `R_CheckBBox()`
-2. **Occlusion Culling**: Track which screen columns are already drawn
+1. ~~**Frustum Culling**: Proper view frustum checks in `R_CheckBBox()`~~ ✅ **Implemented** using Doom's algorithm
+2. **Occlusion Culling**: Track which screen columns are already drawn (like original Doom's solidsegs)
 3. **Portal Rendering**: Combine BSP and portal systems for hybrid approach
 4. **Dynamic Lighting**: Use BSP for shadow calculations
 5. **Multi-threading**: Parallel BSP traversal for large maps
