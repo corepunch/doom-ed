@@ -97,7 +97,11 @@ UI_SRCS = $(UI_DIR)/commctl/button.c \
           $(UI_DIR)/commctl/edit.c \
           $(UI_DIR)/commctl/label.c \
           $(UI_DIR)/commctl/list.c \
-          $(UI_DIR)/commctl/sprite.c
+          $(UI_DIR)/commctl/sprite.c \
+          $(UI_DIR)/user/window.c \
+          $(UI_DIR)/user/message.c \
+          $(UI_DIR)/user/draw_impl.c \
+          $(UI_DIR)/kernel/event.c
 
 # Object files
 MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
@@ -136,6 +140,14 @@ $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 
 # UI framework object file rules
 $(BUILD_DIR)/ui/commctl/%.o: $(UI_DIR)/commctl/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
+
+$(BUILD_DIR)/ui/user/%.o: $(UI_DIR)/user/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
+
+$(BUILD_DIR)/ui/kernel/%.o: $(UI_DIR)/kernel/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
 
