@@ -15,9 +15,9 @@ DOOM-ED is a modern open-source level editor for classic DOOM games, built with 
 ## Build System
 
 - **Primary**: Xcode project (`mapview.xcodeproj`) for macOS development
-- **Platform**: Cross-platform support (Windows, macOS, Linux)
+- **Platform**: Currently macOS-focused; cross-platform support is a goal
 - **Dependencies**: SDL2, OpenGL
-- **Language**: C (C11 compatible)
+- **Language**: C (not C++, despite what README may suggest)
 
 ## Testing
 
@@ -75,19 +75,24 @@ gcc -o bsp_test bsp_test.c -I. -lm
 
 ## Project Structure
 
+**Note**: The actual repository structure differs from what's described in README.md. Use the structure below:
+
 ```
 /
 ├── mapview/              # Main editor source code
 │   ├── *.c              # Implementation files
 │   ├── *.h              # Header files
 │   ├── *_test.c         # Test files
-│   └── windows/         # Platform-specific code
-├── doom/                # DOOM game engine headers
+│   └── windows/         # Window/UI subsystem code
+│       └── inspector/   # Property inspector windows
+├── doom/                # DOOM game engine headers and some source
 ├── hexen/               # Hexen game engine headers
 ├── gldoom/              # OpenGL DOOM headers
 ├── screenshots/         # Screenshot images
 └── mapview.xcodeproj/   # Xcode project files
 ```
+
+The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` directories that don't currently exist in the repository.
 
 ## Important Implementation Details
 
@@ -155,9 +160,9 @@ gcc -o bsp_test bsp_test.c -I. -lm
 
 ## Platform-Specific Considerations
 
-- **macOS**: Uses Xcode project; SDL2 dylib included
-- **Linux/Windows**: Would use CMake or similar build system
-- **Byte Order**: All WAD data is little-endian; handle conversions if needed
+- **macOS**: Primary platform; uses Xcode project; SDL2 dylib included in repository
+- **Linux/Windows**: Build system not yet implemented (README mentions CMake but it's not present)
+- **Byte Order**: All WAD data is little-endian; handle conversions if needed on big-endian systems
 
 ## Performance Considerations
 
