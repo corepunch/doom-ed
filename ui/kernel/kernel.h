@@ -20,13 +20,19 @@ int run(void);
 bool ui_init_graphics(const char *title, int width, int height);
 void ui_shutdown_graphics(void);
 
+// Joystick input management (abstracted)
+// See ui/kernel/joystick.h for full API
+bool ui_joystick_init(void);
+void ui_joystick_shutdown(void);
+bool ui_joystick_available(void);
+const char* ui_joystick_get_name(void);
+
 // Timing functions
 void ui_delay(unsigned int milliseconds);
 
 // Global SDL objects
 extern SDL_Window* window;
 extern SDL_GLContext ctx;
-extern SDL_Joystick* joystick;
 extern bool running;
 extern bool mode;
 extern unsigned frame;
