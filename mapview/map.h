@@ -9,6 +9,8 @@
 
 #include <cglm/struct.h>
 
+#include "../ui/ui.h"
+
 #define OFFSET_OF(type, field) (void*)((size_t)&(((type *)0)->field))
 
 // Macro to define a collection of elements (pointer and count)
@@ -54,16 +56,6 @@ if ((map)->name) free((map)->name); \
 #define sensitivity_y 0.175f // Adjust sensitivity as needed
 
 typedef enum {
-  icon8_minus,
-  icon8_collapse,
-  icon8_maximize,
-  icon8_dropdown,
-  icon8_checkbox,
-  icon8_editor_helmet,
-  icon8_count,
-} ed_icon_t;
-
-typedef enum {
   icon16_select,
   icon16_points,
   icon16_lines,
@@ -98,65 +90,6 @@ enum {
 #define ACCELERATION 1000.0f
 #define FRICTION     1200.0f
 #define MAX_SPEED    300.0f
-
-#define LOWORD(l) ((uint16_t)(l & 0xFFFF))
-#define HIWORD(l) ((uint16_t)((l >> 16) & 0xFFFF))
-#define MAKEDWORD(low, high) ((uint32_t)(((uint16_t)(low)) | ((uint32_t)((uint16_t)(high))) << 16))
-
-enum {
-  WM_CREATE,
-  WM_DESTROY,
-  WM_SHOWWINDOW,
-  WM_NCPAINT,
-  WM_NCLBUTTONUP,
-  WM_PAINT,
-  WM_REFRESHSTENCIL,
-  WM_PAINTSTENCIL,
-  WM_SETFOCUS,
-  WM_KILLFOCUS,
-  WM_HITTEST,
-  WM_COMMAND,
-  WM_TEXTINPUT,
-  WM_WHEEL,
-  WM_MOUSEMOVE,
-  WM_MOUSELEAVE,
-  WM_LBUTTONDOWN,
-  WM_LBUTTONUP,
-  WM_RBUTTONDOWN,
-  WM_RBUTTONUP,
-  WM_RESIZE,
-  WM_KEYDOWN,
-  WM_KEYUP,
-  WM_JOYBUTTONDOWN,
-  WM_JOYBUTTONUP,
-  WM_JOYAXISMOTION,
-  WM_USER = 1000
-};
-
-enum {
-  BM_SETCHECK = WM_USER,
-  BM_GETCHECK,
-  CB_ADDSTRING,
-  CB_GETCURSEL,
-  CB_SETCURSEL,
-  CB_GETLBTEXT,
-  ST_ADDWINDOW,
-  TB_ADDBUTTONS,
-  TB_BUTTONCLICK,
-};
-
-#define CB_ERR -1
-
-enum {
-  BST_UNCHECKED,
-  BST_CHECKED
-};
-
-enum {
-  EN_UPDATE = 100,
-  BN_CLICKED,
-  CBN_SELCHANGE,
-};
 
 // Lump order in a map WAD: each map needs a couple of lumps
 // to provide a complete scene geometry description.
@@ -212,12 +145,6 @@ typedef struct {
 //  float points[2][2];
 //  float points2[2][2];
 } player_t;
-
-typedef struct {
-  int16_t x, y, w, h;
-} rect_t;
-
-#define MAKERECT(X, Y, W, H) &(rect_t){X, Y, W, H}
 
 // Vertex structure for our buffer (xyzuv)
 typedef struct {
@@ -477,97 +404,17 @@ typedef struct {
   editor_state_t state;
 } game_t;
 
-// Base UI Colors
-#define COLOR_PANEL_BG       0xff3c3c3c  // main panel or window background
-#define COLOR_PANEL_DARK_BG  0xff2c2c2c  // main panel or window background
-#define COLOR_LIGHT_EDGE     0xff7f7f7f  // top-left edge for beveled elements
-#define COLOR_DARK_EDGE      0xff1a1a1a  // bottom-right edge for bevel
-#define COLOR_FLARE          0xffcfcfcf  // top-left edge for beveled elements
-#define COLOR_FOCUSED        0xff5EC4F3
 
-// Additional UI Colors
-#define COLOR_BUTTON_BG      0xff404040  // button background (unpressed)
-#define COLOR_BUTTON_INNER   0xff505050  // inner fill of button
-#define COLOR_BUTTON_HOVER   0xff5a5a5a  // slightly brighter for hover state
-#define COLOR_TEXT_NORMAL    0xffc0c0c0  // standard text color
-#define COLOR_TEXT_DISABLED  0xff808080  // for disabled/inactive text
-#define COLOR_TEXT_ERROR     0xffff4444  // red text for errors
-#define COLOR_TEXT_SUCCESS   0xff44ff44  // green text for success messages
-#define COLOR_BORDER_FOCUS   0xff101010  // very dark outline for focused item
-#define COLOR_BORDER_ACTIVE  0xff808080  // light gray for active border
-
-// Transparency helpers (if needed)
-#define COLOR_TRANSPARENT    0x00000000  // fully transparent
-
-#define WINDOW_NOTITLE (1 << 0)
-#define WINDOW_TRANSPARENT (1 << 1)
-#define WINDOW_VSCROLL (1 << 2)
-#define WINDOW_HSCROLL (1 << 3)
-#define WINDOW_NORESIZE (1 << 4)
-#define WINDOW_NOFILL (1 << 5)
-#define WINDOW_ALWAYSONTOP (1 << 6)
-#define WINDOW_ALWAYSINBACK (1 << 7)
-#define WINDOW_HIDDEN (1 << 8)
-#define WINDOW_NOTRAYBUTTON (1 << 9)
-#define WINDOW_DIALOG (1 << 10)
-#define WINDOW_TOOLBAR (1 << 11)
-
-#define TITLEBAR_HEIGHT 12
-#define TOOLBAR_HEIGHT 20
 #define WINDOW_PADDING 4
 #define LINE_PADDING 5
 #define CONTROL_HEIGHT 10
 #define LABEL_WIDTH 54
 #define WIDTH_FILL -1
-#define BUTTON_HEIGHT 13
-#define CONTROL_BUTTON_WIDTH 8
-#define CONTROL_BUTTON_PADDING 2
 #define THING_SIZE 48
 
 struct window_s;
-typedef uint32_t flags_t;
-typedef uint32_t result_t;
-typedef result_t (*winproc_t)(struct window_s *, uint32_t, uint32_t, void *);
-typedef void (*winhook_func_t)(struct window_s *win, uint32_t msg, uint32_t wparam, void *lparam, void *userdata);
 
-typedef struct {
-  const char *classname;
-  const char *text;
-  uint32_t id;
-  int w, h;
-  flags_t flags;
-} windef_t;
-
-typedef struct {
-  int icon;
-  int ident;
-  bool active;
-} toolbar_button_t;
-
-typedef struct window_s {
-  rect_t frame;
-  uint32_t id;
-  uint16_t scroll[2];
-  uint32_t flags;
-  winproc_t proc;
-  uint32_t child_id;
-  bool hovered;
-  bool editing;
-  bool notabstop;
-  bool pressed;
-  bool value;
-  bool visible;
-  bool disabled;
-  char title[64];
-  int cursor_pos;
-  int num_toolbar_buttons;
-  toolbar_button_t *toolbar_buttons;
-  void *userdata;
-  void *userdata2;
-  struct window_s *next;
-  struct window_s *children;
-  struct window_s *parent;
-} window_t;
+typedef struct toolbar_button_s toolbar_button_t;
 
 window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *, winproc_t, void *param);
 void show_window(window_t *win, bool visible);

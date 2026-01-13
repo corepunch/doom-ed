@@ -4,6 +4,11 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+
+#define LOWORD(l) ((uint16_t)(l & 0xFFFF))
+#define HIWORD(l) ((uint16_t)((l >> 16) & 0xFFFF))
+#define MAKEDWORD(low, high) ((uint32_t)(((uint16_t)(low)) | ((uint32_t)((uint16_t)(high))) << 16))
+
 // Forward declarations
 typedef struct window_s window_t;
 typedef struct rect_s rect_t;
@@ -30,7 +35,7 @@ struct rect_s {
 };
 
 // Toolbar button structure
-typedef struct {
+typedef struct toolbar_button_s {
   int icon;
   int ident;
   bool active;

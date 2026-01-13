@@ -63,14 +63,17 @@ enum {
 
 // Window flags
 #define WINDOW_NOTITLE      (1 << 0)
-#define WINDOW_NORESIZE     (1 << 1)
-#define WINDOW_NOFILL       (1 << 2)
-#define WINDOW_TOOLBAR      (1 << 3)
-#define WINDOW_VSCROLL      (1 << 4)
-#define WINDOW_HSCROLL      (1 << 5)
-#define WINDOW_TRANSPARENT  (1 << 6)
-#define WINDOW_DIALOG       (1 << 7)
-#define WINDOW_ALWAYSINBACK (1 << 8)
+#define WINDOW_TRANSPARENT  (1 << 1)
+#define WINDOW_VSCROLL      (1 << 2)
+#define WINDOW_HSCROLL      (1 << 3)
+#define WINDOW_NORESIZE     (1 << 4)
+#define WINDOW_NOFILL       (1 << 5)
+#define WINDOW_ALWAYSONTOP  (1 << 6)
+#define WINDOW_ALWAYSINBACK (1 << 7)
+#define WINDOW_HIDDEN       (1 << 8)
+#define WINDOW_NOTRAYBUTTON (1 << 9)
+#define WINDOW_DIALOG       (1 << 10)
+#define WINDOW_TOOLBAR      (1 << 11)
 
 // Titlebar and toolbar dimensions
 #define TITLEBAR_HEIGHT   16
@@ -96,17 +99,6 @@ typedef enum {
   icon8_editor_helmet,
   icon8_count,
 } icon8_t;
-
-typedef enum {
-  icon16_select,
-  icon16_points,
-  icon16_lines,
-  icon16_sectors,
-  icon16_things,
-  icon16_sounds,
-  icon16_appicon,
-  icon16_count,
-} icon16_t;
 
 // UI colors (from sprites.h COLOR_ constants - will be moved to ui framework)
 #define COLOR_LIGHT_EDGE     0xff545454
