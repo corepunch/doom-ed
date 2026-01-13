@@ -33,6 +33,9 @@ window_t *_captured = NULL;
 
 // Internal state
 static winhook_t *g_hooks = NULL;
+static window_t *_dragging = NULL;
+static window_t *_resizing = NULL;
+static int drag_anchor[2];
 static struct {
   uint8_t read, write;
   msg_t messages[0x100];
@@ -262,13 +265,16 @@ void set_focus(window_t* win) {
 }
 
 void dispatch_message(SDL_Event *evt) {
-  // Simplified - full SDL event translation would go here
-  // This is a stub that applications can override
+  // Forward to hooks
   for (winhook_t *hook = g_hooks; hook; hook = hook->next) {
     if (hook->msg == 0 || evt->type == hook->msg) {
       hook->func(NULL, evt->type, 0, evt, hook->userdata);
     }
   }
+  
+  // Note: Full SDL event handling should be implemented here or via hooks
+  // For now, this is a minimal implementation that applications can extend
+  // by registering hooks with register_window_hook()
 }
 
 int get_message(SDL_Event *evt) {
@@ -382,4 +388,56 @@ void enable_window(window_t *win, bool enable) {
   }
   win->disabled = !enable;
   invalidate_window(win);
+}
+
+// Window z-ordering
+void move_to_top(window_t* _win) {
+  window_t *win = get_root_window(_win);
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+  invalidate_window(win);
+  
+  if (win->flags & WINDOW_ALWAYSINBACK)
+    return;
+  
+  window_t **head = &windows, *p = NULL, *n = *head;
+  
+  // Find the node `win` in the list
+  while (n != win) {
+    p = n;
+    n = n->next;
+    if (!n) return;  // If `win` is not found, exit
+  }
+  
+  // Remove the node `win` from the list
+  if (p) p->next = win->next;
+  else *head = win->next;  // If `win` is at the head, update the head
+  
+  // Ensure that if `win` was the only node, we don't append it to itself
+  if (!*head) return;  // If the list becomes empty, there's nothing to append
+  
+  // Find the tail of the list
+  window_t *tail = *head;
+  while (tail->next)
+    tail = tail->next;
+  
+  // Append `win` to the end of the list
+  tail->next = win;
+  win->next = NULL;
+}
+
+// Tab navigation
+window_t* find_next_tab_stop(window_t *win, bool allow_current) {
+  if (!win) return NULL;
+  window_t *next;
+  if ((next = find_next_tab_stop(win->children, true))) return next;
+  if (!win->notabstop && (win->parent || win->visible) && allow_current) return win;
+  if ((next = find_next_tab_stop(win->next, true))) return next;
+  return allow_current ? NULL : find_next_tab_stop(win->parent, false);
+}
+
+window_t* find_prev_tab_stop(window_t* win) {
+  window_t *it = (win = (win->parent ? win : find_next_tab_stop(win, false)));
+  for (window_t *next = find_next_tab_stop(it, false); next != win;
+       it = next, next = find_next_tab_stop(next, false));
+  return it;
 }

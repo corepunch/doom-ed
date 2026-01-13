@@ -132,41 +132,9 @@ static void repaint_stencil(void) {
 
 
 
-// NOTE: create_window, find_window, and window management helpers are now in ui_framework
-
-static void move_to_top(window_t* _win) {
-  window_t *win = get_root_window(_win);
-  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
-  invalidate_window(win);
-  
-  if (win->flags&WINDOW_ALWAYSINBACK)
-    return;
-  
-  window_t **head = &windows, *p = NULL, *n = *head;
-  
-  // Find the node `win` in the list
-  while (n != win) {
-    p = n;
-    n = n->next;
-    if (!n) return;  // If `win` is not found, exit
-  }
-  
-  // Remove the node `win` from the list
-  if (p) p->next = win->next;
-  else *head = win->next;  // If `win` is at the head, update the head
-  
-  // Ensure that if `win` was the only node, we don't append it to itself
-  if (!*head) return;  // If the list becomes empty, there's nothing to append
-  
-  // Find the tail of the list
-  window_t *tail = *head;
-  while (tail->next)
-    tail = tail->next;
-  
-  // Append `win` to the end of the list
-  tail->next = win;
-  win->next = NULL;
-}
+// NOTE: The following are now in ui_framework:
+// - move_to_top, find_next_tab_stop, find_prev_tab_stop (window navigation)
+// - handle_mouse (mouse event routing) - will be moved next
 
 static int handle_mouse(int msg, window_t *win, int x, int y) {
   for (window_t *c = win->children; c; c = c->next) {
@@ -179,21 +147,8 @@ static int handle_mouse(int msg, window_t *win, int x, int y) {
   return false;
 }
 
-window_t* find_next_tab_stop(window_t *win, bool allow_current) {
-  if (!win) return false;
-  window_t *next;
-  if ((next = find_next_tab_stop(win->children, true))) return next;
-  if (!win->notabstop && (win->parent || win->visible) && allow_current) return win;
-  if ((next = find_next_tab_stop(win->next, true))) return next;
-  return allow_current ? NULL : find_next_tab_stop(win->parent, false);
-}
-
-window_t* find_prev_tab_stop(window_t* win) {
-  window_t *it = (win = (win->parent ? win : find_next_tab_stop(win, false)));
-  for (window_t *next = find_next_tab_stop(it, false); next != win;
-       it = next, next = find_next_tab_stop(next, false));
-  return it;
-}
+// NOTE: dispatch_message contains SDL event handling - this is being moved to ui_framework
+// with application-specific hooks for _dragging/_resizing behavior
 
 void dispatch_message(SDL_Event *evt) {
   extern bool running;

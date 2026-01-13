@@ -177,6 +177,11 @@ void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
 void load_window_children(window_t *win, windef_t const *def);
 int window_title_bar_y(window_t const *win);
 
+// Window z-ordering and navigation
+void move_to_top(window_t *win);
+window_t *find_next_tab_stop(window_t *win, bool allow_current);
+window_t *find_prev_tab_stop(window_t *win);
+
 // Hooks
 void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata);
 
