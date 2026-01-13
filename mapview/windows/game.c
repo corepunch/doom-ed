@@ -142,7 +142,7 @@ void get_view_matrix(map_data_t const *map, player_t const *player, float aspect
 
 void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);
 void draw_sky(map_data_t const *map, player_t const *player, mat4 mvp);
-void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);
+void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);  // BSP-based rendering
 
 int pixel = 0;
 
@@ -253,13 +253,8 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   viewdef.player = *player;
   viewdef.frame = frame++;
   
-//  void R_ClearClipSegs (int width);
-//  void R_RenderBSPNode (map_data_t *map, int bspnum, viewdef_t *viewdef);
-//  R_ClearClipSegs(screen_width);
-//  
-//  R_RenderBSPNode(&game->map, game->map.num_nodes-1, &viewdef);
-  
-  draw_floors(map, sector, &viewdef);
+  // Use BSP-based rendering (with automatic fallback for maps without BSP data)
+  draw_bsp(map, &viewdef);
 #endif
   draw_things(map, &viewdef, true);
   
