@@ -58,7 +58,7 @@ function render_bsp_node(node, viewdef):
    - `R_CheckBBox()` - Bounding box visibility check
    - `has_bsp_data()` - Helper to check if BSP data available
 
-2. **mapview/bsp_test.c** (232 lines)
+2. **tests/bsp_test.c** (232 lines)
    - Comprehensive test suite with 5 test cases
    - Tests vertical, horizontal, and diagonal partitions
    - Tests BSP tree traversal logic

@@ -115,7 +115,7 @@ Each sector tracks the last frame number it was rendered in. This prevents:
 
 ## Testing
 
-### BSP Traversal Tests (`bsp_test.c`)
+### BSP Traversal Tests (`tests/bsp_test.c`)
 Comprehensive tests covering:
 
 1. **Vertical Partition Test**: Points on left/right sides of a vertical line
@@ -126,8 +126,9 @@ Comprehensive tests covering:
 
 All tests pass successfully:
 ```bash
-cd mapview
-gcc -o bsp_test bsp_test.c -lm
+make test
+# or manually:
+gcc -o bsp_test tests/bsp_test.c -Imapview -Itests -lm
 ./bsp_test
 ```
 
@@ -179,6 +180,6 @@ Potential enhancements:
 ## See Also
 
 - `TRIANGULATION_IMPROVEMENTS.md` - Improvements to polygon triangulation
-- `mapview/TEST_README.md` - Test documentation and usage
+- `tests/TEST_README.md` - Test documentation and usage
 - `mapview/bsp.c` - BSP implementation source code
-- `mapview/bsp_test.c` - BSP test suite
+- `tests/bsp_test.c` - BSP test suite
