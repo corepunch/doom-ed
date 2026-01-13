@@ -1,4 +1,8 @@
+#ifdef TEST_MODE
+#include "map_test.h"
+#else
 #include "map.h"
+#endif
 #include <math.h>
 #include <stdlib.h>  // For malloc/free
 

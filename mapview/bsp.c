@@ -1,4 +1,4 @@
-#include <OpenGL/gl3.h>
+#include "gl_compat.h"
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 #include <stdbool.h>

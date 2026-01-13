@@ -21,28 +21,23 @@ A modern open-source level editor for classic DOOM games, built with SDL2.
 
 - SDL2
 - OpenGL
-- C++11 compatible compiler
-- CMake (for building)
+- cglm (OpenGL Mathematics library for C)
+- C17 compatible compiler
+- Make (for building with Makefile) or CMake
 
 ## Building
 
-### Windows
+### With Make (Linux/macOS)
 
 ```bash
-mkdir build
-cd build
-cmake ..
-cmake --build . --config Release
-```
-
-### macOS and Linux
-
-```bash
-mkdir build
-cd build
-cmake ..
 make
 ```
+
+For detailed build instructions, see [BUILD.md](BUILD.md).
+
+### With CMake (Cross-platform)
+
+**Note**: CMake support is planned but not yet implemented. Use Make for now.
 
 ## Usage
 

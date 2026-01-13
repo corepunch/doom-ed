@@ -2,7 +2,7 @@
 #define RADIAL_MENU_H
 
 #include <SDL2/SDL.h>
-#include <OpenGL/gl3.h>
+#include "gl_compat.h"
 #include <stdbool.h>
 
 // Initialize the radial menu system
