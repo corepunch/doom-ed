@@ -101,7 +101,8 @@ UI_SRCS = $(UI_DIR)/commctl/button.c \
           $(UI_DIR)/user/window.c \
           $(UI_DIR)/user/message.c \
           $(UI_DIR)/user/draw_impl.c \
-          $(UI_DIR)/kernel/event.c
+          $(UI_DIR)/kernel/event.c \
+          $(UI_DIR)/kernel/init.c
 
 # Object files
 MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)

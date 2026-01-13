@@ -155,3 +155,35 @@ void draw_windows(bool rich) {
     send_message(win, WM_PAINT, 0, NULL);
   }
 }
+
+// Set stencil test to render for specific window
+void ui_set_stencil_for_window(uint32_t window_id) {
+  glStencilFunc(GL_EQUAL, window_id, 0xFF);
+}
+
+// Set stencil test to render for root window
+void ui_set_stencil_for_root_window(uint32_t window_id) {
+  glStencilFunc(GL_EQUAL, window_id, 0xFF);
+}
+
+// Begin frame rendering
+void ui_begin_frame(void) {
+  // Nothing to do here for now - left for future expansion
+}
+
+// End frame rendering  
+void ui_end_frame(void) {
+  // Nothing to do here for now - left for future expansion
+}
+
+// Clear screen with color
+void ui_clear_screen(float r, float g, float b) {
+  glClearColor(r, g, b, 1.0f);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+}
+
+// Swap display buffers
+void ui_swap_buffers(void) {
+  extern SDL_Window *window;
+  SDL_GL_SwapWindow(window);
+}

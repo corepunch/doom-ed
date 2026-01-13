@@ -99,7 +99,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     // Handle special messages
     switch (msg) {
       case WM_NCPAINT:
-        glStencilFunc(GL_EQUAL, win->id, 0xFF);
+        ui_set_stencil_for_window(win->id);
         set_viewport(&(window_t){0, 0, screen_width, screen_height});
         set_projection(0, 0, screen_width, screen_height);
         if (!(win->flags&WINDOW_TRANSPARENT)) {
@@ -123,7 +123,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         break;
       case WM_PAINT:
-        glStencilFunc(GL_EQUAL, get_root_window(win)->id, 0xFF);
+        ui_set_stencil_for_root_window(get_root_window(win)->id);
         set_viewport(root);
         set_projection(root->scroll[0],
                        root->scroll[1],

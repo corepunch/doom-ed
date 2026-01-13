@@ -4,17 +4,24 @@
 #include <stdbool.h>
 #include <SDL2/SDL.h>
 
-// Forward declarations
-typedef union SDL_Event SDL_Event;
+// Event type abstraction
+typedef SDL_Event ui_event_t;
 
 // Event message queue functions
-int get_message(SDL_Event *evt);
-void dispatch_message(SDL_Event *evt);
+int get_message(ui_event_t *evt);
+void dispatch_message(ui_event_t *evt);
 void repost_messages(void);
 
 // SDL initialization
 bool init_sdl(void);
 int run(void);
+
+// Graphics context initialization (abstracted)
+bool ui_init_graphics(const char *title, int width, int height);
+void ui_shutdown_graphics(void);
+
+// Timing functions
+void ui_delay(unsigned int milliseconds);
 
 // Global SDL objects
 extern SDL_Window* window;
