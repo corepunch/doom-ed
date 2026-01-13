@@ -74,29 +74,76 @@ typedef struct window_s {
   struct window_s *parent;
 } window_t;
 
-// Window flags - keeping original names for compatibility
-#define WINDOW_NOTITLE         0x0001
-#define WINDOW_TRANSPARENT     0x0002
-#define WINDOW_ALWAYSINBACK    0x0004
-#define WINDOW_NOTRAYBUTTON    0x0008
-#define WINDOW_NOFILL          0x0010
-#define WINDOW_VSCROLL         0x0020
-#define WINDOW_TOOLBAR         0x0040
+// Window flags - matching the original map.h definitions
+#define WINDOW_NOTITLE         (1 << 0)
+#define WINDOW_TRANSPARENT     (1 << 1)
+#define WINDOW_VSCROLL         (1 << 2)
+#define WINDOW_HSCROLL         (1 << 3)
+#define WINDOW_NORESIZE        (1 << 4)
+#define WINDOW_NOFILL          (1 << 5)
+#define WINDOW_ALWAYSONTOP     (1 << 6)
+#define WINDOW_ALWAYSINBACK    (1 << 7)
+#define WINDOW_HIDDEN          (1 << 8)
+#define WINDOW_NOTRAYBUTTON    (1 << 9)
+#define WINDOW_DIALOG          (1 << 10)
+#define WINDOW_TOOLBAR         (1 << 11)
 
-// Message constants - these match the original window.c implementation
-#define WM_CREATE          0x0001
-#define WM_DESTROY         0x0002
-#define WM_PAINT           0x000F
-#define WM_CLOSE           0x0010
-#define WM_MOUSEMOVE       0x0200
-#define WM_LBUTTONDOWN     0x0201
-#define WM_LBUTTONUP       0x0202
-#define WM_RBUTTONDOWN     0x0204
-#define WM_RBUTTONUP       0x0205
-#define WM_MOUSEWHEEL      0x020A
-#define WM_KEYDOWN         0x0100
-#define WM_KEYUP           0x0101
-#define WM_COMMAND         0x0111
+// Message constants - matching the original map.h enum
+enum {
+  WM_CREATE,
+  WM_DESTROY,
+  WM_SHOWWINDOW,
+  WM_NCPAINT,
+  WM_NCLBUTTONUP,
+  WM_PAINT,
+  WM_REFRESHSTENCIL,
+  WM_PAINTSTENCIL,
+  WM_SETFOCUS,
+  WM_KILLFOCUS,
+  WM_HITTEST,
+  WM_COMMAND,
+  WM_TEXTINPUT,
+  WM_WHEEL,
+  WM_MOUSEMOVE,
+  WM_MOUSELEAVE,
+  WM_LBUTTONDOWN,
+  WM_LBUTTONUP,
+  WM_RBUTTONDOWN,
+  WM_RBUTTONUP,
+  WM_RESIZE,
+  WM_KEYDOWN,
+  WM_KEYUP,
+  WM_JOYBUTTONDOWN,
+  WM_JOYBUTTONUP,
+  WM_JOYAXISMOTION,
+  WM_USER = 1000
+};
+
+// UI control messages
+enum {
+  BM_SETCHECK = WM_USER,
+  BM_GETCHECK,
+  CB_ADDSTRING,
+  CB_GETCURSEL,
+  CB_SETCURSEL,
+  CB_GETLBTEXT,
+  ST_ADDWINDOW,
+  TB_ADDBUTTONS,
+  TB_BUTTONCLICK,
+};
+
+#define CB_ERR -1
+
+enum {
+  BST_UNCHECKED,
+  BST_CHECKED
+};
+
+enum {
+  EN_UPDATE = 100,
+  BN_CLICKED,
+  CBN_SELCHANGE,
+};
 
 // Core UI framework functions - window management
 window_t *create_window(char const *title, flags_t flags, const rect_t *rect, 
@@ -140,5 +187,17 @@ uint32_t show_dialog(char const *title, const rect_t *rect, window_t *parent,
 bool init_sdl_window(SDL_Window **window, int screen_width, int screen_height);
 void cleanup_sdl(SDL_Window *window);
 int run_event_loop(bool *running);
+
+// Common window procedures (may be implemented by application)
+// These are declared here for interface compatibility, but
+// actual implementation may remain in the application if
+// they depend on application-specific rendering functions
+result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_list(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 #endif // __UI_FRAMEWORK_H__

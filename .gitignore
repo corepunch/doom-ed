@@ -15,7 +15,17 @@ tests/bsp_test
 triangulate_test
 bsp_test
 *.o
+*.a
+doom-ed
+build/
+triangulate_test
+bsp_test
 
-# Build logs
-build.log
+# Xcode
+*.xcuserstate
+xcuserdata/
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+*.pbxuser
 
