@@ -52,7 +52,8 @@ gcc -o bsp_test bsp_test.c -I. -lm
 
 - **Indentation**: Use 2 spaces for indentation (no tabs)
 - **Naming**: Use snake_case for functions and variables
-- **Headers**: Include header guards in the format `#ifndef __FILENAME_H__`
+- **Headers**: Include header guards (existing code uses various patterns: `__FILENAME_H__`, `__FILENAME__`, or `FILENAME_H`)
+  - Note: Double-underscore prefixes are reserved in C standard, but the codebase uses them
 - **Comments**: Use meaningful comments for complex algorithms; avoid obvious comments
 - **Constants**: Use `#define` for compile-time constants in SCREAMING_SNAKE_CASE
 
