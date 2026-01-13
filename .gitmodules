@@ -1,0 +1,3 @@
+[submodule "wads"]
+	path = wads
+	url = https://github.com/Akbar30Bill/DOOM_wads.git

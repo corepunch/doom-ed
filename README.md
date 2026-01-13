@@ -27,6 +27,20 @@ A modern open-source level editor for classic DOOM games, built with SDL2.
 
 ## Building
 
+### Clone the Repository
+
+When cloning the repository, make sure to initialize the submodules to get the WAD files:
+
+```bash
+git clone --recurse-submodules https://github.com/corepunch/doom-ed.git
+```
+
+Or if you already cloned the repository:
+
+```bash
+git submodule update --init --recursive
+```
+
 ### With Make (Linux/macOS)
 
 ```bash
