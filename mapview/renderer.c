@@ -96,10 +96,11 @@ editor_state_t *get_editor(void) {
   return g_game ? &g_game->state : NULL;
 }
 
-// Initialize SDL and create window/renderer
+// Initialize SDL subsystems (VIDEO already initialized by ui_init_window)
 bool init_sdl(void) {
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+  // Only initialize JOYSTICK subsystem - VIDEO was already initialized
+  if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) {
+    printf("SDL joystick subsystem could not initialize! SDL_Error: %s\n", SDL_GetError());
     return false;
   }
   
