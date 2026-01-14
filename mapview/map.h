@@ -41,6 +41,7 @@ if ((map)->name) free((map)->name); \
 #define SCROLL_SENSITIVITY 5
 #define SPRITE_SCALE 2
 #define SCALE_POINT(x) ((x)/2)
+// TODO: Move HEXEN macro to build system (Makefile -DHEXEN flag) for cleaner separation
 #define HEXEN
 #define HIGHLIGHT(light) ((light)+0.25)
 #define CONSOLE_PADDING 2

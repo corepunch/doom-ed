@@ -84,11 +84,17 @@ For detailed build instructions, see [BUILD.md](BUILD.md).
 
 ## File Structure
 
-- `src/`: Source code
-- `include/`: Header files
-- `resources/`: Icons, shaders, and other resources
-- `lua/`: Lua scripts for editor extension
-- `docs/`: Documentation
+- `mapview/`: Main editor source code
+  - `game/`: Game-specific code (DOOM/Hexen data abstraction)
+  - `windows/`: UI windows and dialogs
+  - `*.c`, `*.h`: Editor core functionality
+- `ui/`: UI framework (common controls, window management)
+- `doom/`: DOOM game data and headers
+- `hexen/`: Hexen game data and headers
+- `tests/`: Test files
+- `screenshots/`: Screenshot images
+
+For detailed architecture information, see [ARCHITECTURE.md](ARCHITECTURE.md).
 
 ## Contributing
 
