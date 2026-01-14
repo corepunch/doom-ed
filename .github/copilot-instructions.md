@@ -228,7 +228,7 @@ The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` dir
 - Keep `README.md` updated with user-facing changes
 - Document algorithms in separate markdown files (e.g., `BSP_RENDERING.md`, `TRIANGULATION_IMPROVEMENTS.md`)
   - Existing algorithm docs: `BSP_RENDERING.md`, `TRIANGULATION_IMPROVEMENTS.md`, `PR_SUMMARY.md`
-- Update `mapview/TEST_README.md` when adding or modifying tests
+- Update `tests/TEST_README.md` when adding or modifying tests
 - Add comments in code for complex algorithms or non-obvious logic
 
 ## When Making Changes

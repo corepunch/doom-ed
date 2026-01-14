@@ -18,7 +18,7 @@ steps:
         echo "For Ubuntu < 18.04, install cglm from source:"
         echo "  git clone https://github.com/recp/cglm.git"
         echo "  cd cglm && mkdir build && cd build"
-        echo "  cmake .. && sudo make install"
+        echo "  cmake .. && make && sudo make install"
       }
   
   - name: Verify installation
