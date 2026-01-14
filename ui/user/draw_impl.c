@@ -104,13 +104,17 @@ void draw_panel(window_t const *win) {
 
 // Draw window controls (close, minimize, etc.)
 void draw_window_controls(window_t *win) {
+  rect_t r = win->frame;
   int t = titlebar_height(win);
-  int x = win->frame.x, y = win->frame.y-t;
-  int w = win->frame.w;
+  fill_rect(COLOR_PANEL_DARK_BG, r.x, r.y-t, r.w, t);
+  set_viewport(&(window_t){0, 0, screen_width, screen_height});
+  set_projection(0, 0, screen_width, screen_height);
   
-  // Draw close button
-  draw_icon8(icon8_minus, x+w-10, y+3, COLOR_DARK_EDGE);
-  draw_icon8(icon8_minus, x+w-11, y+2, COLOR_TEXT_NORMAL);
+  for (int i = 0; i < 1; i++) {
+    int x = win->frame.x + win->frame.w - (i+1)*CONTROL_BUTTON_WIDTH - CONTROL_BUTTON_PADDING;
+    int y = window_title_bar_y(win);
+    draw_icon8(icon8_minus + i, x, y, COLOR_TEXT_NORMAL);
+  }
 }
 
 // Set OpenGL viewport for window

@@ -230,7 +230,7 @@ void invalidate_window(window_t *win) {
 
 // Get titlebar Y position
 int window_title_bar_y(window_t const *win) {
-  return titlebar_height(win);
+  return win->frame.y + 2 - titlebar_height(win);
 }
 
 // Get child window by ID
