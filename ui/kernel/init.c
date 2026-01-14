@@ -8,6 +8,15 @@
 #include "../user/gl_compat.h"
 #include "kernel.h"
 
+// Global SDL/OpenGL context (defined here, declared in kernel.h)
+SDL_Window *window = NULL;
+SDL_GLContext ctx = NULL;
+bool running = true;
+
+// Screen dimensions (defined here, declared in kernel.h)
+int screen_width = 1440;  // Default values, can be updated
+int screen_height = 960;
+
 // Initialize graphics context (SDL + OpenGL)
 bool ui_init_graphics(const char *title, int width, int height) {
   // Initialize SDL video subsystem
@@ -23,7 +32,6 @@ bool ui_init_graphics(const char *title, int width, int height) {
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
   // Create SDL window
-  extern SDL_Window *window;
   window = SDL_CreateWindow(
     title,
     SDL_WINDOWPOS_CENTERED,
@@ -40,7 +48,6 @@ bool ui_init_graphics(const char *title, int width, int height) {
   }
 
   // Create OpenGL context
-  extern SDL_GLContext ctx;
   ctx = SDL_GL_CreateContext(window);
   if (!ctx) {
     printf("OpenGL context could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -57,9 +64,6 @@ bool ui_init_graphics(const char *title, int width, int height) {
 
 // Shutdown graphics context
 void ui_shutdown_graphics(void) {
-  extern SDL_Window *window;
-  extern SDL_GLContext ctx;
-  
   if (ctx) {
     SDL_GL_DeleteContext(ctx);
     ctx = NULL;

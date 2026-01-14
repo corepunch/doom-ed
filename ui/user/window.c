@@ -348,3 +348,31 @@ void enable_window(window_t *win, bool enable) {
   win->disabled = !enable;
   invalidate_window(win);
 }
+
+// Dialog handling
+static uint32_t _return_code;
+
+// Show modal dialog and wait for result
+uint32_t show_dialog(char const *title, const rect_t* frame, window_t *parent, winproc_t proc, void *param) {
+  extern bool running;
+  extern int get_message(SDL_Event *evt);
+  extern void dispatch_message(SDL_Event *evt);
+  extern void repost_messages(void);
+  
+  SDL_Event e;
+  window_t *dlg = create_window(title, WINDOW_DIALOG, frame, parent, proc, param);
+  dlg->visible = true;
+  while (running && is_window(dlg)) {
+    while (get_message(&e)) {
+      dispatch_message(&e);
+    }
+    repost_messages();
+  }
+  return _return_code;
+}
+
+// End modal dialog with result code
+void end_dialog(window_t *win, uint32_t code) {
+  _return_code = code;
+  destroy_window(win);
+}

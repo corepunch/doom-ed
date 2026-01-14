@@ -20,10 +20,30 @@ typedef struct {
   int height;
 } mapside_texture_t;
 
-// External functions from game code
-extern sprite_t const *find_sprite(const char *name);
-extern mapside_texture_t const *get_flat_texture(const char *name);
-extern mapside_texture_t const *get_texture(const char *name);
+// Weak symbols for game-specific functions - can be overridden by application
+// This allows the UI framework to compile standalone
+#ifndef __APPLE__
+#define WEAK_SYMBOL __attribute__((weak))
+#else
+#define WEAK_SYMBOL
+#endif
+
+// Stub implementations that can be overridden by the application
+WEAK_SYMBOL sprite_t const *find_sprite(const char *name) {
+  (void)name;
+  return NULL;
+}
+
+WEAK_SYMBOL mapside_texture_t const *get_flat_texture(const char *name) {
+  (void)name;
+  return NULL;
+}
+
+WEAK_SYMBOL mapside_texture_t const *get_texture(const char *name) {
+  (void)name;
+  return NULL;
+}
+
 extern window_t *_focused;
 
 // Helper function to fit sprite in target rect
