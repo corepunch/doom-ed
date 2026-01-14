@@ -96,17 +96,23 @@ static void move_to_top(window_t* _win) {
   if (p) p->next = win->next;
   else *head = win->next;  // If `win` is at the head, update the head
   
-  // Ensure that if `win` was the only node, we don't append it to itself
-  if (!*head) return;  // If the list becomes empty, there's nothing to append
+  // If `win` was the only node, just re-add it and return
+  if (!*head) {
+    *head = win;
+    win->next = NULL;
+    return;
+  }
   
   // Find the tail of the list
   window_t *tail = *head;
   while (tail->next)
     tail = tail->next;
   
-  // Append `win` to the end of the list
-  tail->next = win;
-  win->next = NULL;
+  // Append `win` to the end of the list (only if not already at tail)
+  if (tail != win) {
+    tail->next = win;
+    win->next = NULL;
+  }
 }
 
 // Dispatch SDL event to window system
