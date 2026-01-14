@@ -19,7 +19,7 @@ window_t *_captured = NULL;
 
 static window_t *_dragging = NULL;
 static window_t *_resizing = NULL;
-static int drag_anchor[2];
+//static int drag_anchor[2];
 
 // Forward declarations
 extern void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
