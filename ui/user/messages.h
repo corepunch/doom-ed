@@ -76,8 +76,8 @@ enum {
 #define WINDOW_TOOLBAR      (1 << 11)
 
 // Titlebar and toolbar dimensions
-#define TITLEBAR_HEIGHT   16
-#define TOOLBAR_HEIGHT    24
+#define TITLEBAR_HEIGHT   12
+#define TOOLBAR_HEIGHT    20
 #define RESIZE_HANDLE     8
 #define BUTTON_HEIGHT     13
 
