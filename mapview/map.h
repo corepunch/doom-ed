@@ -103,46 +103,10 @@ enum {
 #define FRICTION     1200.0f
 #define MAX_SPEED    300.0f
 
-// Lump order in a map WAD: each map needs a couple of lumps
-// to provide a complete scene geometry description.
-enum
-{
-  ML_LABEL,    // A separator, name, ExMx or MAPxx
-  ML_THINGS,    // Monsters, items..
-  ML_LINEDEFS,    // LineDefs, from editing
-  ML_SIDEDEFS,    // SideDefs, from editing
-  ML_VERTEXES,    // Vertices, edited and BSP splits generated
-  ML_SEGS,    // LineSegs, from LineDefs split by BSP
-  ML_SSECTORS,    // SubSectors, list of LineSegs
-  ML_NODES,    // BSP nodes
-  ML_SECTORS,    // Sectors, from editing
-  ML_REJECT,    // LUT, sector-sector visibility
-  ML_BLOCKMAP    // LUT, motion clipping, walls/grid element
-};
+// NOTE: The following types are now defined in libgame/map.h and libgame/wad.h
+// ML_* enum, wadid_t, lumpname_t, texname_t, NF_SUBSECTOR, mapnode_t
 
-// Type definitions to better represent the WAD format
-typedef char wadid_t[4];     // "IWAD" or "PWAD"
-typedef char lumpname_t[8];  // Lump name, null-terminated
-typedef char texname_t[8];   // Texture name, null-terminated
-
-// Indicate a leaf.
-#define  NF_SUBSECTOR  0x8000
-
-typedef struct {
-  // Partition line from (x,y) to x+dx,y+dy)
-  int16_t    x;
-  int16_t    y;
-  int16_t    dx;
-  int16_t    dy;
-  // Bounding box for each child,
-  // clip against view frustum.
-  int16_t    bbox[2][4];
-  // If NF_SUBSECTOR its a subsector,
-  // else it's a node of another subtree.
-  uint16_t   children[2];
-} mapnode_t;
-
-// Player state
+// Player state (editor-specific, not in libgame)
 typedef struct {
   float x, y, z;
   float angle;  // in degrees, 0 is east, 90 is north
@@ -181,99 +145,11 @@ typedef struct {
   mapside_texture_t const *texture;  // Texture to use
 } wall_section_t;
 
-// WAD header structure
-typedef struct {
-  wadid_t identification;     // Should be "IWAD" or "PWAD"
-  uint32_t numlumps;           // Number of lumps in the WAD
-  uint32_t infotableofs;       // Pointer to the location of the directory
-} wadheader_t;
+// NOTE: The following types are now defined in libgame/wad.h and libgame/map.h
+// wadheader_t, filelump_t, patch_t, mapthing_t, maplinedef_t, mapvertex_t,
+// mapsidedef_t, mapsector_t, mapsubsector_t, palette_entry_t, mapseg_t, texdef_t
 
-// WAD directory entry structure
-typedef struct {
-  uint32_t filepos;           // File offset of the lump
-  uint32_t size;              // Size of the lump in bytes
-  lumpname_t name;           // Name of the lump, null-terminated
-} filelump_t;
-
-// Patch header structure
-typedef struct {
-  int16_t width;              // Width of the patch
-  int16_t height;             // Height of the patch
-  int16_t leftoffset;         // Left offset of the patch
-  int16_t topoffset;          // Top offset of the patch
-  int32_t columnofs[1];       // Column offsets (variable size)
-} patch_t;
-
-#ifdef HEXEN
-// Thing structure
-typedef struct {
-  int16_t tid;
-  int16_t x;
-  int16_t y;
-  int16_t height;
-  int16_t angle;
-  int16_t type;
-  int16_t options;
-  int8_t special;
-  int8_t args[5];
-} mapthing_t;
-// Linedef structure
-typedef struct {
-  uint16_t start;             // Start vertex
-  uint16_t end;               // End vertex
-  uint16_t flags;             // Flags
-  uint8_t special;            // Special type
-  uint8_t args[5];            // Arguments for special (e.g., script number, delay)
-  uint16_t sidenum[2];        // Sidedef numbers
-} maplinedef_t;
-#else
-// Thing structure
-typedef struct {
-  int16_t x;                 // X position
-  int16_t y;                 // Y position
-  int16_t angle;             // Angle facing
-  int16_t type;              // Thing type
-  int16_t flags;             // Flags
-} mapthing_t;
-// Linedef structure
-typedef struct {
-  uint16_t start;             // Start vertex
-  uint16_t end;               // End vertex
-  uint16_t flags;             // Flags
-  uint16_t special;           // Special type
-  uint16_t tag;               // Tag number
-  uint16_t sidenum[2];        // Sidedef numbers
-} maplinedef_t;
-#endif
-
-// Vertex structure
-typedef struct {
-  int16_t x;                 // X coordinate
-  int16_t y;                 // Y coordinate
-} mapvertex_t;
-
-// Sidedef structure
-typedef struct {
-  int16_t textureoffset;     // X offset for texture
-  int16_t rowoffset;         // Y offset for texture
-  texname_t toptexture;      // Name of upper texture
-  texname_t bottomtexture;   // Name of lower texture
-  texname_t midtexture;      // Name of middle texture
-  uint16_t sector;           // Sector number this sidedef faces
-} mapsidedef_t;
-
-// Sector structure
-typedef struct {
-  int16_t floorheight;       // Floor height
-  int16_t ceilingheight;     // Ceiling height
-  texname_t floorpic;        // Name of floor texture
-  texname_t ceilingpic;      // Name of ceiling texture
-  int16_t lightlevel;        // Light level
-  int16_t special;           // Special behavior
-  int16_t tag;               // Tag number
-} mapsector_t;
-
-// Wall section references
+// Wall section references (editor-specific extensions to game data)
 typedef struct {
   mapsidedef_t *def;
   mapsector_t *sector;
@@ -290,34 +166,7 @@ typedef struct {
   uint32_t frame;
 } mapsector2_t;
 
-// SubSector, as generated by BSP.
-typedef struct {
-  uint16_t    numsegs;
-  // Index of first one, segs are stored sequentially.
-  uint16_t    firstseg;
-} mapsubsector_t;
-
-// Palette structure
-typedef struct {
-  uint8_t r;
-  uint8_t g;
-  uint8_t b;
-} palette_entry_t;
-
-typedef struct {
-  uint16_t v1;
-  uint16_t v2;
-  uint16_t angle;
-  uint16_t linedef;
-  uint16_t side;
-  uint16_t offset;
-} mapseg_t;
-
-typedef struct {
-  char const *name;
-  uint16_t width;
-  uint16_t height;
-} texdef_t;
+// NOTE: mapsubsector_t, palette_entry_t, mapseg_t, texdef_t are now defined in libgame
 
 extern palette_entry_t *palette;
 

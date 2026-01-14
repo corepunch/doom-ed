@@ -1,6 +1,8 @@
 #ifndef __LIBGAME_MAP_H__
 #define __LIBGAME_MAP_H__
 
+#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
 #include "wad.h"
