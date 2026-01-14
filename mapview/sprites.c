@@ -50,7 +50,6 @@ typedef struct {
   GLuint program;        // Shader program
   GLuint vao;            // Vertex array object
   GLuint vbo;            // Vertex buffer object
-  GLuint tmp;
   sprite_t all_sprites[MAX_SPRITES];
   int num_sprites;
   mat4 projection;       // Orthographic projection matrix
@@ -108,10 +107,6 @@ bool init_sprites(void) {
   glBindAttribLocation(sys->program, 1, "texcoord");
   glBindAttribLocation(sys->program, 2, "color");
   glLinkProgram(sys->program);
-  
-  glGenTextures(1, &sys->tmp);
-  glBindTexture(GL_TEXTURE_2D, sys->tmp);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0});
   
   // Create VAO, VBO, EBO
   glGenVertexArrays(1, &sys->vao);
@@ -645,10 +640,4 @@ void draw_icon16(int icon, int x, int y, uint32_t col) {
   icon*=2;
   char str[6] = { icon+128, icon+129, '\n', icon+144, icon+145, 0 };
   draw_text_small(str, x, y, col);
-}
-
-void fill_rect(int color, int x, int y, int w, int h) {
-  glBindTexture(GL_TEXTURE_2D, g_sprite_system.tmp);
-  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
-  draw_rect_ex(g_sprite_system.tmp, x, y, w, h, false, 1);
 }

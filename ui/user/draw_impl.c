@@ -19,13 +19,28 @@ extern int screen_width, screen_height;
 extern SDL_Window *window;
 
 // Forward declarations
-extern void fill_rect(int color, int x, int y, int w, int h);
 extern void draw_rect(int tex, int x, int y, int w, int h);
+extern void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 extern void draw_text_small(const char* text, int x, int y, uint32_t col);
 extern void draw_icon8(int icon, int x, int y, uint32_t col);
 extern void draw_icon16(int icon, int x, int y, uint32_t col);
 extern int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 extern void set_projection(int x, int y, int w, int h);
+
+// Internal white texture for drawing solid colors
+static GLuint ui_white_texture = 0;
+
+// Initialize the internal white texture
+static void init_ui_white_texture(void) {
+  if (ui_white_texture == 0) {
+    glGenTextures(1, &ui_white_texture);
+    glBindTexture(GL_TEXTURE_2D, ui_white_texture);
+    uint32_t white_pixel = 0xFFFFFFFF;
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &white_pixel);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+  }
+}
 
 // Get titlebar height
 int titlebar_height(window_t const *win) {
@@ -186,4 +201,19 @@ void ui_clear_screen(float r, float g, float b) {
 void ui_swap_buffers(void) {
   extern SDL_Window *window;
   SDL_GL_SwapWindow(window);
+}
+
+// Fill a rectangle with a solid color
+void fill_rect(int color, int x, int y, int w, int h) {
+  // Ensure the white texture is initialized
+  if (ui_white_texture == 0) {
+    init_ui_white_texture();
+  }
+  
+  // Update the white texture with the desired color
+  glBindTexture(GL_TEXTURE_2D, ui_white_texture);
+  glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &color);
+  
+  // Draw a rectangle using the texture
+  draw_rect_ex(ui_white_texture, x, y, w, h, false, 1);
 }
