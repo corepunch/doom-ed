@@ -33,16 +33,20 @@ bool ui_init_window(const char *title, int width, int height) {
     SDL_Rect bounds;
     if (SDL_GetDisplayBounds(1, &bounds) != 0) {
       SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
-      // fallback to display 0 or handle error
+      // Fallback to primary display with undefined position
+      window = SDL_CreateWindow(title,
+                                SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                width, height,
+                                SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
+    } else {
+      // Centered position on display 1
+      int w = width;
+      int h = height;
+      int x = bounds.x + (bounds.w - w) / 2;
+      int y = bounds.y + (bounds.h - h) / 2;
+      
+      window = SDL_CreateWindow(title, x, y, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS);
     }
-    
-    // Centered position on display 1
-    int w = width;
-    int h = height;
-    int x = bounds.x + (bounds.w - w) / 2;
-    int y = bounds.y + (bounds.h - h) / 2;
-    
-    window = SDL_CreateWindow(title, x, y, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS);
   }
   
   if (!window) {
@@ -63,6 +67,7 @@ bool ui_init_window(const char *title, int width, int height) {
 }
 
 // Initialize graphics context (SDL + OpenGL)
+// This is a convenience function that initializes SDL and creates window/context
 bool ui_init_graphics(const char *title, int width, int height) {
   // Initialize SDL video subsystem
   if (SDL_Init(SDL_INIT_VIDEO) < 0) {
@@ -70,33 +75,8 @@ bool ui_init_graphics(const char *title, int width, int height) {
     return false;
   }
 
-  // Set OpenGL attributes
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
-  // Create SDL window
-  window = SDL_CreateWindow(
-    title,
-    SDL_WINDOWPOS_CENTERED,
-    SDL_WINDOWPOS_CENTERED,
-    width,
-    height,
-    SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN
-  );
-
-  if (!window) {
-    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-    SDL_Quit();
-    return false;
-  }
-
-  // Create OpenGL context
-  ctx = SDL_GL_CreateContext(window);
-  if (!ctx) {
-    printf("OpenGL context could not be created! SDL_Error: %s\n", SDL_GetError());
-    SDL_DestroyWindow(window);
+  // Use ui_init_window to create window and context
+  if (!ui_init_window(title, width, height)) {
     SDL_Quit();
     return false;
   }
