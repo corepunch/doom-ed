@@ -7,21 +7,11 @@
 #include "../../ui/user/messages.h"
 #include "../../ui/user/draw.h"
 
-// Game-specific types (defined in mapview/sprites.h and mapview/map.h)
-typedef struct {
-  int texture;
-  int width;
-  int height;
-} sprite_t;
-
-typedef struct {
-  int texture;
-  int width;
-  int height;
-} mapside_texture_t;
+#include "../sprites.h"
+#include "../map.h"
 
 // External functions from game code
-extern sprite_t const *find_sprite(const char *name);
+extern sprite_t *find_sprite(const char *name);
 extern mapside_texture_t const *get_flat_texture(const char *name);
 extern mapside_texture_t const *get_texture(const char *name);
 extern window_t *_focused;

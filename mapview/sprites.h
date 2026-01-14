@@ -15,6 +15,8 @@ typedef struct {
   int offsety;           // Y offset for centering
 } sprite_t;
 
+typedef struct player_s player_t;
+
 float *get_sprite_matrix(void);
 
 // Initialize sprite system

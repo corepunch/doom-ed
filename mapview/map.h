@@ -129,7 +129,7 @@ typedef struct {
 } mapnode_t;
 
 // Player state
-typedef struct {
+typedef struct player_s {
   float x, y, z;
   float angle;  // in degrees, 0 is east, 90 is north
   float pitch;
@@ -403,9 +403,6 @@ typedef struct {
 } game_t;
 
 
-#define WINDOW_PADDING 4
-#define LINE_PADDING 5
-#define CONTROL_HEIGHT 10
 #define LABEL_WIDTH 54
 #define WIDTH_FILL -1
 #define THING_SIZE 48

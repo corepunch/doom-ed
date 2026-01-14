@@ -211,13 +211,16 @@ void set_capture(window_t *win) {
 void set_focus(window_t* win) {
   if (win == _focused)
     return;
-  if (_focused)
-    send_message(_focused, WM_KILLFOCUS, 0, win);
-  _focused = win;
+  if (_focused) {
+    _focused->editing = false;
+    post_message(_focused, WM_KILLFOCUS, 0, win);
+    invalidate_window(_focused);
+  }
   if (win) {
-    send_message(win, WM_SETFOCUS, 0, NULL);
+    post_message(win, WM_SETFOCUS, 0, _focused);
     invalidate_window(win);
   }
+  _focused = win;
 }
 
 // Invalidate window (request repaint)
@@ -257,11 +260,12 @@ void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...) {
 }
 
 // Create window from definition
-extern result_t win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-extern result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-extern result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-extern result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-extern result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//extern result_t win_label(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//extern result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//extern result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//extern result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//extern result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+extern result_t win_space(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent) {
   rect_t rect = {r->x, r->y, def->w, def->h};
@@ -272,28 +276,41 @@ window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent)
 
 // Load child windows from definition array
 void load_window_children(window_t *win, windef_t const *def) {
-  clear_window_children(win);
-  rect_t r = {0, 0, 0, 0};
-  for (windef_t const *d = def; d->proc; d++) {
-    r.y += r.h;
-    window_t *child = create_window2(d, &r, win);
-    if (d->id) {
-      win->child_id = MAX(win->child_id, d->id);
+  int x = WINDOW_PADDING;
+  int y = WINDOW_PADDING;
+  for (; def->proc; def++) {
+    int w = def->w == -1 ? win->frame.w - WINDOW_PADDING*2 : def->w;
+    int h = def->h == 0 ? CONTROL_HEIGHT : def->h;
+    if (x + w > win->frame.w - WINDOW_PADDING || def->proc == win_space) {
+      x = WINDOW_PADDING;
+      for (window_t *child = win->children; child; child = child->next) {
+        y = MAX(y, child->frame.y + child->frame.h);
+      }
+      y += LINE_PADDING;
     }
-    r.h = child->frame.h;
+    if (def->proc == win_space)
+      continue;
+    window_t *item = create_window2(def, MAKERECT(x, y, w, h), win);
+    if (item) {
+      x += item->frame.w + LINE_PADDING;
+    }
   }
 }
 
 // Show or hide window
 void show_window(window_t *win, bool visible) {
-  if (win->visible == visible) return;
-  win->visible = visible;
-  send_message(win, WM_SHOWWINDOW, visible, NULL);
-  if (visible) {
-    move_to_top(win);
-  } else {
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+  if (!visible) {
     invalidate_overlaps(win);
+    if (_focused == win) set_focus(NULL);
+    if (_captured == win) set_capture(NULL);
+    if (_tracked == win) track_mouse(NULL);
+  } else {
+    move_to_top(win);
+    set_focus(win);
   }
+  win->visible = visible;
+  post_message(win, WM_SHOWWINDOW, visible, NULL);
 }
 
 // Check if pointer is a valid window
@@ -306,6 +323,9 @@ bool is_window(window_t *win) {
 
 // Enable or disable window
 void enable_window(window_t *win, bool enable) {
+  if (!enable && _focused == win) {
+    set_focus(NULL);
+  }
   win->disabled = !enable;
   invalidate_window(win);
 }

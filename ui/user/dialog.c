@@ -30,15 +30,19 @@ uint32_t show_dialog(char const *title,
                      winproc_t proc,
                      void *param)
 {
-  SDL_Event e;
-  window_t *dlg = create_window(title, WINDOW_DIALOG, frame, parent, proc, param);
-  dlg->visible = true;
+  extern bool running;
+  SDL_Event event;
+  uint32_t flags = WINDOW_VSCROLL|WINDOW_DIALOG|WINDOW_NOTRAYBUTTON;
+  window_t *dlg = create_window("Things", flags, frame, NULL, proc, param);
+  enable_window(parent, false);
+  show_window(dlg, true);
   while (running && is_window(dlg)) {
-    while (get_message(&e)) {
-      dispatch_message(&e);
+    while (get_message(&event)) {
+      dispatch_message(&event);
     }
     repost_messages();
   }
+  enable_window(parent, true);
   return _return_code;
 }
 
