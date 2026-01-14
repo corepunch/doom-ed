@@ -254,11 +254,9 @@ static void move_to_top(window_t* _win) {
   while (tail->next)
     tail = tail->next;
   
-  // Append `win` to the end of the list (only if not already at tail)
-  if (tail != win) {
-    tail->next = win;
-    win->next = NULL;
-  }
+  // Append `win` to the end of the list
+  tail->next = win;
+  win->next = NULL;
 }
 
 // Invalidate window (request repaint)
