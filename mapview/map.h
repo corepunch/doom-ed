@@ -472,10 +472,6 @@ void update_player_position_with_sliding(map_data_t const *map, player_t *player
 void fill_rect(int color, int x, int y, int w, int h);
 void draw_rect(int tex, int x, int y, int w, int h);
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
-void draw_text_gl3(const char* text, int x, int y, float alpha);
-void draw_text_small(const char* text, int x, int y, uint32_t col);
-int strwidth(const char* text);
-int strnwidth(const char* text, int text_length);
 void draw_icon8(int icon, int x, int y, uint32_t col);
 void draw_icon16(int icon, int x, int y, uint32_t col);
 void draw_palette(map_data_t const *map);

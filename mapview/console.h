@@ -9,9 +9,6 @@
 // Initialize the console system
 void init_console(void);
 
-// Load the DOOM font from the WAD file
-bool load_console_font(void);
-
 // Print a message to the console
 void conprintf(const char* format, ...);
 
@@ -23,12 +20,5 @@ void shutdown_console(void);
 
 // Toggle console visibility
 void toggle_console(void);
-
-// Set console text color
-void set_console_color(uint8_t r, uint8_t g, uint8_t b);
-
-void draw_text_small(const char* text, int x, int y, uint32_t col);
-
-int get_text_width(const char* text);
 
 #endif // __CONSOLE_H__

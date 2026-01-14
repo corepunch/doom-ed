@@ -6,6 +6,7 @@
 // User subsystem (window management)
 #include "user/user.h"
 #include "user/messages.h"
+#include "user/text.h"
 #include "user/draw.h"
 
 // Kernel subsystem (event management)
