@@ -1,0 +1,22 @@
+name: Setup DOOM-ED Development Environment
+description: Pre-install dependencies needed to build and test DOOM-ED
+
+steps:
+  - name: Install system dependencies
+    run: |
+      # Install build tools and libraries
+      sudo apt-get update
+      sudo apt-get install -y \
+        build-essential \
+        libsdl2-dev \
+        libcglm-dev \
+        libgl1-mesa-dev \
+        pkg-config
+  
+  - name: Verify installation
+    run: |
+      # Verify that all dependencies are installed
+      pkg-config --modversion sdl2 || echo "SDL2 not found via pkg-config"
+      pkg-config --modversion cglm || echo "cglm not found via pkg-config"
+      gcc --version
+      make --version

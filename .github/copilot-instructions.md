@@ -4,6 +4,19 @@
 
 DOOM-ED is a modern open-source level editor for classic DOOM games, built with SDL2 and C. The project provides a full-featured level editor that supports DOOM, DOOM II, Heretic, and other DOOM engine games with PWAD/IWAD file formats.
 
+## Code Standards
+
+### Required Before Each Commit
+- Run `make test` before committing any changes to ensure all tests pass
+- Verify that your changes don't break the build with `make all`
+- All tests must pass before changes can be merged
+
+### Development Flow
+- **Build**: `make all` or `make` (creates `doom-ed` executable)
+- **Test**: `make test` (runs triangulation and BSP tests)
+- **Clean**: `make clean` (removes all build artifacts)
+- **Individual tests**: `make triangulate_test` or `make bsp_test`
+
 ## Key Components
 
 - **Map Rendering**: BSP (Binary Space Partitioning) tree traversal for efficient sector rendering
@@ -15,27 +28,57 @@ DOOM-ED is a modern open-source level editor for classic DOOM games, built with 
 ## Build System
 
 - **Primary**: Xcode project (`mapview.xcodeproj`) for macOS development
+- **Cross-platform**: Makefile supports both macOS and Linux
 - **Platform**: Currently macOS-focused; cross-platform support is a goal
-- **Dependencies**: SDL2, OpenGL
+- **Dependencies**: SDL2, OpenGL, cglm (OpenGL Mathematics library)
 - **Language**: C (not C++, despite what README may suggest)
+
+## Dependencies and Libraries
+
+- **SDL2**: Window management, input, and 2D graphics
+- **OpenGL**: 3D rendering and texture management
+- **cglm**: OpenGL Mathematics library for C
+- **Standard C Library**: Math (`-lm`), standard I/O, memory management
+
+### Installing Dependencies
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get install build-essential libsdl2-dev libcglm-dev libgl1-mesa-dev
+```
+
+**macOS:**
+```bash
+brew install sdl2 cglm
+```
+
+**Note**: OpenGL is included with Xcode Command Line Tools on macOS.
 
 ## Testing
 
 ### Building and Running Tests
 
-Tests are located in the `mapview/` directory. Build and run them as follows:
+Tests are located in the `tests/` directory. Build and run them using the Makefile:
 
-**Triangulation Tests:**
+**Run all tests (recommended):**
 ```bash
-cd mapview
-gcc -DTEST_MODE -o triangulate_test triangulate_test.c triangulate_standalone.c -I. -lm
-./triangulate_test
+make test
 ```
 
-**BSP Tests:**
+**Build and run individual tests:**
 ```bash
-cd mapview
-gcc -o bsp_test bsp_test.c -I. -lm
+make triangulate_test && ./triangulate_test
+make bsp_test && ./bsp_test
+```
+
+**Manual compilation (if needed):**
+```bash
+# Triangulation tests
+gcc -DTEST_MODE -o triangulate_test tests/triangulate_test.c mapview/triangulate.c -Imapview -Itests -lm
+./triangulate_test
+
+# BSP tests
+gcc -o bsp_test tests/bsp_test.c -Imapview -Itests -lm
 ./bsp_test
 ```
 
@@ -43,8 +86,8 @@ gcc -o bsp_test bsp_test.c -I. -lm
 
 - Tests verify core algorithms (triangulation, BSP traversal, geometry)
 - All tests must pass before changes are merged
-- Test files: `triangulate_test.c`, `bsp_test.c`
-- See `mapview/TEST_README.md` for detailed test documentation
+- Test files: `tests/triangulate_test.c`, `tests/bsp_test.c`
+- See `tests/TEST_README.md` for detailed test documentation
 
 ## Coding Conventions
 
@@ -83,13 +126,23 @@ gcc -o bsp_test bsp_test.c -I. -lm
 ├── mapview/              # Main editor source code
 │   ├── *.c              # Implementation files
 │   ├── *.h              # Header files
-│   ├── *_test.c         # Test files
-│   └── windows/         # Window/UI subsystem code
-│       └── inspector/   # Property inspector windows
+│   ├── windows/         # Window/UI subsystem code
+│   │   └── inspector/   # Property inspector windows
+│   └── editor/          # Editor-specific modules
+├── tests/               # Test files
+│   ├── *_test.c         # Test implementations
+│   ├── TEST_README.md   # Test documentation
+│   └── map_test.h       # Test helper headers
+├── ui/                  # UI framework (common controls, window management)
+│   ├── commctl/         # Common controls (button, checkbox, etc.)
+│   ├── user/            # User interface primitives
+│   ├── kernel/          # Event handling and initialization
+│   └── examples/        # UI framework examples
 ├── doom/                # DOOM game engine headers and some source
 ├── hexen/               # Hexen game engine headers
 ├── gldoom/              # OpenGL DOOM headers
 ├── screenshots/         # Screenshot images
+├── Makefile             # Cross-platform build system
 └── mapview.xcodeproj/   # Xcode project files
 ```
 
@@ -147,22 +200,17 @@ The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` dir
 
 ### Adding Tests
 
-1. Follow existing test patterns in `*_test.c` files
+1. Follow existing test patterns in `tests/*_test.c` files
 2. Include edge cases and boundary conditions
 3. Test both valid and invalid inputs
 4. Verify expected output format
-5. Update `TEST_README.md` with new test documentation
-
-## Dependencies and Libraries
-
-- **SDL2**: Window management, input, and 2D graphics
-- **OpenGL**: 3D rendering and texture management
-- **Standard C Library**: Math (`-lm`), standard I/O, memory management
+5. Update `tests/TEST_README.md` with new test documentation
 
 ## Platform-Specific Considerations
 
-- **macOS**: Primary platform; uses Xcode project; SDL2 dylib included in repository
-- **Linux/Windows**: README.md describes CMake build instructions, but no CMakeLists.txt files exist in the repository currently
+- **macOS**: Primary platform; uses Xcode project; SDL2 dylib included in repository; Makefile uses Homebrew paths
+- **Linux**: Supported via Makefile; uses pkg-config to locate dependencies
+- **Windows**: Not currently supported; README.md mentions CMake but no CMakeLists.txt exists yet
 - **Byte Order**: All WAD data is little-endian; handle conversions if needed on big-endian systems
 
 ## Performance Considerations
