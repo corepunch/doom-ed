@@ -11,18 +11,32 @@
 
 #include "../ui/ui.h"
 
+// We define our own extended version of map_data_t with rendering data
+#define MAP_DATA_T_DEFINED
+
+// Include game data structures from libgame
+// Note: Some types are redefined below for backward compatibility
+// TODO: Remove duplicates in future refactoring
+#include "../libgame/libgame.h"
+
 #define OFFSET_OF(type, field) (void*)((size_t)&(((type *)0)->field))
 
 // Macro to define a collection of elements (pointer and count)
+// Defined in libgame/map.h - kept here for backward compatibility
+#ifndef DEFINE_COLLECTION
 #define DEFINE_COLLECTION(type, name) \
 type* name;                   \
 int num_##name
+#endif
 
 // Macro to free a collection and reset its values
+// Defined in libgame/map.h - kept here for backward compatibility
+#ifndef CLEAR_COLLECTION
 #define CLEAR_COLLECTION(map, name) \
 if ((map)->name) free((map)->name); \
 (map)->name = NULL;               \
 (map)->num_##name = 0
+#endif
 
 // Helper macros for min/max if not already defined
 #ifndef MIN

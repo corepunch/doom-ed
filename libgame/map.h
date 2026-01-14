@@ -148,8 +148,9 @@ typedef struct {
 } maplinedef_t;
 #endif
 
-// Basic map data structure (game-only, without rendering extensions)
-// Note: The editor extends this with rendering buffers
+// Map data structure (basic game data without rendering extensions)
+// If the application defines MAP_DATA_T_DEFINED, it provides its own extended version
+#ifndef MAP_DATA_T_DEFINED
 typedef struct {
   DEFINE_COLLECTION(mapvertex_t, vertices);
   DEFINE_COLLECTION(maplinedef_t, linedefs);
@@ -160,6 +161,7 @@ typedef struct {
   DEFINE_COLLECTION(mapsubsector_t, subsectors);
   DEFINE_COLLECTION(mapseg_t, segs);
 } map_data_t;
+#endif
 
 // Map loading functions
 map_data_t load_map(const char* map_name);
