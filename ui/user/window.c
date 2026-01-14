@@ -10,7 +10,7 @@
 #include "user.h"
 #include "messages.h"
 #include "draw.h"
-#include "../../mapview/editor/sprite.h"
+#include "editor/sprite.h"
 
 // Global window state
 window_t *windows = NULL;
