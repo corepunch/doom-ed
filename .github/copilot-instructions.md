@@ -208,10 +208,11 @@ The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` dir
 
 ## Platform-Specific Considerations
 
-- **macOS**: Primary platform; uses Xcode project; SDL2 dylib included in repository; Makefile uses Homebrew paths
+- **macOS**: Primary platform; uses Xcode project; Makefile uses Homebrew paths for dependencies
 - **Linux**: Supported via Makefile; uses pkg-config to locate dependencies
 - **Windows**: Not currently supported; README.md mentions CMake but no CMakeLists.txt exists yet
 - **Byte Order**: All WAD data is little-endian; handle conversions if needed on big-endian systems
+- **Note**: Repository includes `libSDL2-2.0.0.dylib` but Makefile prefers system-installed libraries via pkg-config or Homebrew
 
 ## Performance Considerations
 

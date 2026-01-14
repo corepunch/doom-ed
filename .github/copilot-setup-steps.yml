@@ -4,19 +4,21 @@ description: Pre-install dependencies needed to build and test DOOM-ED
 steps:
   - name: Install system dependencies
     run: |
-      # Install build tools and libraries
+      # Install build tools and libraries for Ubuntu/Debian
+      # Note: Requires Ubuntu 18.04 or later for cglm package
       sudo apt-get update
       sudo apt-get install -y \
         build-essential \
         libsdl2-dev \
-        libcglm-dev \
         libgl1-mesa-dev \
         pkg-config
+      # Install cglm if available, otherwise continue (may need manual installation)
+      sudo apt-get install -y libcglm-dev || echo "Warning: libcglm-dev not available, may need manual installation"
   
   - name: Verify installation
     run: |
-      # Verify that all dependencies are installed
-      pkg-config --modversion sdl2 || echo "SDL2 not found via pkg-config"
-      pkg-config --modversion cglm || echo "cglm not found via pkg-config"
+      # Verify that critical dependencies are installed
+      pkg-config --modversion sdl2 || echo "Warning: SDL2 not found via pkg-config"
+      pkg-config --modversion cglm || echo "Warning: cglm not found via pkg-config"
       gcc --version
       make --version
