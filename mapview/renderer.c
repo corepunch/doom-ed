@@ -8,6 +8,7 @@
 #include "sprites.h"
 #include "console.h"
 #include "editor.h"
+#include "../ui/kernel/joystick.h"
 
 const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
@@ -84,7 +85,6 @@ int ui_prog_color;
 
 SDL_Window* window = NULL;
 SDL_GLContext ctx;
-SDL_Joystick* joystick = NULL;
 bool running = true;
 bool mode = false;
 unsigned frame = 0;
@@ -129,20 +129,10 @@ bool init_sdl(void) {
     return false;
   }
   
-  // Open the first available controller
-  for (int i = 0; i < SDL_NumJoysticks(); ++i) {
-    joystick = SDL_JoystickOpen(i);
-    if (joystick) {
-      SDL_JoystickEventState(SDL_ENABLE);
-      printf("Opened joystick: %s\n", SDL_JoystickName(joystick));
-    } else {
-      printf("Could not open joystick: %s\n", SDL_GetError());
-    }
-  }
-  
-  if (!joystick) {
-    printf("No game controller found\n");
-  }
+  // Initialize joystick support through UI layer
+  // Note: Joystick initialization is now handled by the UI layer
+  // to decouple SDL-specific code and prepare for potential GLFW migration
+  ui_joystick_init();
   
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -225,9 +215,8 @@ bool init_sdl(void) {
 
 // Clean up SDL resources
 void cleanup(void) {
-  if (joystick) {
-    SDL_JoystickClose(joystick);
-  }
+  // Shutdown joystick through UI layer
+  ui_joystick_shutdown();
   SDL_DestroyWindow(window);
   SDL_Quit();
 }

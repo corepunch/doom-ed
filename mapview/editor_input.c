@@ -14,7 +14,18 @@ extern SDL_Window* window;
 //  *y = (*y / grid_size) * grid_size;
 //}
 
-// Handle mouse and keyboard input for the editor
+/**
+ * DEPRECATED: This function contains legacy direct SDL event polling.
+ * 
+ * Modern input handling is done through the window message system:
+ * - Joystick events are routed via WM_JOYAXISMOTION and WM_JOYBUTTONDOWN
+ * - See mapview/windows/game.c win_game() for proper joystick handling
+ * - See mapview/editor_input.c win_editor() for proper editor input handling
+ * 
+ * This function should not be called. Input is now handled through window
+ * procedures responding to window messages, which properly decouples SDL
+ * and prepares for potential GLFW migration.
+ */
 void handle_editor_input(map_data_t *map,
                          editor_state_t *editor,
                          player_t *player,
@@ -23,24 +34,18 @@ void handle_editor_input(map_data_t *map,
   
   static float forward_move = 0, strafe_move = 0;
   
+  // NOTE: This direct SDL_PollEvent is deprecated.
+  // Input should be handled through window messages (WM_KEYDOWN, WM_JOYAXISMOTION, etc.)
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
       extern bool running;
       running = false;
-    } else if (event.type == SDL_JOYBUTTONDOWN) {
-      if (event.jbutton.button == 8) {
-//        toggle_editor_mode(editor);
-      }
     }
-    else if (event.type == SDL_JOYAXISMOTION) {
-      //      printf("Axis %d = %d\n", event.jaxis.axis, event.jaxis.value);
-      switch (event.jaxis.axis) {
-        case 0: strafe_move = event.jaxis.value/(float)0x8000; break;
-        case 1: forward_move = -event.jaxis.value/(float)0x8000; break;
-//        case 3: mouse_x_rel = event.jaxis.value/1200.f; break;
-//        case 4: mouse_y_rel = event.jaxis.value/1200.f; break;
-      }
-    }
+    // REMOVED: Direct joystick event handling
+    // Joystick events are now routed through the UI message system:
+    // - WM_JOYBUTTONDOWN for button presses
+    // - WM_JOYAXISMOTION for axis movement
+    // See win_game() in mapview/windows/game.c for example usage
     else if (event.type == SDL_KEYUP) {
       switch (event.key.keysym.scancode) {
         case SDL_SCANCODE_W:
