@@ -2,6 +2,7 @@
 #include "sprites.h"
 #include "console.h"
 #include "editor.h"
+#include "gamefont.h"
 #include "../ui/kernel/kernel.h"
 
 void init_floor_shader(void);
@@ -84,6 +85,7 @@ int main(int argc, char* argv[]) {
   init_sky_geometry();
   init_radial_menu();
   init_console();
+  init_gamefont();
   load_console_font();
   init_sprites();
   init_things();

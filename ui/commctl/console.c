@@ -93,8 +93,10 @@ void draw_console(void) {
         alpha = (MESSAGE_DISPLAY_TIME - age) / (float)MESSAGE_FADE_TIME;
       }
       
-      // Draw the message
-      draw_text_gl3(msg->text, CONSOLE_PADDING, y, alpha);
+      // Draw the message using small font
+      // Convert alpha to color with alpha channel
+      uint32_t col = 0xFFFFFF00 | (uint32_t)(alpha * 255);
+      draw_text_small(msg->text, CONSOLE_PADDING, y, col);
       
       // Move to next line
       y += LINE_HEIGHT;

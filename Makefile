@@ -48,6 +48,7 @@ MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
                $(MAPVIEW_DIR)/editor_sector.c \
                $(MAPVIEW_DIR)/floor.c \
                $(MAPVIEW_DIR)/font.c \
+               $(MAPVIEW_DIR)/gamefont.c \
                $(MAPVIEW_DIR)/icons.c \
                $(MAPVIEW_DIR)/input.c \
                $(MAPVIEW_DIR)/main.c \
@@ -173,9 +174,10 @@ ui-helloworld: $(UI_OBJS)
 	@mkdir -p $(BUILD_DIR)/mapview
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/sprites.c -o $(BUILD_DIR)/mapview/sprites.o
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/font.c -o $(BUILD_DIR)/mapview/font.o
+	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/gamefont.c -o $(BUILD_DIR)/mapview/gamefont.o
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/icons.c -o $(BUILD_DIR)/mapview/icons.o
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(UI_DIR)/examples/helloworld.c -o $(BUILD_DIR)/ui/examples/helloworld.o
-	$(CC) $(BUILD_DIR)/ui/examples/helloworld.o $(UI_OBJS) $(BUILD_DIR)/mapview/sprites.o $(BUILD_DIR)/mapview/font.o $(BUILD_DIR)/mapview/icons.o -o ui-helloworld $(LDFLAGS)
+	$(CC) $(BUILD_DIR)/ui/examples/helloworld.o $(UI_OBJS) $(BUILD_DIR)/mapview/sprites.o $(BUILD_DIR)/mapview/font.o $(BUILD_DIR)/mapview/gamefont.o $(BUILD_DIR)/mapview/icons.o -o ui-helloworld $(LDFLAGS)
 	@echo "Built ui-helloworld executable"
 	@echo "Run with: ./ui-helloworld"
 
