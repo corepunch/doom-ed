@@ -39,7 +39,9 @@ int find_lump_from_file(FILE* wad_file, const char* name);
 
 int load_sprite(const char *name);
 sprite_t* find_sprite(const char* name);
-void set_projection(int x, int y, int w, int h);
+void set_sprite_projection(int x, int y, int w, int h);
+void draw_sprite_rect(int tex, int x, int y, int w, int h);
+void draw_sprite_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 
 // things
 

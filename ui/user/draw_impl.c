@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <stdint.h>
 
 #include "user.h"
 #include "messages.h"
@@ -19,16 +20,244 @@ extern int screen_width, screen_height;
 extern SDL_Window *window;
 
 // Forward declarations
-extern void draw_rect(int tex, int x, int y, int w, int h);
-extern void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 extern void draw_text_small(const char* text, int x, int y, uint32_t col);
-extern void draw_icon8(int icon, int x, int y, uint32_t col);
-extern void draw_icon16(int icon, int x, int y, uint32_t col);
 extern int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-extern void set_projection(int x, int y, int w, int h);
+
+// UI drawing system state
+typedef struct {
+  GLuint program;        // Shader program for drawing rectangles
+  GLuint vao;            // Vertex array object
+  GLuint vbo;            // Vertex buffer object
+  float projection[16];  // Orthographic projection matrix
+} ui_draw_system_t;
+
+static ui_draw_system_t ui_draw_system = {0};
 
 // Internal white texture for drawing solid colors
 static GLuint ui_white_texture = 0;
+
+// UI shader sources (same as sprite shader but for UI framework)
+static const char* ui_vs_src = "#version 150 core\n"
+"in vec2 position;\n"
+"in vec2 texcoord;\n"
+"in vec4 color;\n"
+"out vec2 tex;\n"
+"out vec4 col;\n"
+"uniform mat4 projection;\n"
+"uniform vec2 offset;\n"
+"uniform vec2 scale;\n"
+"void main() {\n"
+"  col = color;\n"
+"  tex = texcoord;\n"
+"  gl_Position = projection * vec4(position * scale + offset, 0.0, 1.0);\n"
+"}";
+
+static const char* ui_fs_src = "#version 150 core\n"
+"in vec2 tex;\n"
+"in vec4 col;\n"
+"out vec4 outColor;\n"
+"uniform sampler2D tex0;\n"
+"uniform float alpha;\n"
+"void main() {\n"
+"  outColor = texture(tex0, tex) * col;\n"
+"  outColor.a *= alpha;\n"
+"  if(outColor.a < 0.1) discard;\n"
+"}";
+
+// Simple vertex structure for UI rectangles
+typedef struct {
+  int16_t x, y, z;    // Position
+  int16_t u, v;       // Texture coordinates
+  int8_t nx, ny, nz;  // Normal (unused for 2D)
+  int32_t color;      // Color
+} ui_vertex_t;
+
+// Rectangle vertices (quad)
+static ui_vertex_t rect_verts[] = {
+  {0, 0, 0, 0, 0, 0, 0, 0, -1}, // bottom left
+  {0, 1, 0, 0, 1, 0, 0, 0, -1}, // top left
+  {1, 1, 0, 1, 1, 0, 0, 0, -1}, // top right
+  {1, 0, 0, 1, 0, 0, 0, 0, -1}, // bottom right
+};
+
+// Compile a shader
+static GLuint compile_shader(GLenum type, const char* src) {
+  GLuint shader = glCreateShader(type);
+  glShaderSource(shader, 1, &src, NULL);
+  glCompileShader(shader);
+  
+  // Check compilation status
+  GLint success;
+  glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
+  if (!success) {
+    char log[512];
+    glGetShaderInfoLog(shader, sizeof(log), NULL, log);
+    fprintf(stderr, "Shader compilation failed: %s\n", log);
+    return 0;
+  }
+  
+  return shader;
+}
+
+// Initialize UI drawing system
+static void init_ui_draw_system(void) {
+  if (ui_draw_system.program != 0) {
+    return; // Already initialized
+  }
+  
+  ui_draw_system_t* sys = &ui_draw_system;
+  
+  // Create shader program
+  GLuint vertex_shader = compile_shader(GL_VERTEX_SHADER, ui_vs_src);
+  GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, ui_fs_src);
+  
+  sys->program = glCreateProgram();
+  glAttachShader(sys->program, vertex_shader);
+  glAttachShader(sys->program, fragment_shader);
+  glBindAttribLocation(sys->program, 0, "position");
+  glBindAttribLocation(sys->program, 1, "texcoord");
+  glBindAttribLocation(sys->program, 2, "color");
+  glLinkProgram(sys->program);
+  
+  // Check link status
+  GLint success;
+  glGetProgramiv(sys->program, GL_LINK_STATUS, &success);
+  if (!success) {
+    char log[512];
+    glGetProgramInfoLog(sys->program, sizeof(log), NULL, log);
+    fprintf(stderr, "Shader program linking failed: %s\n", log);
+  }
+  
+  // Clean up shaders (no longer needed after linking)
+  glDeleteShader(vertex_shader);
+  glDeleteShader(fragment_shader);
+  
+  // Create VAO and VBO
+  glGenVertexArrays(1, &sys->vao);
+  glBindVertexArray(sys->vao);
+  
+  glGenBuffers(1, &sys->vbo);
+  glBindBuffer(GL_ARRAY_BUFFER, sys->vbo);
+  glBufferData(GL_ARRAY_BUFFER, sizeof(rect_verts), rect_verts, GL_STATIC_DRAW);
+  
+  // Set up vertex attributes
+  glEnableVertexAttribArray(0);
+  glEnableVertexAttribArray(1);
+  glEnableVertexAttribArray(2);
+  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(ui_vertex_t), (void*)0); // Position
+  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(ui_vertex_t), (void*)(3 * sizeof(int16_t))); // UV
+  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(ui_vertex_t), (void*)(5 * sizeof(int16_t) + 3 * sizeof(int8_t))); // Color
+  
+  printf("UI drawing system initialized successfully\n");
+}
+
+// Set orthographic projection for UI drawing
+void set_projection(int x, int y, int w, int h) {
+  // Ensure the UI drawing system is initialized
+  if (ui_draw_system.program == 0) {
+    init_ui_draw_system();
+  }
+  
+  // Create orthographic projection matrix
+  // glm_ortho equivalent: orthographic projection from (x, y) to (w, h)
+  float left = x, right = w, bottom = h, top = y;
+  float near = -1, far = 1;
+  
+  float* m = ui_draw_system.projection;
+  
+  // Column-major order for OpenGL
+  m[0] = 2.0f / (right - left);
+  m[1] = 0.0f;
+  m[2] = 0.0f;
+  m[3] = 0.0f;
+  
+  m[4] = 0.0f;
+  m[5] = 2.0f / (top - bottom);
+  m[6] = 0.0f;
+  m[7] = 0.0f;
+  
+  m[8] = 0.0f;
+  m[9] = 0.0f;
+  m[10] = -2.0f / (far - near);
+  m[11] = 0.0f;
+  
+  m[12] = -(right + left) / (right - left);
+  m[13] = -(top + bottom) / (top - bottom);
+  m[14] = -(far + near) / (far - near);
+  m[15] = 1.0f;
+  
+  // Set the projection matrix in the shader
+  glUseProgram(ui_draw_system.program);
+  glUniformMatrix4fv(glGetUniformLocation(ui_draw_system.program, "projection"), 1, GL_FALSE, ui_draw_system.projection);
+}
+
+// Draw a rectangle with extended parameters
+void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
+  // Ensure the UI drawing system is initialized
+  if (ui_draw_system.program == 0) {
+    init_ui_draw_system();
+  }
+  
+  ui_draw_system_t* sys = &ui_draw_system;
+  
+  // Bind shader program and set uniforms
+  glUseProgram(sys->program);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, tex);
+  glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
+  glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
+  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
+  glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
+  
+  // Bind VAO and draw
+  glBindVertexArray(sys->vao);
+  
+  // Enable blending for transparency
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+  
+  // Disable depth testing for UI elements
+  glDisable(GL_DEPTH_TEST);
+  
+  glDrawArrays(type ? GL_LINE_LOOP : GL_TRIANGLE_FAN, 0, 4);
+  
+  // Reset state
+  glEnable(GL_DEPTH_TEST);
+  glDisable(GL_BLEND);
+}
+
+// Draw a rectangle at the specified screen position
+void draw_rect(int tex, int x, int y, int w, int h) {
+  draw_rect_ex(tex, x, y, w, h, false, 1);
+}
+
+// Get the UI drawing shader program (for text rendering)
+GLuint ui_get_draw_program(void) {
+  // Ensure the UI drawing system is initialized
+  if (ui_draw_system.program == 0) {
+    init_ui_draw_system();
+  }
+  return ui_draw_system.program;
+}
+
+// Set shader uniforms for drawing (used by text rendering)
+void ui_set_draw_uniforms(int tex, int x, int y, int w, int h, float alpha) {
+  // Ensure the UI drawing system is initialized
+  if (ui_draw_system.program == 0) {
+    init_ui_draw_system();
+  }
+  
+  ui_draw_system_t* sys = &ui_draw_system;
+  
+  // Bind shader program and set uniforms
+  glUseProgram(sys->program);
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D, tex);
+  glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
+  glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
+  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
+  glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
+}
 
 // Initialize the internal white texture
 static void init_ui_white_texture(void) {

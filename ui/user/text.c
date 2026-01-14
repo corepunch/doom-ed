@@ -39,7 +39,8 @@ static struct {
 } text_state = {0};
 
 // Forward declarations for external functions
-extern void push_sprite_args(int tex, int x, int y, int w, int h, float alpha);
+extern GLuint ui_get_draw_program(void);
+extern void ui_set_draw_uniforms(int tex, int x, int y, int w, int h, float alpha);
 
 // Forward declarations
 static bool create_font_atlas(void);
@@ -228,8 +229,8 @@ void draw_text_small(const char* text, int x, int y, uint32_t col) {
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glDisable(GL_DEPTH_TEST);
   
-  // Get locations for shader uniforms
-  push_sprite_args(text_state.small_font.texture, 0, 0, 1, 1, 1);
+  // Set shader uniforms using UI framework
+  ui_set_draw_uniforms(text_state.small_font.texture, 0, 0, 1, 1, 1);
   
   // Bind font texture
   glBindTexture(GL_TEXTURE_2D, text_state.small_font.texture);

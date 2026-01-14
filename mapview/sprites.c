@@ -436,7 +436,7 @@ void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
 
 // Draw the shotgun at the bottom center of the screen
 void draw_weapon(player_t const *player, float k) {
-  set_projection(0, 0, k * VGA_HEGHT, VGA_HEGHT);
+  set_sprite_projection(0, 0, k * VGA_HEGHT, VGA_HEGHT);
   
   // Find appropriate shotgun sprite frame (usually "SHTGA0")
 #ifdef HEXEN
@@ -484,7 +484,7 @@ void draw_weapon(player_t const *player, float k) {
 void draw_crosshair(float k) {
   sprite_system_t* sys = &g_sprite_system;
 
-  set_projection(0, 0, k * VGA_HEGHT, VGA_HEGHT);
+  set_sprite_projection(0, 0, k * VGA_HEGHT, VGA_HEGHT);
 
   // First try to find a pre-existing crosshair sprite
   sprite_t* sprite = find_sprite("CROSA0");
@@ -579,7 +579,7 @@ void cleanup_sprites(void) {
   sys->num_sprites = 0;
 }
 
-void set_projection(int x, int y, int w, int h) {
+void set_sprite_projection(int x, int y, int w, int h) {
   mat4 projection;
   glm_ortho(x, w, h, y, -1, 1, projection);
   glUseProgram(g_sprite_system.program);
@@ -600,7 +600,7 @@ void push_sprite_args(int tex, int x, int y, int w, int h, float alpha) {
 }
 
 // Draw a sprite at the specified screen position
-void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
+void draw_sprite_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
   sprite_system_t* sys = &g_sprite_system;
   
   push_sprite_args(tex, x, y, w, h, alpha);
@@ -625,7 +625,7 @@ void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
 }
 
 // Draw a sprite at the specified screen position
-void draw_rect(int tex, int x, int y, int w, int h) {
-  draw_rect_ex(tex, x, y, w, h, false, 1);
+void draw_sprite_rect(int tex, int x, int y, int w, int h) {
+  draw_sprite_rect_ex(tex, x, y, w, h, false, 1);
 }
 

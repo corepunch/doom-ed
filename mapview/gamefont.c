@@ -10,6 +10,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "gamefont.h"
+#include "../ui/user/draw.h"
 
 #define CONSOLE_FONT_HEIGHT 8
 #define CONSOLE_FONT_WIDTH 8
@@ -36,7 +37,6 @@ static const char* FONT_LUMPS_PREFIX = "STCFN";
 #endif
 
 // Forward declarations for external functions
-extern void draw_rect(int tex, int x, int y, int w, int h);
 extern GLuint white_tex;
 
 // Forward declarations for WAD file functions

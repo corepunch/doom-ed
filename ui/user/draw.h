@@ -5,6 +5,11 @@
 #include "../user/user.h"
 #include "text.h"
 
+// OpenGL types forward declaration
+#ifndef GLAPIENTRY
+typedef unsigned int GLuint;
+#endif
+
 // Rectangle drawing functions
 void fill_rect(int color, int x, int y, int w, int h);
 void draw_rect(int tex, int x, int y, int w, int h);
@@ -27,5 +32,9 @@ void ui_swap_buffers(void);
 // Stencil management (internal use)
 void ui_set_stencil_for_window(uint32_t window_id);
 void ui_set_stencil_for_root_window(uint32_t window_id);
+
+// Internal UI drawing system helpers (for text rendering)
+GLuint ui_get_draw_program(void);
+void ui_set_draw_uniforms(int tex, int x, int y, int w, int h, float alpha);
 
 #endif

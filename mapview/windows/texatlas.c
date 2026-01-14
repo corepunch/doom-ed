@@ -1,4 +1,5 @@
 #include "../map.h"
+#include "../../ui/user/draw.h"
 
 #define CELL_SIZE 16       // Size of each cell in the mask buffer
 //#define DISPLAY_WIDTH 640  // Width of the display area
