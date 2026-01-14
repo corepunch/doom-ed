@@ -171,7 +171,8 @@ typedef struct {
 extern palette_entry_t *palette;
 
 // Map data structure using the collection macro
-typedef struct {
+// Extended version with rendering data (matches libgame base + extensions)
+typedef struct map_data_s {
   DEFINE_COLLECTION(mapvertex_t, vertices);
   DEFINE_COLLECTION(maplinedef_t, linedefs);
   DEFINE_COLLECTION(mapsidedef_t, sidedefs);

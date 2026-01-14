@@ -151,9 +151,12 @@ typedef struct {
 #endif
 
 // Map data structure (basic game data without rendering extensions)
-// If the application defines MAP_DATA_T_DEFINED, it provides its own extended version
-#ifndef MAP_DATA_T_DEFINED
-typedef struct {
+// Note: The editor (mapview) extends this with additional rendering fields.
+// Forward declaration for when the editor provides its own definition
+#ifdef MAP_DATA_T_DEFINED
+typedef struct map_data_s map_data_t;
+#else
+typedef struct map_data_s {
   DEFINE_COLLECTION(mapvertex_t, vertices);
   DEFINE_COLLECTION(maplinedef_t, linedefs);
   DEFINE_COLLECTION(mapsidedef_t, sidedefs);
