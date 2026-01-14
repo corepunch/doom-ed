@@ -72,7 +72,7 @@ MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
                $(MAPVIEW_DIR)/windows/texatlas.c \
                $(MAPVIEW_DIR)/windows/things.c \
                $(MAPVIEW_DIR)/windows/tray.c \
-               $(MAPVIEW_DIR)/editor/sprite.c
+               $(MAPVIEW_DIR)/windows/sprite.c
 
 # DOOM files (only headers are used, .c files excluded per Xcode config)
 # These are just listed for reference, not compiled
@@ -151,10 +151,6 @@ $(BUILD_DIR)/mapview/windows/%.o: $(MAPVIEW_DIR)/windows/%.c
 	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
 $(BUILD_DIR)/mapview/windows/inspector/%.o: $(MAPVIEW_DIR)/windows/inspector/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
-
-$(BUILD_DIR)/mapview/editor/%.o: $(MAPVIEW_DIR)/editor/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
