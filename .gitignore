@@ -6,6 +6,10 @@ build/
 # Executables
 doom-ed
 
+# Generated libraries (not bundled dependencies)
+build/libgoldie.so
+build/libgoldie.dylib
+
 # macOS Finder metadata
 .DS_Store
 
