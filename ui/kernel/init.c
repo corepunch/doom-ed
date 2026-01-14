@@ -8,6 +8,60 @@
 #include "../user/gl_compat.h"
 #include "kernel.h"
 
+// Global SDL objects
+SDL_Window* window = NULL;
+SDL_GLContext ctx;
+
+// Initialize window and OpenGL context
+bool ui_init_window(const char *title, int width, int height) {
+  // Set OpenGL attributes before creating window
+  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  
+  // Check for multiple displays
+  int numDisplays = SDL_GetNumVideoDisplays();
+  if (numDisplays < 2) {
+    window = SDL_CreateWindow(title,
+                              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                              width, height,
+                              SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
+  } else {
+    SDL_Rect bounds;
+    if (SDL_GetDisplayBounds(1, &bounds) != 0) {
+      SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
+      // fallback to display 0 or handle error
+    }
+    
+    // Centered position on display 1
+    int w = width;
+    int h = height;
+    int x = bounds.x + (bounds.w - w) / 2;
+    int y = bounds.y + (bounds.h - h) / 2;
+    
+    window = SDL_CreateWindow(title, x, y, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS);
+  }
+  
+  if (!window) {
+    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+    return false;
+  }
+  
+  // Create OpenGL context
+  ctx = SDL_GL_CreateContext(window);
+  if (!ctx) {
+    printf("OpenGL context could not be created! SDL_Error: %s\n", SDL_GetError());
+    SDL_DestroyWindow(window);
+    window = NULL;
+    return false;
+  }
+  
+  return true;
+}
+
 // Initialize graphics context (SDL + OpenGL)
 bool ui_init_graphics(const char *title, int width, int height) {
   // Initialize SDL video subsystem
@@ -23,7 +77,6 @@ bool ui_init_graphics(const char *title, int width, int height) {
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
   // Create SDL window
-  extern SDL_Window *window;
   window = SDL_CreateWindow(
     title,
     SDL_WINDOWPOS_CENTERED,
@@ -40,7 +93,6 @@ bool ui_init_graphics(const char *title, int width, int height) {
   }
 
   // Create OpenGL context
-  extern SDL_GLContext ctx;
   ctx = SDL_GL_CreateContext(window);
   if (!ctx) {
     printf("OpenGL context could not be created! SDL_Error: %s\n", SDL_GetError());
@@ -57,9 +109,6 @@ bool ui_init_graphics(const char *title, int width, int height) {
 
 // Shutdown graphics context
 void ui_shutdown_graphics(void) {
-  extern SDL_Window *window;
-  extern SDL_GLContext ctx;
-  
   if (ctx) {
     SDL_GL_DeleteContext(ctx);
     ctx = NULL;
