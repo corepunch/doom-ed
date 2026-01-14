@@ -10,6 +10,10 @@
 #include "editor.h"
 #include "../ui/kernel/joystick.h"
 
+// External references to window and context (defined in ui/kernel)
+extern SDL_Window* window;
+extern SDL_GLContext ctx;
+
 const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
 "in vec2 uv;\n"
@@ -83,8 +87,6 @@ int ui_prog_tex0_size;
 int ui_prog_tex0;
 int ui_prog_color;
 
-SDL_Window* window = NULL;
-SDL_GLContext ctx;
 bool running = true;
 bool mode = false;
 unsigned frame = 0;
@@ -102,46 +104,10 @@ bool init_sdl(void) {
     return false;
   }
   
-  int numDisplays = SDL_GetNumVideoDisplays();
-  if (numDisplays < 2) {
-    window = SDL_CreateWindow("DOOM Wireframe Renderer",
-                              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                              SCREEN_WIDTH, SCREEN_HEIGHT,
-                              SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
-  } else{
-    SDL_Rect bounds;
-    if (SDL_GetDisplayBounds(1, &bounds) != 0) {
-      SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
-      // fallback to display 0 or handle error
-    }
-    
-    // Centered position on display 1
-    int w = SCREEN_WIDTH;
-    int h = SCREEN_HEIGHT;
-    int x = bounds.x + (bounds.w - w) / 2;
-    int y = bounds.y + (bounds.h - h) / 2;
-    
-    window = SDL_CreateWindow("DOOM Wireframe Renderer", x, y, w, h, SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS);
-  }
-  
-  if (!window) {
-    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-    return false;
-  }
-  
   // Initialize joystick support through UI layer
   // Note: Joystick initialization is now handled by the UI layer
   // to decouple SDL-specific code and prepare for potential GLFW migration
   ui_joystick_init();
-  
-  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-  
-  ctx = SDL_GL_CreateContext(window);
   
   GLuint vs, fs;
 

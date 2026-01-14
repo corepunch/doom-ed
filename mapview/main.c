@@ -2,6 +2,7 @@
 #include "sprites.h"
 #include "console.h"
 #include "editor.h"
+#include "../ui/kernel/kernel.h"
 
 void init_floor_shader(void);
 void init_sky_geometry(void);
@@ -69,6 +70,11 @@ int main(int argc, char* argv[]) {
 //  printf("%s\n", cache_lump("MAPINFO"));
   
   // Print map info
+  // Initialize window and OpenGL context
+  if (!ui_init_window("DOOM Wireframe Renderer", SCREEN_WIDTH, SCREEN_HEIGHT)) {
+    return 1;
+  }
+  
   // Initialize SDL
   if (!init_sdl()) {
     return 1;

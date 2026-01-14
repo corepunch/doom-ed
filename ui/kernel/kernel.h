@@ -16,6 +16,9 @@ void repost_messages(void);
 bool init_sdl(void);
 int run(void);
 
+// Window and OpenGL context initialization
+bool ui_init_window(const char *title, int width, int height);
+
 // Graphics context initialization (abstracted)
 bool ui_init_graphics(const char *title, int width, int height);
 void ui_shutdown_graphics(void);
