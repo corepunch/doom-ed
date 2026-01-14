@@ -3,17 +3,12 @@
 
 #include <stdint.h>
 #include "../user/user.h"
+#include "text.h"
 
 // Rectangle drawing functions
 void fill_rect(int color, int x, int y, int w, int h);
 void draw_rect(int tex, int x, int y, int w, int h);
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
-
-// Text drawing functions
-void draw_text_gl3(const char* text, int x, int y, float alpha);
-void draw_text_small(const char* text, int x, int y, uint32_t col);
-int strwidth(const char* text);
-int strnwidth(const char* text, int text_length);
 
 // Icon drawing functions
 void draw_icon8(int icon, int x, int y, uint32_t col);
