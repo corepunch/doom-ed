@@ -16,8 +16,6 @@ typedef struct {
   GLuint crosshair_texture; // Custom crosshair texture (if needed)
 } sprite_system_t;
 
-//int screen_width=640, screen_height=480;
-
 sprite_system_t g_sprite_system = {0};
 
 // Forward declarations

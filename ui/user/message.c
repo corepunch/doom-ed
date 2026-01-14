@@ -11,6 +11,7 @@
 #include "user.h"
 #include "messages.h"
 #include "draw.h"
+#include "gl_compat.h"
 
 // Message queue structure
 typedef struct {
@@ -48,6 +49,7 @@ extern void draw_panel(window_t const *win);
 extern void draw_window_controls(window_t *win);
 extern void draw_bevel(rect_t const *r);
 extern void paint_window_stencil(window_t const *w);
+extern void repaint_stencil(void);
 extern window_t *get_root_window(window_t *window);
 
 // Register a window hook
@@ -222,23 +224,16 @@ void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   };
 }
 
-// Repost all pending messages
 void repost_messages(void) {
-  msg_t old_messages[0x100];
-  int old_count = (queue.write - queue.read) & 0xFF;
-  
-  for (int i = 0; i < old_count; i++) {
-    old_messages[i] = queue.messages[(queue.read + i) & 0xFF];
-  }
-  
-  queue.read = queue.write = 0;
-  
-  for (int i = 0; i < old_count; i++) {
-    if (old_messages[i].target) {
-      post_message(old_messages[i].target,
-                   old_messages[i].msg,
-                   old_messages[i].wparam,
-                   old_messages[i].lparam);
+  for (uint8_t write = queue.write; queue.read != write;) {
+    msg_t *m = &queue.messages[queue.read++];
+    if (m->target == NULL) continue;
+    if (m->msg == WM_REFRESHSTENCIL) {
+      repaint_stencil();
+      continue;
     }
+    send_message(m->target, m->msg, m->wparam, m->lparam);
   }
+  glFlush();
+  // SDL_GL_SwapWindow(window);
 }

@@ -132,8 +132,8 @@ bool ui_init_prog(void) {
   //  float offset_x = (width - render_width) / (2.0f * scale);
   //  black_bars = offset_x;
   //  glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, g_ref.projection);
-  int screen_width = width/2;
-  int screen_height = height/2;
+  screen_width = width/2;
+  screen_height = height/2;
   glm_ortho(0, screen_width, screen_height, 0, -1, 1, g_ref.projection);
     
   glDeleteShader(vertex_shader);

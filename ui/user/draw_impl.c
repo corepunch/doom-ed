@@ -141,7 +141,7 @@ void paint_window_stencil(window_t const *w) {
 }
 
 // Repaint window stencil buffer
-static void repaint_stencil(void) {
+void repaint_stencil(void) {
   set_viewport(&(window_t){0, 0, screen_width, screen_height});
   set_projection(0, 0, screen_width, screen_height);
   
