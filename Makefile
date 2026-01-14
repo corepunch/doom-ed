@@ -88,54 +88,36 @@ HEXEN_SRCS = $(HEXEN_DIR)/actions.c \
              $(HEXEN_DIR)/hu_stuff.c \
              $(HEXEN_DIR)/info.c
 
-# UI framework files (libdesktop)
-LIBDESKTOP_SRCS = $(UI_DIR)/commctl/button.c \
-                  $(UI_DIR)/commctl/checkbox.c \
-                  $(UI_DIR)/commctl/combobox.c \
-                  $(UI_DIR)/commctl/console.c \
-                  $(UI_DIR)/commctl/edit.c \
-                  $(UI_DIR)/commctl/label.c \
-                  $(UI_DIR)/commctl/list.c \
-                  $(UI_DIR)/user/window.c \
-                  $(UI_DIR)/user/message.c \
-                  $(UI_DIR)/user/draw_impl.c \
-                  $(UI_DIR)/user/text.c \
-                  $(UI_DIR)/user/dialog.c \
-                  $(UI_DIR)/user/font_6x8.c \
-                  $(UI_DIR)/user/icons.c \
-                  $(UI_DIR)/kernel/event.c \
-                  $(UI_DIR)/kernel/init.c \
-                  $(UI_DIR)/kernel/joystick.c \
-                  $(UI_DIR)/kernel/renderer.c
-
 # Object files
 MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
-LIBDESKTOP_OBJS = $(LIBDESKTOP_SRCS:$(UI_DIR)/%.c=$(BUILD_DIR)/ui/%.o)
 
-# Libraries
-LIBDESKTOP = $(BUILD_DIR)/libdesktop.a
+# Libraries (libgoldie-ui built via ui/Makefile)
+ifeq ($(UNAME_S),Darwin)
+  LIBGOLDIE = $(BUILD_DIR)/libgoldie-ui.dylib
+else
+  LIBGOLDIE = $(BUILD_DIR)/libgoldie-ui.so
+endif
 
 # All object files for main executable
 OBJS = $(MAPVIEW_OBJS) $(HEXEN_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test bsp_test examples helloworld libdesktop
+.PHONY: all clean test triangulate_test bsp_test examples helloworld libgoldie
 
-all: libdesktop mapview
+all: libgoldie mapview
 
-# libdesktop library
-libdesktop: $(LIBDESKTOP)
+# libgoldie-ui library (built via ui/Makefile)
+libgoldie: $(LIBGOLDIE)
 
-$(LIBDESKTOP): $(LIBDESKTOP_OBJS)
-	@mkdir -p $(dir $@)
-	ar rcs $@ $^
-	@echo "Built libdesktop.a"
+$(LIBGOLDIE):
+	@echo "Building libgoldie-ui via ui/Makefile..."
+	@$(MAKE) -C $(UI_DIR) all
 
 # mapview executable (main executable)
-mapview: $(OBJS) $(LIBDESKTOP)
+mapview: $(OBJS) $(LIBGOLDIE)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LIBDESKTOP) $(LDFLAGS) -o doom-ed
+	$(CC) $(OBJS) $(LIBGOLDIE) $(LDFLAGS) -o doom-ed
 	@echo "Built doom-ed executable"
 
 # Legacy target name (kept for compatibility)
@@ -158,19 +140,6 @@ $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
-# UI framework object file rules
-$(BUILD_DIR)/ui/commctl/%.o: $(UI_DIR)/commctl/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
-
-$(BUILD_DIR)/ui/user/%.o: $(UI_DIR)/user/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
-
-$(BUILD_DIR)/ui/kernel/%.o: $(UI_DIR)/kernel/%.c
-	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
-
 # Test targets
 test: triangulate_test bsp_test
 	@echo "=== Running all tests ==="
@@ -183,14 +152,14 @@ examples: helloworld
 # UI Framework hello world example
 # Note: Currently requires mapview sprites.c for drawing functions
 # TODO: Extract drawing primitives to make UI framework fully standalone
-helloworld: $(LIBDESKTOP)
+helloworld: $(LIBGOLDIE)
 	@echo "=== Building UI Framework Hello World Example ==="
 	@mkdir -p $(BUILD_DIR)/ui/examples
 	@mkdir -p $(BUILD_DIR)/mapview
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/sprites.c -o $(BUILD_DIR)/mapview/sprites.o
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/gamefont.c -o $(BUILD_DIR)/mapview/gamefont.o
 	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(UI_DIR)/examples/helloworld.c -o $(BUILD_DIR)/ui/examples/helloworld.o
-	$(CC) $(BUILD_DIR)/ui/examples/helloworld.o $(LIBDESKTOP) $(BUILD_DIR)/mapview/sprites.o $(BUILD_DIR)/mapview/gamefont.o -o helloworld $(LDFLAGS)
+	$(CC) $(BUILD_DIR)/ui/examples/helloworld.o $(LIBGOLDIE) $(BUILD_DIR)/mapview/sprites.o $(BUILD_DIR)/mapview/gamefont.o -o helloworld $(LDFLAGS)
 	@echo "Built helloworld executable"
 	@echo "Run with: ./helloworld"
 
@@ -202,8 +171,9 @@ bsp_test: $(TESTS_DIR)/bsp_test.c
 
 # Clean
 clean:
+	@$(MAKE) -C $(UI_DIR) clean
 	rm -rf $(BUILD_DIR) 
 	-rm -f triangulate_test bsp_test doom-ed helloworld
 	-test -f mapview && rm -f mapview || true
 	rm -f $(MAPVIEW_DIR)/*.o $(MAPVIEW_DIR)/windows/*.o $(MAPVIEW_DIR)/windows/inspector/*.o
-	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o $(UI_DIR)/**/*.o
+	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o
