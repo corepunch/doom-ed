@@ -92,11 +92,11 @@ HEXEN_SRCS = $(HEXEN_DIR)/actions.c \
 MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
 
-# Libraries (libgoldie built via ui/Makefile)
+# Libraries (libgoldie-ui built via ui/Makefile)
 ifeq ($(UNAME_S),Darwin)
-  LIBGOLDIE = $(BUILD_DIR)/libgoldie.dylib
+  LIBGOLDIE = $(BUILD_DIR)/libgoldie-ui.dylib
 else
-  LIBGOLDIE = $(BUILD_DIR)/libgoldie.so
+  LIBGOLDIE = $(BUILD_DIR)/libgoldie-ui.so
 endif
 
 # All object files for main executable
@@ -107,11 +107,11 @@ OBJS = $(MAPVIEW_OBJS) $(HEXEN_OBJS)
 
 all: libgoldie mapview
 
-# libgoldie library (built via ui/Makefile)
+# libgoldie-ui library (built via ui/Makefile)
 libgoldie: $(LIBGOLDIE)
 
 $(LIBGOLDIE):
-	@echo "Building libgoldie via ui/Makefile..."
+	@echo "Building libgoldie-ui via ui/Makefile..."
 	@$(MAKE) -C $(UI_DIR) all
 
 # mapview executable (main executable)

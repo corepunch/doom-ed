@@ -7,8 +7,8 @@ build/
 doom-ed
 
 # Generated libraries (not bundled dependencies)
-build/libgoldie.so
-build/libgoldie.dylib
+build/libgoldie-ui.so
+build/libgoldie-ui.dylib
 
 # macOS Finder metadata
 .DS_Store
