@@ -4,6 +4,41 @@
 
 DOOM-ED is a level editor for classic DOOM games with a clean separation between editor functionality and game-specific code. This document describes the architectural organization of the codebase.
 
+## Architectural Diagram
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    DOOM-ED Editor                        │
+│                                                          │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  Editor Code (mapview/)                         │    │
+│  │  - Geometry editing (editor_*.c)                │    │
+│  │  - Rendering (renderer.c, walls.c, floor.c)    │    │
+│  │  - WAD I/O (wad.c)                             │    │
+│  │  - UI (windows/)                                │    │
+│  └───────────────────┬────────────────────────────┘    │
+│                      │                                   │
+│                      │ uses interface                    │
+│                      ▼                                   │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  Game Abstraction Layer (mapview/game/)        │    │
+│  │  - thing_info.h (interface)                    │    │
+│  │  - thing_info.c (implementation)               │    │
+│  └───────────────────┬────────────────────────────┘    │
+│                      │                                   │
+│                      │ accesses                          │
+│                      ▼                                   │
+│  ┌────────────────────────────────────────────────┐    │
+│  │  Game Data (doom/, hexen/)                     │    │
+│  │  - info.c (mobjinfo, states, sprnames)         │    │
+│  │  - info.h (type definitions)                   │    │
+│  │  - ed_config.h (thing categories - Hexen)     │    │
+│  └────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────┘
+```
+
+**Key Principle:** Editor code never directly includes `doom/` or `hexen/` headers except through the game abstraction layer.
+
 ## Directory Structure
 
 ```
