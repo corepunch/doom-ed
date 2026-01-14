@@ -100,6 +100,7 @@ UI_SRCS = $(UI_DIR)/commctl/button.c \
           $(UI_DIR)/commctl/sprite.c \
           $(UI_DIR)/user/window.c \
           $(UI_DIR)/user/message.c \
+          $(UI_DIR)/user/draw.c \
           $(UI_DIR)/user/draw_impl.c \
           $(UI_DIR)/kernel/event.c \
           $(UI_DIR)/kernel/init.c \

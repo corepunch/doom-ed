@@ -83,9 +83,11 @@ int ui_prog_tex0_size;
 int ui_prog_tex0;
 int ui_prog_color;
 
-SDL_Window* window = NULL;
-SDL_GLContext ctx;
-bool running = true;
+// SDL/OpenGL context is now defined in ui/kernel/init.c
+extern SDL_Window* window;
+extern SDL_GLContext ctx;
+extern bool running;
+
 bool mode = false;
 unsigned frame = 0;
 
