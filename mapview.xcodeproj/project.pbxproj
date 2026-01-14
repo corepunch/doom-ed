@@ -64,6 +64,7 @@
 				commctl/button.c,
 				commctl/checkbox.c,
 				commctl/combobox.c,
+				commctl/console.c,
 				commctl/edit.c,
 				commctl/label.c,
 				commctl/list.c,
@@ -73,6 +74,7 @@
 				kernel/joystick.c,
 				user/draw_impl.c,
 				user/message.c,
+				user/text.c,
 				user/window.c,
 			);
 			target = 785D12A82DB8DDF300567DFE /* mapview */;
@@ -83,6 +85,7 @@
 				commctl/button.c,
 				commctl/checkbox.c,
 				commctl/combobox.c,
+				commctl/console.c,
 				commctl/edit.c,
 				commctl/label.c,
 				commctl/list.c,
@@ -91,6 +94,7 @@
 				kernel/joystick.c,
 				user/draw_impl.c,
 				user/message.c,
+				user/text.c,
 				user/window.c,
 			);
 			target = 78F688AB2F1793CB00FFD6E9 /* desktop */;

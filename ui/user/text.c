@@ -260,8 +260,8 @@ void draw_text_gl3(const char* text, int x, int y, float alpha) {
     char c = text[i];
 #else
   // Doom font is uppercase only
-  //for (int i = 0; text[i] != '\0'; i++) {
-  //  char c = toupper(text[i]);
+  for (int i = 0; text[i] != '\0'; i++) {
+    char c = toupper(text[i]);
 #endif
     draw_char_gl3(c, cursor_x, y, alpha);
     
@@ -290,8 +290,8 @@ int get_text_width(const char* text) {
     char c = text[i];
 #else
   // Doom font is uppercase only
-  //for (int i = 0; text[i] != '\0'; i++) {
-  //  char c = toupper(text[i]);
+  for (int i = 0; text[i] != '\0'; i++) {
+    char c = toupper(text[i]);
 #endif
     
     // Advance cursor

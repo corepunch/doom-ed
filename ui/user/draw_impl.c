@@ -217,3 +217,14 @@ void fill_rect(int color, int x, int y, int w, int h) {
   // Draw a rectangle using the texture
   draw_rect_ex(ui_white_texture, x, y, w, h, false, 1);
 }
+
+void draw_icon8(int icon, int x, int y, uint32_t col) {
+  char str[2] = { icon+128+6*16, 0 };
+  draw_text_small(str, x, y, col);
+}
+
+void draw_icon16(int icon, int x, int y, uint32_t col) {
+  icon*=2;
+  char str[6] = { icon+128, icon+129, '\n', icon+144, icon+145, 0 };
+  draw_text_small(str, x, y, col);
+}
