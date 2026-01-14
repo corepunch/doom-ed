@@ -4,10 +4,7 @@
 #include <SDL2/SDL.h>
 #include "gl_compat.h"
 
-#include "map.h"
-#include "sprites.h"
-#include "editor.h"
-#include "../ui/ui.h"
+#include "../ui.h"
 
 // SDL window (defined here for compatibility)
 extern SDL_Window* window;
@@ -25,9 +22,14 @@ extern SDL_Window* window;
 // Dialog handling (still in mapview as it's app-specific)
 static uint32_t _return_code;
 
-extern bool running;
+bool running;
 
-uint32_t show_dialog(char const *title, const rect_t* frame, window_t *parent, winproc_t proc, void *param) {
+uint32_t show_dialog(char const *title,
+                     const rect_t* frame,
+                     window_t *parent,
+                     winproc_t proc,
+                     void *param)
+{
   SDL_Event e;
   window_t *dlg = create_window(title, WINDOW_DIALOG, frame, parent, proc, param);
   dlg->visible = true;

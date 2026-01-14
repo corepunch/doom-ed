@@ -87,7 +87,6 @@ int ui_prog_tex0_size;
 int ui_prog_tex0;
 int ui_prog_color;
 
-bool running = true;
 bool mode = false;
 unsigned frame = 0;
 
