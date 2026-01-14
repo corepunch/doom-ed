@@ -1,6 +1,6 @@
 // Text rendering implementation
 // Extracted from mapview/windows/console.c
-// Contains only the small embedded font rendering (6x8 bitmap font)
+// Contains only the small embedded font rendering (console_font_6x8: 6-bit wide, 8 pixels tall)
 
 #include <SDL2/SDL.h>
 #include "gl_compat.h"
