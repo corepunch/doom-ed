@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		7815CD952DCE0F7C000617A1 /* libhexen.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7815CD662DCE0DC7000617A1 /* libhexen.dylib */; };
 		785D12BC2DB8E85000567DFE /* libSDL2-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		78F688BE2F17940200FFD6E9 /* libdesktop.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -29,6 +30,7 @@
 		7815CD662DCE0DC7000617A1 /* libhexen.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libhexen.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 		785D12A92DB8DDF300567DFE /* mapview */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mapview; sourceTree = BUILT_PRODUCTS_DIR; };
 		785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
+		78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libdesktop.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -59,9 +61,41 @@
 		78F688A42F16EBEC00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
+				commctl/button.c,
+				commctl/checkbox.c,
+				commctl/combobox.c,
+				commctl/edit.c,
+				commctl/label.c,
+				commctl/list.c,
+				commctl/sprite.c,
 				examples/helloworld.c,
+				kernel/event.c,
+				kernel/init.c,
+				kernel/joystick.c,
+				user/draw_impl.c,
+				user/message.c,
+				user/window.c,
 			);
 			target = 785D12A82DB8DDF300567DFE /* mapview */;
+		};
+		78F688BD2F1793F800FFD6E9 /* Exceptions for "ui" folder in "desktop" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				commctl/button.c,
+				commctl/checkbox.c,
+				commctl/combobox.c,
+				commctl/edit.c,
+				commctl/label.c,
+				commctl/list.c,
+				commctl/sprite.c,
+				kernel/event.c,
+				kernel/init.c,
+				kernel/joystick.c,
+				user/draw_impl.c,
+				user/message.c,
+				user/window.c,
+			);
+			target = 78F688AB2F1793CB00FFD6E9 /* desktop */;
 		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
@@ -89,6 +123,7 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				78F688A42F16EBEC00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */,
+				78F688BD2F1793F800FFD6E9 /* Exceptions for "ui" folder in "desktop" target */,
 			);
 			path = ui;
 			sourceTree = "<group>";
@@ -114,7 +149,15 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				78F688BE2F17940200FFD6E9 /* libdesktop.dylib in Frameworks */,
 				7815CD952DCE0F7C000617A1 /* libhexen.dylib in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78F688AA2F1793CB00FFD6E9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -139,6 +182,7 @@
 				785D12A92DB8DDF300567DFE /* mapview */,
 				7815CD462DCE0CA6000617A1 /* libdoom.dylib */,
 				7815CD662DCE0DC7000617A1 /* libhexen.dylib */,
+				78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -162,6 +206,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7815CD602DCE0DC7000617A1 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78F688A82F1793CB00FFD6E9 /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -236,6 +287,25 @@
 			productReference = 785D12A92DB8DDF300567DFE /* mapview */;
 			productType = "com.apple.product-type.tool";
 		};
+		78F688AB2F1793CB00FFD6E9 /* desktop */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 78F688AD2F1793CB00FFD6E9 /* Build configuration list for PBXNativeTarget "desktop" */;
+			buildPhases = (
+				78F688A82F1793CB00FFD6E9 /* Headers */,
+				78F688A92F1793CB00FFD6E9 /* Sources */,
+				78F688AA2F1793CB00FFD6E9 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = desktop;
+			packageProductDependencies = (
+			);
+			productName = desktop;
+			productReference = 78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */;
+			productType = "com.apple.product-type.library.dynamic";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -250,6 +320,9 @@
 					};
 					785D12A82DB8DDF300567DFE = {
 						CreatedOnToolsVersion = 16.3;
+					};
+					78F688AB2F1793CB00FFD6E9 = {
+						CreatedOnToolsVersion = 26.2;
 					};
 				};
 			};
@@ -270,6 +343,7 @@
 				785D12A82DB8DDF300567DFE /* mapview */,
 				7815CD452DCE0CA6000617A1 /* doom */,
 				7815CD5F2DCE0DC7000617A1 /* hexen */,
+				78F688AB2F1793CB00FFD6E9 /* desktop */,
 			);
 		};
 /* End PBXProject section */
@@ -290,6 +364,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		785D12A52DB8DDF300567DFE /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78F688A92F1793CB00FFD6E9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -510,6 +591,38 @@
 			};
 			name = Release;
 		};
+		78F688AE2F1793CB00FFD6E9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Debug;
+		};
+		78F688AF2F1793CB00FFD6E9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				EXECUTABLE_PREFIX = lib;
+				MACOSX_DEPLOYMENT_TARGET = 26.1;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -545,6 +658,15 @@
 			buildConfigurations = (
 				785D12B12DB8DDF300567DFE /* Debug */,
 				785D12B22DB8DDF300567DFE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		78F688AD2F1793CB00FFD6E9 /* Build configuration list for PBXNativeTarget "desktop" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				78F688AE2F1793CB00FFD6E9 /* Debug */,
+				78F688AF2F1793CB00FFD6E9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
