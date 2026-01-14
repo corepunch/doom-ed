@@ -19,8 +19,6 @@ extern int screen_width, screen_height;
 extern SDL_Window *window;
 
 // Forward declarations
-extern void draw_rect(int tex, int x, int y, int w, int h);
-extern void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 extern void draw_text_small(const char* text, int x, int y, uint32_t col);
 extern void draw_icon8(int icon, int x, int y, uint32_t col);
 extern void draw_icon16(int icon, int x, int y, uint32_t col);

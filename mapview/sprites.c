@@ -9,50 +9,10 @@
 
 #define MAX_SPRITES 10000
 
-// Sprite shader sources
-const char* sprite_vs_src = "#version 150 core\n"
-"in vec2 position;\n"
-"in vec2 texcoord;\n"
-"in vec4 color;\n"
-"out vec2 tex;\n"
-"out vec4 col;\n"
-"uniform mat4 projection;\n"
-"uniform vec2 offset;\n"
-"uniform vec2 scale;\n"
-"void main() {\n"
-"  col = color;\n"
-"  tex = texcoord;\n"
-"  gl_Position = projection * vec4(position * scale + offset, 0.0, 1.0);\n"
-"}";
-
-const char* sprite_fs_src = "#version 150 core\n"
-"in vec2 tex;\n"
-"in vec4 col;\n"
-"out vec4 outColor;\n"
-"uniform sampler2D tex0;\n"
-"uniform float alpha;\n"
-"void main() {\n"
-"  outColor = texture(tex0, tex) * col;\n"
-"  outColor.a *= alpha;\n"
-"  if(outColor.a < 0.1) discard;\n"
-"}";
-
-// Sprite vertices (quad)
-wall_vertex_t sprite_verts[] = {
-  {0, 0, 0, 0, 0, 0, 0, 0, -1}, // bottom left
-  {0, 1, 0, 0, 1, 0, 0, 0, -1},  // top left
-  {1, 1, 0, 1, 1, 0, 0, 0, -1}, // top right
-  {1, 0, 0, 1, 0, 0, 0, 0, -1}, // bottom right
-};
-
 // Sprite system state
 typedef struct {
-  GLuint program;        // Shader program
-  GLuint vao;            // Vertex array object
-  GLuint vbo;            // Vertex buffer object
   sprite_t all_sprites[MAX_SPRITES];
   int num_sprites;
-  mat4 projection;       // Orthographic projection matrix
   GLuint crosshair_texture; // Custom crosshair texture (if needed)
 } sprite_system_t;
 
@@ -83,64 +43,10 @@ int load_sprite(const char *name) {
   }
 }
 
-float *get_sprite_matrix(void) {
-  return g_sprite_system.projection[0];
-}
-
-int get_sprite_prog(void) {
-  return g_sprite_system.program;
-}
-
-
 // Initialize the sprite system
 bool init_sprites(void) {
   sprite_system_t* sys = &g_sprite_system;
-  
-  // Create shader program
-  GLuint vertex_shader = compile_shader(GL_VERTEX_SHADER, sprite_vs_src);
-  GLuint fragment_shader = compile_shader(GL_FRAGMENT_SHADER, sprite_fs_src);
-  
-  sys->program = glCreateProgram();
-  glAttachShader(sys->program, vertex_shader);
-  glAttachShader(sys->program, fragment_shader);
-  glBindAttribLocation(sys->program, 0, "position");
-  glBindAttribLocation(sys->program, 1, "texcoord");
-  glBindAttribLocation(sys->program, 2, "color");
-  glLinkProgram(sys->program);
-  
-  // Create VAO, VBO, EBO
-  glGenVertexArrays(1, &sys->vao);
-  glBindVertexArray(sys->vao);
-  
-  glGenBuffers(1, &sys->vbo);
-  glBindBuffer(GL_ARRAY_BUFFER, sys->vbo);
-  glBufferData(GL_ARRAY_BUFFER, sizeof(sprite_verts), sprite_verts, GL_STATIC_DRAW);
-  
-  // Set up vertex attributes
-//  glEnableVertexAttribArray(0);
-//  glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
-//  glEnableVertexAttribArray(1);
-//  glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
-
-  glEnableVertexAttribArray(0);
-  glEnableVertexAttribArray(1);
-  glEnableVertexAttribArray(2);
-  glVertexAttribPointer(0, 3, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, x)); // Position
-  glVertexAttribPointer(1, 2, GL_SHORT, GL_FALSE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, u)); // UV
-  glVertexAttribPointer(2, 4, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(wall_vertex_t), OFFSET_OF(wall_vertex_t, color)); // Color
-  
-  // Create orthographic projection matrix for screen-space rendering
-  int width, height;
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &width, &height);
-//  float scale = (float)height / DOOM_HEIGHT;
-//  float render_width = DOOM_WIDTH * scale;
-//  float offset_x = (width - render_width) / (2.0f * scale);
-//  black_bars = offset_x;
-//  glm_ortho(-offset_x, DOOM_WIDTH+offset_x, DOOM_HEIGHT, 0, -1, 1, sys->projection);
-  int screen_width = width/2;
-  int screen_height = height/2;
-  glm_ortho(0, screen_width, screen_height, 0, -1, 1, sys->projection);
-  
+    
   // Find and preload weapon sprites (starting with SHT)
   sys->num_sprites = 0;
   
@@ -174,32 +80,9 @@ bool init_sprites(void) {
   // Initialize the crosshair texture to 0 (will be generated on demand if needed)
   sys->crosshair_texture = 0;
   
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
-  
   return sys->num_sprites > 0;
 }
 
-// Compile a shader
-GLuint compile_shader(GLenum type, const char* src) {
-  GLuint shader = glCreateShader(type);
-  glShaderSource(shader, 1, &src, 0);
-  glCompileShader(shader);
-  
-  // Check for errors
-  GLint status;
-  glGetShaderiv(shader, GL_COMPILE_STATUS, &status);
-  if (status == GL_FALSE) {
-    GLint log_length;
-    glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &log_length);
-    char* log = malloc(log_length);
-    glGetShaderInfoLog(shader, log_length, NULL, log);
-    printf("Shader compilation error: %s\n", log);
-    free(log);
-  }
-  
-  return shader;
-}
 // Sprite header structure (same as patch_t)
 typedef struct {
   int16_t width;      // width of the sprite
@@ -398,21 +281,21 @@ void draw_sprite(const char* name, float x, float y, float scale, float alpha) {
   glDisable(GL_DEPTH_TEST);
   
   // Use sprite shader program
-  glUseProgram(sys->program);
+  glUseProgram(get_sprite_prog());
   
   // Set uniforms
 //  glUniformMatrix4fv(glGetUniformLocation(sys->program, "projection"), 1, GL_FALSE, (const float*)sys->projection);
-  glUniform2f(glGetUniformLocation(sys->program, "offset"), x-sprite->offsetx*scale, y-sprite->offsety*scale);
-  glUniform2f(glGetUniformLocation(sys->program, "scale"), sprite->width * scale, sprite->height * scale);
-  glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
+  glUniform2f(glGetUniformLocation(get_sprite_prog(), "offset"), x-sprite->offsetx*scale, y-sprite->offsety*scale);
+  glUniform2f(glGetUniformLocation(get_sprite_prog(), "scale"), sprite->width * scale, sprite->height * scale);
+  glUniform1f(glGetUniformLocation(get_sprite_prog(), "alpha"), alpha);
   
   // Bind sprite texture
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, sprite->texture);
-  glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
+  glUniform1i(glGetUniformLocation(get_sprite_prog(), "tex0"), 0);
   
   // Bind VAO and draw
-  glBindVertexArray(sys->vao);
+  glBindVertexArray(get_sprite_vao());
   glDrawArrays(GL_TRIANGLE_FAN, 0, 4);
   
   // Reset state
@@ -569,63 +452,8 @@ void cleanup_sprites(void) {
   for (int i = 0; i < sys->num_sprites; i++) {
     glDeleteTextures(1, &sys->all_sprites[i].texture);
   }
-  
-  // Delete shader program and buffers
-  glDeleteProgram(sys->program);
-  glDeleteVertexArrays(1, &sys->vao);
-  glDeleteBuffers(1, &sys->vbo);
-  
+    
   // Reset sprite count
   sys->num_sprites = 0;
-}
-
-void set_projection(int x, int y, int w, int h) {
-  mat4 projection;
-  glm_ortho(x, w, h, y, -1, 1, projection);
-  glUseProgram(g_sprite_system.program);
-  glUniformMatrix4fv(glGetUniformLocation(g_sprite_system.program, "projection"), 1, GL_FALSE, projection[0]);
-}
-
-void push_sprite_args(int tex, int x, int y, int w, int h, float alpha) {
-  sprite_system_t* sys = &g_sprite_system;
-  
-  // Bind sprite texture
-  glUseProgram(sys->program);
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, tex);
-  glUniform1i(glGetUniformLocation(sys->program, "tex0"), 0);
-  glUniform2f(glGetUniformLocation(sys->program, "offset"), x, y);
-  glUniform2f(glGetUniformLocation(sys->program, "scale"), w, h);
-  glUniform1f(glGetUniformLocation(sys->program, "alpha"), alpha);
-}
-
-// Draw a sprite at the specified screen position
-void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
-  sprite_system_t* sys = &g_sprite_system;
-  
-  push_sprite_args(tex, x, y, w, h, alpha);
-  
-  // Bind VAO and draw
-  glBindVertexArray(sys->vao);
-//  if (alpha == 1) {
-//    glDisable(GL_BLEND);
-//  } else {
-    // Enable blending for transparency
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-//  }
-  // Disable depth testing for UI elements
-  glDisable(GL_DEPTH_TEST);
-  
-  glDrawArrays(type?GL_LINE_LOOP:GL_TRIANGLE_FAN, 0, 4);
-  
-  // Reset state
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
-}
-
-// Draw a sprite at the specified screen position
-void draw_rect(int tex, int x, int y, int w, int h) {
-  draw_rect_ex(tex, x, y, w, h, false, 1);
 }
 

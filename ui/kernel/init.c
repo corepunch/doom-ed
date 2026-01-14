@@ -12,6 +12,9 @@
 SDL_Window* window = NULL;
 SDL_GLContext ctx;
 
+bool ui_init_prog(void);
+void ui_shutdown_prog(void);
+
 // Initialize window and OpenGL context
 bool ui_init_window(const char *title, int width, int height) {
   // Set OpenGL attributes before creating window
@@ -83,12 +86,16 @@ bool ui_init_graphics(const char *title, int width, int height) {
 
   // Enable VSync
   SDL_GL_SetSwapInterval(1);
+  
+  ui_init_prog();
 
   return true;
 }
 
 // Shutdown graphics context
 void ui_shutdown_graphics(void) {
+  ui_shutdown_prog();
+  
   if (ctx) {
     SDL_GL_DeleteContext(ctx);
     ctx = NULL;

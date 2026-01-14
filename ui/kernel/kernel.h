@@ -33,6 +33,13 @@ const char* ui_joystick_get_name(void);
 // Timing functions
 void ui_delay(unsigned int milliseconds);
 
+// Sprite stuff
+int get_sprite_prog(void);
+int get_sprite_vao(void);
+
+void push_sprite_args(int tex, int x, int y, int w, int h, float alpha);
+void set_projection(int x, int y, int w, int h);
+
 // Global SDL objects
 extern SDL_Window* window;
 extern SDL_GLContext ctx;
