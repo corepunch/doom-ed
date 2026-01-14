@@ -66,6 +66,9 @@ bool ui_init_window(const char *title, int width, int height) {
     return false;
   }
   
+  printf("GL_VERSION  : %s\n", glGetString(GL_VERSION));
+  printf("GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
+  
   return true;
 }
 
