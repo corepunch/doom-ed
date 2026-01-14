@@ -71,7 +71,7 @@ window_t* find_prev_tab_stop(window_t* win) {
 }
 
 // Move window to top of Z-order
-static void move_to_top(window_t* _win) {
+void move_to_top(window_t* _win) {
   extern window_t *get_root_window(window_t *window);
   extern void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
   extern void invalidate_window(window_t *win);

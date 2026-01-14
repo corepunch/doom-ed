@@ -112,6 +112,7 @@ void enable_window(window_t *win, bool enable);
 void set_focus(window_t* win);
 void set_capture(window_t *win);
 void track_mouse(window_t *win);
+void move_to_top(window_t* win);
 
 // Window hook registration
 void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata);
