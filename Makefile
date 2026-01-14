@@ -90,22 +90,22 @@ HEXEN_SRCS = $(HEXEN_DIR)/actions.c \
 
 # UI framework files (libdesktop)
 LIBDESKTOP_SRCS = $(UI_DIR)/commctl/button.c \
-          $(UI_DIR)/commctl/checkbox.c \
-          $(UI_DIR)/commctl/combobox.c \
-          $(UI_DIR)/commctl/console.c \
-          $(UI_DIR)/commctl/edit.c \
-          $(UI_DIR)/commctl/label.c \
-          $(UI_DIR)/commctl/list.c \
-          $(UI_DIR)/user/window.c \
-          $(UI_DIR)/user/message.c \
-          $(UI_DIR)/user/draw_impl.c \
-          $(UI_DIR)/user/text.c \
+                  $(UI_DIR)/commctl/checkbox.c \
+                  $(UI_DIR)/commctl/combobox.c \
+                  $(UI_DIR)/commctl/console.c \
+                  $(UI_DIR)/commctl/edit.c \
+                  $(UI_DIR)/commctl/label.c \
+                  $(UI_DIR)/commctl/list.c \
+                  $(UI_DIR)/user/window.c \
+                  $(UI_DIR)/user/message.c \
+                  $(UI_DIR)/user/draw_impl.c \
+                  $(UI_DIR)/user/text.c \
                   $(UI_DIR)/user/dialog.c \
                   $(UI_DIR)/user/font_6x8.c \
                   $(UI_DIR)/user/icons.c \
-          $(UI_DIR)/kernel/event.c \
-          $(UI_DIR)/kernel/init.c \
-          $(UI_DIR)/kernel/joystick.c
+                  $(UI_DIR)/kernel/event.c \
+                  $(UI_DIR)/kernel/init.c \
+                  $(UI_DIR)/kernel/joystick.c \
                   $(UI_DIR)/kernel/renderer.c
 
 # Object files
@@ -135,13 +135,11 @@ $(LIBDESKTOP): $(LIBDESKTOP_OBJS)
 # mapview executable (main executable)
 mapview: $(OBJS) $(LIBDESKTOP)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LIBDESKTOP) $(LDFLAGS) -o $@
-	@echo "Built mapview executable"
+	$(CC) $(OBJS) $(LIBDESKTOP) $(LDFLAGS) -o doom-ed
+	@echo "Built doom-ed executable"
 
-# Legacy target name
+# Legacy target name (kept for compatibility)
 doom-ed: mapview
-	@cp mapview doom-ed
-	@echo "Built doom-ed (copy of mapview)"
 
 # Object file rules
 $(BUILD_DIR)/mapview/%.o: $(MAPVIEW_DIR)/%.c
@@ -208,7 +206,8 @@ bsp_test: $(TESTS_DIR)/bsp_test.c
 
 # Clean
 clean:
-	rm -rf $(BUILD_DIR) triangulate_test bsp_test mapview doom-ed helloworld
+	rm -rf $(BUILD_DIR) 
+	-rm -f triangulate_test bsp_test doom-ed helloworld
+	-test -f mapview && rm -f mapview || true
 	rm -f $(MAPVIEW_DIR)/*.o $(MAPVIEW_DIR)/windows/*.o $(MAPVIEW_DIR)/windows/inspector/*.o
-	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o
-rm -f $(UI_DIR)/**/*.o
+	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o $(UI_DIR)/**/*.o
