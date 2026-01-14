@@ -19,7 +19,8 @@ extern SDL_Window* window;
 // - ui/kernel/event.c - SDL event handling
 //
 // Controls are in:
-// - ui/commctl/*.c - Button, checkbox, edit, label, list, combobox, sprite
+// - ui/commctl/*.c - Button, checkbox, edit, label, list, combobox
+// - mapview/editor/sprite.c - Sprite control (moved from ui/commctl)
 
 // Dialog handling (still in mapview as it's app-specific)
 static uint32_t _return_code;
