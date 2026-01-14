@@ -17,12 +17,6 @@ void ui_shutdown_prog(void);
 
 // Initialize window and OpenGL context
 bool ui_init_window(const char *title, int width, int height) {
-  // Initialize SDL video subsystem first
-  if (SDL_Init(SDL_INIT_VIDEO) < 0) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-    return false;
-  }
-  
   // Set OpenGL attributes before creating window
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);

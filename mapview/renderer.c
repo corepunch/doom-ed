@@ -96,13 +96,66 @@ editor_state_t *get_editor(void) {
   return g_game ? &g_game->state : NULL;
 }
 
-// Initialize SDL subsystems (VIDEO already initialized by ui_init_window)
+// Initialize SDL and create window/renderer
 bool init_sdl(void) {
-  // Only initialize JOYSTICK subsystem - VIDEO was already initialized
-  if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) {
-    printf("SDL joystick subsystem could not initialize! SDL_Error: %s\n", SDL_GetError());
+  // Initialize SDL subsystems FIRST
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
     return false;
   }
+  
+  // Set OpenGL attributes BEFORE creating window
+  SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+  SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+  SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 0);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+  SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+  
+  // Check for multiple displays and create window
+  int numDisplays = SDL_GetNumVideoDisplays();
+  if (numDisplays < 2) {
+    window = SDL_CreateWindow("DOOM Wireframe Renderer",
+                              SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                              SCREEN_WIDTH, SCREEN_HEIGHT,
+                              SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
+  } else {
+    SDL_Rect bounds;
+    if (SDL_GetDisplayBounds(1, &bounds) != 0) {
+      SDL_Log("SDL_GetDisplayBounds failed: %s", SDL_GetError());
+      // Fallback to primary display
+      window = SDL_CreateWindow("DOOM Wireframe Renderer",
+                                SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+                                SCREEN_WIDTH, SCREEN_HEIGHT,
+                                SDL_WINDOW_OPENGL|SDL_WINDOW_INPUT_FOCUS);
+    } else {
+      // Centered position on display 1
+      int w = SCREEN_WIDTH;
+      int h = SCREEN_HEIGHT;
+      int x = bounds.x + (bounds.w - w) / 2;
+      int y = bounds.y + (bounds.h - h) / 2;
+      
+      window = SDL_CreateWindow("DOOM Wireframe Renderer", x, y, w, h, 
+                                SDL_WINDOW_OPENGL | SDL_WINDOW_INPUT_FOCUS);
+    }
+  }
+
+  if (!window) {
+    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+    return false;
+  }
+  
+  // Create OpenGL context
+  ctx = SDL_GL_CreateContext(window);
+  if (!ctx) {
+    printf("OpenGL context could not be created! SDL_Error: %s\n", SDL_GetError());
+    SDL_DestroyWindow(window);
+    window = NULL;
+    return false;
+  }
+  
+  printf("GL_VERSION  : %s\n", glGetString(GL_VERSION));
+  printf("GLSL_VERSION: %s\n", glGetString(GL_SHADING_LANGUAGE_VERSION));
   
   // Initialize joystick support through UI layer
   // Note: Joystick initialization is now handled by the UI layer

@@ -19,3 +19,7 @@ bsp_test
 # Build logs
 build.log
 
+
+# Test files
+test_gl_version
+test_gl_version.c
