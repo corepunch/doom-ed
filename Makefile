@@ -60,6 +60,7 @@ MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
                $(MAPVIEW_DIR)/wad.c \
                $(MAPVIEW_DIR)/walls.c \
                $(MAPVIEW_DIR)/wi_stuff.c \
+               $(MAPVIEW_DIR)/game/thing_info.c \
                $(MAPVIEW_DIR)/windows/desktop.c \
                $(MAPVIEW_DIR)/windows/game.c \
                $(MAPVIEW_DIR)/windows/inspector/insp_line.c \
@@ -143,6 +144,10 @@ doom-ed: mapview
 
 # Object file rules
 $(BUILD_DIR)/mapview/%.o: $(MAPVIEW_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+
+$(BUILD_DIR)/mapview/game/%.o: $(MAPVIEW_DIR)/game/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 

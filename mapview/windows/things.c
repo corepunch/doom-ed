@@ -1,6 +1,7 @@
-#include "map.h"
-#include "editor.h"
-#include "sprites.h"
+#include "../map.h"
+#include "../editor.h"
+#include "../sprites.h"
+#include "../game/thing_info.h"
 
 #ifdef HEXEN
 #include "../../hexen/info.h"

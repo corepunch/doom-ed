@@ -7,12 +7,7 @@
 #include "map.h"
 #include "sprites.h"
 #include "editor.h"
-
-#ifdef HEXEN
-#include "../hexen/info.h"
-#else
-#include "../doom/info.h"
-#endif
+#include "game/thing_info.h"
 
 // Thing shader sources - we'll use view-aligned quads
 const char* thing_vs_src = "#version 150 core\n"
@@ -52,19 +47,7 @@ typedef struct {
   GLuint vbo;
 } thing_renderer_t;
 
-typedef struct {
-  bool rotate;
-  sprite_t *angle[8];
-  bool flip[8];
-} spriteframe_t;
-
-typedef struct  {
-  int num_frames;
-  spriteframe_t spriteframes[24];
-} spritedef_t;
-
 static thing_renderer_t g_thing_renderer = {0};
-static spritedef_t sprites[NUMSPRITES];
 
 // Forward declarations
 GLuint compile_thing_shader(GLenum type, const char* src);
@@ -112,37 +95,10 @@ bool init_things(void) {
   glDeleteShader(vertex_shader);
   glDeleteShader(fragment_shader);
   
-  memset(sprites, 0, sizeof(sprites));
-  
-  extern sprite_t* find_sprite6(const char* name);
-  
-  for (int i = 0; i < NUMSPRITES; i++) {
-    // Determine angle frame (A-H based on 45-degree increments)
-    // Doom uses 8 angle sprites, with 0 being east, 45 northeast, etc.
-    for (int j = 0; j < 16; j++) { //((angle + 22) % 360) / 45;
-      char frame_char = 'A' + j;
-      char sprite_name[8]={0};
-      const char *prefix = sprnames[i];
-      // Format sprite name (typically PREFIX + FRAME + ANGLE, e.g., "TROOA1")
-      snprintf(sprite_name, sizeof(sprite_name), "%s%c1", prefix, frame_char);
-      
-      if (find_sprite6(sprite_name)) {
-        for (int k = 0; k < 8; k++) {
-          snprintf(sprite_name, sizeof(sprite_name), "%s%c%d", prefix, frame_char, k+1);
-          sprites[i].spriteframes[j].angle[k] = find_sprite6(sprite_name);
-        }
-        sprites[i].spriteframes[j].rotate = true;
-      } else {
-        snprintf(sprite_name, sizeof(sprite_name), "%s%c0", prefix, frame_char);
-        sprites[i].spriteframes[j].angle[0] = find_sprite6(sprite_name);
-      }
-      
-      if (!sprites[i].spriteframes[j].angle[0]) {
-        break;
-      }
-      
-      sprites[i].num_frames++;
-    }
+  // Initialize game-specific thing data
+  if (!game_init_thing_info()) {
+    printf("Failed to initialize game thing info\n");
+    return false;
   }
   
   return true;
@@ -171,28 +127,7 @@ GLuint compile_thing_shader(GLenum type, const char* src) {
 
 // Helper function to get sprite name based on thing type and angle
 sprite_t *get_thing_sprite_name(uint16_t thing_type, uint16_t angle) {
-  static sprite_t empty = {
-    .width = 8,
-    .height = 8,
-    .texture = 1,
-  };
-  for (int i = 0; i < NUMMOBJTYPES; i++) {
-    if (mobjinfo[i].doomednum == thing_type) {
-      state_t const *s = &states[mobjinfo[i].spawnstate];
-      spritedef_t const *sdef = &sprites[s->sprite];
-      uint16_t frame = s->frame&0x7fff;
-      if (sdef->num_frames == 0) {
-        return &empty;
-      }
-      if (sdef->num_frames <= frame) {
-        frame = 0;
-      }
-      spriteframe_t const *sf = &sdef->spriteframes[frame];
-      sprite_t *sprite = sf->rotate ? sf->angle[angle%8] : sf->angle[0];
-      return sprite ? sprite : &empty;
-    }
-  }
-  return &empty;
+  return game_get_thing_sprite(thing_type, angle);
 }
 
 // Returns a value from 1 to 8 for sprite angle selection
@@ -236,12 +171,8 @@ void draw_things(map_data_t const *map, viewdef_t const *viewdef, bool rotate) {
   for (int i = 0; i < map->num_things; i++) {
     mapthing_t const *thing = &map->things[i];
     
-    // Skip player
-#ifdef HEXEN
-    if (thing->type == MT_MAPSPOT)
-#else
-    if (thing->type == MT_PLAYER)
-#endif
+    // Skip player start positions
+    if (game_is_player_start(thing->type))
       continue;
     
     // Find the sector this thing is in to get light level
