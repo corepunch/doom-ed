@@ -10,6 +10,7 @@
 #include "user.h"
 #include "messages.h"
 #include "draw.h"
+#include "../../mapview/editor/sprite.h"
 
 // Global window state
 window_t *windows = NULL;
@@ -286,7 +287,6 @@ extern result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *l
 extern result_t win_checkbox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 extern result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 extern result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-extern result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent) {
   winproc_t proc = NULL;

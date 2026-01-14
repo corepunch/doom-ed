@@ -3,9 +3,9 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../user/user.h"
-#include "../user/messages.h"
-#include "../user/draw.h"
+#include "../../ui/user/user.h"
+#include "../../ui/user/messages.h"
+#include "../../ui/user/draw.h"
 
 // Game-specific types (defined in mapview/sprites.h and mapview/map.h)
 typedef struct {
