@@ -188,7 +188,7 @@ static void R_Subsector(map_data_t const *map, int num, viewdef_t const *viewdef
   mapsector_t const *sector = &map->sectors[sidedef->sector];
   
   // Check if we've already drawn this sector in this frame
-  uint32_t sector_index = sector - map->sectors;
+  uint32_t sector_index = (uint32_t)(sector - map->sectors);
   if (map->floors.sectors[sector_index].frame == viewdef->frame)
     return;
   

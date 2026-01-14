@@ -90,6 +90,8 @@ bool ui_init_graphics(int flags, const char *title, int width, int height) {
   SDL_GL_SetSwapInterval(1);
   
   ui_init_prog();
+  
+  running = true;
 
   return true;
 }

@@ -98,10 +98,14 @@ int main(int argc, char* argv[]) {
   new_map();
 //  open_map("MAP01");
   
+//  bool running = true;
   // Main game loop
   while (running) {
     SDL_Event event;
     while (get_message(&event)) {
+//      if (event.type == SDL_QUIT) {
+//        running = false;
+//      }
       dispatch_message(&event);
     }
     repost_messages();
