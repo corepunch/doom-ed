@@ -74,7 +74,8 @@ MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
                $(MAPVIEW_DIR)/windows/statbar.c \
                $(MAPVIEW_DIR)/windows/texatlas.c \
                $(MAPVIEW_DIR)/windows/things.c \
-               $(MAPVIEW_DIR)/windows/tray.c
+               $(MAPVIEW_DIR)/windows/tray.c \
+               $(MAPVIEW_DIR)/editor/sprite.c
 
 # DOOM files (only headers are used, .c files excluded per Xcode config)
 # These are just listed for reference, not compiled
@@ -97,7 +98,6 @@ UI_SRCS = $(UI_DIR)/commctl/button.c \
           $(UI_DIR)/commctl/edit.c \
           $(UI_DIR)/commctl/label.c \
           $(UI_DIR)/commctl/list.c \
-          $(UI_DIR)/commctl/sprite.c \
           $(UI_DIR)/user/window.c \
           $(UI_DIR)/user/message.c \
           $(UI_DIR)/user/draw_impl.c \
@@ -135,6 +135,10 @@ $(BUILD_DIR)/mapview/windows/%.o: $(MAPVIEW_DIR)/windows/%.c
 $(BUILD_DIR)/mapview/windows/inspector/%.o: $(MAPVIEW_DIR)/windows/inspector/%.c
 	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $< -o $@
+
+$(BUILD_DIR)/mapview/editor/%.o: $(MAPVIEW_DIR)/editor/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
 $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 	@mkdir -p $(dir $@)
