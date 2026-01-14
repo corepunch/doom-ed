@@ -5,15 +5,21 @@ steps:
   - name: Install system dependencies
     run: |
       # Install build tools and libraries for Ubuntu/Debian
-      # Note: Requires Ubuntu 18.04 or later for cglm package
+      # Requires Ubuntu 18.04+ for libcglm-dev package
       sudo apt-get update
       sudo apt-get install -y \
         build-essential \
         libsdl2-dev \
         libgl1-mesa-dev \
         pkg-config
-      # Install cglm if available, otherwise continue (may need manual installation)
-      sudo apt-get install -y libcglm-dev || echo "Warning: libcglm-dev not available, may need manual installation"
+      # Install cglm if available, otherwise provide manual installation guidance
+      sudo apt-get install -y libcglm-dev || {
+        echo "Warning: libcglm-dev not available in this Ubuntu version"
+        echo "For Ubuntu < 18.04, install cglm from source:"
+        echo "  git clone https://github.com/recp/cglm.git"
+        echo "  cd cglm && mkdir build && cd build"
+        echo "  cmake .. && sudo make install"
+      }
   
   - name: Verify installation
     run: |

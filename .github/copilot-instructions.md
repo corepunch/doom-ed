@@ -44,8 +44,10 @@ DOOM-ED is a modern open-source level editor for classic DOOM games, built with 
 
 **Linux (Ubuntu/Debian):**
 ```bash
-sudo apt-get install build-essential libsdl2-dev libcglm-dev libgl1-mesa-dev
+sudo apt-get install build-essential libsdl2-dev libcglm-dev libgl1-mesa-dev pkg-config
 ```
+
+**Note**: cglm is available in Ubuntu 18.04+. For older versions, install from source: https://github.com/recp/cglm
 
 **macOS:**
 ```bash
@@ -212,7 +214,7 @@ The README.md mentions `src/`, `include/`, `resources/`, `lua/`, and `docs/` dir
 - **Linux**: Supported via Makefile; uses pkg-config to locate dependencies
 - **Windows**: Not currently supported; README.md mentions CMake but no CMakeLists.txt exists yet
 - **Byte Order**: All WAD data is little-endian; handle conversions if needed on big-endian systems
-- **Note**: Repository includes `libSDL2-2.0.0.dylib` but Makefile prefers system-installed libraries via pkg-config or Homebrew
+- **Note**: Repository includes a bundled `libSDL2-2.0.0.dylib` (likely for Xcode project). The Makefile build system prefers system-installed SDL2 via pkg-config or Homebrew.
 
 ## Performance Considerations
 
