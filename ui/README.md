@@ -10,9 +10,17 @@ ui/
 ├── user/             # Window management and user interface (USER.DLL equivalent)
 │   ├── user.h        # Window structures and management functions
 │   ├── messages.h    # Window message constants and macros
-│   └── draw.h        # Drawing primitives (rectangles, text, icons)
+│   ├── draw.h        # Drawing primitives (rectangles, icons)
+│   ├── text.h        # Text rendering functions (NEW)
+│   ├── text.c        # Text rendering implementation (small font, DOOM/Hexen fonts)
+│   ├── window.c      # Window management implementation
+│   ├── message.c     # Message queue implementation
+│   └── draw_impl.c   # Drawing primitives implementation
 ├── kernel/           # Event loop and SDL integration (KERNEL.DLL equivalent)
-│   └── kernel.h      # Event management and SDL initialization
+│   ├── kernel.h      # Event management and SDL initialization
+│   ├── event.c       # Event loop implementation
+│   ├── init.c        # SDL initialization
+│   └── joystick.c    # Joystick/gamepad support
 └── commctl/          # Common controls (COMCTL32.DLL equivalent)
     ├── commctl.h     # Common control window procedures
     ├── button.c      # Button control implementation
@@ -20,7 +28,9 @@ ui/
     ├── edit.c        # Text edit control implementation
     ├── label.c       # Label (static text) control implementation
     ├── list.c        # List control implementation
-    └── combobox.c    # Combobox (dropdown) control implementation
+    ├── combobox.c    # Combobox (dropdown) control implementation
+    ├── console.h     # Console control header (NEW)
+    └── console.c     # Console control implementation (NEW)
 ```
 
 ## Architecture
@@ -55,6 +65,7 @@ Implements standard UI controls that can be used to build interfaces.
 - **Label**: Static text display
 - **List**: Scrollable list of items
 - **Combobox**: Dropdown selection control
+- **Console**: Message display console with automatic fading and scrolling
 
 ## Usage
 
@@ -90,6 +101,32 @@ window_t *chk = create_window("Enable Feature", 0, &chk_frame, parent, win_check
 
 // Create an edit box
 window_t *edit = create_window("Enter text", 0, &edit_frame, parent, win_textedit, NULL);
+
+// Create a console window
+window_t *console = create_window("Console", 0, &console_frame, parent, win_console, NULL);
+```
+
+### Using the Console
+
+```c
+#include "ui/commctl/console.h"
+
+// Initialize the console system (call once at startup)
+init_console();
+
+// Print messages to the console
+conprintf("Game started");
+conprintf("Player health: %d", player_health);
+
+// Messages automatically fade after 5 seconds
+// Draw the console overlay (called from your render loop or window procedure)
+// draw_console() is called automatically by win_console in WM_PAINT
+
+// Toggle console visibility
+toggle_console();
+
+// Clean up (call at shutdown)
+shutdown_console();
 ```
 
 ## Window Messages
@@ -123,26 +160,82 @@ The framework uses a message-based architecture. Common messages include:
 ### Edit Box Messages
 - `EN_UPDATE` - Text was modified
 
+## Text Rendering API
+
+The UI framework provides text rendering through `ui/user/text.h`:
+
+### Small Bitmap Font (6x8 pixels)
+
+```c
+#include "ui/user/text.h"
+
+// Initialize text rendering system (call once at startup)
+init_text_rendering();
+
+// Draw text with small bitmap font
+draw_text_small("Hello World", x, y, 0xFFFFFFFF); // color as RGBA
+
+// Measure text width
+int width = strwidth("Hello World");
+int partial_width = strnwidth("Hello", 5);
+
+// Clean up (call at shutdown)
+shutdown_text_rendering();
+```
+
+### DOOM/Hexen Game Font
+
+```c
+// Load game font from WAD file (call after loading WAD)
+load_console_font();
+
+// Draw text with game font (includes fade-out effect)
+draw_text_gl3("DOOM", x, y, 1.0f); // alpha 0.0-1.0
+
+// Measure game font text width
+int width = get_text_width("DOOM");
+```
+
+### Notes
+- Small bitmap font supports all 128 ASCII characters
+- DOOM/Hexen font supports characters 33-95 (printable ASCII)
+- Font atlas is created automatically for efficient rendering
+- Text rendering uses OpenGL for hardware acceleration
+
+
 ## Status
 
 This is an in-progress refactoring. The framework currently:
 
 ✅ Has header files defining the API structure
-✅ Has extracted common control implementations (button, checkbox, edit, label, list, combobox)
+✅ Has extracted common control implementations (button, checkbox, edit, label, list, combobox, console)
+✅ Has extracted text rendering to `ui/user/text.c` (small bitmap font and DOOM/Hexen fonts)
+✅ Has moved console to `ui/commctl/console.c` (console message management and display)
+✅ Has integrated with build system (Makefile)
 ⏳ Still needs core window management code to be moved from mapview/window.c
 ⏳ Still needs drawing primitives to be moved from mapview/sprites.c
-⏳ Still needs text rendering to be moved from mapview/windows/console.c
-⏳ Needs build system integration
+
+## Recent Changes
+
+### Text Rendering Module (ui/user/text.c, ui/user/text.h)
+- **Small bitmap font rendering**: `draw_text_small()`, `strwidth()`, `strnwidth()`
+- **DOOM/Hexen font rendering**: `draw_text_gl3()`, `get_text_width()`, `load_console_font()`
+- **Font atlas management**: Automatic creation of font texture atlas for efficient rendering
+- Extracted from mapview/windows/console.c to make text rendering reusable
+
+### Console Module (ui/commctl/console.c, ui/commctl/console.h)
+- **Console message management**: Circular buffer for console messages with timestamps
+- **Message display**: Automatic fading and scrolling of recent messages
+- **Public API**: `init_console()`, `conprintf()`, `draw_console()`, `shutdown_console()`, `toggle_console()`
+- Uses text rendering module for display
+- Moved from mapview/windows/console.c to UI framework
 
 ## Future Work
 
 1. Move core window management functions to `ui/user/window.c`
 2. Move message queue to `ui/user/message.c`
 3. Move drawing primitives to `ui/user/draw.c`
-4. Move text rendering to `ui/user/text.c`
-5. Move font system to `ui/user/font.c`
-6. Update build system (Makefile, Xcode project)
-7. Update all #includes throughout the codebase
-8. Add documentation for each function
-9. Add example code
-10. Add unit tests for UI components
+4. Update Xcode project with new file locations
+5. Add documentation for each function
+6. Add example code
+7. Add unit tests for UI components
