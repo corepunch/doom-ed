@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 
 #include "../map.h"
+#include "../gamefont.h"
 
 // Add these to your console.c file at the top with other static variables
 static struct {

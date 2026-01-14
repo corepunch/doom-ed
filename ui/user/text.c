@@ -1,5 +1,6 @@
 // Text rendering implementation
 // Extracted from mapview/windows/console.c
+// Contains only the small embedded font rendering (console_font_6x8: 6-bit wide, 8 pixels tall)
 
 #include <SDL2/SDL.h>
 #include "gl_compat.h"
@@ -14,8 +15,6 @@
 #define MAX_TEXT_LENGTH 256
 #define SMALL_FONT_WIDTH 8
 #define SMALL_FONT_HEIGHT 8
-#define CONSOLE_FONT_HEIGHT 8
-#define CONSOLE_FONT_WIDTH 8
 
 typedef struct {
   int16_t x, y;
@@ -34,41 +33,15 @@ typedef struct {
   uint8_t total_chars;       // Total number of characters in atlas
 } font_atlas_t;
 
-// Font character structure for DOOM/Hexen fonts
-typedef struct {
-  GLuint texture;    // OpenGL texture ID
-  int x, y;
-  int width;         // Width of this character
-  int height;        // Height of this character
-} font_char_t;
-
 // Text rendering state
 static struct {
-  font_char_t font[128];     // ASCII characters for DOOM/Hexen fonts
   font_atlas_t small_font;   // Small 6x8 font atlas
 } text_state = {0};
 
-#ifdef HEXEN
-// Hexen font lump name
-static const char* HEXEN_FONT_LUMP = "FONTAY_S";
-#else
-// Doom font lump names (original Doom font is stored in patches named STCFN*)
-static const char* FONT_LUMPS_PREFIX = "STCFN";
-#endif
-
 // Forward declarations for external functions
 extern void push_sprite_args(int tex, int x, int y, int w, int h, float alpha);
-extern void draw_rect(int tex, int x, int y, int w, int h);
-extern GLuint white_tex;
-
-// Forward declarations for WAD file functions
-extern int find_lump_num(const char* name);
-extern void* cache_lump_num(int lump);
-extern void* cache_lump(const char* name);
-extern GLuint load_sprite_texture(void *data, int* width, int* height, int* offsetx, int* offsety);
 
 // Forward declarations
-static bool load_font_char(int font, int char_code);
 static bool create_font_atlas(void);
 
 // Create texture atlas for the small 6x8 font
@@ -161,149 +134,6 @@ static bool create_font_atlas(void) {
 void init_text_rendering(void) {
   memset(&text_state, 0, sizeof(text_state));
   create_font_atlas();
-}
-
-// Load a specific font character for Doom
-static bool load_font_char(int font, int char_code) {
-  int width, height, leftoffset, topoffset;
-  
-#ifdef HEXEN
-  int texture = load_sprite_texture(cache_lump_num(font+char_code-32), &width, &height, &leftoffset, &topoffset);
-#else
-  // Construct font lump name (e.g., "STCFN065" for 'A')
-  char lump_name[16];
-  snprintf(lump_name, sizeof(lump_name), "%s%03d", FONT_LUMPS_PREFIX, char_code);
-  int texture = load_sprite_texture(cache_lump(lump_name), &width, &height, &leftoffset, &topoffset);
-#endif
-  
-  // Store character data
-  text_state.font[char_code].texture = texture;
-  text_state.font[char_code].x = leftoffset;
-  text_state.font[char_code].y = topoffset;
-  text_state.font[char_code].width = width;
-  text_state.font[char_code].height = height;
-  
-  return true;
-}
-
-// Load the appropriate font (Doom or Hexen)
-bool load_console_font(void) {
-  bool success = true;
-  
-#ifdef HEXEN
-  // Load Hexen font
-  int fontdata = find_lump_num(HEXEN_FONT_LUMP);
-  if (fontdata == -1) {
-    printf("Error: Could not load Hexen font lump %s\n", HEXEN_FONT_LUMP);
-    return false;
-  }
-  
-  for (int i = 33; i <= 95; i++) {
-    if (!load_font_char(fontdata, i)) {
-      // Not all characters might be present, that's fine
-      printf("Warning: Could not load font character %c (%d)\n", (char)i, i);
-    }
-  }
-  
-  printf("Text rendering initialized with Hexen font\n");
-#else
-  // Doom: Find and load all STCFN## font characters
-  // In Doom, only certain ASCII characters are stored (33-95, i.e., ! through _)
-  for (int i = 33; i <= 95; i++) {
-    if (!load_font_char(0, i)) {
-      // Not all characters might be present, that's fine
-      printf("Warning: Could not load font character %c (%d)\n", (char)i, i);
-    }
-  }
-  
-  printf("Text rendering initialized with DOOM font\n");
-#endif
-  
-  return success;
-}
-
-// Draw a single character using DOOM/Hexen font
-static void draw_char_gl3(char c, int x, int y, float alpha) {
-#ifdef HEXEN
-  int char_code = toupper(c);
-#else
-  int char_code = (int)(c);
-#endif
-  
-  // Only handle characters we have textures for
-  if (char_code < 0 || char_code >= 128 || text_state.font[char_code].texture == 0) {
-    // Fallback for unsupported characters - draw a solid rectangle
-    if (c != ' ') {  // Skip spaces
-      draw_rect(white_tex, x, y, CONSOLE_FONT_WIDTH, CONSOLE_FONT_HEIGHT);
-    }
-    return;
-  }
-  
-  font_char_t* ch = &text_state.font[char_code];
-  
-  draw_rect(ch->texture, x - text_state.font[char_code].x, y - text_state.font[char_code].y, ch->width, ch->height);
-}
-
-// Draw text string using GL3 with DOOM/Hexen font
-void draw_text_gl3(const char* text, int x, int y, float alpha) {
-  int cursor_x = x;
-  
-  // Set up GL state
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-  glDisable(GL_DEPTH_TEST);
-  
-  // Draw each character
-#ifdef HEXEN
-  // Hexen font is already uppercase
-  for (int i = 0; text[i] != '\0'; i++) {
-    char c = text[i];
-#else
-  // Doom font is uppercase only
-  for (int i = 0; text[i] != '\0'; i++) {
-    char c = toupper(text[i]);
-#endif
-    draw_char_gl3(c, cursor_x, y, alpha);
-    
-    // Advance cursor
-    if (c >= 32 && c > 0) {
-      // Use character width if available, otherwise use default
-      int char_width = text_state.font[c].width;
-      cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH);
-    } else {
-      cursor_x += CONSOLE_FONT_WIDTH;  // Default width for unsupported chars
-    }
-  }
-  
-  // Restore GL state
-  glEnable(GL_DEPTH_TEST);
-  glDisable(GL_BLEND);
-}
-
-// Get width of text rendered with DOOM/Hexen font
-int get_text_width(const char* text) {
-  int cursor_x = 0;
-  // Draw each character
-#ifdef HEXEN
-  // Hexen font is already uppercase
-  for (int i = 0; text[i] != '\0'; i++) {
-    char c = text[i];
-#else
-  // Doom font is uppercase only
-  for (int i = 0; text[i] != '\0'; i++) {
-    char c = toupper(text[i]);
-#endif
-    
-    // Advance cursor
-    if (c >= 32 && c > 0) {
-      // Use character width if available, otherwise use default
-      int char_width = text_state.font[c].width;
-      cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH);
-    } else {
-      cursor_x += CONSOLE_FONT_WIDTH;  // Default width for unsupported chars
-    }
-  }
-  return cursor_x;
 }
 
 // Get width of text substring with small font
@@ -433,14 +263,6 @@ void draw_text_small(const char* text, int x, int y, uint32_t col) {
 
 // Clean up text rendering resources
 void shutdown_text_rendering(void) {
-  // Delete all font textures
-  for (int i = 0; i < 128; i++) {
-    if (text_state.font[i].texture != 0) {
-      glDeleteTextures(1, &text_state.font[i].texture);
-      text_state.font[i].texture = 0;
-    }
-  }
-  
   // Delete small font resources
   if (text_state.small_font.texture != 0) {
     glDeleteTextures(1, &text_state.small_font.texture);
