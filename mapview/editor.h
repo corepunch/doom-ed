@@ -21,6 +21,7 @@ bool point_exists(mapvertex_t point, map_data_t *map, int *index);
 int split_linedef(map_data_t *map, int linedef_id, float x, float y);
 editor_state_t *get_editor(void);
 
+result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 /**
  * Calculate the closest point on a line segment to a given point

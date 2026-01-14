@@ -7,12 +7,12 @@ enum {
 };
 
 windef_t vertex_layout[] = {
-  { "TEXT", "Vertex#:", -1, LABEL_WIDTH },
-  { "EDITTEXT", "", ID_VERTEX_ID, 50 },
-  { "TEXT", "Position X:", -1, LABEL_WIDTH },
-  { "EDITTEXT", "", ID_VERTEX_POS_X, 50 },
-  { "TEXT", "Position Y:", -1, LABEL_WIDTH },
-  { "EDITTEXT", "", ID_VERTEX_POS_Y, 50 },
+  { win_label, "Vertex#:", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_VERTEX_ID, 50 },
+  { win_label, "Position X:", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_VERTEX_POS_X, 50 },
+  { win_label, "Position Y:", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_VERTEX_POS_Y, 50 },
   { NULL }
 };
 

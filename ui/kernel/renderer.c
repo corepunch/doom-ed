@@ -167,6 +167,10 @@ void set_projection(int x, int y, int w, int h) {
   glUniformMatrix4fv(glGetUniformLocation(g_ref.program, "projection"), 1, GL_FALSE, projection[0]);
 }
 
+float *get_sprite_matrix(void) {
+  return (float*)&g_ref.projection;
+}
+
 // Draw a sprite at the specified screen position
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha) {
   push_sprite_args(tex, x, y, w, h, alpha);

@@ -52,3 +52,7 @@ result_t win_button(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   }
   return false;
 }
+
+result_t win_space(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
+  return false;
+}

@@ -11,17 +11,17 @@ enum {
 };
 
 windef_t sector_layout[] = {
-  { "TEXT", "Sector#", -1, LABEL_WIDTH },
-  { "EDITTEXT", "", ID_SECTOR_IDENT, 50 },
-  { "TEXT", "Light lvl:", -1, LABEL_WIDTH },
-  { "EDITTEXT", "", ID_SECTOR_LIGHT_LEVEL, 50 },
-  { "TEXT", "Floor Hgt:", -1, LABEL_WIDTH },
-  { "EDITTEXT", "", ID_SECTOR_FLOOR_HEIGHT, 50 },
-  { "TEXT", "Ceiling Hgt:", -1, LABEL_WIDTH },
-  { "EDITTEXT", "", ID_SECTOR_CEILING_HEIGHT, 50 },
-//  { "COMBOBOX", "Stone", ID_TEST_COMBOBOX, 90 }, {"SPACE"},
-  { "SPRITE", "", ID_SECTOR_FLOOR_IMAGE, 64, 64 },
-  { "SPRITE", "", ID_SECTOR_CEILING_IMAGE, 64, 64 },
+  { win_label, "Sector#", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_SECTOR_IDENT, 50 },
+  { win_label, "Light lvl:", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_SECTOR_LIGHT_LEVEL, 50 },
+  { win_label, "Floor Hgt:", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_SECTOR_FLOOR_HEIGHT, 50 },
+  { win_label, "Ceiling Hgt:", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_SECTOR_CEILING_HEIGHT, 50 },
+//  { win_combobox, "Stone", ID_TEST_COMBOBOX, 90 }, {win_space},
+  { win_sprite, "", ID_SECTOR_FLOOR_IMAGE, 64, 64 },
+  { win_sprite, "", ID_SECTOR_CEILING_IMAGE, 64, 64 },
   { NULL }
 };
 

@@ -192,7 +192,6 @@ void draw_radial(GLuint texture, float center_x, float center_y,
   // Use radial menu shader program
   glUseProgram(menu->program);
   
-  float *get_sprite_matrix(void);
   // Set uniforms
   glUniformMatrix4fv(glGetUniformLocation(menu->program, "projection"), 1, GL_FALSE, get_sprite_matrix());
   glUniform2f(glGetUniformLocation(menu->program, "center"), center_x, center_y);

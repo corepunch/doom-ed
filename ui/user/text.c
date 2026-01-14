@@ -41,9 +41,6 @@ static struct {
 // Forward declarations for external functions
 extern void push_sprite_args(int tex, int x, int y, int w, int h, float alpha);
 
-// Forward declarations
-static bool create_font_atlas(void);
-
 // Create texture atlas for the small 6x8 font
 static bool create_font_atlas(void) {
   extern unsigned char console_font_6x8[];

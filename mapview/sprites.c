@@ -265,7 +265,6 @@ GLuint generate_crosshair_texture(int size) {
 
 // Draw a sprite at the specified screen position
 void draw_sprite(const char* name, float x, float y, float scale, float alpha) {
-  sprite_system_t* sys = &g_sprite_system;
   sprite_t* sprite = find_sprite(name);
   
   if (!sprite) {

@@ -45,7 +45,7 @@ typedef struct toolbar_button_s {
 
 // Window definition structure (for declarative window creation)
 typedef struct {
-  const char *classname;
+  winproc_t proc;
   const char *text;
   uint32_t id;
   int w, h;

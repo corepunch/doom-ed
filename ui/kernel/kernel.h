@@ -39,6 +39,7 @@ int get_sprite_vao(void);
 
 void push_sprite_args(int tex, int x, int y, int w, int h, float alpha);
 void set_projection(int x, int y, int w, int h);
+float *get_sprite_matrix(void);
 
 // Global SDL objects
 extern SDL_Window* window;

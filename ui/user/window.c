@@ -289,22 +289,8 @@ extern result_t win_textedit(window_t *win, uint32_t msg, uint32_t wparam, void 
 extern result_t win_combobox(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent) {
-  winproc_t proc = NULL;
-  if (!strcmp(def->classname, "TEXT")) {
-    proc = win_label;
-  } else if (!strcmp(def->classname, "BUTTON")) {
-    proc = win_button;
-  } else if (!strcmp(def->classname, "CHECKBOX")) {
-    proc = win_checkbox;
-  } else if (!strcmp(def->classname, "EDIT")) {
-    proc = win_textedit;
-  } else if (!strcmp(def->classname, "COMBOBOX")) {
-    proc = win_combobox;
-  } else if (!strcmp(def->classname, "SPRITE")) {
-    proc = win_sprite;
-  }
   rect_t rect = {r->x, r->y, def->w, def->h};
-  window_t *win = create_window(def->text, def->flags, &rect, parent, proc, NULL);
+  window_t *win = create_window(def->text, def->flags, &rect, parent, def->proc, NULL);
   win->id = def->id;
   return win;
 }
@@ -313,7 +299,7 @@ window_t *create_window2(windef_t const *def, rect_t const *r, window_t *parent)
 void load_window_children(window_t *win, windef_t const *def) {
   clear_window_children(win);
   rect_t r = {0, 0, 0, 0};
-  for (windef_t const *d = def; d->classname; d++) {
+  for (windef_t const *d = def; d->proc; d++) {
     r.y += r.h;
     window_t *child = create_window2(d, &r, win);
     if (d->id) {
