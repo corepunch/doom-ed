@@ -222,26 +222,37 @@ void set_focus(window_t* win) {
 
 // Move window to top of Z-order
 static void move_to_top(window_t* _win) {
-  window_t *win = _win;
+  window_t *win = get_root_window(_win);
+  post_message(win, WM_REFRESHSTENCIL, 0, NULL);
+  invalidate_window(win);
   
-  if (win == windows)
+  if (win->flags&WINDOW_ALWAYSINBACK)
     return;
   
-  window_t *prev = NULL;
-  for (window_t *w = windows; w; prev = w, w = w->next) {
-    if (w == win) {
-      if (prev) {
-        prev->next = win->next;
-      }
-      break;
-    }
+  window_t **head = &windows, *p = NULL, *n = *head;
+  
+  // Find the node `win` in the list
+  while (n != win) {
+    p = n;
+    n = n->next;
+    if (!n) return;  // If `win` is not found, exit
   }
   
-  win->next = windows;
-  windows = win;
+  // Remove the node `win` from the list
+  if (p) p->next = win->next;
+  else *head = win->next;  // If `win` is at the head, update the head
   
-  post_message(win, WM_NCPAINT, 0, NULL);
-  post_message(win, WM_PAINT, 0, NULL);
+  // Ensure that if `win` was the only node, we don't append it to itself
+  if (!*head) return;  // If the list becomes empty, there's nothing to append
+  
+  // Find the tail of the list
+  window_t *tail = *head;
+  while (tail->next)
+    tail = tail->next;
+  
+  // Append `win` to the end of the list
+  tail->next = win;
+  win->next = NULL;
 }
 
 // Invalidate window (request repaint)
