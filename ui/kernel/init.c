@@ -16,7 +16,7 @@ bool ui_init_prog(void);
 void ui_shutdown_prog(void);
 
 // Initialize window and OpenGL context
-bool ui_init_window(const char *title, int width, int height) {
+static bool ui_init_window(const char *title, int width, int height) {
   // Set OpenGL attributes before creating window
   SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
   SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -74,9 +74,15 @@ bool ui_init_window(const char *title, int width, int height) {
 
 // Initialize graphics context (SDL + OpenGL)
 // This is a convenience function that initializes SDL and creates window/context
-bool ui_init_graphics(const char *title, int width, int height) {
+bool ui_init_graphics(int flags, const char *title, int width, int height) {
+  //  printf("%s\n", cache_lump("MAPINFO"));
+  if (SDL_Init(SDL_INIT_VIDEO|flags) < 0) {
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    return false;
+  }
   // Use ui_init_window to create window and context
   if (!ui_init_window(title, width, height)) {
+    SDL_Quit();
     return false;
   }
 

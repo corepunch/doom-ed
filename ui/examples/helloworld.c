@@ -46,47 +46,14 @@ int main(int argc, char* argv[]) {
   printf("UI Framework Hello World Example\n");
   printf("=================================\n\n");
 
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-    return false;
-  }
-
   // Initialize graphics system (SDL + OpenGL abstracted)
-  if (!ui_init_graphics("UI Framework - Hello World", screen_width, screen_height)) {
+  if (!ui_init_graphics(0, "UI Framework - Hello World", 640, 480)) {
     printf("Failed to initialize graphics!\n");
-    SDL_Quit();
     return 1;
   }
 
   printf("Graphics initialized successfully\n");
   printf("Creating window with UI framework...\n");
-
-  // Create a desktop window
-  rect_t desktop_rect = {0, 0, screen_width, screen_height};
-  window_t *desktop = create_window(
-    "Desktop",
-    WINDOW_NOTITLE | WINDOW_NORESIZE | WINDOW_NOFILL,
-    &desktop_rect,
-    NULL,
-    NULL,
-    NULL
-  );
-  desktop->visible = true;
-
-  // Create hello world window  
-  rect_t hello_rect = {250, 200, 300, 200};
-  window_t *hello_win = create_window(
-    "Hello World Window",
-    0,  // Default flags (has title, resizable, filled)
-    &hello_rect,
-    NULL,
-    hello_window_proc,
-    NULL
-  );
-  hello_win->visible = true;
-
-  printf("Window created successfully!\n");
-  printf("Press the close button to exit.\n\n");
 
   // Main event loop
   ui_event_t e;

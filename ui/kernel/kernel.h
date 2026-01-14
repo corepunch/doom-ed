@@ -12,11 +12,8 @@ int get_message(ui_event_t *evt);
 void dispatch_message(ui_event_t *evt);
 void repost_messages(void);
 
-// Window and OpenGL context initialization
-bool ui_init_window(const char *title, int width, int height);
-
 // Graphics context initialization (abstracted)
-bool ui_init_graphics(const char *title, int width, int height);
+bool ui_init_graphics(int flags, const char *title, int width, int height);
 void ui_shutdown_graphics(void);
 
 // Joystick input management (abstracted)

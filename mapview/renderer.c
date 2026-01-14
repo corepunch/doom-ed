@@ -97,12 +97,7 @@ editor_state_t *get_editor(void) {
 }
 
 // Initialize SDL and create window/renderer
-bool init_resources(void) {
-  // Initialize joystick support through UI layer
-  // Note: Joystick initialization is now handled by the UI layer
-  // to decouple SDL-specific code and prepare for potential GLFW migration
-  ui_joystick_init();
-  
+bool init_resources(void) {  
   GLuint vs, fs;
 
   vs = compile(GL_VERTEX_SHADER, vs_src);
@@ -170,31 +165,6 @@ bool init_resources(void) {
   glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &(int){0xffffff00});
 
   return true;
-}
-
-// Clean up SDL resources
-void cleanup(void) {
-  // Shutdown joystick through UI layer
-  ui_joystick_shutdown();
-  SDL_DestroyWindow(window);
-  SDL_Quit();
-}
-
-// Main function
-int run(void) {
-  // Main game loop
-  while (running) {
-    SDL_Event event;
-    while (get_message(&event)) {
-      dispatch_message(&event);
-    }
-    repost_messages();
-  }
-  
-  // Clean up
-  cleanup();
-  
-  return 0;
 }
 
 void GetMouseInVirtualCoords(int* vx, int* vy) {

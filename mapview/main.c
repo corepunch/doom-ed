@@ -68,18 +68,16 @@ int main(int argc, char* argv[]) {
   extern palette_entry_t *palette;
   palette = cache_lump("PLAYPAL");
   
-//  printf("%s\n", cache_lump("MAPINFO"));
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-    return false;
-  }
-  
   // Print map info
   // Initialize window and OpenGL context
-  if (!ui_init_window("DOOM Wireframe Renderer", SCREEN_WIDTH, SCREEN_HEIGHT)) {
-    SDL_Quit();
+  if (!ui_init_graphics(SDL_INIT_JOYSTICK, "DOOM Wireframe Renderer", SCREEN_WIDTH, SCREEN_HEIGHT)) {
     return 1;
   }
+  
+  // Initialize joystick support through UI layer
+  // Note: Joystick initialization is now handled by the UI layer
+  // to decouple SDL-specific code and prepare for potential GLFW migration
+  ui_joystick_init();
   
   // Initialize SDL
   init_resources();
@@ -100,11 +98,20 @@ int main(int argc, char* argv[]) {
   new_map();
 //  open_map("MAP01");
   
-  run();
+  // Main game loop
+  while (running) {
+    SDL_Event event;
+    while (get_message(&event)) {
+      dispatch_message(&event);
+    }
+    repost_messages();
+  }
 
   shutdown_wad();
   
-  SDL_Quit();
+  ui_joystick_shutdown();
+  
+  ui_shutdown_graphics();
   
   return 0;
 }
