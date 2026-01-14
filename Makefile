@@ -39,6 +39,7 @@ HEXEN_DIR = hexen
 BUILD_DIR = build
 TESTS_DIR = tests
 UI_DIR = ui
+LIBGAME_DIR = libgame
 
 # Source files
 MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
@@ -108,21 +109,34 @@ LIBDESKTOP_SRCS = $(UI_DIR)/commctl/button.c \
                   $(UI_DIR)/kernel/joystick.c \
                   $(UI_DIR)/kernel/renderer.c
 
+# libgame files (game data and WAD I/O)
+LIBGAME_SRCS = $(LIBGAME_DIR)/wad.c
+
 # Object files
 MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
 LIBDESKTOP_OBJS = $(LIBDESKTOP_SRCS:$(UI_DIR)/%.c=$(BUILD_DIR)/ui/%.o)
+LIBGAME_OBJS = $(LIBGAME_SRCS:$(LIBGAME_DIR)/%.c=$(BUILD_DIR)/libgame/%.o)
 
 # Libraries
 LIBDESKTOP = $(BUILD_DIR)/libdesktop.a
+LIBGAME = $(BUILD_DIR)/libgame.a
 
 # All object files for main executable
 OBJS = $(MAPVIEW_OBJS) $(HEXEN_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test bsp_test examples helloworld libdesktop
+.PHONY: all clean test triangulate_test bsp_test examples helloworld libdesktop libgame
 
-all: libdesktop mapview
+all: libgame libdesktop mapview
+
+# libgame library
+libgame: $(LIBGAME)
+
+$(LIBGAME): $(LIBGAME_OBJS)
+	@mkdir -p $(dir $@)
+	ar rcs $@ $^
+	@echo "Built libgame.a"
 
 # libdesktop library
 libdesktop: $(LIBDESKTOP)
@@ -133,9 +147,9 @@ $(LIBDESKTOP): $(LIBDESKTOP_OBJS)
 	@echo "Built libdesktop.a"
 
 # mapview executable (main executable)
-mapview: $(OBJS) $(LIBDESKTOP)
+mapview: $(OBJS) $(LIBGAME) $(LIBDESKTOP)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LIBDESKTOP) $(LDFLAGS) -o doom-ed
+	$(CC) $(OBJS) $(LIBGAME) $(LIBDESKTOP) $(LDFLAGS) -o doom-ed
 	@echo "Built doom-ed executable"
 
 # Legacy target name (kept for compatibility)
@@ -144,23 +158,28 @@ doom-ed: mapview
 # Object file rules
 $(BUILD_DIR)/mapview/%.o: $(MAPVIEW_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(LIBGAME_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
 $(BUILD_DIR)/mapview/windows/%.o: $(MAPVIEW_DIR)/windows/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(LIBGAME_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
 $(BUILD_DIR)/mapview/windows/inspector/%.o: $(MAPVIEW_DIR)/windows/inspector/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(LIBGAME_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
 $(BUILD_DIR)/mapview/editor/%.o: $(MAPVIEW_DIR)/editor/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(LIBGAME_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
 
 $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(LIBGAME_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+
+# libgame object file rules
+$(BUILD_DIR)/libgame/%.o: $(LIBGAME_DIR)/%.c
+	@mkdir -p $(dir $@)
+	$(CC) $(CFLAGS) -I$(LIBGAME_DIR) -c $< -o $@
 
 # UI framework object file rules
 $(BUILD_DIR)/ui/commctl/%.o: $(UI_DIR)/commctl/%.c
