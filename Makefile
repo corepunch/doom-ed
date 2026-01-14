@@ -62,7 +62,6 @@ MAPVIEW_SRCS = $(MAPVIEW_DIR)/bsp.c \
                $(MAPVIEW_DIR)/walls.c \
                $(MAPVIEW_DIR)/wi_stuff.c \
                $(MAPVIEW_DIR)/window.c \
-               $(MAPVIEW_DIR)/windows/console.c \
                $(MAPVIEW_DIR)/windows/desktop.c \
                $(MAPVIEW_DIR)/windows/game.c \
                $(MAPVIEW_DIR)/windows/inspector/insp_line.c \
@@ -95,6 +94,7 @@ HEXEN_SRCS = $(HEXEN_DIR)/actions.c \
 UI_SRCS = $(UI_DIR)/commctl/button.c \
           $(UI_DIR)/commctl/checkbox.c \
           $(UI_DIR)/commctl/combobox.c \
+          $(UI_DIR)/commctl/console.c \
           $(UI_DIR)/commctl/edit.c \
           $(UI_DIR)/commctl/label.c \
           $(UI_DIR)/commctl/list.c \

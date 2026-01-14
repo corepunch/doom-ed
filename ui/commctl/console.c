@@ -1,18 +1,21 @@
 #include <SDL2/SDL.h>
-#include "../gl_compat.h"
+#include "../user/gl_compat.h"
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
-#include "../console.h"
-#include "../map.h"
-#include "../../ui/user/text.h"
+#include "console.h"
+#include "../user/text.h"
+#include "../user/user.h"
+#include "../user/messages.h"
 
 #define MAX_CONSOLE_MESSAGES 32
 #define MESSAGE_DISPLAY_TIME 5000  // milliseconds
 #define MESSAGE_FADE_TIME 1000     // fade out duration in milliseconds
 #define MAX_MESSAGE_LENGTH 256
 #define MAX_CONSOLE_LINES 10      // Maximum number of lines to display at once
+#define CONSOLE_PADDING 2
+#define LINE_HEIGHT 8
 
 // Console message structure
 typedef struct {
