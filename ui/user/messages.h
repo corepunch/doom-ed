@@ -101,12 +101,12 @@ typedef enum {
 } icon8_t;
 
 // UI colors (from sprites.h COLOR_ constants - will be moved to ui framework)
-#define COLOR_LIGHT_EDGE     0xff545454
+#define COLOR_LIGHT_EDGE     0xff7f7f7f
 #define COLOR_DARK_EDGE      0xff1a1a1a
 #define COLOR_PANEL_BG       0xff3c3c3c
 #define COLOR_PANEL_DARK_BG  0xff2c2c2c
 #define COLOR_FOCUSED        0xff5EC4F3
-#define COLOR_FLARE          0xffffffff
+#define COLOR_FLARE          0xffcfcfcf
 #define COLOR_TEXT_NORMAL    0xffc0c0c0
 #define COLOR_TEXT_DISABLED  0xff808080
 #define COLOR_TEXT_ERROR     0xffff4444
