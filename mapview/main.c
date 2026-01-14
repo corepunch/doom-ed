@@ -69,18 +69,20 @@ int main(int argc, char* argv[]) {
   palette = cache_lump("PLAYPAL");
   
 //  printf("%s\n", cache_lump("MAPINFO"));
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    return false;
+  }
   
   // Print map info
   // Initialize window and OpenGL context
   if (!ui_init_window("DOOM Wireframe Renderer", SCREEN_WIDTH, SCREEN_HEIGHT)) {
+    SDL_Quit();
     return 1;
   }
   
   // Initialize SDL
-  if (!init_sdl()) {
-    return 1;
-  }
-  
+  init_resources();
   init_floor_shader();
   init_sky_geometry();
   init_radial_menu();
@@ -101,6 +103,8 @@ int main(int argc, char* argv[]) {
   run();
 
   shutdown_wad();
+  
+  SDL_Quit();
   
   return 0;
 }

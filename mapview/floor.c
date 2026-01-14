@@ -80,7 +80,7 @@ bool linedef_in_mvp_2d(mat4 mvp, vec2 a, vec2 b) {
   
   return true; // At least partially visible
 }
-// Add this to your init_sdl function
+// Add this to your init_resources function
 void init_floor_shader(void) {
 }
 

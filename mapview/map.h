@@ -442,7 +442,7 @@ uint32_t show_dialog(char const *, const rect_t*, struct window_s *, winproc_t, 
 extern window_t *g_inspector;
 extern game_t *g_game;
 
-bool init_sdl(void);
+bool init_resources(void);
 int run(void);
 
 filelump_t *find_lump(const char* name);

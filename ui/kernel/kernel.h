@@ -12,10 +12,6 @@ int get_message(ui_event_t *evt);
 void dispatch_message(ui_event_t *evt);
 void repost_messages(void);
 
-// SDL initialization
-bool init_sdl(void);
-int run(void);
-
 // Window and OpenGL context initialization
 bool ui_init_window(const char *title, int width, int height);
 

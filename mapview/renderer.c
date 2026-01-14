@@ -97,12 +97,7 @@ editor_state_t *get_editor(void) {
 }
 
 // Initialize SDL and create window/renderer
-bool init_sdl(void) {
-  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-    return false;
-  }
-  
+bool init_resources(void) {
   // Initialize joystick support through UI layer
   // Note: Joystick initialization is now handled by the UI layer
   // to decouple SDL-specific code and prepare for potential GLFW migration
@@ -150,7 +145,6 @@ bool init_sdl(void) {
   ui_prog_tex0_size = glGetUniformLocation(ui_prog, "tex0_size");
   ui_prog_tex0 = glGetUniformLocation(ui_prog, "tex0");
   ui_prog_color = glGetUniformLocation(ui_prog, "color");
-
 
   glEnable(GL_CULL_FACE);
   glCullFace(GL_BACK);

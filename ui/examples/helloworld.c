@@ -46,9 +46,15 @@ int main(int argc, char* argv[]) {
   printf("UI Framework Hello World Example\n");
   printf("=================================\n\n");
 
+  if (SDL_Init(SDL_INIT_VIDEO|SDL_INIT_JOYSTICK) < 0) {
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+    return false;
+  }
+
   // Initialize graphics system (SDL + OpenGL abstracted)
   if (!ui_init_graphics("UI Framework - Hello World", screen_width, screen_height)) {
     printf("Failed to initialize graphics!\n");
+    SDL_Quit();
     return 1;
   }
 
