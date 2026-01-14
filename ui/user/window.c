@@ -211,13 +211,16 @@ void set_capture(window_t *win) {
 void set_focus(window_t* win) {
   if (win == _focused)
     return;
-  if (_focused)
-    send_message(_focused, WM_KILLFOCUS, 0, win);
-  _focused = win;
+  if (_focused) {
+    _focused->editing = false;
+    post_message(_focused, WM_KILLFOCUS, 0, win);
+    invalidate_window(_focused);
+  }
   if (win) {
-    send_message(win, WM_SETFOCUS, 0, NULL);
+    post_message(win, WM_SETFOCUS, 0, _focused);
     invalidate_window(win);
   }
+  _focused = win;
 }
 
 // Invalidate window (request repaint)
