@@ -5,12 +5,15 @@
 #include <mapview/gamefont.h>
 #include <ui/kernel/kernel.h>
 
+#define SCREEN_WIDTH 720
+#define SCREEN_HEIGHT 480
+
 void init_floor_shader(void);
 void init_sky_geometry(void);
 bool init_radial_menu(void);
 
-result_t win_desktop(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-result_t win_tray(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//result_t win_desktop(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+//result_t win_tray(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_console(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
@@ -26,8 +29,6 @@ void init_windows(void) {
   //  create_window("FPS", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT(0, 0, 128, 64), NULL, win_perf, NULL);
   //  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);
   //  create_window("Console", 0, MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
-  show_window(create_window("Desktop", WINDOW_NOTITLE|WINDOW_ALWAYSINBACK|WINDOW_NOTRAYBUTTON, MAKERECT(0, 0, screen_width, screen_height), NULL, win_desktop, NULL), true);
-  show_window(create_window("Tray", WINDOW_NOTITLE|WINDOW_NOTRAYBUTTON, MAKERECT(0, 0, 0, 0), NULL, win_tray, NULL), true);
 //  create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
   show_window(create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, THING_SIZE*3, 256), NULL, win_things, NULL), true);
   create_window("Project", WINDOW_VSCROLL, MAKERECT(4, 20, 128, 256), NULL, win_project, NULL);
@@ -70,7 +71,10 @@ int main(int argc, char* argv[]) {
   
   // Print map info
   // Initialize window and OpenGL context
-  if (!ui_init_graphics(SDL_INIT_JOYSTICK, "DOOM Wireframe Renderer", SCREEN_WIDTH, SCREEN_HEIGHT)) {
+  if (!ui_init_graphics(SDL_INIT_JOYSTICK|UI_INIT_DESKTOP|UI_INIT_TRAY,
+                        "DOOM Wireframe Renderer",
+                        SCREEN_WIDTH, SCREEN_HEIGHT))
+  {
     return 1;
   }
   

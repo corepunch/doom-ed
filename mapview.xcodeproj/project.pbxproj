@@ -78,7 +78,6 @@
 				editor_input.c,
 				editor_sector.c,
 				radial_menu.c,
-				windows/desktop.c,
 				windows/game.c,
 				windows/inspector/insp_line.c,
 				windows/inspector/insp_sector.c,
@@ -90,7 +89,6 @@
 				windows/statbar.c,
 				windows/texatlas.c,
 				windows/things.c,
-				windows/tray.c,
 			);
 			target = 78F695EF2F18FE7000FFD6E9 /* helloworld */;
 		};
@@ -145,6 +143,7 @@
 				commctl/edit.c,
 				commctl/label.c,
 				commctl/list.c,
+				commctl/tray.c,
 				kernel/event.c,
 				kernel/init.c,
 				kernel/joystick.c,
@@ -202,6 +201,7 @@
 				commctl/edit.c,
 				commctl/label.c,
 				commctl/list.c,
+				commctl/tray.c,
 				examples/helloworld.c,
 				kernel/event.c,
 				kernel/init.c,
@@ -231,6 +231,7 @@
 				commctl/edit.c,
 				commctl/label.c,
 				commctl/list.c,
+				commctl/tray.c,
 				kernel/event.c,
 				kernel/init.c,
 				kernel/joystick.c,
