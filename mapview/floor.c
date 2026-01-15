@@ -301,6 +301,10 @@ void draw_portals(map_data_t const *map,
         // Get the neighboring sector
         uint32_t neighbor_sector_idx = map->sidedefs[linedef->sidenum[!j]].sector;
         
+        // Bounds check to prevent buffer overflow
+        if (neighbor_sector_idx >= map->num_sectors)
+          continue;
+        
         // FIX #1: Check if neighbor sector was already drawn this frame
         // This prevents redundant traversal and ensures each sector is visited once per frame
         if (map->floors.sectors[neighbor_sector_idx].frame == viewdef->frame)
