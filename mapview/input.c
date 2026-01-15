@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
 #include <limits.h>
 
-#include "map.h"
-#include "editor.h"
+#include <mapview/map.h>
+#include <editor/editor.h>
 
 extern SDL_Window* window;
 extern bool running;

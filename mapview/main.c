@@ -1,9 +1,9 @@
-#include "map.h"
-#include "sprites.h"
-#include "console.h"
-#include "editor.h"
-#include "gamefont.h"
-#include "../ui/kernel/kernel.h"
+#include <mapview/map.h>
+#include <mapview/sprites.h>
+#include <mapview/console.h>
+#include <editor/editor.h>
+#include <mapview/gamefont.h>
+#include <ui/kernel/kernel.h>
 
 void init_floor_shader(void);
 void init_sky_geometry(void);

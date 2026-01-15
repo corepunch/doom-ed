@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 
-#include "../../editor.h"
-#include "../../sprites.h"
+#include <editor/editor.h>
+#include <mapview/sprites.h>
 
 #define MTF_EASY    1
 #define MTF_NORMAL    2

@@ -1,4 +1,4 @@
-#include "map.h"
+#include <mapview/map.h>
 
 #define TRAY_HEIGHT (BUTTON_HEIGHT+4)
 #define SPACING 4

@@ -1,14 +1,14 @@
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 #include <math.h>
 
-#include "map.h"
-#include "sprites.h"
-#include "console.h"
-#include "editor.h"
-#include "../ui/kernel/joystick.h"
+#include <mapview/map.h>
+#include <mapview/sprites.h>
+#include <mapview/console.h>
+#include <editor/editor.h>
+#include <ui/kernel/joystick.h>
 
 // External references to window and context (defined in ui/kernel)
 extern SDL_Window* window;

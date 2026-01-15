@@ -1,7 +1,7 @@
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
-#include "map.h"
+#include <mapview/map.h>
 
 // Global variables to add
 extern GLuint world_prog;

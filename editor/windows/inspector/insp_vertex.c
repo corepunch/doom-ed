@@ -1,4 +1,4 @@
-#include "../../editor.h"
+#include <editor/editor.h>
 
 enum {
   ID_VERTEX_ID = 1000,

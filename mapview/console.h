@@ -3,6 +3,6 @@
 
 // Compatibility header - console has been moved to UI framework
 // This header redirects to the new location
-#include "../ui/commctl/console.h"
+#include <ui/commctl/console.h>
 
 #endif // __CONSOLE_H__

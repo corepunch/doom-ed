@@ -1,9 +1,9 @@
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/struct.h>
 #include <string.h>
 #include <math.h>
-#include "map.h"
+#include <mapview/map.h>
 
 // Structure to hold sky texture information
 typedef struct {

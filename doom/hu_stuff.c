@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "d_englsh.h"
+#include <doom/d_englsh.h>
 
 #define HU_TITLE2  (mapnames2[gamemap-1])
 
