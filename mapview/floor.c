@@ -284,15 +284,25 @@ void draw_portals(map_data_t const *map,
     if (linedef->sidenum[0] == 0xFFFF || linedef->sidenum[1] == 0xFFFF)
       continue;
     for (int j = 0; j < 2; j++) {
-      if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors &&
-          (linedef_in_frustum_2d(viewdef->frustum,
-                                (vec3){a->x,a->y,sector->floorheight},
-                                (vec3){b->x,b->y,sector->floorheight}) ||
-           linedef_in_frustum_2d(viewdef->frustum,
-                                 (vec3){a->x,a->y,sector->ceilingheight},
-                                 (vec3){b->x,b->y,sector->ceilingheight})))
-      {
-        func(map, &map->sectors[map->sidedefs[linedef->sidenum[!j]].sector], viewdef);
+      if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors) {
+        // Get the neighboring sector
+        uint32_t neighbor_sector_idx = map->sidedefs[linedef->sidenum[!j]].sector;
+        
+        // Check if neighbor sector was already drawn this frame
+        if (map->floors.sectors[neighbor_sector_idx].frame == viewdef->frame)
+          continue;
+        
+        // Check if the portal linedef is in frustum using neighbor sector heights
+        mapsector_t const *neighbor = &map->sectors[neighbor_sector_idx];
+        if (linedef_in_frustum_2d(viewdef->frustum,
+                                  (vec3){a->x,a->y,neighbor->floorheight},
+                                  (vec3){b->x,b->y,neighbor->floorheight}) ||
+            linedef_in_frustum_2d(viewdef->frustum,
+                                  (vec3){a->x,a->y,neighbor->ceilingheight},
+                                  (vec3){b->x,b->y,neighbor->ceilingheight}))
+        {
+          func(map, neighbor, viewdef);
+        }
       }
     }
   }

@@ -53,7 +53,6 @@ EDITOR_SRCS = $(EDITOR_DIR)/editor_draw.c \
               $(EDITOR_DIR)/editor_input.c \
               $(EDITOR_DIR)/editor_sector.c \
               $(EDITOR_DIR)/radial_menu.c \
-              $(EDITOR_DIR)/windows/desktop.c \
               $(EDITOR_DIR)/windows/game.c \
               $(EDITOR_DIR)/windows/inspector/insp_line.c \
               $(EDITOR_DIR)/windows/inspector/insp_sector.c \
@@ -64,7 +63,6 @@ EDITOR_SRCS = $(EDITOR_DIR)/editor_draw.c \
               $(EDITOR_DIR)/windows/statbar.c \
               $(EDITOR_DIR)/windows/texatlas.c \
               $(EDITOR_DIR)/windows/things.c \
-              $(EDITOR_DIR)/windows/tray.c \
               $(EDITOR_DIR)/windows/sprite.c
 
 # DOOM files (only headers are used, .c files excluded per Xcode config)
