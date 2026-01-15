@@ -152,6 +152,7 @@
 				kernel/renderer.c,
 				Makefile,
 				tests/basic_test.c,
+				tests/button_click_test.c,
 				tests/cleanup_test.c,
 				tests/integration_cleanup.c,
 				tests/memory_leak_test.c,
