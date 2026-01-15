@@ -97,10 +97,9 @@ HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
 
 # Libraries (libgoldieui built via ui/Makefile)
 ifeq ($(UNAME_S),Darwin)
-#   LIBGOLDIE = $(BUILD_DIR)/libgoldieui.dylib
-  LIBGOLDIE = $(BUILD_DIR)/libgoldieui.so
+  LIBGOLDIE = $(UI_DIR)/build/lib/libgoldieui.dylib
 else
-  LIBGOLDIE = $(BUILD_DIR)/libgoldieui.so
+  LIBGOLDIE = $(UI_DIR)/build/lib/libgoldieui.so
 endif
 
 # All object files for main executable
