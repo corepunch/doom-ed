@@ -5,7 +5,7 @@
 CC = gcc
 CFLAGS = -Wall -std=gnu17
 LDFLAGS = -lm
-LIBS = 
+LIBS = # Populated by platform-specific sections below
 
 # Platform detection
 UNAME_S := $(shell uname -s)
@@ -112,7 +112,7 @@ $(LIBGOLDIE):
 # mapview executable (main executable)
 mapview: $(OBJS) $(LIBGOLDIE)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LIBGOLDIE) $(LDFLAGS) $(LIBS) -o doom-ed
+	$(CC) $(OBJS) $(LIBGOLDIE) $(LIBS) $(LDFLAGS) -o doom-ed
 	@echo "Built doom-ed executable"
 
 # Legacy target name (kept for compatibility)
