@@ -58,55 +58,6 @@
 			);
 			target = 785D12A82DB8DDF300567DFE /* mapview */;
 		};
-		78F688A42F16EBEC00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				commctl/button.c,
-				commctl/checkbox.c,
-				commctl/combobox.c,
-				commctl/console.c,
-				commctl/edit.c,
-				commctl/label.c,
-				commctl/list.c,
-				examples/helloworld.c,
-				kernel/event.c,
-				kernel/init.c,
-				kernel/joystick.c,
-				kernel/renderer.c,
-				user/dialog.c,
-				user/draw_impl.c,
-				user/font_6x8.c,
-				user/icons.c,
-				user/message.c,
-				user/text.c,
-				user/window.c,
-			);
-			target = 785D12A82DB8DDF300567DFE /* mapview */;
-		};
-		78F688BD2F1793F800FFD6E9 /* Exceptions for "ui" folder in "desktop" target */ = {
-			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
-			membershipExceptions = (
-				commctl/button.c,
-				commctl/checkbox.c,
-				commctl/combobox.c,
-				commctl/console.c,
-				commctl/edit.c,
-				commctl/label.c,
-				commctl/list.c,
-				kernel/event.c,
-				kernel/init.c,
-				kernel/joystick.c,
-				kernel/renderer.c,
-				user/dialog.c,
-				user/draw_impl.c,
-				user/font_6x8.c,
-				user/icons.c,
-				user/message.c,
-				user/text.c,
-				user/window.c,
-			);
-			target = 78F688AB2F1793CB00FFD6E9 /* desktop */;
-		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -131,10 +82,6 @@
 		};
 		78F688952F16E59000FFD6E9 /* ui */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			exceptions = (
-				78F688A42F16EBEC00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */,
-				78F688BD2F1793F800FFD6E9 /* Exceptions for "ui" folder in "desktop" target */,
-			);
 			path = ui;
 			sourceTree = "<group>";
 		};
