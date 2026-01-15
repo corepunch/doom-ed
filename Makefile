@@ -16,7 +16,7 @@ ifeq ($(UNAME_S),Darwin)
   SDL_CFLAGS = -I/opt/homebrew/include -I/usr/local/include
   SDL_LDFLAGS = -L/opt/homebrew/lib -L/usr/local/lib -lSDL2
   CGLM_CFLAGS = -I/opt/homebrew/include -I/usr/local/opt/cglm/include
-  CGLM_LDFLAGS = 
+  CGLM_LDFLAGS = # cglm is header-only on macOS
 else
   # Linux
   GL_CFLAGS = -DGL_SILENCE_DEPRECATION -D__LINUX__
