@@ -294,12 +294,18 @@ void draw_portals(map_data_t const *map,
     maplinedef_t const *linedef = &map->linedefs[i];
     mapvertex_t const *a = &map->vertices[linedef->start];
     mapvertex_t const *b = &map->vertices[linedef->end];
+    // Skip one-sided linedefs (0xFFFF = no sidedef, standard DOOM format)
     if (linedef->sidenum[0] == 0xFFFF || linedef->sidenum[1] == 0xFFFF)
       continue;
     for (int j = 0; j < 2; j++) {
       if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors) {
+        // Bounds check the neighboring sidedef index
+        uint16_t neighbor_sidedef_idx = linedef->sidenum[!j];
+        if (neighbor_sidedef_idx >= map->num_sidedefs)
+          continue;
+        
         // Get the neighboring sector
-        uint32_t neighbor_sector_idx = map->sidedefs[linedef->sidenum[!j]].sector;
+        uint32_t neighbor_sector_idx = map->sidedefs[neighbor_sidedef_idx].sector;
         
         // Bounds check to prevent buffer overflow
         if (neighbor_sector_idx >= map->num_sectors)
@@ -307,6 +313,7 @@ void draw_portals(map_data_t const *map,
         
         // FIX #1: Check if neighbor sector was already drawn this frame
         // This prevents redundant traversal and ensures each sector is visited once per frame
+        // Note: frame fields are initialized to 0 via memset in build_floor_vertex_buffer()
         if (map->floors.sectors[neighbor_sector_idx].frame == viewdef->frame)
           continue;
         
