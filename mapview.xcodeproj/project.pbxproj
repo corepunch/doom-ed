@@ -9,7 +9,9 @@
 /* Begin PBXBuildFile section */
 		7815CD952DCE0F7C000617A1 /* libhexen.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 7815CD662DCE0DC7000617A1 /* libhexen.dylib */; };
 		785D12BC2DB8E85000567DFE /* libSDL2-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
-		78F688BE2F17940200FFD6E9 /* libdesktop.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */; };
+		78F695F22F18FE7000FFD6E9 /* libdesktop.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */; };
+		78F695F52F18FE7000FFD6E9 /* libSDL2-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		78F695FF2F18FED900FFD6E9 /* libdesktop.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -23,6 +25,16 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		78F695F42F18FE7000FFD6E9 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				78F695F52F18FE7000FFD6E9 /* libSDL2-2.0.0.dylib in CopyFiles */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
@@ -31,6 +43,7 @@
 		785D12A92DB8DDF300567DFE /* mapview */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = mapview; sourceTree = BUILT_PRODUCTS_DIR; };
 		785D12BB2DB8E83F00567DFE /* libSDL2-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libSDL2-2.0.0.dylib"; sourceTree = "<group>"; };
 		78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.dylib"; includeInIndex = 0; path = libdesktop.dylib; sourceTree = BUILT_PRODUCTS_DIR; };
+		78F695F92F18FE7000FFD6E9 /* helloworld */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = helloworld; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -58,6 +71,180 @@
 			);
 			target = 785D12A82DB8DDF300567DFE /* mapview */;
 		};
+		78F695FA2F18FE7000FFD6E9 /* Exceptions for "editor" folder in "helloworld" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				editor_draw.c,
+				editor_input.c,
+				editor_sector.c,
+				radial_menu.c,
+				windows/desktop.c,
+				windows/game.c,
+				windows/inspector/insp_line.c,
+				windows/inspector/insp_sector.c,
+				windows/inspector/insp_thing.c,
+				windows/inspector/insp_vertex.c,
+				windows/perfcounter.c,
+				windows/project.c,
+				windows/sprite.c,
+				windows/statbar.c,
+				windows/texatlas.c,
+				windows/things.c,
+				windows/tray.c,
+			);
+			target = 78F695EF2F18FE7000FFD6E9 /* helloworld */;
+		};
+		78F695FB2F18FE7000FFD6E9 /* Exceptions for "mapview" folder in "helloworld" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				bsp.c,
+				collision.c,
+				floor.c,
+				gamefont.c,
+				input.c,
+				main.c,
+				renderer.c,
+				sky.c,
+				sprites.c,
+				texture.c,
+				things.c,
+				triangulate.c,
+				wad.c,
+				walls.c,
+				wi_stuff.c,
+			);
+			target = 78F695EF2F18FE7000FFD6E9 /* helloworld */;
+		};
+		78F695FC2F18FE7000FFD6E9 /* Exceptions for "ui" folder in "helloworld" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				build/lib/libgoldieui.a,
+				build/lib/libgoldieui.dylib,
+				build/obj/commctl/button.o,
+				build/obj/commctl/checkbox.o,
+				build/obj/commctl/combobox.o,
+				build/obj/commctl/console.o,
+				build/obj/commctl/edit.o,
+				build/obj/commctl/label.o,
+				build/obj/commctl/list.o,
+				build/obj/kernel/event.o,
+				build/obj/kernel/init.o,
+				build/obj/kernel/joystick.o,
+				build/obj/kernel/renderer.o,
+				build/obj/user/dialog.o,
+				build/obj/user/draw_impl.o,
+				build/obj/user/font_6x8.o,
+				build/obj/user/icons.o,
+				build/obj/user/message.o,
+				build/obj/user/text.o,
+				build/obj/user/window.o,
+				commctl/button.c,
+				commctl/checkbox.c,
+				commctl/combobox.c,
+				commctl/console.c,
+				commctl/edit.c,
+				commctl/label.c,
+				commctl/list.c,
+				kernel/event.c,
+				kernel/init.c,
+				kernel/joystick.c,
+				kernel/renderer.c,
+				Makefile,
+				tests/basic_test.c,
+				tests/test_env.c,
+				tests/window_msg_test.c,
+				user/dialog.c,
+				user/draw_impl.c,
+				user/font_6x8.c,
+				user/icons.c,
+				user/message.c,
+				user/text.c,
+				user/window.c,
+			);
+			target = 78F695EF2F18FE7000FFD6E9 /* helloworld */;
+		};
+		78F695FD2F18FE7000FFD6E9 /* Exceptions for "doom" folder in "helloworld" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				actions.c,
+				hu_stuff.c,
+				info.c,
+			);
+			target = 78F695EF2F18FE7000FFD6E9 /* helloworld */;
+		};
+		78F695FE2F18FE8C00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				build/lib/libgoldieui.a,
+				build/lib/libgoldieui.dylib,
+				build/obj/commctl/button.o,
+				build/obj/commctl/checkbox.o,
+				build/obj/commctl/combobox.o,
+				build/obj/commctl/console.o,
+				build/obj/commctl/edit.o,
+				build/obj/commctl/label.o,
+				build/obj/commctl/list.o,
+				build/obj/kernel/event.o,
+				build/obj/kernel/init.o,
+				build/obj/kernel/joystick.o,
+				build/obj/kernel/renderer.o,
+				build/obj/user/dialog.o,
+				build/obj/user/draw_impl.o,
+				build/obj/user/font_6x8.o,
+				build/obj/user/icons.o,
+				build/obj/user/message.o,
+				build/obj/user/text.o,
+				build/obj/user/window.o,
+				commctl/button.c,
+				commctl/checkbox.c,
+				commctl/combobox.c,
+				commctl/console.c,
+				commctl/edit.c,
+				commctl/label.c,
+				commctl/list.c,
+				examples/helloworld.c,
+				kernel/event.c,
+				kernel/init.c,
+				kernel/joystick.c,
+				kernel/renderer.c,
+				Makefile,
+				tests/basic_test.c,
+				tests/test_env.c,
+				tests/window_msg_test.c,
+				user/dialog.c,
+				user/draw_impl.c,
+				user/font_6x8.c,
+				user/icons.c,
+				user/message.c,
+				user/text.c,
+				user/window.c,
+			);
+			target = 785D12A82DB8DDF300567DFE /* mapview */;
+		};
+		78F696122F18FF0400FFD6E9 /* Exceptions for "ui" folder in "desktop" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				commctl/button.c,
+				commctl/checkbox.c,
+				commctl/combobox.c,
+				commctl/console.c,
+				commctl/edit.c,
+				commctl/label.c,
+				commctl/list.c,
+				kernel/event.c,
+				kernel/init.c,
+				kernel/joystick.c,
+				kernel/renderer.c,
+				user/dialog.c,
+				user/draw_impl.c,
+				user/font_6x8.c,
+				user/icons.c,
+				user/message.c,
+				user/text.c,
+				user/window.c,
+			);
+			target = 78F688AB2F1793CB00FFD6E9 /* desktop */;
+		};
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -66,6 +253,7 @@
 			exceptions = (
 				7815CD5B2DCE0CE7000617A1 /* Exceptions for "doom" folder in "mapview" target */,
 				7815CD5A2DCE0CBC000617A1 /* Exceptions for "doom" folder in "doom" target */,
+				78F695FD2F18FE7000FFD6E9 /* Exceptions for "doom" folder in "helloworld" target */,
 			);
 			path = doom;
 			sourceTree = "<group>";
@@ -77,16 +265,27 @@
 		};
 		785D12AB2DB8DDF300567DFE /* mapview */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				78F695FB2F18FE7000FFD6E9 /* Exceptions for "mapview" folder in "helloworld" target */,
+			);
 			path = mapview;
 			sourceTree = "<group>";
 		};
 		78F688952F16E59000FFD6E9 /* ui */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				78F695FE2F18FE8C00FFD6E9 /* Exceptions for "ui" folder in "mapview" target */,
+				78F696122F18FF0400FFD6E9 /* Exceptions for "ui" folder in "desktop" target */,
+				78F695FC2F18FE7000FFD6E9 /* Exceptions for "ui" folder in "helloworld" target */,
+			);
 			path = ui;
 			sourceTree = "<group>";
 		};
 		78F690102F18DA5B00FFD6E9 /* editor */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				78F695FA2F18FE7000FFD6E9 /* Exceptions for "editor" folder in "helloworld" target */,
+			);
 			path = editor;
 			sourceTree = "<group>";
 		};
@@ -111,7 +310,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				78F688BE2F17940200FFD6E9 /* libdesktop.dylib in Frameworks */,
+				78F695FF2F18FED900FFD6E9 /* libdesktop.dylib in Frameworks */,
 				7815CD952DCE0F7C000617A1 /* libhexen.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -120,6 +319,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78F695F12F18FE7000FFD6E9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				78F695F22F18FE7000FFD6E9 /* libdesktop.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -146,6 +353,7 @@
 				7815CD462DCE0CA6000617A1 /* libdoom.dylib */,
 				7815CD662DCE0DC7000617A1 /* libhexen.dylib */,
 				78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */,
+				78F695F92F18FE7000FFD6E9 /* helloworld */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -270,6 +478,31 @@
 			productReference = 78F688AC2F1793CB00FFD6E9 /* libdesktop.dylib */;
 			productType = "com.apple.product-type.library.dynamic";
 		};
+		78F695EF2F18FE7000FFD6E9 /* helloworld */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 78F695F62F18FE7000FFD6E9 /* Build configuration list for PBXNativeTarget "helloworld" */;
+			buildPhases = (
+				78F695F02F18FE7000FFD6E9 /* Sources */,
+				78F695F12F18FE7000FFD6E9 /* Frameworks */,
+				78F695F42F18FE7000FFD6E9 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				7815CD532DCE0CAA000617A1 /* doom */,
+				785D12AB2DB8DDF300567DFE /* mapview */,
+				78F688952F16E59000FFD6E9 /* ui */,
+				78F690102F18DA5B00FFD6E9 /* editor */,
+			);
+			name = helloworld;
+			packageProductDependencies = (
+			);
+			productName = mapview;
+			productReference = 78F695F92F18FE7000FFD6E9 /* helloworld */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -308,6 +541,7 @@
 				7815CD452DCE0CA6000617A1 /* doom */,
 				7815CD5F2DCE0DC7000617A1 /* hexen */,
 				78F688AB2F1793CB00FFD6E9 /* desktop */,
+				78F695EF2F18FE7000FFD6E9 /* helloworld */,
 			);
 		};
 /* End PBXProject section */
@@ -335,6 +569,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		78F688A92F1793CB00FFD6E9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		78F695F02F18FE7000FFD6E9 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -597,6 +838,34 @@
 			};
 			name = Release;
 		};
+		78F695F72F18FE7000FFD6E9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ui/build/lib",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		78F695F82F18FE7000FFD6E9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = BM2R8F5YHC;
+				ENABLE_HARDENED_RUNTIME = YES;
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/ui/build/lib",
+				);
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -641,6 +910,15 @@
 			buildConfigurations = (
 				78F688AE2F1793CB00FFD6E9 /* Debug */,
 				78F688AF2F1793CB00FFD6E9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		78F695F62F18FE7000FFD6E9 /* Build configuration list for PBXNativeTarget "helloworld" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				78F695F72F18FE7000FFD6E9 /* Debug */,
+				78F695F82F18FE7000FFD6E9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
