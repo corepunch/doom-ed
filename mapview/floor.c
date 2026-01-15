@@ -23,19 +23,47 @@ bool point_in_frustum(vec3 point, vec4 const planes[6]) {
   return true; // Inside all planes
 }
 
-// Improved frustum culling for 2D linedefs
-bool linedef_in_frustum_2d(vec4 const frustum[6], vec3 a, vec3 b) {
-  // Quick reject: both endpoints are outside the same plane
-  float a_left = glm_vec3_dot(a, (float*)frustum[0]) + frustum[0][3] < 0;
-  float b_left = glm_vec3_dot(b, (float*)frustum[0]) + frustum[0][3] < 0;
-  float a_right = glm_vec3_dot(a, (float*)frustum[1]) + frustum[1][3] < 0;
-  float b_right = glm_vec3_dot(b, (float*)frustum[1]) + frustum[1][3] < 0;
-  float a_near = glm_vec3_dot(a, (float*)frustum[4]) + frustum[4][3] < 0;
-  float b_near = glm_vec3_dot(b, (float*)frustum[4]) + frustum[4][3] < 0;
-
-  if ((a_left && b_left) || (a_right && b_right) || (a_near && b_near))
-    return false;
+//
+// linedef_quad_in_frustum_3d
+// Proper 3D frustum culling for a linedef quad (4-pointed polygon in 3D space).
+// The quad is defined by two endpoints (a, b) and floor/ceiling heights.
+// Tests if the quad formed by the linedef is visible in the view frustum.
+//
+// Quad vertices:
+//   v0: (a.x, a.y, floor_height)  - bottom left
+//   v1: (a.x, a.y, ceiling_height) - top left
+//   v2: (b.x, b.y, floor_height)  - bottom right
+//   v3: (b.x, b.y, ceiling_height) - top right
+//
+bool linedef_quad_in_frustum_3d(vec4 const frustum[6], vec2 a, vec2 b, 
+                                 float floor_height, float ceiling_height) {
+  // Build the 4 corners of the quad in 3D space
+  vec3 corners[4] = {
+    {a[0], a[1], floor_height},     // bottom left
+    {a[0], a[1], ceiling_height},   // top left
+    {b[0], b[1], floor_height},     // bottom right
+    {b[0], b[1], ceiling_height}    // top right
+  };
   
+  // For each frustum plane, check if all corners are outside
+  // If all corners are outside any single plane, the quad is not visible
+  for (int plane = 0; plane < 6; plane++) {
+    int outside_count = 0;
+    
+    for (int corner = 0; corner < 4; corner++) {
+      float distance = glm_vec3_dot(corners[corner], (float*)frustum[plane]) + frustum[plane][3];
+      if (distance < 0.0f) {
+        outside_count++;
+      }
+    }
+    
+    // All 4 corners are outside this plane - quad is definitely not visible
+    if (outside_count == 4) {
+      return false;
+    }
+  }
+  
+  // At least part of the quad is potentially visible
   return true;
 }
 
@@ -269,6 +297,19 @@ void draw_wall_ids(map_data_t const *map,
                    mapsector_t const *sector,
                    viewdef_t const *viewdef);
 
+//
+// draw_portals
+// Recursively traverse connected sectors through two-sided linedefs (portals).
+// This function implements portal-based rendering for maps without BSP data.
+//
+// IMPORTANT FIX (2026-01):
+// This function had two critical bugs that caused sectors to drop off during movement:
+// 1. Missing frame tracking: Neighbor sectors were not checked for already being drawn,
+//    causing redundant traversal and potential incorrect culling.
+// 2. Wrong sector heights: The frustum check used the current sector's heights instead
+//    of the neighbor sector's heights, causing incorrect portal rejection when sectors
+//    had different floor/ceiling heights (very common in DOOM maps).
+//
 void draw_portals(map_data_t const *map,
                   mapsector_t const *sector,
                   viewdef_t const *viewdef,
@@ -281,18 +322,42 @@ void draw_portals(map_data_t const *map,
     maplinedef_t const *linedef = &map->linedefs[i];
     mapvertex_t const *a = &map->vertices[linedef->start];
     mapvertex_t const *b = &map->vertices[linedef->end];
+    // Skip one-sided linedefs (0xFFFF = no sidedef, standard DOOM format)
     if (linedef->sidenum[0] == 0xFFFF || linedef->sidenum[1] == 0xFFFF)
       continue;
     for (int j = 0; j < 2; j++) {
-      if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors &&
-          (linedef_in_frustum_2d(viewdef->frustum,
-                                (vec3){a->x,a->y,sector->floorheight},
-                                (vec3){b->x,b->y,sector->floorheight}) ||
-           linedef_in_frustum_2d(viewdef->frustum,
-                                 (vec3){a->x,a->y,sector->ceilingheight},
-                                 (vec3){b->x,b->y,sector->ceilingheight})))
-      {
-        func(map, &map->sectors[map->sidedefs[linedef->sidenum[!j]].sector], viewdef);
+      if (map->sidedefs[linedef->sidenum[j]].sector == sector - map->sectors) {
+        // Bounds check the neighboring sidedef index
+        uint16_t neighbor_sidedef_idx = linedef->sidenum[!j];
+        if (neighbor_sidedef_idx >= map->num_sidedefs)
+          continue;
+        
+        // Get the neighboring sector
+        uint32_t neighbor_sector_idx = map->sidedefs[neighbor_sidedef_idx].sector;
+        
+        // Bounds check to prevent buffer overflow
+        if (neighbor_sector_idx >= map->num_sectors)
+          continue;
+        
+        // FIX #1: Check if neighbor sector was already drawn this frame
+        // This prevents redundant traversal and ensures each sector is visited once per frame
+        // Note: frame fields are initialized to 0 via memset in build_floor_vertex_buffer()
+        if (map->floors.sectors[neighbor_sector_idx].frame == viewdef->frame)
+          continue;
+        
+        // FIX #2: Check frustum using proper 3D math for the linedef quad
+        // The linedef forms a 4-pointed polygon in 3D space with floor and ceiling heights
+        // Using the current sector's heights would incorrectly reject portals when sectors
+        // have different floor/ceiling heights (e.g., stairs, lifts, different room heights)
+        mapsector_t const *neighbor = &map->sectors[neighbor_sector_idx];
+        if (linedef_quad_in_frustum_3d(viewdef->frustum,
+                                       (vec2){a->x, a->y},
+                                       (vec2){b->x, b->y},
+                                       neighbor->floorheight,
+                                       neighbor->ceilingheight))
+        {
+          func(map, neighbor, viewdef);
+        }
       }
     }
   }
