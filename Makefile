@@ -178,7 +178,7 @@ bsp_test: $(TESTS_DIR)/bsp_test.c
 
 # Clean
 clean:
-	-@$(MAKE) -C $(UI_DIR) clean 2>/dev/null || true
+	-@if [ -f $(UI_DIR)/Makefile ]; then $(MAKE) -C $(UI_DIR) clean; fi
 	rm -rf $(BUILD_DIR) 
 	-rm -f triangulate_test bsp_test doom-ed helloworld
 	-test -f mapview && rm -f mapview || true
