@@ -415,7 +415,6 @@ window_t *create_window(char const *, flags_t, const rect_t*, struct window_s *,
 void show_window(window_t *win, bool visible);
 void destroy_window(window_t *win);
 void clear_window_children(window_t *win);
-void register_window_hook(uint32_t msg, winhook_func_t func, void *userdata);
 void load_window_children(window_t *win, windef_t const *def);
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
