@@ -100,37 +100,20 @@ OBJS = $(MAPVIEW_OBJS) $(EDITOR_OBJS) $(HEXEN_OBJS)
 # Targets
 .PHONY: all clean test triangulate_test bsp_test libgoldie
 
-# Check if ui/Makefile exists before trying to build libgoldie
-ifneq (,$(wildcard $(UI_DIR)/Makefile))
-  all: libgoldie mapview
-else
-  all: mapview
-endif
+all: libgoldie mapview
 
 # libgoldieui library (built via ui/Makefile)
 libgoldie: $(LIBGOLDIE)
 
 $(LIBGOLDIE):
-	@if [ -f $(UI_DIR)/Makefile ]; then \
-		echo "Building libgoldieui via ui/Makefile..."; \
-		$(MAKE) -C $(UI_DIR) all; \
-	else \
-		echo "Warning: ui/Makefile not found, skipping libgoldieui build"; \
-		mkdir -p $(dir $(LIBGOLDIE)); \
-		touch $(LIBGOLDIE); \
-	fi
+	@echo "Building libgoldieui via ui/Makefile..."
+	@$(MAKE) -C $(UI_DIR) all
 
 # mapview executable (main executable)
-mapview: $(OBJS)
+mapview: $(OBJS) $(LIBGOLDIE)
 	@mkdir -p $(dir $@)
-	@if [ -f $(UI_DIR)/Makefile ]; then \
-		$(MAKE) --no-print-directory libgoldie; \
-		$(CC) $(OBJS) $(LIBGOLDIE) $(LIBS) $(LDFLAGS) -o doom-ed; \
-		echo "Built doom-ed executable"; \
-	else \
-		$(CC) $(OBJS) $(LIBS) $(LDFLAGS) -o doom-ed; \
-		echo "Built doom-ed executable (without libgoldieui)"; \
-	fi
+	$(CC) $(OBJS) $(LIBGOLDIE) $(LIBS) $(LDFLAGS) -o doom-ed
+	@echo "Built doom-ed executable"
 
 # Legacy target name (kept for compatibility)
 doom-ed: mapview
