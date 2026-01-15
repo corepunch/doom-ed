@@ -490,7 +490,6 @@ void open_map(const char *mapname);
 bool init_wad(const char *filename);
 void shutdown_wad(void);
 
-void draw_windows(bool rich);
 void handle_windows(void);
 
 void GetMouseInVirtualCoords(int* vx, int* vy);
