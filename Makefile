@@ -10,22 +10,21 @@ LDFLAGS = -lm
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
-  # macOS
-  HOMEBREW_INCLUDES = -I/opt/homebrew/include -I/usr/local/opt/cglm/include
+  # macOS (arm64 and x86_64)
   GL_CFLAGS = -DGL_SILENCE_DEPRECATION
   GL_LDFLAGS = -framework OpenGL
-  SDL_CFLAGS = $(shell pkg-config --cflags sdl2 2>/dev/null || echo "$(HOMEBREW_INCLUDES)")
-  SDL_LDFLAGS = $(shell pkg-config --libs sdl2 2>/dev/null || echo "-L/opt/homebrew/lib -lSDL2")
-  CGLM_CFLAGS = $(shell pkg-config --cflags cglm 2>/dev/null || echo "$(HOMEBREW_INCLUDES)")
-  CGLM_LDFLAGS = $(shell pkg-config --libs cglm 2>/dev/null || echo "")
+  SDL_CFLAGS = -I/opt/homebrew/include -I/usr/local/include
+  SDL_LDFLAGS = -L/opt/homebrew/lib -L/usr/local/lib -lSDL2
+  CGLM_CFLAGS = -I/opt/homebrew/include -I/usr/local/opt/cglm/include
+  CGLM_LDFLAGS = 
 else
   # Linux
   GL_CFLAGS = -DGL_SILENCE_DEPRECATION -D__LINUX__
   GL_LDFLAGS = -lGL
-  SDL_CFLAGS = $(shell pkg-config --cflags sdl2)
-  SDL_LDFLAGS = $(shell pkg-config --libs sdl2)
-  CGLM_CFLAGS = $(shell pkg-config --cflags cglm 2>/dev/null || echo "")
-  CGLM_LDFLAGS = $(shell pkg-config --libs cglm 2>/dev/null || echo "-lcglm")
+  SDL_CFLAGS = -I/usr/include -I/usr/local/include
+  SDL_LDFLAGS = -L/usr/lib -L/usr/local/lib -lSDL2
+  CGLM_CFLAGS = -I/usr/include -I/usr/local/include
+  CGLM_LDFLAGS = -lcglm
 endif
 
 # Combine all flags
