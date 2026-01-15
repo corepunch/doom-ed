@@ -96,6 +96,7 @@ EDITOR_OBJS = $(EDITOR_SRCS:$(EDITOR_DIR)/%.c=$(BUILD_DIR)/editor/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
 
 # Libraries (libgoldieui built via ui/Makefile)
+# Note: ui/Makefile must build the library to ui/build/lib/ directory
 ifeq ($(UNAME_S),Darwin)
   LIBGOLDIE = $(UI_DIR)/build/lib/libgoldieui.dylib
 else
