@@ -38,11 +38,12 @@ bool point_in_frustum(vec3 point, vec4 const planes[6]) {
 bool linedef_quad_in_frustum_3d(vec4 const frustum[6], vec2 a, vec2 b, 
                                  float floor_height, float ceiling_height) {
   // Build the 4 corners of the quad in 3D space
-  vec3 corners[4];
-  glm_vec3_copy((vec3){a[0], a[1], floor_height}, corners[0]);
-  glm_vec3_copy((vec3){a[0], a[1], ceiling_height}, corners[1]);
-  glm_vec3_copy((vec3){b[0], b[1], floor_height}, corners[2]);
-  glm_vec3_copy((vec3){b[0], b[1], ceiling_height}, corners[3]);
+  vec3 corners[4] = {
+    {a[0], a[1], floor_height},     // bottom left
+    {a[0], a[1], ceiling_height},   // top left
+    {b[0], b[1], floor_height},     // bottom right
+    {b[0], b[1], ceiling_height}    // top right
+  };
   
   // For each frustum plane, check if all corners are outside
   // If all corners are outside any single plane, the quad is not visible
