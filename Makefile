@@ -106,7 +106,7 @@ endif
 OBJS = $(MAPVIEW_OBJS) $(EDITOR_OBJS) $(HEXEN_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test bsp_test examples helloworld libgoldie
+.PHONY: all clean test triangulate_test bsp_test libgoldie
 
 all: libgoldie mapview
 
@@ -153,23 +153,6 @@ test: triangulate_test bsp_test
 	@./triangulate_test
 	@./bsp_test
 
-# Examples
-examples: helloworld
-
-# UI Framework hello world example
-# Note: Currently requires mapview sprites.c for drawing functions
-# TODO: Extract drawing primitives to make UI framework fully standalone
-helloworld: $(LIBGOLDIE)
-	@echo "=== Building UI Framework Hello World Example ==="
-	@mkdir -p $(BUILD_DIR)/ui/examples
-	@mkdir -p $(BUILD_DIR)/mapview
-	$(CC) $(CFLAGS) -I. -c $(MAPVIEW_DIR)/sprites.c -o $(BUILD_DIR)/mapview/sprites.o
-	$(CC) $(CFLAGS) -I. -c $(MAPVIEW_DIR)/gamefont.c -o $(BUILD_DIR)/mapview/gamefont.o
-	$(CC) $(CFLAGS) -I. -c $(UI_DIR)/examples/helloworld.c -o $(BUILD_DIR)/ui/examples/helloworld.o
-	$(CC) $(BUILD_DIR)/ui/examples/helloworld.o $(LIBGOLDIE) $(BUILD_DIR)/mapview/sprites.o $(BUILD_DIR)/mapview/gamefont.o -o helloworld $(LDFLAGS)
-	@echo "Built helloworld executable"
-	@echo "Run with: ./helloworld"
-
 triangulate_test: $(TESTS_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate.c
 	$(CC) -DTEST_MODE -o $@ $^ -I. -lm
 
@@ -180,7 +163,7 @@ bsp_test: $(TESTS_DIR)/bsp_test.c
 clean:
 	-@if [ -f $(UI_DIR)/Makefile ]; then $(MAKE) -C $(UI_DIR) clean; fi
 	rm -rf $(BUILD_DIR) 
-	-rm -f triangulate_test bsp_test doom-ed helloworld
+	-rm -f triangulate_test bsp_test doom-ed
 	-test -f mapview && rm -f mapview || true
 	rm -f $(MAPVIEW_DIR)/*.o $(EDITOR_DIR)/*.o $(EDITOR_DIR)/windows/*.o $(EDITOR_DIR)/windows/inspector/*.o
 	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o
