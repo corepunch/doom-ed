@@ -1,9 +1,9 @@
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 #include <stdbool.h>
 #include <math.h>
-#include "map.h"
+#include <mapview/map.h>
 
 // Forward declarations
 void draw_walls(map_data_t const *map,

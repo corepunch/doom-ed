@@ -9,7 +9,7 @@
 
 #include <cglm/struct.h>
 
-#include "../ui/ui.h"
+#include <ui/ui.h>
 
 #define OFFSET_OF(type, field) (void*)((size_t)&(((type *)0)->field))
 

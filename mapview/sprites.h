@@ -3,7 +3,7 @@
 
 #include <stdio.h>
 #include <stdbool.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 
 // Sprite cache structure
 typedef struct {

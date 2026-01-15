@@ -1,4 +1,4 @@
-#include "map.h"
+#include <mapview/map.h>
 
 struct {
   filelump_t* directory;

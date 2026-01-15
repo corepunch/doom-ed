@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <string.h>
 #include <ctype.h>
-#include "map.h"
+#include <mapview/map.h>
 
 #define MAX_TEXTURES 256
 #define MAX_TEXDIR 8

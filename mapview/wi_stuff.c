@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 
-#include "map.h"
-#include "sprites.h"
+#include <mapview/map.h>
+#include <mapview/sprites.h>
 
 #define NUMEPISODES  4
 #define NUMMAPS    9

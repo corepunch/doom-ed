@@ -1,4 +1,4 @@
-#include "../../editor.h"
+#include <editor/editor.h>
 
 enum {
   ID_SECTOR_FLOOR_HEIGHT = 1000,

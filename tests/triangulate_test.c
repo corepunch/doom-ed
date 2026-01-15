@@ -1,4 +1,4 @@
-#include "map_test.h"
+#include <tests/map_test.h>
 #include <stdio.h>
 #include <assert.h>
 #include <math.h>

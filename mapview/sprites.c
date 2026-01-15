@@ -1,11 +1,11 @@
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 #include <string.h>
 #include <ctype.h>
-#include "map.h"
-#include "sprites.h"
+#include <mapview/map.h>
+#include <mapview/sprites.h>
 
 #define MAX_SPRITES 10000
 

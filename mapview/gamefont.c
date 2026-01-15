@@ -2,14 +2,14 @@
 // Moved from ui/user/text.c to keep game-specific code in mapview
 
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "gamefont.h"
+#include <mapview/gamefont.h>
 
 #define CONSOLE_FONT_HEIGHT 8
 #define CONSOLE_FONT_WIDTH 8

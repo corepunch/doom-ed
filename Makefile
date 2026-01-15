@@ -126,19 +126,19 @@ doom-ed: mapview
 # Object file rules
 $(BUILD_DIR)/mapview/%.o: $(MAPVIEW_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I. -c $< -o $@
 
 $(BUILD_DIR)/mapview/windows/%.o: $(MAPVIEW_DIR)/windows/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I. -c $< -o $@
 
 $(BUILD_DIR)/mapview/windows/inspector/%.o: $(MAPVIEW_DIR)/windows/inspector/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I. -c $< -o $@
 
 $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 	@mkdir -p $(dir $@)
-	$(CC) $(CFLAGS) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -I$(UI_DIR) -c $< -o $@
+	$(CC) $(CFLAGS) -I. -c $< -o $@
 
 # Test targets
 test: triangulate_test bsp_test
@@ -156,18 +156,18 @@ helloworld: $(LIBGOLDIE)
 	@echo "=== Building UI Framework Hello World Example ==="
 	@mkdir -p $(BUILD_DIR)/ui/examples
 	@mkdir -p $(BUILD_DIR)/mapview
-	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/sprites.c -o $(BUILD_DIR)/mapview/sprites.o
-	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(MAPVIEW_DIR)/gamefont.c -o $(BUILD_DIR)/mapview/gamefont.o
-	$(CC) $(CFLAGS) -I$(UI_DIR) -I$(MAPVIEW_DIR) -I$(DOOM_DIR) -I$(HEXEN_DIR) -c $(UI_DIR)/examples/helloworld.c -o $(BUILD_DIR)/ui/examples/helloworld.o
+	$(CC) $(CFLAGS) -I. -c $(MAPVIEW_DIR)/sprites.c -o $(BUILD_DIR)/mapview/sprites.o
+	$(CC) $(CFLAGS) -I. -c $(MAPVIEW_DIR)/gamefont.c -o $(BUILD_DIR)/mapview/gamefont.o
+	$(CC) $(CFLAGS) -I. -c $(UI_DIR)/examples/helloworld.c -o $(BUILD_DIR)/ui/examples/helloworld.o
 	$(CC) $(BUILD_DIR)/ui/examples/helloworld.o $(LIBGOLDIE) $(BUILD_DIR)/mapview/sprites.o $(BUILD_DIR)/mapview/gamefont.o -o helloworld $(LDFLAGS)
 	@echo "Built helloworld executable"
 	@echo "Run with: ./helloworld"
 
 triangulate_test: $(TESTS_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate.c
-	$(CC) -DTEST_MODE -o $@ $^ -I$(MAPVIEW_DIR) -I$(TESTS_DIR) -lm
+	$(CC) -DTEST_MODE -o $@ $^ -I. -lm
 
 bsp_test: $(TESTS_DIR)/bsp_test.c
-	$(CC) -o $@ $^ -I$(MAPVIEW_DIR) -I$(TESTS_DIR) -lm
+	$(CC) -o $@ $^ -I. -lm
 
 # Clean
 clean:

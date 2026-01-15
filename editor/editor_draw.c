@@ -1,9 +1,9 @@
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/struct.h>
 #include <math.h>
 
-#include "editor.h"
-#include "sprites.h"
+#include <editor/editor.h>
+#include <mapview/sprites.h>
 
 // Globals
 extern GLuint ui_prog;

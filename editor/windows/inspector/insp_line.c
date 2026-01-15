@@ -1,4 +1,4 @@
-#include "../../editor.h"
+#include <editor/editor.h>
 
 enum {
   ID_LINE_TYPE = 1000,

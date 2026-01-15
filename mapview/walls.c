@@ -1,9 +1,9 @@
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/struct.h>
 #include <math.h>
 
-#include "map.h"
+#include <mapview/map.h>
 
 #define init_wall_vertex(X, Y, Z, U, V) \
 write_line=true;\

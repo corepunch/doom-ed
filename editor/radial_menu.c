@@ -1,12 +1,12 @@
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 #include <string.h>
 #include <math.h>
-#include "map.h"
-#include "sprites.h"
-#include "radial_menu.h"
+#include <mapview/map.h>
+#include <mapview/sprites.h>
+#include <editor/radial_menu.h>
 
 // Radial menu shader sources
 const char* radial_vs_src = "#version 150 core\n"

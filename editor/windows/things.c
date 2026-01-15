@@ -1,12 +1,12 @@
-#include "map.h"
-#include "editor.h"
-#include "sprites.h"
+#include <mapview/map.h>
+#include <editor/editor.h>
+#include <mapview/sprites.h>
 
 #ifdef HEXEN
-#include "../../hexen/info.h"
-#include "../../hexen/ed_config.h"
+#include <hexen/info.h>
+#include <hexen/ed_config.h>
 #else
-#include "../../doom/info.h"
+#include <doom/info.h>
 #endif
 
 struct texture_layout_s*

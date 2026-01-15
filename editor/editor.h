@@ -8,7 +8,7 @@
 #ifndef __EDITOR_H__
 #define __EDITOR_H__
 
-#include "map.h"
+#include <mapview/map.h>
 
 #define ED_SCROLL 16
 

@@ -1,5 +1,5 @@
-#include "../map.h"
-#include "../sprites.h"
+#include <mapview/map.h>
+#include <mapview/sprites.h>
 
 result_t win_statbar(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {

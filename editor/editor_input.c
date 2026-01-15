@@ -1,8 +1,8 @@
 #include <SDL2/SDL.h>
 #include <cglm/struct.h>
 
-#include "editor.h"
-#include "sprites.h"
+#include <editor/editor.h>
+#include <mapview/sprites.h>
 
 #define SNAP_SIZE 10
 

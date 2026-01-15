@@ -1,17 +1,17 @@
 #include <SDL2/SDL.h>
-#include "gl_compat.h"
+#include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 #include <string.h>
 #include <math.h>
-#include "map.h"
-#include "sprites.h"
-#include "editor.h"
+#include <mapview/map.h>
+#include <mapview/sprites.h>
+#include <editor/editor.h>
 
 #ifdef HEXEN
-#include "../hexen/info.h"
+#include <hexen/info.h>
 #else
-#include "../doom/info.h"
+#include <doom/info.h>
 #endif
 
 // Thing shader sources - we'll use view-aligned quads
