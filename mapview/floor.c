@@ -269,6 +269,19 @@ void draw_wall_ids(map_data_t const *map,
                    mapsector_t const *sector,
                    viewdef_t const *viewdef);
 
+//
+// draw_portals
+// Recursively traverse connected sectors through two-sided linedefs (portals).
+// This function implements portal-based rendering for maps without BSP data.
+//
+// IMPORTANT FIX (2026-01):
+// This function had two critical bugs that caused sectors to drop off during movement:
+// 1. Missing frame tracking: Neighbor sectors were not checked for already being drawn,
+//    causing redundant traversal and potential incorrect culling.
+// 2. Wrong sector heights: The frustum check used the current sector's heights instead
+//    of the neighbor sector's heights, causing incorrect portal rejection when sectors
+//    had different floor/ceiling heights (very common in DOOM maps).
+//
 void draw_portals(map_data_t const *map,
                   mapsector_t const *sector,
                   viewdef_t const *viewdef,
@@ -288,11 +301,14 @@ void draw_portals(map_data_t const *map,
         // Get the neighboring sector
         uint32_t neighbor_sector_idx = map->sidedefs[linedef->sidenum[!j]].sector;
         
-        // Check if neighbor sector was already drawn this frame
+        // FIX #1: Check if neighbor sector was already drawn this frame
+        // This prevents redundant traversal and ensures each sector is visited once per frame
         if (map->floors.sectors[neighbor_sector_idx].frame == viewdef->frame)
           continue;
         
-        // Check if the portal linedef is in frustum using neighbor sector heights
+        // FIX #2: Check frustum using NEIGHBOR sector heights, not current sector heights
+        // Using the current sector's heights would incorrectly reject portals when sectors
+        // have different floor/ceiling heights (e.g., stairs, lifts, different room heights)
         mapsector_t const *neighbor = &map->sectors[neighbor_sector_idx];
         if (linedef_in_frustum_2d(viewdef->frustum,
                                   (vec3){a->x,a->y,neighbor->floorheight},
