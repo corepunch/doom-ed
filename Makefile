@@ -5,31 +5,23 @@
 CC = gcc
 CFLAGS = -Wall -std=gnu17
 LDFLAGS = -lm
+LIBS = 
 
 # Platform detection
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
-  # macOS (arm64 and x86_64)
-  GL_CFLAGS = -DGL_SILENCE_DEPRECATION
-  GL_LDFLAGS = -framework OpenGL
-  SDL_CFLAGS = -I/opt/homebrew/include -I/usr/local/include
-  SDL_LDFLAGS = -L/opt/homebrew/lib -L/usr/local/lib -lSDL2
-  CGLM_CFLAGS = -I/opt/homebrew/include -I/usr/local/opt/cglm/include
-  CGLM_LDFLAGS = # cglm is header-only on macOS
-else
-  # Linux
-  GL_CFLAGS = -DGL_SILENCE_DEPRECATION -D__LINUX__
-  GL_LDFLAGS = -lGL
-  SDL_CFLAGS = -I/usr/include -I/usr/local/include
-  SDL_LDFLAGS = -L/usr/lib -L/usr/local/lib -lSDL2
-  CGLM_CFLAGS = -I/usr/include -I/usr/local/include
-  CGLM_LDFLAGS = -lcglm
+  # macOS specific flags
+  CFLAGS += -DGL_SILENCE_DEPRECATION
+  CFLAGS += -I/opt/homebrew/include -I/usr/local/include -I/usr/local/opt/cglm/include
+  LDFLAGS += -L/opt/homebrew/lib -L/usr/local/lib
+  LIBS += -framework OpenGL -lSDL2
+else ifeq ($(UNAME_S),Linux)
+  # Linux specific flags
+  CFLAGS += -DGL_SILENCE_DEPRECATION -D__LINUX__ -fPIC
+  LDFLAGS += -L/usr/lib -L/usr/local/lib
+  LIBS += -lGL -lSDL2 -lcglm
 endif
-
-# Combine all flags
-CFLAGS += $(GL_CFLAGS) $(SDL_CFLAGS) $(CGLM_CFLAGS)
-LDFLAGS += $(GL_LDFLAGS) $(SDL_LDFLAGS) $(CGLM_LDFLAGS)
 
 # Directories
 MAPVIEW_DIR = mapview
@@ -120,7 +112,7 @@ $(LIBGOLDIE):
 # mapview executable (main executable)
 mapview: $(OBJS) $(LIBGOLDIE)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LIBGOLDIE) $(LDFLAGS) -o doom-ed
+	$(CC) $(OBJS) $(LIBGOLDIE) $(LDFLAGS) $(LIBS) -o doom-ed
 	@echo "Built doom-ed executable"
 
 # Legacy target name (kept for compatibility)
