@@ -1,7 +1,7 @@
 #include <SDL2/SDL.h>
 
-#include "map.h"
-#include "editor.h"
+#include <mapview/map.h>
+#include <editor/editor.h>
 
 #define MAX_MAPNAMES 256
 

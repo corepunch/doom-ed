@@ -138,6 +138,11 @@
 			path = ui;
 			sourceTree = "<group>";
 		};
+		78F690102F18DA5B00FFD6E9 /* editor */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = editor;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -177,6 +182,7 @@
 		785D12A02DB8DDF300567DFE = {
 			isa = PBXGroup;
 			children = (
+				78F690102F18DA5B00FFD6E9 /* editor */,
 				78F688952F16E59000FFD6E9 /* ui */,
 				7815CD892DCE0E20000617A1 /* hexen */,
 				785D12AB2DB8DDF300567DFE /* mapview */,
@@ -289,6 +295,7 @@
 				7815CD532DCE0CAA000617A1 /* doom */,
 				785D12AB2DB8DDF300567DFE /* mapview */,
 				78F688952F16E59000FFD6E9 /* ui */,
+				78F690102F18DA5B00FFD6E9 /* editor */,
 			);
 			name = mapview;
 			packageProductDependencies = (
@@ -507,6 +514,7 @@
 				HEADER_SEARCH_PATHS = (
 					/opt/homebrew/include,
 					/usr/local/opt/cglm/include,
+					"$(SRCROOT)",
 				);
 				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
@@ -570,6 +578,7 @@
 				HEADER_SEARCH_PATHS = (
 					/opt/homebrew/include,
 					/usr/local/opt/cglm/include,
+					"$(SRCROOT)",
 				);
 				LIBRARY_SEARCH_PATHS = /opt/homebrew/lib;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;

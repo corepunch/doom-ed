@@ -3,12 +3,12 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "../../ui/user/user.h"
-#include "../../ui/user/messages.h"
-#include "../../ui/user/draw.h"
+#include <ui/user/user.h>
+#include <ui/user/messages.h>
+#include <ui/user/draw.h>
 
-#include "../sprites.h"
-#include "../map.h"
+#include <mapview/sprites.h>
+#include <mapview/map.h>
 
 // External functions from game code
 extern sprite_t *find_sprite(const char *name);
