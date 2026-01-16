@@ -135,21 +135,9 @@ map_data_t load_map(const char* map_name) {
     map.num_vertices = wad.directory[map_index + ML_VERTEXES].size / sizeof(mapvertex_t);
     map.vertices = read_lump_data(wad.file, &wad.directory[map_index + ML_VERTEXES]);
 
-    // NODES
-    map.num_nodes = wad.directory[map_index + ML_NODES].size / sizeof(mapnode_t);
-    map.nodes = read_lump_data(wad.file, &wad.directory[map_index + ML_NODES]);
-
-    // SSECTORS
-    map.num_subsectors = wad.directory[map_index + ML_SSECTORS].size / sizeof(mapsubsector_t);
-    map.subsectors = read_lump_data(wad.file, &wad.directory[map_index + ML_SSECTORS]);
-
     // SECTORS
     map.num_sectors = wad.directory[map_index + ML_SECTORS].size / sizeof(mapsector_t);
     map.sectors = read_lump_data(wad.file, &wad.directory[map_index + ML_SECTORS]);
-    
-    // SEGS
-    map.num_segs = wad.directory[map_index + ML_SEGS].size / sizeof(mapseg_t);
-    map.segs = read_lump_data(wad.file, &wad.directory[map_index + ML_SEGS]);
   }
   
   for (int i = 0; i < map.num_things; i++) {
