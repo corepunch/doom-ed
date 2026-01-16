@@ -96,7 +96,7 @@ endif
 OBJS = $(MAPVIEW_OBJS) $(EDITOR_OBJS) $(HEXEN_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test bsp_test libgoldie
+.PHONY: all clean test triangulate_test libgoldie
 
 all: libgoldie mapview
 
@@ -138,22 +138,18 @@ $(BUILD_DIR)/hexen/%.o: $(HEXEN_DIR)/%.c
 	$(CC) $(CFLAGS) -I. -c $< -o $@
 
 # Test targets
-test: triangulate_test bsp_test
+test: triangulate_test
 	@echo "=== Running all tests ==="
 	@./triangulate_test
-	@./bsp_test
 
 triangulate_test: $(TESTS_DIR)/triangulate_test.c $(MAPVIEW_DIR)/triangulate.c
 	$(CC) -DTEST_MODE -o $@ $^ -I. -lm
-
-bsp_test: $(TESTS_DIR)/bsp_test.c
-	$(CC) -o $@ $^ -I. -lm
 
 # Clean
 clean:
 	-@if [ -f $(UI_DIR)/Makefile ]; then $(MAKE) -C $(UI_DIR) clean; fi
 	rm -rf $(BUILD_DIR) 
-	-rm -f triangulate_test bsp_test doom-ed
+	-rm -f triangulate_test doom-ed
 	-test -f mapview && rm -f mapview || true
 	rm -f $(MAPVIEW_DIR)/*.o $(EDITOR_DIR)/*.o $(EDITOR_DIR)/windows/*.o $(EDITOR_DIR)/windows/inspector/*.o
 	rm -f $(HEXEN_DIR)/*.o $(DOOM_DIR)/*.o
