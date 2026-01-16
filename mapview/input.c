@@ -91,17 +91,14 @@ bool point_in_sector(map_data_t const* map, int x, int y, int secidx) {
   // Perform detailed ray-casting test
   int inside = 0;
   for (int i = 0; i < map->num_linedefs; i++) {
-    maplinedef_t* line = &map->linedefs[i];
+    maplinedef_t const* line = &map->linedefs[i];
     for (int s = 0; s < 2; s++) {
       int sidenum = line->sidenum[s];
       if (sidenum == 0xFFFF) continue;
       if (map->sidedefs[sidenum].sector != secidx) continue;
-      
-      mapvertex_t* v1 = &map->vertices[line->start];
-      mapvertex_t* v2 = &map->vertices[line->end];
-      
-      if (((v1->y > y) != (v2->y > y)) &&
-          (x < (v2->x - v1->x) * (y - v1->y) / (v2->y - v1->y) + v1->x))
+      mapvertex_t const* a = &map->vertices[line->start];
+      mapvertex_t const* b = &map->vertices[line->end];
+      if (((a->y>y)!=(b->y>y))&&(x<(b->x-a->x)*(y-a->y)/(b->y-a->y)+a->x))
         inside = !inside;
     }
   }
