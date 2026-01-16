@@ -1,4 +1,31 @@
-# BSP-Based Rendering Implementation
+# BSP-Based Rendering - Removed
+
+**Note: As of January 2026, BSP-based rendering has been removed from this project.**
+
+The renderer now uses only portal-based rendering to traverse connected sectors through two-sided linedefs. BSP data (nodes, subsectors, segs) is no longer loaded from WAD files.
+
+## Why BSP Was Removed
+
+The project has transitioned to use portal-based rendering exclusively. This simplifies the codebase and removes the dependency on precomputed BSP data while still providing functional rendering through the portal traversal system.
+
+## Portal-Based Rendering
+
+The current rendering system uses `draw_portals()` in `floor.c` to recursively traverse connected sectors:
+
+1. Start from the player's sector
+2. Render the current sector's floors, ceilings, and walls
+3. Check all two-sided linedefs in the sector
+4. For each portal (two-sided linedef), check if it's visible using frustum culling
+5. Recursively render connected sectors
+6. Frame tracking prevents duplicate sector rendering
+
+## Historical Context
+
+This document is preserved for historical reference. The original BSP implementation is described below.
+
+---
+
+# Original BSP-Based Rendering Implementation (Historical)
 
 ## Overview
 This document describes the BSP (Binary Space Partitioning) based rendering system implemented to fix the visibility issues in the DOOM level renderer. The implementation follows the approach used in the original Doom and GZDoom engines.
