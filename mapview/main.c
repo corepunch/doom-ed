@@ -31,7 +31,7 @@ void init_windows(void) {
   //  create_window("Console", 0, MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
 //  create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
   show_window(create_window("Things", WINDOW_VSCROLL, MAKERECT(8, 96, THING_SIZE*3, 256), NULL, win_things, NULL), true);
-  create_window("Project", WINDOW_VSCROLL, MAKERECT(4, 20, 128, 256), NULL, win_project, NULL);
+  show_window(create_window("Project", WINDOW_VSCROLL, MAKERECT(4, 20, 128, 256), NULL, win_project, NULL), true);
   //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, NULL);
 //  create_window("Inspector", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, NULL);
   
