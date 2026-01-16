@@ -2,30 +2,47 @@
 
 ![DOOM-ED Screenshot](https://github.com/corepunch/doom-ed/raw/main/screenshots/editor.png)
 
-A modern open-source level editor for classic DOOM games, built with SDL2.
+A modern open-source level editor for classic DOOM games, built with SDL2 and C.
 
 ## Features
 
 - Full-featured level editor for DOOM, DOOM II, Heretic, and other DOOM engine games
 - Support for PWAD/IWAD file formats
-- Real-time 2D and 3D preview
-- Vertex manipulation tools
-- Sector creation and editing
-- Texture browser and management
-- Thing placement and properties editor
+- Real-time 2D map editing with visual feedback
+- 3D map preview and navigation
+- Vertex manipulation and geometry editing
+- Sector creation and editing with triangulation
+- BSP tree visualization and traversal
+- Texture management and display
+- Thing placement and properties
 - Linedef and sidedef editing
-- Scriptable with Lua for custom tools and automation
-- Cross-platform support (Windows, macOS, Linux)
+- Inspector panels for editing map elements
+- Custom UI framework with window management
+- Cross-platform support (macOS, Linux)
 
 ## Requirements
 
-- SDL2
-- OpenGL
+- SDL2 (window management and input)
+- OpenGL (3D rendering)
 - cglm (OpenGL Mathematics library for C)
-- C17 compatible compiler
-- Make (for building with Makefile) or CMake
+- C17 compatible compiler (gcc)
+- Make (for building with Makefile)
 
 ## Building
+
+### Prerequisites
+
+**Linux (Ubuntu/Debian):**
+```bash
+sudo apt-get install build-essential libsdl2-dev libcglm-dev libgl1-mesa-dev
+```
+
+**macOS:**
+```bash
+brew install sdl2 cglm
+```
+
+OpenGL is included with Xcode Command Line Tools on macOS.
 
 ### Clone the Repository
 
@@ -41,54 +58,78 @@ Or if you already cloned the repository:
 git submodule update --init --recursive
 ```
 
-### With Make (Linux/macOS)
+### Build with Make
 
+Build the main executable:
 ```bash
 make
 ```
 
-For detailed build instructions, see [BUILD.md](BUILD.md).
+This will create the `doom-ed` executable in the current directory.
 
-### With CMake (Cross-platform)
-
-**Note**: CMake support is planned but not yet implemented. Use Make for now.
+For detailed build instructions and troubleshooting, see [BUILD.md](BUILD.md).
 
 ## Usage
+
+The editor requires a WAD file to load:
+
+```bash
+./doom-ed path/to/yourfile.wad
+```
+
+You can use the WAD files included via git submodules in the `wads/` directory.
 
 ### Basic Controls
 
 - **Left Mouse**: Select objects
-- **Right Mouse**: Context menu/Pan view
-- **Middle Mouse**: Drag to pan view
-- **Scroll Wheel**: Zoom in/out
-- **Shift + Left Mouse**: Add to selection
-- **Ctrl + Left Mouse**: Remove from selection
-- **Shift + Drag**: Create sector
-- **Tab**: Switch between 2D and 3D view
+- **Mouse Wheel**: Zoom in/out
+- **WASD / Arrow Keys**: Navigate in map view
+- **Mouse Movement**: Pan/navigate the view
 
-### Keyboard Shortcuts
+The editor includes multiple inspector windows for editing different map elements (vertices, lines, sectors, things).
 
-- **Ctrl+N**: New map
-- **Ctrl+O**: Open WAD file
-- **Ctrl+S**: Save
-- **Ctrl+Z**: Undo
-- **Ctrl+Y**: Redo
-- **Delete**: Delete selected objects
-- **G**: Grid toggle
-- **F**: Focus on selection
-- **V**: Vertex mode
-- **L**: Line mode
-- **S**: Sector mode
-- **T**: Thing mode
-- **Esc**: Cancel current operation
+## Project Structure
 
-## File Structure
+```
+/
+├── mapview/              # Core map viewer and renderer
+│   ├── *.c, *.h         # Map rendering, BSP, textures, sprites
+│   └── main.c           # Application entry point
+├── editor/              # Editor-specific functionality
+│   ├── editor_*.c       # Drawing, input, sector editing
+│   ├── radial_menu.*    # Radial menu system
+│   └── windows/         # Editor windows (inspector, game view, etc.)
+│       └── inspector/   # Property inspector for map elements
+├── ui/                  # UI framework (window management, controls)
+│   ├── kernel/          # Event handling and SDL integration
+│   ├── user/            # Window system API
+│   └── commctl/         # Common controls (buttons, lists, etc.)
+├── doom/                # DOOM engine headers and some source
+├── hexen/               # Hexen game engine headers and source
+├── tests/               # Test suite (triangulation, BSP)
+├── screenshots/         # Screenshot images
+├── wads/                # WAD files (git submodule)
+├── Makefile             # Build system
+└── mapview.xcodeproj/   # Xcode project files
+```
 
-- `src/`: Source code
-- `include/`: Header files
-- `resources/`: Icons, shaders, and other resources
-- `lua/`: Lua scripts for editor extension
-- `docs/`: Documentation
+## Testing
+
+Run all tests:
+```bash
+make test
+```
+
+This will run the triangulation tests and BSP tree traversal tests. See `tests/TEST_README.md` for detailed test documentation.
+
+## Documentation
+
+- [BUILD.md](BUILD.md) - Detailed build instructions and troubleshooting
+- [BSP_RENDERING.md](BSP_RENDERING.md) - BSP tree rendering algorithm documentation
+- [TRIANGULATION_IMPROVEMENTS.md](TRIANGULATION_IMPROVEMENTS.md) - Polygon triangulation implementation
+- [tests/TEST_README.md](tests/TEST_README.md) - Test suite documentation
+- [UI_FRAMEWORK_SUMMARY.md](UI_FRAMEWORK_SUMMARY.md) - UI framework architecture
+- [UI_MIGRATION_GUIDE.md](UI_MIGRATION_GUIDE.md) - UI framework migration guide
 
 ## Contributing
 
