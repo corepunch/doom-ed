@@ -270,6 +270,7 @@ static void R_RenderBSPNode(map_data_t const *map, int bspnum, viewdef_t const *
   }
 }
 
+#if 0
 //
 // has_bsp_data
 // Check if the map has valid BSP data for rendering.
@@ -277,8 +278,8 @@ static void R_RenderBSPNode(map_data_t const *map, int bspnum, viewdef_t const *
 static inline bool has_bsp_data(map_data_t const *map) {
   return map->num_nodes > 0 && map->num_subsectors > 0 && map->num_segs > 0;
 }
+#endif
 
-//
 // draw_bsp
 // Main entry point for BSP-based rendering.
 // Traverses the BSP tree and draws all visible sectors.
@@ -286,11 +287,12 @@ static inline bool has_bsp_data(map_data_t const *map) {
 void draw_bsp(map_data_t const *map, viewdef_t const *viewdef) {
   if (!map || !viewdef)
     return;
-  
+#if 0
   // Check if we have BSP data
   if (!has_bsp_data(map)) {
     // No BSP data - fall back to portal-based rendering
     // This happens with manually created maps
+#endif
     extern void draw_floors(map_data_t const *, mapsector_t const *, viewdef_t const *);
     
     // Find the player's sector and start rendering from there
@@ -310,9 +312,10 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef) {
     if (player_sector) {
       draw_floors(map, player_sector, viewdef);
     }
+#if 0
     return;
   }
-  
   // Start traversal from the root node (last node in the array)
   R_RenderBSPNode(map, map->num_nodes - 1, viewdef);
+#endif
 }

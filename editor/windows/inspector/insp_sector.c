@@ -11,7 +11,7 @@ enum {
 };
 
 windef_t sector_layout[] = {
-  { win_label, "Sector#", -1, LABEL_WIDTH },
+  { win_label, "Sector#: ", -1, LABEL_WIDTH },
   { win_textedit, "", ID_SECTOR_IDENT, 50 },
   { win_label, "Light lvl:", -1, LABEL_WIDTH },
   { win_textedit, "", ID_SECTOR_LIGHT_LEVEL, 50 },
@@ -95,6 +95,7 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return true;
     case WM_PAINT:
       if (sector) {
+        set_window_item_text(win, ID_SECTOR_IDENT, "%d", sector - g_game->map.sectors);
         set_window_item_text(win, ID_SECTOR_LIGHT_LEVEL, "%d", sector->lightlevel);
         set_window_item_text(win, ID_SECTOR_FLOOR_HEIGHT, "%d", sector->floorheight);
         set_window_item_text(win, ID_SECTOR_FLOOR_IMAGE, sector->floorpic);

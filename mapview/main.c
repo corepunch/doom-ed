@@ -30,7 +30,7 @@ void init_windows(void) {
   //  create_window("Statbar", WINDOW_NOTITLE|WINDOW_TRANSPARENT, MAKERECT((screen_width-VGA_WIDTH)/2, (screen_height-VGA_HEGHT), VGA_WIDTH, VGA_HEGHT), NULL, win_statbar, NULL);
   //  create_window("Console", 0, MAKERECT(32, 32, 512, 256), NULL, win_console, NULL);
 //  create_window("Game", WINDOW_NOFILL, MAKERECT(380, 128, 320, 320), NULL, win_game, NULL);
-  show_window(create_window("Things", WINDOW_VSCROLL, MAKERECT(96, 96, THING_SIZE*3, 256), NULL, win_things, NULL), true);
+  show_window(create_window("Things", WINDOW_VSCROLL, MAKERECT(8, 96, THING_SIZE*3, 256), NULL, win_things, NULL), true);
   create_window("Project", WINDOW_VSCROLL, MAKERECT(4, 20, 128, 256), NULL, win_project, NULL);
   //  create_window("Mode", 0, MAKERECT(200, 20, 320, 20), NULL, win_editmode, NULL);
 //  create_window("Inspector", 0, MAKERECT(200, 20, 150, 300), NULL, win_sector, NULL);
@@ -98,8 +98,8 @@ int main(int argc, char* argv[]) {
   allocate_mapside_textures();
   allocate_flat_textures();
 
-  new_map();
-//  open_map("MAP01");
+//  new_map();
+  open_map("MAP01");
   
 //  bool running = true;
   // Main game loop

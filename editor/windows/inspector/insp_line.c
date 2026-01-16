@@ -19,11 +19,14 @@ enum {
   ID_LINE_BACK_BTM,
   ID_LINE_BACK_MID,
   ID_LINE_BACK_TOP,
+  ID_LINE_IDENT
 };
 
 #define ICON 44
 
 windef_t line_layout[] = {
+  { win_label, "LineDef#: ", -1, LABEL_WIDTH },
+  { win_textedit, "", ID_LINE_IDENT, 50 },
   { win_label, "Type:", -1 },
   { win_textedit, "", ID_LINE_TYPE, 32 },
   { win_space },
@@ -81,6 +84,8 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
       return true;
     case WM_PAINT:
       if (line) {
+        set_window_item_text(win, ID_LINE_IDENT, "%d", line - g_game->map.linedefs);
+        set_window_item_text(win, ID_LINE_TYPE, "%d", line->special);
         set_window_item_text(win, ID_LINE_TYPE, "%d", line->special);
         set_window_item_text(win, ID_LINE_START, "%d", line->start);
         set_window_item_text(win, ID_LINE_END, "%d", line->end);

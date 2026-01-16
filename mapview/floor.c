@@ -35,14 +35,18 @@ bool point_in_frustum(vec3 point, vec4 const planes[6]) {
 //   v2: (b.x, b.y, floor_height)  - bottom right
 //   v3: (b.x, b.y, ceiling_height) - top right
 //
-bool linedef_quad_in_frustum_3d(vec4 const frustum[6], vec2 a, vec2 b, 
-                                 float floor_height, float ceiling_height) {
+bool linedef_in_frustum(vec4 const frustum[6],
+                        mapvertex_t a,
+                        mapvertex_t b,
+                        float floor_height,
+                        float ceiling_height)
+{
   // Build the 4 corners of the quad in 3D space
   vec3 corners[4] = {
-    {a[0], a[1], floor_height},     // bottom left
-    {a[0], a[1], ceiling_height},   // top left
-    {b[0], b[1], floor_height},     // bottom right
-    {b[0], b[1], ceiling_height}    // top right
+    {a.x, a.y, floor_height},     // bottom left
+    {a.x, a.y, ceiling_height},   // top left
+    {b.x, b.y, floor_height},     // bottom right
+    {b.x, b.y, ceiling_height}    // top right
   };
   
   // For each frustum plane, check if all corners are outside
@@ -349,14 +353,9 @@ void draw_portals(map_data_t const *map,
         // The linedef forms a 4-pointed polygon in 3D space with floor and ceiling heights
         // Using the current sector's heights would incorrectly reject portals when sectors
         // have different floor/ceiling heights (e.g., stairs, lifts, different room heights)
-        mapsector_t const *neighbor = &map->sectors[neighbor_sector_idx];
-        if (linedef_quad_in_frustum_3d(viewdef->frustum,
-                                       (vec2){a->x, a->y},
-                                       (vec2){b->x, b->y},
-                                       neighbor->floorheight,
-                                       neighbor->ceilingheight))
-        {
-          func(map, neighbor, viewdef);
+        mapsector_t const *n = &map->sectors[neighbor_sector_idx];
+        if (linedef_in_frustum(viewdef->frustum, *a, *b, n->floorheight, n->ceilingheight)) {
+          func(map, n, viewdef);
         }
       }
     }
