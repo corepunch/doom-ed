@@ -14,7 +14,7 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef) {
   // Find the player's sector and start rendering from there
   mapsector_t const *player_sector = NULL;
   for (int i = 0; i < map->num_sectors; i++) {
-    if (point_in_sector(map, viewdef->viewpos[0], viewdef->viewpos[1], i)) {
+    if (point_in_sector(map, (int)viewdef->viewpos[0], (int)viewdef->viewpos[1], i)) {
       player_sector = &map->sectors[i];
       break;
     }
