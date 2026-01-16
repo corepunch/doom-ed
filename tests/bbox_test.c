@@ -5,7 +5,8 @@
 #include <stdint.h>
 #include <limits.h>
 
-// Minimal type definitions for testing
+// Forward declarations and minimal types needed for testing
+// (We can't include map.h directly due to external dependencies like cglm)
 typedef char texname_t[8];
 
 typedef struct {
@@ -31,6 +32,7 @@ typedef struct {
   uint16_t sector;
 } mapsidedef_t;
 
+// Bounding box coordinates (from map.h)
 enum {
   BOXTOP,
   BOXBOTTOM,
@@ -46,7 +48,7 @@ typedef struct {
   int16_t lightlevel;
   int16_t special;
   int16_t tag;
-  int16_t bbox[4];
+  int16_t bbox[4];  // Bounding box for optimization
 } mapsector_t;
 
 typedef struct {

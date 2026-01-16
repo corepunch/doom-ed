@@ -8,6 +8,12 @@ extern SDL_Window* window;
 extern bool running;
 extern bool mode;
 
+// Check if a point is inside a sector's bounding box
+static inline bool point_in_bbox(mapsector_t const* sector, int x, int y) {
+  return !(x < sector->bbox[BOXLEFT] || x > sector->bbox[BOXRIGHT] ||
+           y < sector->bbox[BOXBOTTOM] || y > sector->bbox[BOXTOP]);
+}
+
 // Compute bounding box for a single sector
 // Note: Primarily used for debugging/testing. Production code uses build_floor_vertex_buffer()
 void compute_sector_bbox(map_data_t *map, int sector_index) {
@@ -77,8 +83,7 @@ bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
   
   // Quick rejection test using bounding box
   mapsector_t const* sector = &map->sectors[sector_index];
-  if (x < sector->bbox[BOXLEFT] || x > sector->bbox[BOXRIGHT] ||
-      y < sector->bbox[BOXBOTTOM] || y > sector->bbox[BOXTOP]) {
+  if (!point_in_bbox(sector, x, y)) {
     return false;
   }
   
