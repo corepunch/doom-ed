@@ -61,7 +61,7 @@ typedef struct {
 } map_data_t;
 
 // Bbox computation function (copied from input.c)
-void compute_sector_bbox(map_data_t const* map, int sector_index) {
+void compute_sector_bbox(map_data_t *map, int sector_index) {
   if (sector_index < 0 || sector_index >= map->num_sectors) {
     return;
   }

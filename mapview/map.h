@@ -421,7 +421,7 @@ int allocate_mapside_textures(void);
 int allocate_flat_textures(void);
 
 uint8_t* load_patch(void* patch_lump, int* width, int* height);
-void compute_sector_bbox(map_data_t const* map, int sector_index);
+void compute_sector_bbox(map_data_t *map, int sector_index);
 void compute_all_sector_bboxes(map_data_t *map);
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
 void assign_thing_sector(map_data_t const *map, mapthing_t *thing);

@@ -9,7 +9,8 @@ extern bool running;
 extern bool mode;
 
 // Compute bounding box for a single sector
-void compute_sector_bbox(map_data_t const* map, int sector_index) {
+// Note: Primarily used for debugging/testing. Production code uses build_floor_vertex_buffer()
+void compute_sector_bbox(map_data_t *map, int sector_index) {
   if (sector_index < 0 || sector_index >= map->num_sectors) {
     return;
   }
@@ -49,7 +50,7 @@ void compute_sector_bbox(map_data_t const* map, int sector_index) {
       if (v2->x > sector->bbox[BOXRIGHT]) sector->bbox[BOXRIGHT] = v2->x;
       
       found = true;
-      break; // We found this linedef belongs to sector, no need to check other side
+      break; // Both vertices processed, no need to check other side
     }
   }
   
