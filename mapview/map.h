@@ -248,7 +248,6 @@ typedef struct {
   int16_t lightlevel;        // Light level
   int16_t special;           // Special behavior
   int16_t tag;               // Tag number
-  int16_t bbox[4];           // Bounding box for optimization
 } mapsector_t;
 
 // Wall section references
@@ -266,6 +265,7 @@ typedef struct {
   wall_section_t floor;
   wall_section_t ceiling;
   uint32_t frame;
+  int16_t  bbox[4];
 } mapsector2_t;
 
 // Palette structure

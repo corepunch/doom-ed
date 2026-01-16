@@ -9,7 +9,7 @@ extern bool running;
 extern bool mode;
 
 // Check if a point is inside a sector's bounding box
-static inline bool point_in_bbox(mapsector_t const* sector, int x, int y) {
+static inline bool point_in_bbox(mapsector2_t const* sector, int x, int y) {
   return !(x < sector->bbox[BOXLEFT] || x > sector->bbox[BOXRIGHT] ||
            y < sector->bbox[BOXBOTTOM] || y > sector->bbox[BOXTOP]);
 }
@@ -22,12 +22,13 @@ void compute_sector_bbox(map_data_t *map, int sector_index) {
   }
   
   mapsector_t *sector = &map->sectors[sector_index];
+  mapsector2_t *sector2 = &map->floors.sectors[sector_index];
   
   // Initialize bbox to extreme values
-  sector->bbox[BOXTOP] = INT16_MIN;
-  sector->bbox[BOXBOTTOM] = INT16_MAX;
-  sector->bbox[BOXLEFT] = INT16_MAX;
-  sector->bbox[BOXRIGHT] = INT16_MIN;
+  sector2->bbox[BOXTOP] = INT16_MIN;
+  sector2->bbox[BOXBOTTOM] = INT16_MAX;
+  sector2->bbox[BOXLEFT] = INT16_MAX;
+  sector2->bbox[BOXRIGHT] = INT16_MIN;
   
   // Iterate through all linedefs to find those belonging to this sector
   bool found = false;
@@ -45,15 +46,14 @@ void compute_sector_bbox(map_data_t *map, int sector_index) {
       mapvertex_t* v2 = &map->vertices[line->end];
       
       // Update bounding box
-      if (v1->y > sector->bbox[BOXTOP]) sector->bbox[BOXTOP] = v1->y;
-      if (v1->y < sector->bbox[BOXBOTTOM]) sector->bbox[BOXBOTTOM] = v1->y;
-      if (v1->x < sector->bbox[BOXLEFT]) sector->bbox[BOXLEFT] = v1->x;
-      if (v1->x > sector->bbox[BOXRIGHT]) sector->bbox[BOXRIGHT] = v1->x;
-      
-      if (v2->y > sector->bbox[BOXTOP]) sector->bbox[BOXTOP] = v2->y;
-      if (v2->y < sector->bbox[BOXBOTTOM]) sector->bbox[BOXBOTTOM] = v2->y;
-      if (v2->x < sector->bbox[BOXLEFT]) sector->bbox[BOXLEFT] = v2->x;
-      if (v2->x > sector->bbox[BOXRIGHT]) sector->bbox[BOXRIGHT] = v2->x;
+      if (v1->y > sector2->bbox[BOXTOP]) sector2->bbox[BOXTOP] = v1->y;
+      if (v1->y < sector2->bbox[BOXBOTTOM]) sector2->bbox[BOXBOTTOM] = v1->y;
+      if (v1->x < sector2->bbox[BOXLEFT]) sector2->bbox[BOXLEFT] = v1->x;
+      if (v1->x > sector2->bbox[BOXRIGHT]) sector2->bbox[BOXRIGHT] = v1->x;
+      if (v2->y > sector2->bbox[BOXTOP]) sector2->bbox[BOXTOP] = v2->y;
+      if (v2->y < sector2->bbox[BOXBOTTOM]) sector2->bbox[BOXBOTTOM] = v2->y;
+      if (v2->x < sector2->bbox[BOXLEFT]) sector2->bbox[BOXLEFT] = v2->x;
+      if (v2->x > sector2->bbox[BOXRIGHT]) sector2->bbox[BOXRIGHT] = v2->x;
       
       found = true;
       break; // Both vertices processed, no need to check other side
@@ -62,10 +62,10 @@ void compute_sector_bbox(map_data_t *map, int sector_index) {
   
   // If no linedefs found for this sector, set bbox to zero
   if (!found) {
-    sector->bbox[BOXTOP] = 0;
-    sector->bbox[BOXBOTTOM] = 0;
-    sector->bbox[BOXLEFT] = 0;
-    sector->bbox[BOXRIGHT] = 0;
+    sector2->bbox[BOXTOP] = 0;
+    sector2->bbox[BOXBOTTOM] = 0;
+    sector2->bbox[BOXLEFT] = 0;
+    sector2->bbox[BOXRIGHT] = 0;
   }
 }
 
@@ -76,14 +76,15 @@ void compute_all_sector_bboxes(map_data_t *map) {
   }
 }
 
-bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
-  if (sector_index < 0 || sector_index >= map->num_sectors) {
+bool point_in_sector(map_data_t const* map, int x, int y, int secidx) {
+  if (secidx < 0 || secidx >= map->num_sectors) {
     return false;
   }
   
   // Quick rejection test using bounding box
-  mapsector_t const* sector = &map->sectors[sector_index];
-  if (!point_in_bbox(sector, x, y)) {
+  if (map->floors.sectors &&
+      !point_in_bbox(map->floors.sectors+secidx, x, y))
+  {
     return false;
   }
   
@@ -94,7 +95,7 @@ bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
     for (int s = 0; s < 2; s++) {
       int sidenum = line->sidenum[s];
       if (sidenum == 0xFFFF) continue;
-      if (map->sidedefs[sidenum].sector != sector_index) continue;
+      if (map->sidedefs[sidenum].sector != secidx) continue;
       
       mapvertex_t* v1 = &map->vertices[line->start];
       mapvertex_t* v2 = &map->vertices[line->end];
