@@ -179,8 +179,8 @@ read_center_pixel(window_t const *win,
   SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
   SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
 
-  int x = (win->frame.x + win->frame.w / 2) * fb_width / screen_width;
-  int y = fb_height - (win->frame.y + win->frame.h / 2) * fb_height / screen_height;
+  int x = (win->frame.x + win->frame.w / 2) * fb_width / ui_get_system_metrics(SM_CXSCREEN);
+  int y = fb_height - (win->frame.y + win->frame.h / 2) * fb_height / ui_get_system_metrics(SM_CYSCREEN);
 
   glReadPixels(x, y, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &pixel);
   

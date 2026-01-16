@@ -50,9 +50,4 @@ bool init_things(void);
 sprite_t* get_thing_sprite_name(uint16_t thing_type, uint16_t angle);
 void cleanup_things(void);
 
-extern int screen_width;
-extern int screen_height;
-
-
-
 #endif /* __SPRITES__ */
