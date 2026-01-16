@@ -236,6 +236,31 @@ void build_floor_vertex_buffer(map_data_t *map) {
     mapvertex_t sector_vertices[MAX_VERTICES]; // Assuming max MAX_VERTICES vertices per sector
     int num_vertices = get_sector_vertices(map, i, sector_vertices);
     
+    // Compute bounding box for this sector from collected vertices
+    if (num_vertices > 0) {
+      map->sectors[i].bbox[BOXTOP] = INT16_MIN;
+      map->sectors[i].bbox[BOXBOTTOM] = INT16_MAX;
+      map->sectors[i].bbox[BOXLEFT] = INT16_MAX;
+      map->sectors[i].bbox[BOXRIGHT] = INT16_MIN;
+      
+      for (int j = 0; j < num_vertices; j++) {
+        if (sector_vertices[j].y > map->sectors[i].bbox[BOXTOP])
+          map->sectors[i].bbox[BOXTOP] = sector_vertices[j].y;
+        if (sector_vertices[j].y < map->sectors[i].bbox[BOXBOTTOM])
+          map->sectors[i].bbox[BOXBOTTOM] = sector_vertices[j].y;
+        if (sector_vertices[j].x < map->sectors[i].bbox[BOXLEFT])
+          map->sectors[i].bbox[BOXLEFT] = sector_vertices[j].x;
+        if (sector_vertices[j].x > map->sectors[i].bbox[BOXRIGHT])
+          map->sectors[i].bbox[BOXRIGHT] = sector_vertices[j].x;
+      }
+    } else {
+      // Empty sector, set bbox to zero
+      map->sectors[i].bbox[BOXTOP] = 0;
+      map->sectors[i].bbox[BOXBOTTOM] = 0;
+      map->sectors[i].bbox[BOXLEFT] = 0;
+      map->sectors[i].bbox[BOXRIGHT] = 0;
+    }
+    
     // Skip sectors with too few vertices
     if (num_vertices < 3) continue;
     

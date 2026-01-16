@@ -16,8 +16,10 @@ build/libgoldie-ui.dylib
 # Test binaries
 tests/triangulate_test
 tests/bsp_test
+tests/bbox_test
 triangulate_test
 bsp_test
+bbox_test
 *.o
 
 # Build logs

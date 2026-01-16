@@ -491,7 +491,8 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           if (editor->dragging && has_selection(editor->hover, obj_point)) {
             editor->dragging = false;
             game->map.vertices[editor->hover.index] = editor->sn;
-            // Rebuild vertex buffers
+            
+            // Rebuild vertex buffers (which will also recompute bboxes)
             build_wall_vertex_buffer(&game->map);
             build_floor_vertex_buffer(&game->map);
           }
