@@ -231,6 +231,14 @@ typedef struct {
   uint16_t sector;           // Sector number this sidedef faces
 } mapsidedef_t;
 
+// Bounding box coordinates (following DOOM convention)
+enum {
+  BOXTOP,
+  BOXBOTTOM,
+  BOXLEFT,
+  BOXRIGHT
+};
+
 // Sector structure
 typedef struct {
   int16_t floorheight;       // Floor height
@@ -240,6 +248,7 @@ typedef struct {
   int16_t lightlevel;        // Light level
   int16_t special;           // Special behavior
   int16_t tag;               // Tag number
+  int16_t bbox[4];           // Bounding box for optimization
 } mapsector_t;
 
 // Wall section references
@@ -412,6 +421,8 @@ int allocate_mapside_textures(void);
 int allocate_flat_textures(void);
 
 uint8_t* load_patch(void* patch_lump, int* width, int* height);
+void compute_sector_bbox(map_data_t const* map, int sector_index);
+void compute_all_sector_bboxes(map_data_t *map);
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index);
 void assign_thing_sector(map_data_t const *map, mapthing_t *thing);
 mapsector_t const *find_player_sector(map_data_t const* map, int x, int y);

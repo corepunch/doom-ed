@@ -412,7 +412,7 @@ bool set_loop_sector(map_data_t *map, uint16_t sector, uint16_t *vertices, uint1
     memcpy(map->sectors+sector, map->sectors+parent, sizeof(mapsector_t));
   }
 
-  // Rebuild vertex buffers
+  // Rebuild vertex buffers (which will also recompute bboxes)
   build_wall_vertex_buffer(map);
   build_floor_vertex_buffer(map);
   

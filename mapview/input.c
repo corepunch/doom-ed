@@ -8,7 +8,80 @@ extern SDL_Window* window;
 extern bool running;
 extern bool mode;
 
+// Compute bounding box for a single sector
+void compute_sector_bbox(map_data_t const* map, int sector_index) {
+  if (sector_index < 0 || sector_index >= map->num_sectors) {
+    return;
+  }
+  
+  mapsector_t *sector = &map->sectors[sector_index];
+  
+  // Initialize bbox to extreme values
+  sector->bbox[BOXTOP] = INT16_MIN;
+  sector->bbox[BOXBOTTOM] = INT16_MAX;
+  sector->bbox[BOXLEFT] = INT16_MAX;
+  sector->bbox[BOXRIGHT] = INT16_MIN;
+  
+  // Iterate through all linedefs to find those belonging to this sector
+  bool found = false;
+  for (int i = 0; i < map->num_linedefs; i++) {
+    maplinedef_t* line = &map->linedefs[i];
+    
+    // Check both sides
+    for (int s = 0; s < 2; s++) {
+      int sidenum = line->sidenum[s];
+      if (sidenum == 0xFFFF) continue;
+      if (map->sidedefs[sidenum].sector != sector_index) continue;
+      
+      // This linedef belongs to our sector, update bbox with its vertices
+      mapvertex_t* v1 = &map->vertices[line->start];
+      mapvertex_t* v2 = &map->vertices[line->end];
+      
+      // Update bounding box
+      if (v1->y > sector->bbox[BOXTOP]) sector->bbox[BOXTOP] = v1->y;
+      if (v1->y < sector->bbox[BOXBOTTOM]) sector->bbox[BOXBOTTOM] = v1->y;
+      if (v1->x < sector->bbox[BOXLEFT]) sector->bbox[BOXLEFT] = v1->x;
+      if (v1->x > sector->bbox[BOXRIGHT]) sector->bbox[BOXRIGHT] = v1->x;
+      
+      if (v2->y > sector->bbox[BOXTOP]) sector->bbox[BOXTOP] = v2->y;
+      if (v2->y < sector->bbox[BOXBOTTOM]) sector->bbox[BOXBOTTOM] = v2->y;
+      if (v2->x < sector->bbox[BOXLEFT]) sector->bbox[BOXLEFT] = v2->x;
+      if (v2->x > sector->bbox[BOXRIGHT]) sector->bbox[BOXRIGHT] = v2->x;
+      
+      found = true;
+      break; // We found this linedef belongs to sector, no need to check other side
+    }
+  }
+  
+  // If no linedefs found for this sector, set bbox to zero
+  if (!found) {
+    sector->bbox[BOXTOP] = 0;
+    sector->bbox[BOXBOTTOM] = 0;
+    sector->bbox[BOXLEFT] = 0;
+    sector->bbox[BOXRIGHT] = 0;
+  }
+}
+
+// Compute bounding boxes for all sectors
+void compute_all_sector_bboxes(map_data_t *map) {
+  for (int i = 0; i < map->num_sectors; i++) {
+    compute_sector_bbox(map, i);
+  }
+}
+
 bool point_in_sector(map_data_t const* map, int x, int y, int sector_index) {
+  if (sector_index < 0 || sector_index >= map->num_sectors) {
+    return false;
+  }
+  
+  // Quick rejection test using bounding box
+  mapsector_t const* sector = &map->sectors[sector_index];
+  if (x < sector->bbox[BOXLEFT] || x > sector->bbox[BOXRIGHT] ||
+      y < sector->bbox[BOXBOTTOM] || y > sector->bbox[BOXTOP]) {
+    return false;
+  }
+  
+  // Perform detailed ray-casting test
   int inside = 0;
   for (int i = 0; i < map->num_linedefs; i++) {
     maplinedef_t* line = &map->linedefs[i];
