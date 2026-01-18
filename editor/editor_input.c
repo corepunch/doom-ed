@@ -18,7 +18,7 @@ extern SDL_Window* window;
  * DEPRECATED: This function contains legacy direct SDL event polling.
  * 
  * Modern input handling is done through the window message system:
- * - Joystick events are routed via WM_JOYAXISMOTION and WM_JOYBUTTONDOWN
+ * - Joystick events are routed via kWindowMessageJoyAxisMotion and kWindowMessageJoyButtonDown
  * - See mapview/windows/game.c win_game() for proper joystick handling
  * - See mapview/editor_input.c win_editor() for proper editor input handling
  * 
@@ -35,7 +35,7 @@ void handle_editor_input(map_data_t *map,
   static float forward_move = 0, strafe_move = 0;
   
   // NOTE: This direct SDL_PollEvent is deprecated.
-  // Input should be handled through window messages (WM_KEYDOWN, WM_JOYAXISMOTION, etc.)
+  // Input should be handled through window messages (kWindowMessageKeyDown, kWindowMessageJoyAxisMotion, etc.)
   while (SDL_PollEvent(&event)) {
     if (event.type == SDL_QUIT) {
       extern bool running;
@@ -43,8 +43,8 @@ void handle_editor_input(map_data_t *map,
     }
     // REMOVED: Direct joystick event handling
     // Joystick events are now routed through the UI message system:
-    // - WM_JOYBUTTONDOWN for button presses
-    // - WM_JOYAXISMOTION for axis movement
+    // - kWindowMessageJoyButtonDown for button presses
+    // - kWindowMessageJoyAxisMotion for axis movement
     // See win_game() in mapview/windows/game.c for example usage
     else if (event.type == SDL_KEYUP) {
       switch (event.key.keysym.scancode) {
@@ -192,7 +192,7 @@ void set_selection_mode(editor_state_t *editor, int mode) {
       return;
   }
   clear_window_children(g_inspector);
-  send_message(g_inspector, WM_CREATE, 0, editor);
+  send_message(g_inspector, kWindowMessageCreate, 0, editor);
   invalidate_window(g_inspector);
 }
 
@@ -210,7 +210,7 @@ static void update_inspector(editor_state_t *editor, objtype_t type) {
   if (g_inspector->proc != proc) {
     g_inspector->proc = proc;
     clear_window_children(g_inspector);
-    send_message(g_inspector, WM_CREATE, 0, editor);
+    send_message(g_inspector, kWindowMessageCreate, 0, editor);
     invalidate_window(g_inspector);
     set_focus(old_focus);
   }
@@ -301,22 +301,22 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   editor_state_t *editor = game ? &game->state : NULL;
   int point = -1;
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->userdata = lparam;
       ((game_t *)lparam)->state.window = win;
       return true;
-    case WM_DESTROY:
+    case kWindowMessageDestroy:
       free_map_data(&game->map);
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       draw_editor(win, &game->map, editor, &game->player);
       return true;
-    case WM_MOUSEMOVE:
+    case kWindowMessageMouseMove:
       track_mouse(win);
       editor->hover.type = ObjTypeNone;
       editor->hover.index = 0xFFFF;
       if (editor->move_camera == 2 || editor->move_thing) {
-        int16_t move_cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
+        int16_t move_cursor[2] = { kLowWord(wparam), kHighWord(wparam) };
         vec3 world_1, world_2;
         mat4 mvp;
         get_editor_mvp(editor, mvp);
@@ -331,11 +331,11 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           editor->camera[0] += world_1[0] - world_2[0];
           editor->camera[1] += world_1[1] - world_2[1];
         }
-        editor->cursor[0] = LOWORD(wparam);
-        editor->cursor[1] = HIWORD(wparam);
+        editor->cursor[0] = kLowWord(wparam);
+        editor->cursor[1] = kHighWord(wparam);
       } else {
-        editor->cursor[0] = LOWORD(wparam);
-        editor->cursor[1] = HIWORD(wparam);
+        editor->cursor[0] = kLowWord(wparam);
+        editor->cursor[1] = kHighWord(wparam);
         vec3 world_1;
         mat4 mvp;
         get_editor_mvp(editor, mvp);
@@ -361,8 +361,8 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       invalidate_window(win);
       invalidate_window(g_inspector);
       return true;
-      //    case WM_WHEEL:
-      //      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
+      //    case kWindowMessageWheel:
+      //      editor->scale *= 1.f - (int16_t)kHighWord(wparam)/50.f;
       //      invalidate_window(win);
       //      return true;
     case WM_MOUSELEAVE:
@@ -373,12 +373,12 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       invalidate_window(win);
       invalidate_window(g_inspector);
       return true;
-    case WM_WHEEL: {
+    case kWindowMessageWheel: {
       mat4 mvp;
       vec3 world_before, world_after, delta;
       get_editor_mvp(editor, mvp);
       get_mouse_position(win, editor, editor->cursor, mvp, world_before);
-      editor->scale *= MAX(1.f - (int16_t)HIWORD(wparam) / 50.f, 0.1f);
+      editor->scale *= MAX(1.f - (int16_t)kHighWord(wparam) / 50.f, 0.1f);
       get_editor_mvp(editor, mvp);
       get_mouse_position(win, editor, editor->cursor, mvp, world_after);
       glm_vec2_sub(world_before, world_after, delta);
@@ -386,7 +386,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       invalidate_window(win);
       return true;
     }
-    case WM_LBUTTONUP:
+    case kWindowMessageLeftButtonUp:
       if (editor->move_camera == 2) {
         editor->move_camera = 1;
       } else if (editor->sel_mode == EditModeSelect) {
@@ -396,7 +396,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //        editor->move_thing = 0;
       }
       return true;
-    case WM_LBUTTONDOWN:
+    case kWindowMessageLeftButtonDown:
       if (editor->move_camera > 0) {
         editor->move_camera = 2;
         return true;
@@ -440,7 +440,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           editor->selected.index = editor->hover.index;
           editor->selected.type = editor->hover.type;
           if (!has_selection(editor->hover, ObjTypePoint)) {
-            int16_t cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
+            int16_t cursor[2] = { kLowWord(wparam), kHighWord(wparam) };
             vec3 world;
             mat4 mvp;
             get_editor_mvp(editor, mvp);
@@ -499,10 +499,10 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           return true;
       }
       return true;
-    case WM_KILLFOCUS:
+    case kWindowMessageKillFocus:
       editor_reset_input(editor);
       return true;
-    case WM_KEYDOWN:
+    case kWindowMessageKeyDown:
       switch (wparam) {
         case SDL_SCANCODE_W:
         case SDL_SCANCODE_UP:
@@ -560,7 +560,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           return true;
       }
       break;
-    case WM_KEYUP:
+    case kWindowMessageKeyUp:
       if (wparam == SDL_SCANCODE_LGUI) {
         editor->move_camera = 0;
       }

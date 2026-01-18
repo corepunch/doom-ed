@@ -63,10 +63,10 @@ void set_selection_mode(editor_state_t *editor, int mode);
 result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);      
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       draw_text_small("Nothing selected", 5, 5, COLOR_DARK_EDGE);
       draw_text_small("Nothing selected", 4, 4, COLOR_TEXT_NORMAL);
       return true;
@@ -87,13 +87,13 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   editor_state_t *editor = get_editor();
   mapsector_t *sector = selected_sector(g_game);
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->userdata = lparam;
       g_inspector = win;
       load_window_children(win, sector_layout);
 //      init_combobox(get_window_item(win, ID_TEST_COMBOBOX));
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       if (sector) {
         set_window_item_text(win, ID_SECTOR_IDENT, "%d", sector - g_game->map.sectors);
         set_window_item_text(win, ID_SECTOR_LIGHT_LEVEL, "%d", sector->lightlevel);
@@ -103,16 +103,16 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         set_window_item_text(win, ID_SECTOR_CEILING_IMAGE, sector->ceilingpic);
       }
       return false;
-    case WM_COMMAND:
+    case kWindowMessageCommand:
       if (sector) {
         switch (wparam) {
-          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, EN_UPDATE):
+          case kMakeDWord(ID_SECTOR_LIGHT_LEVEL, EN_UPDATE):
             sector->lightlevel = atoi(((window_t *)lparam)->title);
             break;
-          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE):
+          case kMakeDWord(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE):
             sector->floorheight = atoi(((window_t *)lparam)->title);
             break;
-          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE):
+          case kMakeDWord(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE):
             sector->ceilingheight = atoi(((window_t *)lparam)->title);
             break;
         }

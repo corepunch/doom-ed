@@ -33,7 +33,7 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   sprite_t const *spr;
   mapside_texture_t const *tex;
   switch (msg) {
-    case WM_PAINT:
+    case kWindowMessagePaint:
       fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(&win->frame, 1, 1, true);
       if (!*win->title) return false;
@@ -50,8 +50,8 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
                   tex->height * scale);
       }
       return true;
-    case WM_LBUTTONUP:
-      send_message(win->parent, WM_COMMAND, MAKEDWORD(win->id, BN_CLICKED), NULL);
+    case kWindowMessageLeftButtonUp:
+      send_message(win->parent, kWindowMessageCommand, kMakeDWord(win->id, BN_CLICKED), NULL);
       return true;
   }
   return false;

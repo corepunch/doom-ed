@@ -30,25 +30,25 @@ result_t win_vertex(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   editor_state_t *editor = get_editor();
   mapvertex_t *point = selected_vertex(g_game);
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->userdata = lparam;
       g_inspector = win;
       load_window_children(win, vertex_layout);
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       if (point) {
         set_window_item_text(win, ID_VERTEX_ID, "%d", point - g_game->map.vertices);
         set_window_item_text(win, ID_VERTEX_POS_X, "%d", point->x);
         set_window_item_text(win, ID_VERTEX_POS_Y, "%d", point->y);
       }
       return false;
-    case WM_COMMAND:
+    case kWindowMessageCommand:
       if (point) {
-        if (wparam == MAKEDWORD(ID_VERTEX_POS_X, EN_UPDATE)) {
+        if (wparam == kMakeDWord(ID_VERTEX_POS_X, EN_UPDATE)) {
           point->x = atoi(((window_t *)lparam)->title);
           invalidate_window(editor->window);
         }
-        if (wparam == MAKEDWORD(ID_VERTEX_POS_Y, EN_UPDATE)) {
+        if (wparam == kMakeDWord(ID_VERTEX_POS_Y, EN_UPDATE)) {
           point->y = atoi(((window_t *)lparam)->title);
           invalidate_window(editor->window);
         }

@@ -77,12 +77,12 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   maplinedef_t *line = selected_line(g_game);
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->userdata = lparam;
       g_inspector = win;
       load_window_children(win, line_layout);
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       if (line) {
         set_window_item_text(win, ID_LINE_IDENT, "%d", line - g_game->map.linedefs);
         set_window_item_text(win, ID_LINE_TYPE, "%d", line->special);
@@ -110,10 +110,10 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
       }
       return false;
-    case WM_COMMAND:
+    case kWindowMessageCommand:
       if (line) {
 #define SET_OFFSET(ID, SIDE, OFFSET) \
-        if (wparam == MAKEDWORD(ID, EN_UPDATE) && line->sidenum[SIDE] != 0xFFFF && g_game) { \
+        if (wparam == kMakeDWord(ID, kEditNotificationUpdate) && line->sidenum[SIDE] != 0xFFFF && g_game) { \
           mapsidedef_t *side = &g_game->map.sidedefs[line->sidenum[SIDE]]; \
           side->OFFSET = atoi(((window_t *)lparam)->title); \
           build_wall_vertex_buffer(&g_game->map); \

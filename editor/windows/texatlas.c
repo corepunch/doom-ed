@@ -221,7 +221,7 @@ int get_layout_item(texture_layout_t* layout, int index, int *texutre_index) {
   }
   texture_layout_entry_t* entry = &layout->entries[index];
   *texutre_index = entry->texture_idx;
-  return MAKEDWORD(entry->x, entry->y);
+  return kMakeDWord(entry->x, entry->y);
 }
 
 // Function to draw the layout with a specific texture highlighted
@@ -362,10 +362,10 @@ typedef struct {
 result_t win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   mapside_texture_t *tex = win->userdata;
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->userdata = lparam;
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       draw_rect(tex ? tex->texture : 1, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
       return true;
   }
@@ -375,7 +375,7 @@ result_t win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   window_udata_t *udata = win->userdata;
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       udata = malloc(sizeof(window_udata_t));
       udata->cache = lparam;
       udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
@@ -386,12 +386,12 @@ result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       free(udata->layout);
       udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       draw_texture_layout_with_selection(udata->layout, udata->cache->textures, udata->cache->selected, SCALE);
       return false;
-    case WM_LBUTTONUP: {
+    case kWindowMessageLeftButtonUp: {
       int texture_idx =
-      get_texture_at_point(udata->layout, LOWORD(wparam) / SCALE, HIWORD(wparam) / SCALE);
+      get_texture_at_point(udata->layout, kLowWord(wparam) / SCALE, kHighWord(wparam) / SCALE);
       if (texture_idx >= 0) {
 //        puts(udata->cache->textures[texture_idx].name);
         memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));

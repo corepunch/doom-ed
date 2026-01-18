@@ -101,12 +101,12 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   mapthing_t *thing = selected_thing(g_game);
   uint16_t tmp;
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->userdata = lparam;
       g_inspector = win;
       load_window_children(win, thing_layout);
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       if (thing) {
         sprite_t *spr = get_thing_sprite_name(thing->type, 0);
         set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
@@ -121,10 +121,10 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
       }
       return false;
-    case WM_COMMAND:
+    case kWindowMessageCommand:
       if (thing) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
-          if (wparam == MAKEDWORD(thing_checkboxes[i], BN_CLICKED)) {
+          if (wparam == kMakeDWord(thing_checkboxes[i], BN_CLICKED)) {
             if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
               thing->options |= 1 << i;
             } else {
@@ -133,19 +133,19 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           }
         }
         switch (wparam) {
-          case MAKEDWORD(ID_THING_POS_X, EN_UPDATE):
+          case kMakeDWord(ID_THING_POS_X, EN_UPDATE):
             thing->x = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_POS_Y, EN_UPDATE):
+          case kMakeDWord(ID_THING_POS_Y, EN_UPDATE):
             thing->y = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_ANGLE, EN_UPDATE):
+          case kMakeDWord(ID_THING_ANGLE, EN_UPDATE):
             thing->angle = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_SPRITE, BN_CLICKED):
+          case kMakeDWord(ID_THING_SPRITE, BN_CLICKED):
             if ((tmp = select_thing_type(win)) != 0xFFFF) {
               thing->type = tmp;
               invalidate_window(editor->window);

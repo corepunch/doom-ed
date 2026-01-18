@@ -33,7 +33,7 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   extern char *sprnames[NUMSPRITES];
 //  editor_state_t *editor = get_editor();
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->flags |= WINDOW_TOOLBAR;
       win->userdata2 = lparam;
 //      win->userdata = layout(NUM_THINGS, win->frame.w, get_mobj_size, win);
@@ -48,7 +48,7 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     }
 //      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);
       break;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       for (int i = 0, j = 0; i < NUM_THINGS; i++) {
         sprite_t *spr = ed_things[i].sprite ? find_sprite(ed_things[i].sprite) : NULL;
         if (spr && ed_things[i].code1 == ed_thinggroups[win->cursor_pos].code) {
@@ -66,16 +66,16 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     case WM_RESIZE:
       invalidate_window(win);
       return true;
-    case WM_LBUTTONUP:
+    case kWindowMessageLeftButtonUp:
       for (int i = 0, j = 0; i < NUM_THINGS; i++) {
         sprite_t *spr = ed_things[i].sprite ? find_sprite(ed_things[i].sprite) : NULL;
         if (spr && ed_things[i].code1 == ed_thinggroups[win->cursor_pos].code) {
           uint16_t n = win->frame.w / THING_SIZE;
           uint16_t x = (j % n) * THING_SIZE;
           uint16_t y = (j / n) * (THING_SIZE+THING_LABEL_HEIGHT);
-          if (LOWORD(wparam) >= x && HIWORD(wparam) >= y &&
-              LOWORD(wparam) < x + THING_SIZE &&
-              HIWORD(wparam) < y + THING_SIZE)
+          if (kLowWord(wparam) >= x && kHighWord(wparam) >= y &&
+              kLowWord(wparam) < x + THING_SIZE &&
+              kHighWord(wparam) < y + THING_SIZE)
           {
             end_dialog(win, ed_things[i].doomednum);
             return true;

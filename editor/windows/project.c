@@ -23,11 +23,11 @@ void collect_proc(const char *name, void *parm) {
 result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   items_t const *items = win->userdata;
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
 			win->userdata = malloc(sizeof(items_t));
 			find_all_maps(collect_proc, win);
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       for (int i = 0, y = 0; i < items->num_items; i++, y += BUTTON_HEIGHT) {
         if (win->cursor_pos == i) {
           fill_rect(COLOR_TEXT_NORMAL, 0, y, win->frame.w, BUTTON_HEIGHT);
@@ -37,14 +37,14 @@ result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
         }
       }
       return true;
-    case WM_LBUTTONUP:
-      win->cursor_pos = HIWORD(wparam)/BUTTON_HEIGHT;
+    case kWindowMessageLeftButtonUp:
+      win->cursor_pos = kHighWord(wparam)/BUTTON_HEIGHT;
       if (win->cursor_pos < items->num_items) {
         open_map(items->items[win->cursor_pos]);
       }
       invalidate_window(win);
       return true;
-    case WM_KEYDOWN:
+    case kWindowMessageKeyDown:
       if (wparam == SDL_SCANCODE_UP && win->cursor_pos > 0) {
         win->cursor_pos--;
         invalidate_window(win);

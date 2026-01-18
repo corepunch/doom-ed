@@ -265,7 +265,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   set_projection(0, 0, win->frame.w, win->frame.h);
   
 //  result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-//  win_perf((window_t*)win, WM_PAINT, 0, NULL);
+//  win_perf((window_t*)win, kWindowMessagePaint, 0, NULL);
   
 //  mapside_texture_t const *tex1 = get_texture(get_selected_texture());
 //  mapside_texture_t const *tex2 = get_flat_texture(get_selected_flat_texture());
@@ -344,18 +344,18 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   extern window_t *_captured;
   game_t *game = win->userdata;
   switch (msg) {
-    case WM_CREATE:
+    case kWindowMessageCreate:
       win->userdata = lparam;
       create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
       return true;
-    case WM_DESTROY:
+    case kWindowMessageDestroy:
       free_map_data(&game->map);
       return true;
-    case WM_PAINT:
+    case kWindowMessagePaint:
       game_tick(game);
       draw_dungeon(win, moved);
       if (_focused == win) {
-        post_message(win, WM_PAINT, wparam, lparam);
+        post_message(win, kWindowMessagePaint, wparam, lparam);
       }
       moved = false;
       return false;
@@ -363,10 +363,10 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 
   if (_captured == win) {
     switch (msg) {
-      case WM_KILLFOCUS:
+      case kWindowMessageKillFocus:
         SDL_SetRelativeMouseMode(SDL_FALSE);
         return true;
-      case WM_KEYDOWN:
+      case kWindowMessageKeyDown:
         switch (wparam) {
           case SDL_SCANCODE_ESCAPE:
             SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -421,7 +421,7 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             return true;
         }
         return true;
-      case WM_KEYUP:
+      case kWindowMessageKeyUp:
         switch (wparam) {
           case SDL_SCANCODE_W:
           case SDL_SCANCODE_UP:
@@ -448,13 +448,13 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             break;
         }
         return true;
-//      case WM_WHEEL:
-//        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game->map);
+//      case kWindowMessageWheel:
+//        handle_scroll((int[]){(int16_t)kLowWord(wparam), (int16_t)kHighWord(wparam)}, &game->map);
 //        return true;
-      case WM_MOUSEMOVE:
+      case kWindowMessageMouseMove:
         moved = true;
-        game->player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
-        game->player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
+        game->player.angle += ((int16_t)kLowWord((intptr_t)lparam)) * sensitivity_x;
+        game->player.pitch -= ((int16_t)kHighWord((intptr_t)lparam)) * sensitivity_y;
         // Keep angle within 0-360 range
         if (game->player.angle < 0) game->player.angle += 360;
         if (game->player.angle >= 360) game->player.angle -= 360;
@@ -462,34 +462,34 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         if (game->player.pitch > 89.0f) game->player.pitch = 89.0f;
         if (game->player.pitch < -89.0f) game->player.pitch = -89.0f;
         return true;
-      case WM_LBUTTONUP:
+      case kWindowMessageLeftButtonUp:
         paint_face(&game->map, SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LALT]);
         return true;
-      case WM_JOYBUTTONDOWN:
+      case kWindowMessageJoyButtonDown:
         if (wparam == 0) {
           paint_face(&game->map, false);
         } else if (wparam == 1) {
           paint_face(&game->map, true);
         }
         return true;
-      case WM_JOYAXISMOTION:
-        switch (LOWORD(wparam)) {
-          case 0: game->player.strafe_move = ((int16_t)HIWORD(wparam))/(float)0x8000; break;
-          case 1: game->player.forward_move = -((int16_t)HIWORD(wparam))/(float)0x8000; break;
-          case 3: game->player.mouse_x_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
-          case 4: game->player.mouse_y_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
+      case kWindowMessageJoyAxisMotion:
+        switch (kLowWord(wparam)) {
+          case 0: game->player.strafe_move = ((int16_t)kHighWord(wparam))/(float)0x8000; break;
+          case 1: game->player.forward_move = -((int16_t)kHighWord(wparam))/(float)0x8000; break;
+          case 3: game->player.mouse_x_rel = ((int16_t)kHighWord(wparam))/1200.f; break;
+          case 4: game->player.mouse_y_rel = ((int16_t)kHighWord(wparam))/1200.f; break;
         }
         return true;
     }
   } else if (_focused == win) {
     switch (msg) {
-      case WM_LBUTTONUP:
+      case kWindowMessageLeftButtonUp:
         if (!SDL_GetRelativeMouseMode()) {
           set_capture(win);
           SDL_SetRelativeMouseMode(SDL_TRUE);
         }
         return true;
-      case WM_KEYDOWN:
+      case kWindowMessageKeyDown:
         switch (wparam) {
 //          case SDL_SCANCODE_ESCAPE:
 //            SDL_SetRelativeMouseMode(SDL_FALSE);
