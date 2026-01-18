@@ -44,11 +44,11 @@ result_t win_vertex(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return false;
     case kWindowMessageCommand:
       if (point) {
-        if (wparam == kMakeDWord(ID_VERTEX_POS_X, EN_UPDATE)) {
+        if (wparam == MAKEDWORD(ID_VERTEX_POS_X, EN_UPDATE)) {
           point->x = atoi(((window_t *)lparam)->title);
           invalidate_window(editor->window);
         }
-        if (wparam == kMakeDWord(ID_VERTEX_POS_Y, EN_UPDATE)) {
+        if (wparam == MAKEDWORD(ID_VERTEX_POS_Y, EN_UPDATE)) {
           point->y = atoi(((window_t *)lparam)->title);
           invalidate_window(editor->window);
         }

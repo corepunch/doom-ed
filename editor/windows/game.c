@@ -449,12 +449,12 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         return true;
 //      case kWindowMessageWheel:
-//        handle_scroll((int[]){(int16_t)kLowWord(wparam), (int16_t)kHighWord(wparam)}, &game->map);
+//        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game->map);
 //        return true;
       case kWindowMessageMouseMove:
         moved = true;
-        game->player.angle += ((int16_t)kLowWord((intptr_t)lparam)) * sensitivity_x;
-        game->player.pitch -= ((int16_t)kHighWord((intptr_t)lparam)) * sensitivity_y;
+        game->player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
+        game->player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
         // Keep angle within 0-360 range
         if (game->player.angle < 0) game->player.angle += 360;
         if (game->player.angle >= 360) game->player.angle -= 360;
@@ -473,11 +473,11 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         return true;
       case kWindowMessageJoyAxisMotion:
-        switch (kLowWord(wparam)) {
-          case 0: game->player.strafe_move = ((int16_t)kHighWord(wparam))/(float)0x8000; break;
-          case 1: game->player.forward_move = -((int16_t)kHighWord(wparam))/(float)0x8000; break;
-          case 3: game->player.mouse_x_rel = ((int16_t)kHighWord(wparam))/1200.f; break;
-          case 4: game->player.mouse_y_rel = ((int16_t)kHighWord(wparam))/1200.f; break;
+        switch (LOWORD(wparam)) {
+          case 0: game->player.strafe_move = ((int16_t)HIWORD(wparam))/(float)0x8000; break;
+          case 1: game->player.forward_move = -((int16_t)HIWORD(wparam))/(float)0x8000; break;
+          case 3: game->player.mouse_x_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
+          case 4: game->player.mouse_y_rel = ((int16_t)HIWORD(wparam))/1200.f; break;
         }
         return true;
     }

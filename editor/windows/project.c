@@ -38,7 +38,7 @@ result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       }
       return true;
     case kWindowMessageLeftButtonUp:
-      win->cursor_pos = kHighWord(wparam)/BUTTON_HEIGHT;
+      win->cursor_pos = HIWORD(wparam)/BUTTON_HEIGHT;
       if (win->cursor_pos < items->num_items) {
         open_map(items->items[win->cursor_pos]);
       }

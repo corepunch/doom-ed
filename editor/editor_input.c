@@ -316,7 +316,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       editor->hover.type = ObjTypeNone;
       editor->hover.index = 0xFFFF;
       if (editor->move_camera == 2 || editor->move_thing) {
-        int16_t move_cursor[2] = { kLowWord(wparam), kHighWord(wparam) };
+        int16_t move_cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
         vec3 world_1, world_2;
         mat4 mvp;
         get_editor_mvp(editor, mvp);
@@ -331,11 +331,11 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           editor->camera[0] += world_1[0] - world_2[0];
           editor->camera[1] += world_1[1] - world_2[1];
         }
-        editor->cursor[0] = kLowWord(wparam);
-        editor->cursor[1] = kHighWord(wparam);
+        editor->cursor[0] = LOWORD(wparam);
+        editor->cursor[1] = HIWORD(wparam);
       } else {
-        editor->cursor[0] = kLowWord(wparam);
-        editor->cursor[1] = kHighWord(wparam);
+        editor->cursor[0] = LOWORD(wparam);
+        editor->cursor[1] = HIWORD(wparam);
         vec3 world_1;
         mat4 mvp;
         get_editor_mvp(editor, mvp);
@@ -362,7 +362,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       invalidate_window(g_inspector);
       return true;
       //    case kWindowMessageWheel:
-      //      editor->scale *= 1.f - (int16_t)kHighWord(wparam)/50.f;
+      //      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
       //      invalidate_window(win);
       //      return true;
     case WM_MOUSELEAVE:
@@ -378,7 +378,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       vec3 world_before, world_after, delta;
       get_editor_mvp(editor, mvp);
       get_mouse_position(win, editor, editor->cursor, mvp, world_before);
-      editor->scale *= MAX(1.f - (int16_t)kHighWord(wparam) / 50.f, 0.1f);
+      editor->scale *= MAX(1.f - (int16_t)HIWORD(wparam) / 50.f, 0.1f);
       get_editor_mvp(editor, mvp);
       get_mouse_position(win, editor, editor->cursor, mvp, world_after);
       glm_vec2_sub(world_before, world_after, delta);
@@ -440,7 +440,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           editor->selected.index = editor->hover.index;
           editor->selected.type = editor->hover.type;
           if (!has_selection(editor->hover, ObjTypePoint)) {
-            int16_t cursor[2] = { kLowWord(wparam), kHighWord(wparam) };
+            int16_t cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
             vec3 world;
             mat4 mvp;
             get_editor_mvp(editor, mvp);

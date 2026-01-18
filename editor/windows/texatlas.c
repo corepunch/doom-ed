@@ -221,7 +221,7 @@ int get_layout_item(texture_layout_t* layout, int index, int *texutre_index) {
   }
   texture_layout_entry_t* entry = &layout->entries[index];
   *texutre_index = entry->texture_idx;
-  return kMakeDWord(entry->x, entry->y);
+  return MAKEDWORD(entry->x, entry->y);
 }
 
 // Function to draw the layout with a specific texture highlighted
@@ -391,7 +391,7 @@ result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       return false;
     case kWindowMessageLeftButtonUp: {
       int texture_idx =
-      get_texture_at_point(udata->layout, kLowWord(wparam) / SCALE, kHighWord(wparam) / SCALE);
+      get_texture_at_point(udata->layout, LOWORD(wparam) / SCALE, HIWORD(wparam) / SCALE);
       if (texture_idx >= 0) {
 //        puts(udata->cache->textures[texture_idx].name);
         memcpy(udata->cache->selected, udata->cache->textures[texture_idx].name, sizeof(texname_t));

@@ -113,7 +113,7 @@ result_t win_line(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
     case kWindowMessageCommand:
       if (line) {
 #define SET_OFFSET(ID, SIDE, OFFSET) \
-        if (wparam == kMakeDWord(ID, kEditNotificationUpdate) && line->sidenum[SIDE] != 0xFFFF && g_game) { \
+        if (wparam == MAKEDWORD(ID, kEditNotificationUpdate) && line->sidenum[SIDE] != 0xFFFF && g_game) { \
           mapsidedef_t *side = &g_game->map.sidedefs[line->sidenum[SIDE]]; \
           side->OFFSET = atoi(((window_t *)lparam)->title); \
           build_wall_vertex_buffer(&g_game->map); \

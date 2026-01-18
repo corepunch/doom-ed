@@ -106,13 +106,13 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     case kWindowMessageCommand:
       if (sector) {
         switch (wparam) {
-          case kMakeDWord(ID_SECTOR_LIGHT_LEVEL, EN_UPDATE):
+          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, EN_UPDATE):
             sector->lightlevel = atoi(((window_t *)lparam)->title);
             break;
-          case kMakeDWord(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE):
+          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE):
             sector->floorheight = atoi(((window_t *)lparam)->title);
             break;
-          case kMakeDWord(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE):
+          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE):
             sector->ceilingheight = atoi(((window_t *)lparam)->title);
             break;
         }

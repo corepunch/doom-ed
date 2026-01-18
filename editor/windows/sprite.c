@@ -51,7 +51,7 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       }
       return true;
     case kWindowMessageLeftButtonUp:
-      send_message(win->parent, kWindowMessageCommand, kMakeDWord(win->id, BN_CLICKED), NULL);
+      send_message(win->parent, kWindowMessageCommand, MAKEDWORD(win->id, BN_CLICKED), NULL);
       return true;
   }
   return false;

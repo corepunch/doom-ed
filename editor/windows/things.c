@@ -73,9 +73,9 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           uint16_t n = win->frame.w / THING_SIZE;
           uint16_t x = (j % n) * THING_SIZE;
           uint16_t y = (j / n) * (THING_SIZE+THING_LABEL_HEIGHT);
-          if (kLowWord(wparam) >= x && kHighWord(wparam) >= y &&
-              kLowWord(wparam) < x + THING_SIZE &&
-              kHighWord(wparam) < y + THING_SIZE)
+          if (LOWORD(wparam) >= x && HIWORD(wparam) >= y &&
+              LOWORD(wparam) < x + THING_SIZE &&
+              HIWORD(wparam) < y + THING_SIZE)
           {
             end_dialog(win, ed_things[i].doomednum);
             return true;
