@@ -44,9 +44,9 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         but[i].ident = i;
         but[i].active = win->cursor_pos == i;
       }
-      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);
+      send_message(win, kToolBarMessageAddButtons, sizeof(but)/sizeof(*but), but);
     }
-//      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);
+//      send_message(win, kToolBarMessageAddButtons, sizeof(but)/sizeof(*but), but);
       break;
     case kWindowMessagePaint:
       for (int i = 0, j = 0; i < NUM_THINGS; i++) {
@@ -63,7 +63,7 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         }
       }
       break;
-    case WM_RESIZE:
+    case kWindowMessageResize:
       invalidate_window(win);
       return true;
     case kWindowMessageLeftButtonUp:
@@ -84,7 +84,7 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         }
       }
       return true;
-    case TB_BUTTONCLICK:
+    case kToolBarMessageButtonClick:
       free(win->userdata);
       win->cursor_pos = wparam;
       for (int i = 0; i < win->num_toolbar_buttons; i++) {

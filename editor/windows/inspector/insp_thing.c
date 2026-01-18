@@ -117,15 +117,15 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
           window_t *checkbox = get_window_item(win, thing_checkboxes[i]);
           uint32_t value = thing->options&(1<<i);
-          send_message(checkbox, BM_SETCHECK, value, NULL);
+          send_message(checkbox, kButtonMessageSetCheck, value, NULL);
         }
       }
       return false;
     case kWindowMessageCommand:
       if (thing) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
-          if (wparam == MAKEDWORD(thing_checkboxes[i], BN_CLICKED)) {
-            if (send_message(lparam, BM_GETCHECK, 0, NULL)) {
+          if (wparam == MAKEDWORD(thing_checkboxes[i], kButtonNotificationClicked)) {
+            if (send_message(lparam, kButtonMessageGetCheck, 0, NULL)) {
               thing->options |= 1 << i;
             } else {
               thing->options &= ~(1 << i);
@@ -133,19 +133,19 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           }
         }
         switch (wparam) {
-          case MAKEDWORD(ID_THING_POS_X, EN_UPDATE):
+          case MAKEDWORD(ID_THING_POS_X, kEditNotificationUpdate):
             thing->x = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_POS_Y, EN_UPDATE):
+          case MAKEDWORD(ID_THING_POS_Y, kEditNotificationUpdate):
             thing->y = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_ANGLE, EN_UPDATE):
+          case MAKEDWORD(ID_THING_ANGLE, kEditNotificationUpdate):
             thing->angle = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_SPRITE, BN_CLICKED):
+          case MAKEDWORD(ID_THING_SPRITE, kButtonNotificationClicked):
             if ((tmp = select_thing_type(win)) != 0xFFFF) {
               thing->type = tmp;
               invalidate_window(editor->window);

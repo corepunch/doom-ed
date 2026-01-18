@@ -492,8 +492,8 @@ draw_player:
 void minimap_matrix(player_t const *player, mat4 mvp) {
   mat4 proj, view;
   
-  float w = ui_get_system_metrics(SM_CXSCREEN)*MINIMAP_SCALE;
-  float h = ui_get_system_metrics(SM_CYSCREEN)*MINIMAP_SCALE;
+  float w = ui_get_system_metrics(kSystemMetricScreenWidth)*MINIMAP_SCALE;
+  float h = ui_get_system_metrics(kSystemMetricScreenHeight)*MINIMAP_SCALE;
   
   glm_ortho(w, -w, h, -h, -1000, 1000, proj);
   

@@ -523,7 +523,7 @@ int allocate_flat_textures(void) {
 //    }
 //  }
   
-  create_window("Flats", WINDOW_VSCROLL, MAKERECT(ui_get_system_metrics(SM_CXSCREEN)-148, 20, 128, 256), NULL, win_textures, flat_cache);
+  create_window("Flats", WINDOW_VSCROLL, MAKERECT(ui_get_system_metrics(kSystemMetricScreenWidth)-148, 20, 128, 256), NULL, win_textures, flat_cache);
   
   if (flat_cache->num_textures) {
     memcpy(flat_cache->selected, flat_cache->textures->name, sizeof(texname_t));

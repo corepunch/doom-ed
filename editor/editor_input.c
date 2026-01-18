@@ -365,7 +365,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       //      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
       //      invalidate_window(win);
       //      return true;
-    case WM_MOUSELEAVE:
+    case kWindowMessageMouseLeave:
 //      editor->hover.point = -1;
 //      editor->hover.sector = -1;
 //      editor->hover.line = -1;
@@ -467,7 +467,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           break;
       }
       return true;
-    case WM_RBUTTONDOWN:
+    case kWindowMessageRightButtonDown:
       switch (editor->sel_mode) {
         case EditModeVertices:
           if (editor->drawing) {
@@ -485,7 +485,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           break;
       }
       return true;
-    case WM_RBUTTONUP:
+    case kWindowMessageRightButtonUp:
       switch (editor->sel_mode) {
         case EditModeVertices:
           if (editor->dragging && has_selection(editor->hover, ObjTypePoint)) {

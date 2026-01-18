@@ -64,13 +64,13 @@ result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   switch (msg) {
     case kWindowMessageCreate:
-      send_message(win, TB_ADDBUTTONS, sizeof(but)/sizeof(*but), but);      
+      send_message(win, kToolBarMessageAddButtons, sizeof(but)/sizeof(*but), but);      
       return true;
     case kWindowMessagePaint:
       draw_text_small("Nothing selected", 5, 5, COLOR_DARK_EDGE);
       draw_text_small("Nothing selected", 4, 4, COLOR_TEXT_NORMAL);
       return true;
-    case TB_BUTTONCLICK:
+    case kToolBarMessageButtonClick:
       for (int i = 0; i < win->num_toolbar_buttons; i++) {
         toolbar_button_t *but = &win->toolbar_buttons[i];
         but->active = (but->ident == wparam);
@@ -106,13 +106,13 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     case kWindowMessageCommand:
       if (sector) {
         switch (wparam) {
-          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, EN_UPDATE):
+          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, kEditNotificationUpdate):
             sector->lightlevel = atoi(((window_t *)lparam)->title);
             break;
-          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, EN_UPDATE):
+          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, kEditNotificationUpdate):
             sector->floorheight = atoi(((window_t *)lparam)->title);
             break;
-          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, EN_UPDATE):
+          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, kEditNotificationUpdate):
             sector->ceilingheight = atoi(((window_t *)lparam)->title);
             break;
         }

@@ -382,7 +382,7 @@ result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam
       win->userdata = udata;
 //      create_window("Image", 0, MAKERECT(10, 10, 30, 30), win, win_image, &udata->cache->textures[0]);
       return true;
-    case WM_RESIZE:
+    case kWindowMessageResize:
       free(udata->layout);
       udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       return true;
