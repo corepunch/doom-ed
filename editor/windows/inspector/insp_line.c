@@ -62,9 +62,9 @@ windef_t line_layout[] = {
 };
 
 maplinedef_t *selected_line(game_t *game) {
-  if (has_selection(game->state.hover, obj_line)) {
+  if (has_selection(game->state.hover, ObjTypeLine)) {
     return &game->map.linedefs[game->state.hover.index];
-  } else if (has_selection(game->state.selected, obj_line)) {
+  } else if (has_selection(game->state.selected, ObjTypeLine)) {
     return &game->map.linedefs[game->state.selected.index];
   } else {
     return NULL;

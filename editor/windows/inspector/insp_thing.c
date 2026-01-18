@@ -74,9 +74,9 @@ uint32_t thing_checkboxes[] = {
 };
 
 mapthing_t *selected_thing(game_t *game) {
-  if (has_selection(game->state.hover, obj_thing)) {
+  if (has_selection(game->state.hover, ObjTypeThing)) {
     return &game->map.things[game->state.hover.index];
-  } else if (has_selection(game->state.selected, obj_thing)) {
+  } else if (has_selection(game->state.selected, ObjTypeThing)) {
     return &game->map.things[game->state.selected.index];
   } else {
     return NULL;

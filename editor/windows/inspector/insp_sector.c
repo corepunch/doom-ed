@@ -28,9 +28,9 @@ windef_t sector_layout[] = {
 mapsector_t *selected_sector(game_t *game) {
   if (!g_game) {
     return NULL;
-  } else if (has_selection(game->state.hover, obj_sector)) {
+  } else if (has_selection(game->state.hover, ObjTypeSector)) {
     return &game->map.sectors[game->state.hover.index];
-  } else if (has_selection(game->state.selected, obj_sector)) {
+  } else if (has_selection(game->state.selected, ObjTypeSector)) {
     return &game->map.sectors[game->state.selected.index];
   } else {
     return NULL;
@@ -52,10 +52,10 @@ mapsector_t *selected_sector(game_t *game) {
 //}
 
 static toolbar_button_t but[] = {
-  { icon16_select, edit_select },
-  { icon16_points, edit_vertices },
-  { icon16_things, edit_things },
-  { icon16_sounds, edit_sounds },
+  { EdIcon16Select, EditModeSelect },
+  { EdIcon16Points, EditModeVertices },
+  { EdIcon16Things, EditModeThings },
+  { EdIcon16Sounds, EditModeSounds },
 };
 
 void set_selection_mode(editor_state_t *editor, int mode);

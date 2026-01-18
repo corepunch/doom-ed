@@ -381,16 +381,16 @@ draw_selection(const editor_selection_t *selected,
 {
   glUniform4ub(ui_prog_color, color);
   switch (selected->type) {
-    case obj_line:
+    case ObjTypeLine:
       draw_line(map, selected->index);
       break;
-    case edit_sectors:
+    case ObjTypeSector:
       draw_sector_outline(map, selected->index);
       break;
-    case edit_things:
+    case ObjTypeThing:
       draw_thing_outline(map, selected->index);
       break;
-    case edit_vertices:
+    case ObjTypePoint:
       draw_vertex_outline(map, selected->index);
       break;
     default:
@@ -447,13 +447,13 @@ draw_editor(window_t *win,
 //    goto draw_player;
 //  }
   
-//  if (editor->sel_mode == edit_vertices || editor->sel_mode == edit_lines) {
-  if (editor->sel_mode == edit_vertices) {
+//  if (editor->sel_mode == EditModeVertices || editor->sel_mode == EditModeLines) {
+  if (editor->sel_mode == EditModeVertices) {
     draw_cursor(editor->sn.x, editor->sn.y);
   }
 //    } else {
 //      ((editor_state_t*)editor)->hover.index = -1;
-//      if (editor->sel_mode == edit_vertices) {
+//      if (editor->sel_mode == EditModeVertices) {
 //        // Snap to grid
 //        snap_mouse_position(editor, world, &editor->sn);
 //        // Draw cursor at the snapped position
@@ -469,11 +469,11 @@ draw_editor(window_t *win,
   draw_selection(&editor->hover, map, sel ? COLOR_SELECTED_HOVER : COLOR_HOVER);
   
   switch (editor->sel_mode) {
-    case edit_vertices:
-    case edit_lines:
+    case EditModeVertices:
+    case EditModeLines:
       // If currently drawing, show line from last point to cursor
       if ((editor->dragging || editor->drawing) &&
-          has_selection(editor->selected, obj_point))
+          has_selection(editor->selected, ObjTypePoint))
       {
         float x = map->vertices[editor->selected.index].x;
         float y = map->vertices[editor->selected.index].y;

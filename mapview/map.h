@@ -56,14 +56,14 @@ if ((map)->name) free((map)->name); \
 #define sensitivity_y 0.175f // Adjust sensitivity as needed
 
 typedef enum {
-  icon16_select,
-  icon16_points,
-  icon16_lines,
-  icon16_sectors,
-  icon16_things,
-  icon16_sounds,
-  icon16_appicon,
-  icon16_count,
+  EdIcon16Select,
+  EdIcon16Points,
+  EdIcon16Lines,
+  EdIcon16Sectors,
+  EdIcon16Things,
+  EdIcon16Sounds,
+  EdIcon16Appicon,
+  EdIcon16Count,
 } ed_icon16_t;
 
 enum {
@@ -323,22 +323,22 @@ typedef struct texture_cache_s {
   mapside_texture_t textures[1];
 } texture_cache_t;
 
-enum {
-  edit_select,
-  edit_vertices,
-  edit_lines,
-  edit_sectors,
-  edit_things,
-  edit_sounds,
-  edit_modes
-};
+typedef enum {
+  EditModeSelect,
+  EditModeVertices,
+  EditModeLines,
+  EditModeSectors,
+  EditModeThings,
+  EditModeSounds,
+  EditModeCount
+} editmode_t;
 
 typedef enum {
-  obj_none,
-  obj_point,
-  obj_line,
-  obj_sector,
-  obj_thing,
+  ObjTypeNone,
+  ObjTypePoint,
+  ObjTypeLine,
+  ObjTypeSector,
+  ObjTypeThing,
 } objtype_t;
 
 typedef struct {

@@ -17,9 +17,9 @@ windef_t vertex_layout[] = {
 };
 
 mapvertex_t *selected_vertex(game_t *game) {
-  if (has_selection(game->state.hover, obj_point)) {
+  if (has_selection(game->state.hover, ObjTypePoint)) {
     return &game->map.vertices[game->state.hover.index];
-  } else if (has_selection(game->state.selected, obj_point)) {
+  } else if (has_selection(game->state.selected, ObjTypePoint)) {
     return &game->map.vertices[game->state.selected.index];
   } else {
     return NULL;

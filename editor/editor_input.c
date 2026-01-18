@@ -185,9 +185,9 @@ result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 void set_selection_mode(editor_state_t *editor, int mode) {
   switch ((editor->sel_mode = mode)) {
-    case edit_things: g_inspector->proc = win_thing; break;
-    case edit_sectors: g_inspector->proc = win_sector; break;
-    case edit_lines: g_inspector->proc = win_line; break;
+    case EditModeThings: g_inspector->proc = win_thing; break;
+    case EditModeSectors: g_inspector->proc = win_sector; break;
+    case EditModeLines: g_inspector->proc = win_line; break;
     default:
       return;
   }
@@ -201,10 +201,10 @@ static void update_inspector(editor_state_t *editor, objtype_t type) {
   winproc_t proc = NULL;
   window_t *old_focus = _focused;
   switch (type) {
-    case obj_thing: proc = win_thing; break;
-    case obj_sector: proc = win_sector; break;
-    case obj_line: proc = win_line; break;
-    case obj_point: proc = win_vertex; break;
+    case ObjTypeThing: proc = win_thing; break;
+    case ObjTypeSector: proc = win_sector; break;
+    case ObjTypeLine: proc = win_line; break;
+    case ObjTypePoint: proc = win_vertex; break;
     default: proc = win_dummy; break;
   }
   if (g_inspector->proc != proc) {
@@ -228,7 +228,7 @@ static void hover_sector(game_t *const *game, editor_selection_t *hover, float *
   mapsector_t const *sec = find_player_sector(&(*game)->map, world_1[0], world_1[1]);
   if (sec) {
     hover->index = (int)(sec - (*game)->map.sectors);
-    hover->type = obj_sector;
+    hover->type = ObjTypeSector;
   }
 }
 
@@ -246,7 +246,7 @@ static void hover_thing(game_t *game, editor_selection_t *hover, float *world_1)
         world_1[0] < th->x + spr->width/2 &&
         world_1[1] < th->y + spr->height/2)
     {
-      hover->type = obj_thing;
+      hover->type = ObjTypeThing;
       hover->index = i;
     }
   }
@@ -276,7 +276,7 @@ static void hover_line(game_t *game, editor_selection_t *hover, float *world) {
         game->state.sn.x = x;
         game->state.sn.y = y;
         hover->index = i;
-        hover->type = obj_line;
+        hover->type = ObjTypeLine;
       }
     }
   }
@@ -291,7 +291,7 @@ static void hover_vertex(game_t *game, editor_selection_t *hover, float *world) 
       game->state.sn.x = game->map.vertices[i].x;
       game->state.sn.y = game->map.vertices[i].y;
       hover->index = i;
-      hover->type = obj_point;
+      hover->type = ObjTypePoint;
     }
   }
 }
@@ -313,7 +313,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return true;
     case WM_MOUSEMOVE:
       track_mouse(win);
-      editor->hover.type = obj_none;
+      editor->hover.type = ObjTypeNone;
       editor->hover.index = 0xFFFF;
       if (editor->move_camera == 2 || editor->move_thing) {
         int16_t move_cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
@@ -322,7 +322,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         get_editor_mvp(editor, mvp);
         get_mouse_position(win, editor, editor->cursor, mvp, world_1);
         get_mouse_position(win, editor, move_cursor, mvp, world_2);
-        if (editor->move_thing && has_selection(editor->hover, obj_thing)) {
+        if (editor->move_thing && has_selection(editor->hover, ObjTypeThing)) {
           uint16_t thing = editor->hover.index;
           game->map.things[thing].x -= world_1[0] - world_2[0];
           game->map.things[thing].y -= world_1[1] - world_2[1];
@@ -343,17 +343,17 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         editor->sn.x = world_1[0];
         editor->sn.y = world_1[1];
         snap_mouse_position(editor, world_1, &editor->sn);
-        if (editor->sel_mode == edit_select) {
+        if (editor->sel_mode == EditModeSelect) {
           hover_sector(&game, &editor->hover, world_1);
           hover_line(game, &editor->hover, world_1);
           hover_vertex(game, &editor->hover, world_1);
           hover_thing(game, &editor->hover, world_1);
 //          update_inspector(editor, editor->hover.type);
-        } else if (editor->sel_mode == edit_vertices) {
+        } else if (editor->sel_mode == EditModeVertices) {
           hover_line(game, &editor->hover, world_1);
           hover_vertex(game, &editor->hover, world_1);
-          if (editor->hover.type != obj_line) {
-            editor->hover.type = obj_none;
+          if (editor->hover.type != ObjTypeLine) {
+            editor->hover.type = ObjTypeNone;
             editor->hover.index = 0xFFFF;
           }
         }
@@ -389,7 +389,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
     case WM_LBUTTONUP:
       if (editor->move_camera == 2) {
         editor->move_camera = 1;
-      } else if (editor->sel_mode == edit_select) {
+      } else if (editor->sel_mode == EditModeSelect) {
         memcpy(&editor->selected, &editor->hover, sizeof(editor_selection_t));
         update_inspector(editor, editor->selected.type);
       } else {
@@ -401,23 +401,23 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         editor->move_camera = 2;
         return true;
       } else switch (editor->sel_mode) {
-        case edit_vertices:
+        case EditModeVertices:
           if (editor->dragging) {
             editor->dragging = false;
             editor->hover.index = -1;
           } else if (point_exists(editor->sn, &game->map, &point)) {
             editor->hover.index = point;
-            editor->hover.type = obj_point;
-          } else if (has_selection(editor->hover, obj_line)) {
+            editor->hover.type = ObjTypePoint;
+          } else if (has_selection(editor->hover, ObjTypeLine)) {
             editor->hover.index = split_linedef(&game->map, editor->hover.index, editor->sn.x, editor->sn.y);
-            editor->hover.type = obj_point;
+            editor->hover.type = ObjTypePoint;
           } else {
             editor->hover.index = add_vertex(&game->map, editor->sn);
-            editor->hover.type = obj_point;
+            editor->hover.type = ObjTypePoint;
           }
           if (editor->drawing &&
-              has_selection(editor->selected, obj_point) &&
-              has_selection(editor->hover, obj_point))
+              has_selection(editor->selected, ObjTypePoint) &&
+              has_selection(editor->hover, ObjTypePoint))
           {
             mapvertex_t a = game->map.vertices[editor->selected.index];
             mapvertex_t b = game->map.vertices[editor->hover.index];
@@ -436,10 +436,10 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           }
           memcpy(&editor->selected, &editor->hover, sizeof(editor->selected));
           break;
-        case edit_things:
+        case EditModeThings:
           editor->selected.index = editor->hover.index;
           editor->selected.type = editor->hover.type;
-          if (!has_selection(editor->hover, obj_point)) {
+          if (!has_selection(editor->hover, ObjTypePoint)) {
             int16_t cursor[2] = { LOWORD(wparam), HIWORD(wparam) };
             vec3 world;
             mat4 mvp;
@@ -455,12 +455,12 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           }
           invalidate_window(win);
           break;
-        case edit_sectors:
+        case EditModeSectors:
           editor->selected.index = editor->hover.index;
           editor->selected.type = editor->hover.type;
           invalidate_window(win);
           break;
-        case edit_lines:
+        case EditModeLines:
           editor->selected.index = editor->hover.index;
           editor->selected.type = editor->hover.type;
           invalidate_window(win);
@@ -469,17 +469,17 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return true;
     case WM_RBUTTONDOWN:
       switch (editor->sel_mode) {
-        case edit_vertices:
+        case EditModeVertices:
           if (editor->drawing) {
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
-          } else if (has_selection(editor->hover, obj_line)) {
+          } else if (has_selection(editor->hover, ObjTypeLine)) {
             editor->hover.index = split_linedef(&game->map, editor->hover.index, editor->sn.x, editor->sn.y);
-            editor->hover.type = obj_point;
+            editor->hover.type = ObjTypePoint;
           } else if (point_exists(editor->sn, &game->map, &point)) {
             editor->hover.index = point;
-            editor->hover.type = obj_point;
+            editor->hover.type = ObjTypePoint;
             editor->dragging = true;
           }
           break;
@@ -487,8 +487,8 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return true;
     case WM_RBUTTONUP:
       switch (editor->sel_mode) {
-        case edit_vertices:
-          if (editor->dragging && has_selection(editor->hover, obj_point)) {
+        case EditModeVertices:
+          if (editor->dragging && has_selection(editor->hover, ObjTypePoint)) {
             editor->dragging = false;
             game->map.vertices[editor->hover.index] = editor->sn;
             
