@@ -20,12 +20,12 @@ git submodule update --init --recursive
 
 ### Linux (Ubuntu/Debian)
 ```bash
-sudo apt-get install build-essential libsdl2-dev libcglm-dev
+sudo apt-get install build-essential libsdl2-dev libcglm-dev liblua5.4-dev
 ```
 
 ### macOS
 ```bash
-brew install sdl2 cglm
+brew install sdl2 cglm lua
 ```
 
 ## Building
@@ -107,6 +107,11 @@ Install cglm library:
 - Linux: `sudo apt-get install libcglm-dev`
 - macOS: `brew install cglm`
 
+### Lua not found
+Install Lua 5.4 library:
+- Linux: `sudo apt-get install liblua5.4-dev`
+- macOS: `brew install lua`
+
 ## Compiler Flags
 
 The Makefile uses the following compiler flags:
@@ -123,6 +128,7 @@ The Makefile uses the following compiler flags:
 - **SDL2**: Window management and input handling
 - **OpenGL**: 3D graphics rendering
 - **cglm**: OpenGL Mathematics (GLM) for C
+- **Lua 5.4**: Scripting support for the UI terminal
 - **Math library**: Standard C math functions
 
 ## Notes
