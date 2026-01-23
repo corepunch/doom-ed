@@ -3,4 +3,4 @@
 	url = https://github.com/Akbar30Bill/DOOM_wads.git
 [submodule "ui"]
 	path = ui
-	url = https://github.com/corepunch/goldie-ui.git
+	url = https://github.com/corepunch/orion-ui.git
