@@ -102,6 +102,7 @@ You can use the WAD files included via git submodules in the `wads/` directory.
 - **Left Mouse**: Select objects
 - **Mouse Wheel**: Zoom in/out
 - **WASD / Arrow Keys**: Navigate in map view
+- **Tab**: Switch top/first-person views in 3D view
 - **Mouse Movement**: Pan/navigate the view
 
 The editor includes multiple inspector windows for editing different map elements (vertices, lines, sectors, things).
