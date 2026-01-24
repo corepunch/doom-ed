@@ -17,7 +17,7 @@ A modern open-source level editor for classic DOOM games, built with SDL2 and C.
 - Thing placement and properties
 - Linedef and sidedef editing
 - Inspector panels for editing map elements
-- Custom UI framework with window management
+- Custom UI framework with window management ([orion-ui](https://github.com/corepunch/orion-ui))
 - Cross-platform support (macOS, Linux)
 
 ## Requirements
@@ -46,13 +46,7 @@ OpenGL is included with Xcode Command Line Tools on macOS.
 
 ### Clone the Repository
 
-When cloning the repository, make sure to initialize the submodules to get the WAD files:
-
-```bash
-git clone --recurse-submodules https://github.com/corepunch/doom-ed.git
-```
-
-Or if you already cloned the repository:
+After cloning, initialize the submodules to get the WAD files and the [orion-ui](https://github.com/corepunch/orion-ui) UI framework:
 
 ```bash
 git submodule update --init --recursive
@@ -67,7 +61,31 @@ make
 
 This will create the `doom-ed` executable in the current directory.
 
-For detailed build instructions and troubleshooting, see [BUILD.md](BUILD.md).
+### Clean Build Artifacts
+
+```bash
+make clean
+```
+
+This removes all object files, executables, and the build directory.
+
+### Troubleshooting
+
+**SDL2 not found:**
+If pkg-config cannot find SDL2, you may need to set PKG_CONFIG_PATH:
+```bash
+export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
+```
+
+**OpenGL headers not found:**
+Make sure you have the OpenGL development headers installed:
+- Linux: `sudo apt-get install libgl1-mesa-dev`
+- macOS: OpenGL is included with Xcode Command Line Tools
+
+**cglm not found:**
+Install cglm library:
+- Linux: `sudo apt-get install libcglm-dev`
+- macOS: `brew install cglm`
 
 ## Usage
 
@@ -100,7 +118,7 @@ The editor includes multiple inspector windows for editing different map element
 │   ├── radial_menu.*    # Radial menu system
 │   └── windows/         # Editor windows (inspector, game view, etc.)
 │       └── inspector/   # Property inspector for map elements
-├── ui/                  # UI framework (window management, controls)
+├── ui/                  # UI framework - orion-ui module (git submodule)
 │   ├── kernel/          # Event handling and SDL integration
 │   ├── user/            # Window system API
 │   └── commctl/         # Common controls (buttons, lists, etc.)
@@ -120,16 +138,7 @@ Run all tests:
 make test
 ```
 
-This will run the triangulation tests and BSP tree traversal tests. See `tests/TEST_README.md` for detailed test documentation.
-
-## Documentation
-
-- [BUILD.md](BUILD.md) - Detailed build instructions and troubleshooting
-- [BSP_RENDERING.md](BSP_RENDERING.md) - BSP tree rendering algorithm documentation
-- [TRIANGULATION_IMPROVEMENTS.md](TRIANGULATION_IMPROVEMENTS.md) - Polygon triangulation implementation
-- [tests/TEST_README.md](tests/TEST_README.md) - Test suite documentation
-- [UI_FRAMEWORK_SUMMARY.md](UI_FRAMEWORK_SUMMARY.md) - UI framework architecture
-- [UI_MIGRATION_GUIDE.md](UI_MIGRATION_GUIDE.md) - UI framework migration guide
+This will run the triangulation tests and BSP tree traversal tests.
 
 ## Contributing
 
