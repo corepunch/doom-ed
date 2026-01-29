@@ -17,7 +17,7 @@ A modern open-source level editor for classic DOOM games, built with SDL2 and C.
 - Thing placement and properties
 - Linedef and sidedef editing
 - Inspector panels for editing map elements
-- Custom UI framework with window management ([orion-ui](https://github.com/corepunch/orion-ui))
+- Built with the Orion UI framework for window management ([orion-ui](https://github.com/corepunch/orion-ui))
 - Cross-platform support (macOS, Linux)
 
 ## Requirements
@@ -46,7 +46,7 @@ OpenGL is included with Xcode Command Line Tools on macOS.
 
 ### Clone the Repository
 
-After cloning, initialize the submodules to get the WAD files and the [orion-ui](https://github.com/corepunch/orion-ui) UI framework:
+After cloning, initialize the submodules to get the WAD files and the Orion UI framework ([orion-ui](https://github.com/corepunch/orion-ui)):
 
 ```bash
 git submodule update --init --recursive
@@ -119,7 +119,7 @@ The editor includes multiple inspector windows for editing different map element
 │   ├── radial_menu.*    # Radial menu system
 │   └── windows/         # Editor windows (inspector, game view, etc.)
 │       └── inspector/   # Property inspector for map elements
-├── ui/                  # UI framework - orion-ui module (git submodule)
+├── ui/                  # Orion UI framework - orion-ui module (git submodule)
 │   ├── kernel/          # Event handling and SDL integration
 │   ├── user/            # Window system API
 │   └── commctl/         # Common controls (buttons, lists, etc.)
