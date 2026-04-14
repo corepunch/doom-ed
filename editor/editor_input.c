@@ -467,6 +467,8 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           return true;
         }
         case AX_KEY_CTRL:
+          // Hold Ctrl to enable camera pan mode (replaces former Command/Super key;
+          // platform API has no AX_KEY_CMD key code — CMD is modifier-only)
           editor->move_camera = 1;
           return true;
         case AX_KEY_TAB:
