@@ -87,9 +87,9 @@ HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
 # Libraries (liborion built via ui/Makefile)
 # Note: ui/Makefile must build the library to ui/build/lib/ directory
 ifeq ($(UNAME_S),Darwin)
-  LIBGOLDIE = $(UI_DIR)/build/lib/liborion.dylib
+  LIBORION = $(UI_DIR)/build/lib/liborion.dylib
 else
-  LIBGOLDIE = $(UI_DIR)/build/lib/liborion.so
+  LIBORION = $(UI_DIR)/build/lib/liborion.so
 endif
 
 # All object files for main executable
@@ -101,16 +101,16 @@ OBJS = $(MAPVIEW_OBJS) $(EDITOR_OBJS) $(HEXEN_OBJS)
 all: liborion mapview
 
 # liborion library (built via ui/Makefile)
-liborion: $(LIBGOLDIE)
+liborion: $(LIBORION)
 
-$(LIBGOLDIE):
+$(LIBORION):
 	@echo "Building liborion via ui/Makefile..."
 	@$(MAKE) -C $(UI_DIR) all
 
 # mapview executable (main executable)
-mapview: $(OBJS) $(LIBGOLDIE)
+mapview: $(OBJS) $(LIBORION)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LIBGOLDIE) $(LIBS) $(LDFLAGS) -o doom-ed
+	$(CC) $(OBJS) $(LIBORION) $(LIBS) $(LDFLAGS) -o doom-ed
 	@echo "Built doom-ed executable"
 
 # Legacy target name (kept for compatibility)
