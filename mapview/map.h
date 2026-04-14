@@ -436,7 +436,7 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);
 void update_player_position_with_sliding(map_data_t const *map, player_t *player,
                                          float move_x, float move_y);
 
-void fill_rect(int color, int x, int y, int w, int h);
+void fill_rect(uint32_t color, int x, int y, int w, int h);
 void draw_rect(int tex, int x, int y, int w, int h);
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 void draw_icon8(int icon, int x, int y, uint32_t col);

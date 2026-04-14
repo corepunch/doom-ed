@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
   
 //  bool running = true;
   // Main game loop
-  while (running) {
+  while (ui_is_running()) {
     ui_event_t event;
     while (get_message(&event)) {
 //      if (event.type == SDL_QUIT) {
