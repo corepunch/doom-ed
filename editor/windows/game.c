@@ -204,7 +204,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   game_t *game = win->userdata;
   
   if (game->map.num_vertices == 0) {
-    fill_rect(COLOR_PANEL_BG, 0, 0, win->frame.w, win->frame.h);
+    fill_rect(get_sys_color(kColorWindowBg), 0, 0, win->frame.w, win->frame.h);
     return;
   }
 
