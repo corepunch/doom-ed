@@ -2,7 +2,7 @@
 
 ![DOOM-ED Screenshot](https://github.com/corepunch/doom-ed/raw/main/screenshots/editor.png)
 
-A modern open-source level editor for classic DOOM games, built with C.
+A modern open-source level editor for classic DOOM games, built with C and the [Orion UI framework](https://github.com/corepunch/orion-ui).
 
 ## Features
 
@@ -17,11 +17,12 @@ A modern open-source level editor for classic DOOM games, built with C.
 - Thing placement and properties
 - Linedef and sidedef editing
 - Inspector panels for editing map elements
-- Built with the Orion UI framework for window management ([orion-ui](https://github.com/corepunch/orion-ui))
+- Built with the [Orion UI](https://github.com/corepunch/orion-ui) framework for window management
 - Cross-platform support (macOS, Linux)
 
 ## Requirements
 
+- [Orion UI](https://github.com/corepunch/orion-ui) (window management and UI — included as a git submodule)
 - OpenGL (3D rendering)
 - cglm (OpenGL Mathematics library for C)
 - C17 compatible compiler (gcc)
@@ -112,7 +113,7 @@ The editor includes multiple inspector windows for editing different map element
 │   ├── radial_menu.*    # Radial menu system
 │   └── windows/         # Editor windows (inspector, game view, etc.)
 │       └── inspector/   # Property inspector for map elements
-├── ui/                  # Orion UI framework - orion-ui module (git submodule)
+├── ui/                  # [Orion UI](https://github.com/corepunch/orion-ui) framework (git submodule)
 │   ├── kernel/          # Event handling and initialization
 │   ├── user/            # Window system API
 │   └── commctl/         # Common controls (buttons, lists, etc.)
@@ -152,3 +153,4 @@ This project is licensed under the GPL v3 License - see the LICENSE file for det
 
 - id Software for creating DOOM
 - The DOOM modding community for their dedication and tools that inspired this project
+- The [Orion UI](https://github.com/corepunch/orion-ui) framework for window management and UI
