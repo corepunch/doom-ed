@@ -1,5 +1,3 @@
-#include <ui/platform/platform.h>
-
 #include <mapview/map.h>
 #include <mapview/sprites.h>
 
@@ -100,10 +98,8 @@ void goto_intermisson(void) {
 }
 
 void handle_intermission_input(float delta_time) {
-  struct AXmessage event;
+  ui_event_t event;
   while (axPollEvent(&event)) {
-    int mouse_x = g_mouse_x / 2;
-    int mouse_y = g_mouse_y / 2;
     if (event.message == kEventWindowClosed) {
       extern bool running;
       running = false;
@@ -113,12 +109,14 @@ void handle_intermission_input(float delta_time) {
       case kEventLeftMouseDragged:
         g_mouse_x = event.x;
         g_mouse_y = event.y;
-        mouse_x = g_mouse_x / 2;
-        mouse_y = g_mouse_y / 2;
-        selected = -1;
-        for (int i = 0; i < 9; i++) {
-          if (abs(mouse_x - lnodes[0][i].x) < 20 && abs(mouse_y - lnodes[0][i].y) < 20) {
-            selected = i;
+        {
+          int mouse_x, mouse_y;
+          GetMouseInVirtualCoords(&mouse_x, &mouse_y);
+          selected = -1;
+          for (int i = 0; i < 9; i++) {
+            if (abs(mouse_x - lnodes[0][i].x) < 20 && abs(mouse_y - lnodes[0][i].y) < 20) {
+              selected = i;
+            }
           }
         }
         break;
