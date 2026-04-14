@@ -84,27 +84,27 @@ MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
 EDITOR_OBJS = $(EDITOR_SRCS:$(EDITOR_DIR)/%.c=$(BUILD_DIR)/editor/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
 
-# Libraries (libgoldieui built via ui/Makefile)
+# Libraries (liborion built via ui/Makefile)
 # Note: ui/Makefile must build the library to ui/build/lib/ directory
 ifeq ($(UNAME_S),Darwin)
-  LIBGOLDIE = $(UI_DIR)/build/lib/libgoldieui.dylib
+  LIBGOLDIE = $(UI_DIR)/build/lib/liborion.dylib
 else
-  LIBGOLDIE = $(UI_DIR)/build/lib/libgoldieui.so
+  LIBGOLDIE = $(UI_DIR)/build/lib/liborion.so
 endif
 
 # All object files for main executable
 OBJS = $(MAPVIEW_OBJS) $(EDITOR_OBJS) $(HEXEN_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test libgoldie
+.PHONY: all clean test triangulate_test liborion
 
-all: libgoldie mapview
+all: liborion mapview
 
-# libgoldieui library (built via ui/Makefile)
-libgoldie: $(LIBGOLDIE)
+# liborion library (built via ui/Makefile)
+liborion: $(LIBGOLDIE)
 
 $(LIBGOLDIE):
-	@echo "Building libgoldieui via ui/Makefile..."
+	@echo "Building liborion via ui/Makefile..."
 	@$(MAKE) -C $(UI_DIR) all
 
 # mapview executable (main executable)
