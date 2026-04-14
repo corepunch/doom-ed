@@ -2,7 +2,7 @@
 
 ![DOOM-ED Screenshot](https://github.com/corepunch/doom-ed/raw/main/screenshots/editor.png)
 
-A modern open-source level editor for classic DOOM games, built with SDL2 and C.
+A modern open-source level editor for classic DOOM games, built with C.
 
 ## Features
 
@@ -22,7 +22,6 @@ A modern open-source level editor for classic DOOM games, built with SDL2 and C.
 
 ## Requirements
 
-- SDL2 (window management and input)
 - OpenGL (3D rendering)
 - cglm (OpenGL Mathematics library for C)
 - C17 compatible compiler (gcc)
@@ -34,12 +33,12 @@ A modern open-source level editor for classic DOOM games, built with SDL2 and C.
 
 **Linux (Ubuntu/Debian):**
 ```bash
-sudo apt-get install build-essential libsdl2-dev libcglm-dev libgl1-mesa-dev
+sudo apt-get install build-essential libcglm-dev libgl1-mesa-dev
 ```
 
 **macOS:**
 ```bash
-brew install sdl2 cglm
+brew install cglm
 ```
 
 OpenGL is included with Xcode Command Line Tools on macOS.
@@ -70,12 +69,6 @@ make clean
 This removes all object files, executables, and the build directory.
 
 ### Troubleshooting
-
-**SDL2 not found:**
-If pkg-config cannot find SDL2, you may need to set PKG_CONFIG_PATH:
-```bash
-export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig:$PKG_CONFIG_PATH
-```
 
 **OpenGL headers not found:**
 Make sure you have the OpenGL development headers installed:
@@ -120,7 +113,7 @@ The editor includes multiple inspector windows for editing different map element
 │   └── windows/         # Editor windows (inspector, game view, etc.)
 │       └── inspector/   # Property inspector for map elements
 ├── ui/                  # Orion UI framework - orion-ui module (git submodule)
-│   ├── kernel/          # Event handling and SDL integration
+│   ├── kernel/          # Event handling and initialization
 │   ├── user/            # Window system API
 │   └── commctl/         # Common controls (buttons, lists, etc.)
 ├── doom/                # DOOM engine headers and some source
