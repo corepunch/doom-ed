@@ -5,7 +5,7 @@
 CC = gcc
 CFLAGS = -Wall -std=gnu17
 LDFLAGS = -lm
-LIBS = # Populated by platform-specific sections below
+LIBS = -Lui/build/lib -lplatform # Populated by platform-specific sections below
 
 # Platform detection
 UNAME_S := $(shell uname -s)
