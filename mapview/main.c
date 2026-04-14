@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
   
   // Print map info
   // Initialize window and OpenGL context
-  if (!ui_init_graphics(SDL_INIT_JOYSTICK|UI_INIT_DESKTOP|UI_INIT_TRAY,
+  if (!ui_init_graphics(UI_INIT_DESKTOP|UI_INIT_TRAY,
                         "DOOM Wireframe Renderer",
                         SCREEN_WIDTH, SCREEN_HEIGHT))
   {
@@ -80,10 +80,10 @@ int main(int argc, char* argv[]) {
   
   // Initialize joystick support through UI layer
   // Note: Joystick initialization is now handled by the UI layer
-  // to decouple SDL-specific code and prepare for potential GLFW migration
+  // via the platform/joystick backend (no longer SDL-specific)
   ui_joystick_init();
   
-  // Initialize SDL
+  // Initialize resources
   init_resources();
   init_floor_shader();
   init_sky_geometry();
@@ -103,8 +103,8 @@ int main(int argc, char* argv[]) {
   
 //  bool running = true;
   // Main game loop
-  while (running) {
-    SDL_Event event;
+  while (ui_is_running()) {
+    ui_event_t event;
     while (get_message(&event)) {
 //      if (event.type == SDL_QUIT) {
 //        running = false;

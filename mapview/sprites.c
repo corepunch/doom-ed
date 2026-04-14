@@ -1,4 +1,3 @@
-#include <SDL2/SDL.h>
 #include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
@@ -301,7 +300,7 @@ void draw_sprite(const char* name, float x, float y, float scale, float alpha) {
 }
 
 void get_weapon_wobble_offset(int* offset_x, int* offset_y, float speed) {
-  unsigned ticks = SDL_GetTicks();
+  unsigned ticks = (unsigned)axGetMilliseconds();
   float time = ticks / 1000.0f;
   
   float freq = 6.0f;             // How fast the bob oscillates

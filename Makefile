@@ -5,7 +5,7 @@
 CC = gcc
 CFLAGS = -Wall -std=gnu17
 LDFLAGS = -lm
-LIBS = # Populated by platform-specific sections below
+LIBS = -Lui/build/lib -lplatform # Populated by platform-specific sections below
 
 # Platform detection
 UNAME_S := $(shell uname -s)
@@ -15,12 +15,12 @@ ifeq ($(UNAME_S),Darwin)
   CFLAGS += -DGL_SILENCE_DEPRECATION
   CFLAGS += -I/opt/homebrew/include -I/usr/local/include -I/usr/local/opt/cglm/include
   LDFLAGS += -L/opt/homebrew/lib -L/usr/local/lib
-  LIBS += -framework OpenGL -lSDL2
+  LIBS += -framework OpenGL
 else ifeq ($(UNAME_S),Linux)
   # Linux specific flags
   CFLAGS += -DGL_SILENCE_DEPRECATION -D__LINUX__ -fPIC
   LDFLAGS += -L/usr/lib -L/usr/local/lib
-  LIBS += -lGL -lSDL2 -lcglm
+  LIBS += -lGL -lcglm
 endif
 
 # Directories
@@ -84,33 +84,33 @@ MAPVIEW_OBJS = $(MAPVIEW_SRCS:$(MAPVIEW_DIR)/%.c=$(BUILD_DIR)/mapview/%.o)
 EDITOR_OBJS = $(EDITOR_SRCS:$(EDITOR_DIR)/%.c=$(BUILD_DIR)/editor/%.o)
 HEXEN_OBJS = $(HEXEN_SRCS:$(HEXEN_DIR)/%.c=$(BUILD_DIR)/hexen/%.o)
 
-# Libraries (libgoldieui built via ui/Makefile)
+# Libraries (liborion built via ui/Makefile)
 # Note: ui/Makefile must build the library to ui/build/lib/ directory
 ifeq ($(UNAME_S),Darwin)
-  LIBGOLDIE = $(UI_DIR)/build/lib/libgoldieui.dylib
+  LIBORION = $(UI_DIR)/build/lib/liborion.dylib
 else
-  LIBGOLDIE = $(UI_DIR)/build/lib/libgoldieui.so
+  LIBORION = $(UI_DIR)/build/lib/liborion.so
 endif
 
 # All object files for main executable
 OBJS = $(MAPVIEW_OBJS) $(EDITOR_OBJS) $(HEXEN_OBJS)
 
 # Targets
-.PHONY: all clean test triangulate_test libgoldie
+.PHONY: all clean test triangulate_test liborion
 
-all: libgoldie mapview
+all: liborion mapview
 
-# libgoldieui library (built via ui/Makefile)
-libgoldie: $(LIBGOLDIE)
+# liborion library (built via ui/Makefile)
+liborion: $(LIBORION)
 
-$(LIBGOLDIE):
-	@echo "Building libgoldieui via ui/Makefile..."
+$(LIBORION):
+	@echo "Building liborion via ui/Makefile..."
 	@$(MAKE) -C $(UI_DIR) all
 
 # mapview executable (main executable)
-mapview: $(OBJS) $(LIBGOLDIE)
+mapview: $(OBJS) $(LIBORION)
 	@mkdir -p $(dir $@)
-	$(CC) $(OBJS) $(LIBGOLDIE) $(LIBS) $(LDFLAGS) -o doom-ed
+	$(CC) $(OBJS) $(LIBORION) $(LIBS) $(LDFLAGS) -o doom-ed
 	@echo "Built doom-ed executable"
 
 # Legacy target name (kept for compatibility)

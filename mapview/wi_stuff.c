@@ -1,15 +1,8 @@
-#include <SDL2/SDL.h>
-
 #include <mapview/map.h>
 #include <mapview/sprites.h>
 
 #define NUMEPISODES  4
 #define NUMMAPS    9
-
-typedef struct {
-  int    x;
-  int    y;
-} point_t;
 
 static point_t lnodes[NUMEPISODES][NUMMAPS] =
 {
@@ -74,8 +67,6 @@ int current = -1;
 
 void get_lnode(int e, int m, int *x, int *y);
 void draw_intermission(void) {
-  int window_width, window_height;
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
   sprite_t* INTERPIC = find_sprite("WIMAP0");
   if (INTERPIC) {
     draw_sprite("WIMAP0", 0, 0, 1, 1.0f);
@@ -99,29 +90,32 @@ void draw_intermission(void) {
 }
 
 void goto_intermisson(void) {
-  SDL_SetRelativeMouseMode(SDL_FALSE);
 }
 
 void handle_intermission_input(float delta_time) {
-  SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    extern SDL_Window* window;
-    int mouse_x, mouse_y;
-    GetMouseInVirtualCoords(&mouse_x, &mouse_y);
-    if (event.type == SDL_QUIT) {
+  ui_event_t event;
+  while (axPollEvent(&event)) {
+    if (event.message == kEventWindowClosed) {
       extern bool running;
       running = false;
     }
-    switch (event.type) {
-      case SDL_MOUSEMOTION:
-        selected = -1;
-        for (int i = 0; i < 9; i++) {
-          if (abs(mouse_x - lnodes[0][i].x) < 20 && abs(mouse_y - lnodes[0][i].y) < 20) {
-            selected = i;
+    switch (event.message) {
+      case kEventMouseMoved:
+      case kEventLeftMouseDragged:
+        g_mouse_x = event.x;
+        g_mouse_y = event.y;
+        {
+          int mouse_x, mouse_y;
+          GetMouseInVirtualCoords(&mouse_x, &mouse_y);
+          selected = -1;
+          for (int i = 0; i < 9; i++) {
+            if (abs(mouse_x - lnodes[0][i].x) < 20 && abs(mouse_y - lnodes[0][i].y) < 20) {
+              selected = i;
+            }
           }
         }
         break;
-      case SDL_MOUSEBUTTONUP:
+      case kEventLeftMouseUp:
         if (selected >= 0) {
           char name[64]={0};
           snprintf(name, 64, "E1M%d", selected+1);

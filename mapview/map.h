@@ -397,9 +397,8 @@ void set_capture(window_t *win);
 void set_focus(window_t* win);
 void enable_window(window_t *win, bool enable);
 
-typedef union SDL_Event SDL_Event;
-int get_message(SDL_Event *evt);
-void dispatch_message(SDL_Event *evt);
+int get_message(ui_event_t *evt);
+void dispatch_message(ui_event_t *evt);
 void repost_messages(void);
 bool is_window(window_t *win);
 void end_dialog(window_t *win, uint32_t code);
@@ -437,7 +436,7 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);
 void update_player_position_with_sliding(map_data_t const *map, player_t *player,
                                          float move_x, float move_y);
 
-void fill_rect(int color, int x, int y, int w, int h);
+void fill_rect(uint32_t color, int x, int y, int w, int h);
 void draw_rect(int tex, int x, int y, int w, int h);
 void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
 void draw_icon8(int icon, int x, int y, uint32_t col);
@@ -464,6 +463,7 @@ void shutdown_wad(void);
 void handle_windows(void);
 
 void GetMouseInVirtualCoords(int* vx, int* vy);
+extern int g_mouse_x, g_mouse_y;
 
 const char *get_selected_texture(void);
 void set_selected_texture(const char *);

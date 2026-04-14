@@ -1,4 +1,3 @@
-#include <SDL2/SDL.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
 
@@ -14,8 +13,10 @@ bool init_sky(map_data_t const*);
 const char *get_map_name(const char *name);
 
 extern GLuint world_prog, ui_prog;
-extern SDL_Window* window;
 extern unsigned frame;
+
+// Track FPS (relative mouse capture) mode for the game window
+static bool g_relative_mouse_mode = false;
 
 // Initialize player position based on map data
 void init_player(map_data_t const *map, player_t *player) {
@@ -48,7 +49,7 @@ static rect_t *new_frame(void) {
 void new_map(void) {
   game_t *gm = malloc(sizeof(game_t));
   memset(gm, 0, sizeof(game_t));
-  gm->last_time = SDL_GetTicks();
+  gm->last_time = (uint32_t)axGetMilliseconds();
   show_window(create_window("New map", 0, new_frame(), NULL, win_editor, gm), true);
   init_editor(&gm->state);
   g_game = gm;
@@ -57,7 +58,7 @@ void new_map(void) {
 void open_map(const char *mapname) {
   game_t *gm = malloc(sizeof(game_t));
   gm->map = load_map(mapname);
-  gm->last_time = SDL_GetTicks();
+  gm->last_time = (uint32_t)axGetMilliseconds();
 
   if (gm->map.num_vertices > 0) {
     print_map_info(&gm->map);
@@ -173,11 +174,10 @@ read_center_pixel(window_t const *win,
   
   draw_floor_ids(map, sector, viewdef);
   
-  int fb_width, fb_height;
-  int window_width, window_height;
-  
-  SDL_GL_GetDrawableSize(window, &fb_width, &fb_height);
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
+  struct AXsize axsz;
+  axGetSize(&axsz);
+  int fb_width = (int)axsz.width;
+  int fb_height = (int)axsz.height;
 
   int x = (win->frame.x + win->frame.w / 2) * fb_width / ui_get_system_metrics(kSystemMetricScreenWidth);
   int y = fb_height - (win->frame.y + win->frame.h / 2) * fb_height / ui_get_system_metrics(kSystemMetricScreenHeight);
@@ -204,7 +204,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   game_t *game = win->userdata;
   
   if (game->map.num_vertices == 0) {
-    fill_rect(COLOR_PANEL_BG, 0, 0, win->frame.w, win->frame.h);
+    fill_rect(get_sys_color(kColorWindowBg), 0, 0, win->frame.w, win->frame.h);
     return;
   }
 
@@ -364,24 +364,24 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   if (_captured == win) {
     switch (msg) {
       case kWindowMessageKillFocus:
-        SDL_SetRelativeMouseMode(SDL_FALSE);
+        g_relative_mouse_mode = false;
         return true;
       case kWindowMessageKeyDown:
         switch (wparam) {
-          case SDL_SCANCODE_ESCAPE:
-            SDL_SetRelativeMouseMode(SDL_FALSE);
+          case AX_KEY_ESCAPE:
+            g_relative_mouse_mode = false;
             set_capture(NULL);
             break;
-          case SDL_SCANCODE_W:
-          case SDL_SCANCODE_UP:
+          case AX_KEY_W:
+          case AX_KEY_UPARROW:
             if (alt) {
               handle_scroll((int[]){0, -8}, &game->map);
             } else {
               game->player.forward_move = 1;
             }
             break;
-          case SDL_SCANCODE_S:
-          case SDL_SCANCODE_DOWN:
+          case AX_KEY_S:
+          case AX_KEY_DOWNARROW:
             if (alt) {
               handle_scroll((int[]){0, 8}, &game->map);
             } else {
@@ -389,33 +389,31 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             }
             break;
             // Calculate strafe direction vector (perpendicular to forward)
-          case SDL_SCANCODE_D:
-          case SDL_SCANCODE_RIGHT:
+          case AX_KEY_D:
+          case AX_KEY_RIGHTARROW:
             if (alt) {
               handle_scroll((int[]){-8, 0}, &game->map);
             } else {
               game->player.strafe_move = 1;
             }
             break;
-          case SDL_SCANCODE_A:
-          case SDL_SCANCODE_LEFT:
+          case AX_KEY_A:
+          case AX_KEY_LEFTARROW:
             if (alt) {
               handle_scroll((int[]){8, 0}, &game->map);
             } else {
               game->player.strafe_move = -1;
             }
             break;
-          case SDL_SCANCODE_LSHIFT:
-          case SDL_SCANCODE_RSHIFT:
+          case AX_KEY_SHIFT:
             mode = true;
             break;
-          case SDL_SCANCODE_LALT:
-          case SDL_SCANCODE_RALT:
+          case AX_KEY_ALT:
             alt = true;
             break;
-          case SDL_SCANCODE_TAB:
+          case AX_KEY_TAB:
             set_capture(NULL);
-            SDL_SetRelativeMouseMode(SDL_FALSE);
+            g_relative_mouse_mode = false;
             win->proc = win_editor;
             invalidate_window(win);
             return true;
@@ -423,25 +421,23 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         return true;
       case kWindowMessageKeyUp:
         switch (wparam) {
-          case SDL_SCANCODE_W:
-          case SDL_SCANCODE_UP:
-          case SDL_SCANCODE_S:
-          case SDL_SCANCODE_DOWN:
+          case AX_KEY_W:
+          case AX_KEY_UPARROW:
+          case AX_KEY_S:
+          case AX_KEY_DOWNARROW:
             game->player.forward_move = 0;
             break;
             // Calculate strafe direction vector (perpendicular to forward)
-          case SDL_SCANCODE_D:
-          case SDL_SCANCODE_RIGHT:
-          case SDL_SCANCODE_A:
-          case SDL_SCANCODE_LEFT:
+          case AX_KEY_D:
+          case AX_KEY_RIGHTARROW:
+          case AX_KEY_A:
+          case AX_KEY_LEFTARROW:
             game->player.strafe_move = 0;
             break;
-          case SDL_SCANCODE_LSHIFT:
-          case SDL_SCANCODE_RSHIFT:
+          case AX_KEY_SHIFT:
             mode = false;
             break;
-          case SDL_SCANCODE_LALT:
-          case SDL_SCANCODE_RALT:
+          case AX_KEY_ALT:
             alt = false;
             break;
           default:
@@ -463,7 +459,7 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         if (game->player.pitch < -89.0f) game->player.pitch = -89.0f;
         return true;
       case kWindowMessageLeftButtonUp:
-        paint_face(&game->map, SDL_GetKeyboardState(NULL)[SDL_SCANCODE_LALT]);
+        paint_face(&game->map, (ui_get_mod_state() & AX_MOD_ALT) != 0);
         return true;
       case kWindowMessageJoyButtonDown:
         if (wparam == 0) {
@@ -484,20 +480,16 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   } else if (_focused == win) {
     switch (msg) {
       case kWindowMessageLeftButtonUp:
-        if (!SDL_GetRelativeMouseMode()) {
+        if (!g_relative_mouse_mode) {
           set_capture(win);
-          SDL_SetRelativeMouseMode(SDL_TRUE);
+          g_relative_mouse_mode = true;
         }
         return true;
       case kWindowMessageKeyDown:
         switch (wparam) {
-//          case SDL_SCANCODE_ESCAPE:
-//            SDL_SetRelativeMouseMode(SDL_FALSE);
-//            //SDL_SetRelativeMouseMode(SDL_GetRelativeMouseMode() ? SDL_FALSE : SDL_TRUE);
-//            break;
-          case SDL_SCANCODE_TAB:
+          case AX_KEY_TAB:
             set_capture(NULL);
-            SDL_SetRelativeMouseMode(SDL_FALSE);
+            g_relative_mouse_mode = false;
             win->proc = win_editor;
             invalidate_window(win);
             return true;

@@ -1,26 +1,24 @@
-#include <SDL2/SDL.h>
-
 #include <mapview/map.h>
 #include <mapview/gamefont.h>
 
 // Add these to your console.c file at the top with other static variables
 static struct {
-  Uint32 ticks[64];
-  Uint32 last_fps_update;   // Last time the FPS was calculated
-  Uint32 frame_count;       // Number of frames since last update
+  uint32_t ticks[64];
+  uint32_t last_fps_update;   // Last time the FPS was calculated
+  uint32_t frame_count;       // Number of frames since last update
   float current_fps;        // Current FPS value to display
   char fps_text[32];        // Buffer for the FPS text
-  Uint32 counter;
+  uint32_t counter;
 } fps_state = {0};
 
 result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
     case kWindowMessagePaint: {
-      Uint32 ticks = SDL_GetTicks();
+      uint32_t ticks = (uint32_t)axGetMilliseconds();
       fps_state.ticks[fps_state.counter++&63] = ticks - fps_state.last_fps_update;
       fps_state.last_fps_update = ticks;
       
-      Uint32 totals = 0;
+      uint32_t totals = 0;
       for (int i = 0; i < 64; i++) {
         totals += fps_state.ticks[i];
       }

@@ -1,4 +1,3 @@
-#include <SDL2/SDL.h>
 #include <mapview/gl_compat.h>
 #include <string.h>
 #include <ctype.h>

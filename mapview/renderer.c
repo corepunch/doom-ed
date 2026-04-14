@@ -1,4 +1,3 @@
-#include <SDL2/SDL.h>
 #include <mapview/gl_compat.h>
 #include <cglm/cglm.h>
 #include <cglm/struct.h>
@@ -10,9 +9,9 @@
 #include <editor/editor.h>
 #include <ui/kernel/joystick.h>
 
-// External references to window and context (defined in ui/kernel)
-extern SDL_Window* window;
-extern SDL_GLContext ctx;
+// External references to context (defined in ui/kernel)
+// Global mouse position (updated from mouse events)
+int g_mouse_x = 0, g_mouse_y = 0;
 
 const char* vs_src = "#version 150 core\n"
 "in vec3 pos;\n"
@@ -96,7 +95,7 @@ editor_state_t *get_editor(void) {
   return g_game ? &g_game->state : NULL;
 }
 
-// Initialize SDL and create window/renderer
+// Initialize OpenGL resources and create shaders
 bool init_resources(void) {  
   GLuint vs, fs;
 
@@ -168,27 +167,6 @@ bool init_resources(void) {
 }
 
 void GetMouseInVirtualCoords(int* vx, int* vy) {
-  extern SDL_Window* window;
-  
-//  const int target_width = DOOM_WIDTH;
-//  const int target_height = DOOM_HEIGHT;
-  
-//  int win_width, win_height;
-  int mouse_x, mouse_y;
-  
-//  SDL_GetWindowSize(window, &win_width, &win_height);
-  SDL_GetMouseState(&mouse_x, &mouse_y);
-  
-  // Calculate uniform scale (based on height)
-//  float scale = (float)win_height / target_height;
-//  float render_width = target_width * scale;
-//  float offset_x = (win_width - render_width) / 2.0f;
-  
-  // Convert real mouse coordinates to virtual
-  float virtual_x = mouse_x/2;//(mouse_x - offset_x) / scale;
-  float virtual_y = mouse_y/2;// / scale;
-  
-  // Return as integers
-  *vx = (int)virtual_x;
-  *vy = (int)virtual_y;
+  *vx = g_mouse_x / 2;
+  *vy = g_mouse_y / 2;
 }
