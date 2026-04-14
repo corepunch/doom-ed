@@ -1,10 +1,9 @@
-#include <SDL2/SDL.h>
 #include <limits.h>
 
+#include <ui/platform/platform.h>
 #include <mapview/map.h>
 #include <editor/editor.h>
 
-extern SDL_Window* window;
 extern bool running;
 extern bool mode;
 
@@ -227,7 +226,7 @@ void handle_scroll(int wheel[], map_data_t *map) {
 }
 
 void game_tick(game_t *game) {
-  Uint32 current_time = SDL_GetTicks();
+  uint32_t current_time = (uint32_t)axGetMilliseconds();
   float delta_time = (current_time - game->last_time) / 1000.0f;
   game->last_time = current_time;
 

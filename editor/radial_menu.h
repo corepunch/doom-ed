@@ -1,7 +1,6 @@
 #ifndef RADIAL_MENU_H
 #define RADIAL_MENU_H
 
-#include <SDL2/SDL.h>
 #include <mapview/gl_compat.h>
 #include <stdbool.h>
 

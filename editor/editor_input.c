@@ -1,4 +1,3 @@
-#include <SDL2/SDL.h>
 #include <cglm/struct.h>
 
 #include <editor/editor.h>
@@ -6,100 +5,19 @@
 
 #define SNAP_SIZE 10
 
-extern SDL_Window* window;
-
-// Utility function to snap coordinates to grid
-//static void snap_to_grid(int *x, int *y, int grid_size) {
-//  *x = (*x / grid_size) * grid_size;
-//  *y = (*y / grid_size) * grid_size;
-//}
-
 /**
- * DEPRECATED: This function contains legacy direct SDL event polling.
- * 
- * Modern input handling is done through the window message system:
- * - Joystick events are routed via kWindowMessageJoyAxisMotion and kWindowMessageJoyButtonDown
- * - See mapview/windows/game.c win_game() for proper joystick handling
- * - See mapview/editor_input.c win_editor() for proper editor input handling
- * 
- * This function should not be called. Input is now handled through window
- * procedures responding to window messages, which properly decouples SDL
- * and prepares for potential GLFW migration.
+ * DEPRECATED: This function previously contained direct SDL event polling.
+ * Modern input handling is done through the window message system.
+ * This function should not be called.
  */
 void handle_editor_input(map_data_t *map,
                          editor_state_t *editor,
                          player_t *player,
                          float delta_time) {
-  SDL_Event event;
-  
   static float forward_move = 0, strafe_move = 0;
-  
-  // NOTE: This direct SDL_PollEvent is deprecated.
-  // Input should be handled through window messages (kWindowMessageKeyDown, kWindowMessageJoyAxisMotion, etc.)
-  while (SDL_PollEvent(&event)) {
-    if (event.type == SDL_QUIT) {
-      extern bool running;
-      running = false;
-    }
-    // REMOVED: Direct joystick event handling
-    // Joystick events are now routed through the UI message system:
-    // - kWindowMessageJoyButtonDown for button presses
-    // - kWindowMessageJoyAxisMotion for axis movement
-    // See win_game() in mapview/windows/game.c for example usage
-    else if (event.type == SDL_KEYUP) {
-      switch (event.key.keysym.scancode) {
-        case SDL_SCANCODE_W:
-        case SDL_SCANCODE_UP:
-        case SDL_SCANCODE_S:
-        case SDL_SCANCODE_DOWN:
-          forward_move = 0;
-          break;
-          // Calculate strafe direction vector (perpendicular to forward)
-        case SDL_SCANCODE_D:
-        case SDL_SCANCODE_RIGHT:
-        case SDL_SCANCODE_A:
-        case SDL_SCANCODE_LEFT:
-          strafe_move = 0;
-          break;
-        default:
-          break;
-      }
-    }
-    else if (event.type == SDL_MOUSEWHEEL) {
-//      if (event.wheel.y) {
-        editor->scale -= event.wheel.y/30.f;
-//      }
-    }
-    else if (event.type == SDL_MOUSEBUTTONUP && editor->dragging) {
-    }
-    else if (event.type == SDL_MOUSEBUTTONDOWN) {
-    }
-    else if (event.type == SDL_MOUSEWHEEL) {
-      // Zoom in/out by adjusting view size
-      // (This would require implementing zoom in the view matrix)
-    }
-  }
-  
-  // If in editor mode, handle keyboard movement
-//  const Uint8* keystates = SDL_GetKeyboardState(NULL);
   float move_speed = 1000 * delta_time;
-
   player->y += forward_move * move_speed;
   player->x += strafe_move * move_speed;
-
-  
-//  if (keystates[SDL_SCANCODE_W] || keystates[SDL_SCANCODE_UP]) {
-//    player->y += move_speed;
-//  }
-//  if (keystates[SDL_SCANCODE_S] || keystates[SDL_SCANCODE_DOWN]) {
-//    player->y -= move_speed;
-//  }
-//  if (keystates[SDL_SCANCODE_A] || keystates[SDL_SCANCODE_LEFT]) {
-//    player->x -= move_speed;
-//  }
-//  if (keystates[SDL_SCANCODE_D] || keystates[SDL_SCANCODE_RIGHT]) {
-//    player->x += move_speed;
-//  }
 }
 
 
@@ -504,64 +422,63 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       return true;
     case kWindowMessageKeyDown:
       switch (wparam) {
-        case SDL_SCANCODE_W:
-        case SDL_SCANCODE_UP:
+        case AX_KEY_W:
+        case AX_KEY_UPARROW:
           // forward_move = 1;
           editor->camera[1] += ED_SCROLL;
           invalidate_window(win);
           return true;
-        case SDL_SCANCODE_S:
-        case SDL_SCANCODE_DOWN:
+        case AX_KEY_S:
+        case AX_KEY_DOWNARROW:
           // forward_move = -1;
           editor->camera[1] -= ED_SCROLL;
           invalidate_window(win);
           return true;
-        case SDL_SCANCODE_D:
-        case SDL_SCANCODE_RIGHT:
+        case AX_KEY_D:
+        case AX_KEY_RIGHTARROW:
           // strafe_move = 1;
           editor->camera[0] += ED_SCROLL;
           invalidate_window(win);
           return true;
-        case SDL_SCANCODE_A:
-        case SDL_SCANCODE_LEFT:
+        case AX_KEY_A:
+        case AX_KEY_LEFTARROW:
           editor->camera[0] -= ED_SCROLL;
           // strafe_move = -1;
           invalidate_window(win);
           return true;
-        case SDL_SCANCODE_ESCAPE:
+        case AX_KEY_ESCAPE:
           if (editor->drawing) {
             // Cancel current drawing
             editor->drawing = false;
             editor->num_draw_points = 0;
           }
           return true;
-        case SDL_SCANCODE_G:
+        case AX_KEY_G:
           // Toggle grid size (8, 16, 32, 64, 128)
           editor->grid_size *= 2;
           if (editor->grid_size > 128) editor->grid_size = 8;
           invalidate_window(win);
           return true;
-        case SDL_SCANCODE_SPACE: {
+        case AX_KEY_SPACE: {
           mat4 mvp;
           get_editor_mvp(editor, mvp);
           get_mouse_position(win, editor, editor->cursor, mvp, &game->player.x);
           invalidate_window(win);
           return true;
         }
-        case SDL_SCANCODE_LGUI:
+        case AX_KEY_CTRL:
           editor->move_camera = 1;
           return true;
-        case SDL_SCANCODE_TAB:
+        case AX_KEY_TAB:
           editor_reset_input(editor);
           win->proc = win_game;
           set_capture(win);
-          SDL_SetRelativeMouseMode(SDL_TRUE);
           invalidate_window(win);
           return true;
       }
       break;
     case kWindowMessageKeyUp:
-      if (wparam == SDL_SCANCODE_LGUI) {
+      if (wparam == AX_KEY_CTRL) {
         editor->move_camera = 0;
       }
       return false;

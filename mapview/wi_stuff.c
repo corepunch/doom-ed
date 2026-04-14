@@ -1,4 +1,4 @@
-#include <SDL2/SDL.h>
+#include <ui/platform/platform.h>
 
 #include <mapview/map.h>
 #include <mapview/sprites.h>
@@ -74,8 +74,6 @@ int current = -1;
 
 void get_lnode(int e, int m, int *x, int *y);
 void draw_intermission(void) {
-  int window_width, window_height;
-  SDL_GetWindowSize(SDL_GL_GetCurrentWindow(), &window_width, &window_height);
   sprite_t* INTERPIC = find_sprite("WIMAP0");
   if (INTERPIC) {
     draw_sprite("WIMAP0", 0, 0, 1, 1.0f);
@@ -99,21 +97,24 @@ void draw_intermission(void) {
 }
 
 void goto_intermisson(void) {
-  SDL_SetRelativeMouseMode(SDL_FALSE);
 }
 
 void handle_intermission_input(float delta_time) {
-  SDL_Event event;
-  while (SDL_PollEvent(&event)) {
-    extern SDL_Window* window;
-    int mouse_x, mouse_y;
-    GetMouseInVirtualCoords(&mouse_x, &mouse_y);
-    if (event.type == SDL_QUIT) {
+  struct AXmessage event;
+  while (axPollEvent(&event)) {
+    int mouse_x = g_mouse_x / 2;
+    int mouse_y = g_mouse_y / 2;
+    if (event.message == kEventWindowClosed) {
       extern bool running;
       running = false;
     }
-    switch (event.type) {
-      case SDL_MOUSEMOTION:
+    switch (event.message) {
+      case kEventMouseMoved:
+      case kEventLeftMouseDragged:
+        g_mouse_x = event.x;
+        g_mouse_y = event.y;
+        mouse_x = g_mouse_x / 2;
+        mouse_y = g_mouse_y / 2;
         selected = -1;
         for (int i = 0; i < 9; i++) {
           if (abs(mouse_x - lnodes[0][i].x) < 20 && abs(mouse_y - lnodes[0][i].y) < 20) {
@@ -121,7 +122,7 @@ void handle_intermission_input(float delta_time) {
           }
         }
         break;
-      case SDL_MOUSEBUTTONUP:
+      case kEventLeftMouseUp:
         if (selected >= 0) {
           char name[64]={0};
           snprintf(name, 64, "E1M%d", selected+1);

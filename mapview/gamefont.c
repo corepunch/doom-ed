@@ -1,7 +1,6 @@
 // Game font rendering implementation for DOOM/Hexen fonts
 // Moved from ui/user/text.c to keep game-specific code in mapview
 
-#include <SDL2/SDL.h>
 #include <mapview/gl_compat.h>
 #include <stdarg.h>
 #include <stdbool.h>

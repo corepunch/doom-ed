@@ -1,5 +1,3 @@
-#include <SDL2/SDL.h>
-
 #include <editor/editor.h>
 #include <mapview/sprites.h>
 

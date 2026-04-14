@@ -1,5 +1,3 @@
-#include <SDL2/SDL.h>
-
 #include <mapview/map.h>
 #include <editor/editor.h>
 
@@ -45,12 +43,12 @@ result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
       invalidate_window(win);
       return true;
     case kWindowMessageKeyDown:
-      if (wparam == SDL_SCANCODE_UP && win->cursor_pos > 0) {
+      if (wparam == AX_KEY_UPARROW && win->cursor_pos > 0) {
         win->cursor_pos--;
         invalidate_window(win);
         return true;
       }
-      if (wparam == SDL_SCANCODE_DOWN && win->cursor_pos < items->num_items-1) {
+      if (wparam == AX_KEY_DOWNARROW && win->cursor_pos < items->num_items-1) {
         win->cursor_pos++;
         invalidate_window(win);
         return true;

@@ -15,12 +15,12 @@ ifeq ($(UNAME_S),Darwin)
   CFLAGS += -DGL_SILENCE_DEPRECATION
   CFLAGS += -I/opt/homebrew/include -I/usr/local/include -I/usr/local/opt/cglm/include
   LDFLAGS += -L/opt/homebrew/lib -L/usr/local/lib
-  LIBS += -framework OpenGL -lSDL2
+  LIBS += -framework OpenGL
 else ifeq ($(UNAME_S),Linux)
   # Linux specific flags
   CFLAGS += -DGL_SILENCE_DEPRECATION -D__LINUX__ -fPIC
   LDFLAGS += -L/usr/lib -L/usr/local/lib
-  LIBS += -lGL -lSDL2 -lcglm
+  LIBS += -lGL -lcglm
 endif
 
 # Directories
