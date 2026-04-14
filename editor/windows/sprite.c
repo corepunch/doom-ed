@@ -1,4 +1,3 @@
-#include <SDL2/SDL.h>
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -34,7 +33,7 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   mapside_texture_t const *tex;
   switch (msg) {
     case kWindowMessagePaint:
-      fill_rect(_focused == win?COLOR_FOCUSED:COLOR_PANEL_BG, win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
+      fill_rect(_focused == win ? get_sys_color(kColorFocusRing) : get_sys_color(kColorWindowBg), win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
       draw_button(&win->frame, 1, 1, true);
       if (!*win->title) return false;
       if ((spr = find_sprite(win->title))) {

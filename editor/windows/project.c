@@ -28,10 +28,10 @@ result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
     case kWindowMessagePaint:
       for (int i = 0, y = 0; i < items->num_items; i++, y += BUTTON_HEIGHT) {
         if (win->cursor_pos == i) {
-          fill_rect(COLOR_TEXT_NORMAL, 0, y, win->frame.w, BUTTON_HEIGHT);
-          draw_text_small(items->items[i], 4, y+3, COLOR_PANEL_BG);
+          fill_rect(get_sys_color(kColorTextNormal), 0, y, win->frame.w, BUTTON_HEIGHT);
+          draw_text_small(items->items[i], 4, y+3, get_sys_color(kColorWindowBg));
         } else {
-          draw_text_small(items->items[i], 4, y+3, COLOR_TEXT_NORMAL);
+          draw_text_small(items->items[i], 4, y+3, get_sys_color(kColorTextNormal));
         }
       }
       return true;

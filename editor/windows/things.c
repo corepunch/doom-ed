@@ -58,7 +58,7 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           uint16_t tx = x + (THING_SIZE-strwidth(ed_things[i].sprite))/2;
           rect_t r = fit_sprite(spr, &(rect_t){ x, y, THING_SIZE, THING_SIZE });
           draw_rect(spr->texture, r.x, r.y, r.w, r.h);
-          draw_text_small(ed_things[i].sprite, tx, y + THING_SIZE+4, COLOR_TEXT_NORMAL);
+          draw_text_small(ed_things[i].sprite, tx, y + THING_SIZE+4, get_sys_color(kColorTextNormal));
           j++;
         }
       }
