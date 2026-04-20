@@ -81,7 +81,6 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       }
       return true;
     case tbButtonClick:
-      free(win->userdata);
       win->cursor_pos = wparam;
       send_message(win, tbSetActiveButton, wparam, NULL);
       invalidate_window(win);

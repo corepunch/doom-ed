@@ -3,6 +3,7 @@
 
 #include <mapview/gl_compat.h>
 #include <ui/user/rect.h>
+#include <ui/user/draw.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -157,7 +158,7 @@ void draw_text_gl3(const char* text, int x, int y, float alpha) {
     // Advance cursor
     if (c >= 32 && c > 0) {
       // Use character width if available, otherwise use default
-      int char_width = gamefont_state.font[c].width;
+      int char_width = gamefont_state.font[(unsigned char)c].width;
       cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH);
     } else {
       cursor_x += CONSOLE_FONT_WIDTH;  // Default width for unsupported chars
@@ -186,7 +187,7 @@ int get_text_width(const char* text) {
     // Advance cursor
     if (c >= 32 && c > 0) {
       // Use character width if available, otherwise use default
-      int char_width = gamefont_state.font[c].width;
+      int char_width = gamefont_state.font[(unsigned char)c].width;
       cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH);
     } else {
       cursor_x += CONSOLE_FONT_WIDTH;  // Default width for unsupported chars

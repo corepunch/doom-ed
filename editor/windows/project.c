@@ -22,7 +22,10 @@ result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam)
   items_t const *items = win->userdata;
   switch (msg) {
     case evCreate:
-			win->userdata = malloc(sizeof(items_t));
+      win->userdata = calloc(1, sizeof(items_t));
+      if (!win->userdata) {
+        return false;
+      }
 			find_all_maps(collect_proc, win);
       return true;
     case evPaint:
