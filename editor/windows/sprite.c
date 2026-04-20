@@ -13,7 +13,6 @@
 extern sprite_t *find_sprite(const char *name);
 extern mapside_texture_t const *get_flat_texture(const char *name);
 extern mapside_texture_t const *get_texture(const char *name);
-extern window_t *_focused;
 
 // Helper function to fit sprite in target rect
 rect_t fit_sprite(sprite_t const *spr, rect_t const *target) {
@@ -32,25 +31,24 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   sprite_t const *spr;
   mapside_texture_t const *tex;
   switch (msg) {
-    case kWindowMessagePaint:
-      fill_rect(_focused == win ? get_sys_color(kColorFocusRing) : get_sys_color(kColorWindowBg), win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4);
+    case evPaint:
+      fill_rect(g_ui_runtime.focused == win ? get_sys_color(brFocusRing) : get_sys_color(brWindowBg), R(win->frame.x-2, win->frame.y-2, win->frame.w+4, win->frame.h+4));
       draw_button(&win->frame, 1, 1, true);
       if (!*win->title) return false;
       if ((spr = find_sprite(win->title))) {
         rect_t r = fit_sprite(spr, &win->frame);
-        draw_rect(spr->texture, r.x, r.y, r.w, r.h);
+        draw_rect(spr->texture, &r);
       } else if ((tex = get_flat_texture(win->title))||(tex = get_texture(win->title))) {
         float scale = fminf(1, fminf(((float)win->frame.w) / tex->width,
                                      ((float)win->frame.h) / tex->height));
-        draw_rect(tex->texture,
-                  win->frame.x+(win->frame.w-tex->width*scale)/2,
+        draw_rect(tex->texture, R(win->frame.x+(win->frame.w-tex->width*scale)/2,
                   win->frame.y+(win->frame.h-tex->height*scale)/2,
                   tex->width * scale,
-                  tex->height * scale);
+                  tex->height * scale));
       }
       return true;
-    case kWindowMessageLeftButtonUp:
-      send_message(win->parent, kWindowMessageCommand, MAKEDWORD(win->id, kButtonNotificationClicked), NULL);
+    case evLeftButtonUp:
+      send_message(win->parent, evCommand, MAKEDWORD(win->id, btnClicked), NULL);
       return true;
   }
   return false;

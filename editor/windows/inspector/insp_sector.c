@@ -51,11 +51,11 @@ mapsector_t *selected_sector(game_t *game) {
 //  send_message(cb, CB_SETCURSEL, 2, NULL);
 //}
 
-static toolbar_button_t but[] = {
-  { EdIcon16Select, EditModeSelect },
-  { EdIcon16Points, EditModeVertices },
-  { EdIcon16Things, EditModeThings },
-  { EdIcon16Sounds, EditModeSounds },
+static toolbar_item_t but[] = {
+  { TOOLBAR_ITEM_BUTTON, EditModeSelect,   EdIcon16Select, 0, 0, NULL },
+  { TOOLBAR_ITEM_BUTTON, EditModeVertices, EdIcon16Points, 0, 0, NULL },
+  { TOOLBAR_ITEM_BUTTON, EditModeThings,   EdIcon16Things, 0, 0, NULL },
+  { TOOLBAR_ITEM_BUTTON, EditModeSounds,   EdIcon16Sounds, 0, 0, NULL },
 };
 
 void set_selection_mode(editor_state_t *editor, int mode);
@@ -63,18 +63,15 @@ void set_selection_mode(editor_state_t *editor, int mode);
 result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   editor_state_t *editor = get_editor();
   switch (msg) {
-    case kWindowMessageCreate:
-      send_message(win, kToolBarMessageAddButtons, sizeof(but)/sizeof(*but), but);      
+    case evCreate:
+      send_message(win, tbSetItems, sizeof(but)/sizeof(*but), but);      
       return true;
-    case kWindowMessagePaint:
-      draw_text_small("Nothing selected", 5, 5, get_sys_color(kColorDarkEdge));
-      draw_text_small("Nothing selected", 4, 4, get_sys_color(kColorTextNormal));
+    case evPaint:
+      draw_text_small("Nothing selected", 5, 5, get_sys_color(brDarkEdge));
+      draw_text_small("Nothing selected", 4, 4, get_sys_color(brTextNormal));
       return true;
-    case kToolBarMessageButtonClick:
-      for (int i = 0; i < win->num_toolbar_buttons; i++) {
-        toolbar_button_t *but = &win->toolbar_buttons[i];
-        but->active = (but->ident == wparam);
-      }
+    case tbButtonClick:
+      send_message(win, tbSetActiveButton, wparam, NULL);
       set_selection_mode(editor, wparam);
       invalidate_window(win);
       return true;
@@ -87,13 +84,13 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   editor_state_t *editor = get_editor();
   mapsector_t *sector = selected_sector(g_game);
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
       win->userdata = lparam;
       g_inspector = win;
       load_window_children(win, sector_layout);
 //      init_combobox(get_window_item(win, ID_TEST_COMBOBOX));
       return true;
-    case kWindowMessagePaint:
+    case evPaint:
       if (sector) {
         set_window_item_text(win, ID_SECTOR_IDENT, "%d", sector - g_game->map.sectors);
         set_window_item_text(win, ID_SECTOR_LIGHT_LEVEL, "%d", sector->lightlevel);
@@ -103,16 +100,16 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         set_window_item_text(win, ID_SECTOR_CEILING_IMAGE, sector->ceilingpic);
       }
       return false;
-    case kWindowMessageCommand:
+    case evCommand:
       if (sector) {
         switch (wparam) {
-          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, kEditNotificationUpdate):
+          case MAKEDWORD(ID_SECTOR_LIGHT_LEVEL, edUpdate):
             sector->lightlevel = atoi(((window_t *)lparam)->title);
             break;
-          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, kEditNotificationUpdate):
+          case MAKEDWORD(ID_SECTOR_FLOOR_HEIGHT, edUpdate):
             sector->floorheight = atoi(((window_t *)lparam)->title);
             break;
-          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, kEditNotificationUpdate):
+          case MAKEDWORD(ID_SECTOR_CEILING_HEIGHT, edUpdate):
             sector->ceilingheight = atoi(((window_t *)lparam)->title);
             break;
         }

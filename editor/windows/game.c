@@ -6,6 +6,8 @@
 #include <mapview/sprites.h>
 #include <mapview/console.h>
 #include <editor/editor.h>
+#include <ui/user/user.h>
+#include <ui/user/draw.h>
 
 game_t *g_game = NULL;
 
@@ -50,7 +52,7 @@ void new_map(void) {
   game_t *gm = malloc(sizeof(game_t));
   memset(gm, 0, sizeof(game_t));
   gm->last_time = (uint32_t)axGetMilliseconds();
-  show_window(create_window("New map", 0, new_frame(), NULL, win_editor, gm), true);
+  show_window(create_window("New map", 0, new_frame(), NULL, win_editor, 0, gm), true);
   init_editor(&gm->state);
   g_game = gm;
 }
@@ -78,7 +80,7 @@ void open_map(const char *mapname) {
 
   init_editor(&gm->state);
 
-  show_window(create_window(mapname, 0, new_frame(), NULL, win_editor, gm), true);
+  show_window(create_window(mapname, 0, new_frame(), NULL, win_editor, 0, gm), true);
   
   g_game = gm;
 }
@@ -204,7 +206,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   game_t *game = win->userdata;
   
   if (game->map.num_vertices == 0) {
-    fill_rect(get_sys_color(kColorWindowBg), 0, 0, win->frame.w, win->frame.h);
+    fill_rect(get_sys_color(brWindowBg), R(0, 0, win->frame.w, win->frame.h));
     return;
   }
 
@@ -265,7 +267,7 @@ void draw_dungeon(window_t const *win, bool draw_pixel) {
   set_projection(0, 0, win->frame.w, win->frame.h);
   
 //  result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
-//  win_perf((window_t*)win, kWindowMessagePaint, 0, NULL);
+//  win_perf((window_t*)win, evPaint, 0, NULL);
   
 //  mapside_texture_t const *tex1 = get_texture(get_selected_texture());
 //  mapside_texture_t const *tex2 = get_flat_texture(get_selected_flat_texture());
@@ -340,33 +342,31 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   static bool alt = false;
   static bool moved = false;
-  extern window_t *_focused;
-  extern window_t *_captured;
   game_t *game = win->userdata;
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
       win->userdata = lparam;
-      create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, NULL);
+      create_window("FPS", 0, MAKERECT(0, 0, 128, 64), win, win_perf, 0, NULL);
       return true;
-    case kWindowMessageDestroy:
+    case evDestroy:
       free_map_data(&game->map);
       return true;
-    case kWindowMessagePaint:
+    case evPaint:
       game_tick(game);
       draw_dungeon(win, moved);
-      if (_focused == win) {
-        post_message(win, kWindowMessagePaint, wparam, lparam);
+      if (g_ui_runtime.focused == win) {
+        post_message(win, evPaint, wparam, lparam);
       }
       moved = false;
       return false;
   }
 
-  if (_captured == win) {
+  if (g_ui_runtime.captured == win) {
     switch (msg) {
-      case kWindowMessageKillFocus:
+      case evKillFocus:
         g_relative_mouse_mode = false;
         return true;
-      case kWindowMessageKeyDown:
+      case evKeyDown:
         switch (wparam) {
           case AX_KEY_ESCAPE:
             g_relative_mouse_mode = false;
@@ -419,7 +419,7 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             return true;
         }
         return true;
-      case kWindowMessageKeyUp:
+      case evKeyUp:
         switch (wparam) {
           case AX_KEY_W:
           case AX_KEY_UPARROW:
@@ -444,10 +444,10 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
             break;
         }
         return true;
-//      case kWindowMessageWheel:
+//      case evWheel:
 //        handle_scroll((int[]){(int16_t)LOWORD(wparam), (int16_t)HIWORD(wparam)}, &game->map);
 //        return true;
-      case kWindowMessageMouseMove:
+      case evMouseMove:
         moved = true;
         game->player.angle += ((int16_t)LOWORD((intptr_t)lparam)) * sensitivity_x;
         game->player.pitch -= ((int16_t)HIWORD((intptr_t)lparam)) * sensitivity_y;
@@ -458,17 +458,17 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         if (game->player.pitch > 89.0f) game->player.pitch = 89.0f;
         if (game->player.pitch < -89.0f) game->player.pitch = -89.0f;
         return true;
-      case kWindowMessageLeftButtonUp:
+      case evLeftButtonUp:
         paint_face(&game->map, (ui_get_mod_state() & AX_MOD_ALT) != 0);
         return true;
-      case kWindowMessageJoyButtonDown:
+      case evJoyButtonDown:
         if (wparam == 0) {
           paint_face(&game->map, false);
         } else if (wparam == 1) {
           paint_face(&game->map, true);
         }
         return true;
-      case kWindowMessageJoyAxisMotion:
+      case evJoyAxisMotion:
         switch (LOWORD(wparam)) {
           case 0: game->player.strafe_move = ((int16_t)HIWORD(wparam))/(float)0x8000; break;
           case 1: game->player.forward_move = -((int16_t)HIWORD(wparam))/(float)0x8000; break;
@@ -477,15 +477,15 @@ result_t win_game(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         }
         return true;
     }
-  } else if (_focused == win) {
+  } else if (g_ui_runtime.focused == win) {
     switch (msg) {
-      case kWindowMessageLeftButtonUp:
+      case evLeftButtonUp:
         if (!g_relative_mouse_mode) {
           set_capture(win);
           g_relative_mouse_mode = true;
         }
         return true;
-      case kWindowMessageKeyDown:
+      case evKeyDown:
         switch (wparam) {
           case AX_KEY_TAB:
             set_capture(NULL);

@@ -339,7 +339,7 @@ int allocate_mapside_textures(void) {
 //    maybe_load_texture(texture_cache, side->bottomtexture, tex_dirs, pnames);
 //  }
   
-  create_window("Textures", WINDOW_VSCROLL, MAKERECT(20, 20, 256, 256), NULL, win_textures, texture_cache);
+  create_window("Textures", WINDOW_VSCROLL, MAKERECT(20, 20, 256, 256), NULL, win_textures, 0, texture_cache);
   
   if (texture_cache->num_textures) {
     memcpy(texture_cache->selected, texture_cache->textures->name, sizeof(texname_t));
@@ -522,7 +522,7 @@ int allocate_flat_textures(void) {
 //    }
 //  }
   
-  create_window("Flats", WINDOW_VSCROLL, MAKERECT(ui_get_system_metrics(kSystemMetricScreenWidth)-148, 20, 128, 256), NULL, win_textures, flat_cache);
+  create_window("Flats", WINDOW_VSCROLL, MAKERECT(ui_get_system_metrics(kSystemMetricScreenWidth)-148, 20, 128, 256), NULL, win_textures, 0, flat_cache);
   
   if (flat_cache->num_textures) {
     memcpy(flat_cache->selected, flat_cache->textures->name, sizeof(texname_t));

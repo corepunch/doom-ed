@@ -33,22 +33,18 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   extern char *sprnames[NUMSPRITES];
 //  editor_state_t *editor = get_editor();
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
       win->flags |= WINDOW_TOOLBAR;
       win->userdata2 = lparam;
-//      win->userdata = layout(NUM_THINGS, win->frame.w, get_mobj_size, win);
     {
-      toolbar_button_t but[8]={0};
+      toolbar_item_t but[8];
       for (int i = 0; i < 8; i++) {
-        but[i].icon = 16+i;
-        but[i].ident = i;
-        but[i].active = win->cursor_pos == i;
+        but[i] = (toolbar_item_t){ TOOLBAR_ITEM_BUTTON, i, 16+i, 0, 0, NULL };
       }
-      send_message(win, kToolBarMessageAddButtons, sizeof(but)/sizeof(*but), but);
+      send_message(win, tbSetItems, 8, but);
     }
-//      send_message(win, kToolBarMessageAddButtons, sizeof(but)/sizeof(*but), but);
       break;
-    case kWindowMessagePaint:
+    case evPaint:
       for (int i = 0, j = 0; i < NUM_THINGS; i++) {
         sprite_t *spr = ed_things[i].sprite ? find_sprite(ed_things[i].sprite) : NULL;
         if (spr && ed_things[i].code1 == ed_thinggroups[win->cursor_pos].code) {
@@ -57,16 +53,16 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           uint16_t y = (j / n) * (THING_SIZE+THING_LABEL_HEIGHT);
           uint16_t tx = x + (THING_SIZE-strwidth(ed_things[i].sprite))/2;
           rect_t r = fit_sprite(spr, &(rect_t){ x, y, THING_SIZE, THING_SIZE });
-          draw_rect(spr->texture, r.x, r.y, r.w, r.h);
-          draw_text_small(ed_things[i].sprite, tx, y + THING_SIZE+4, get_sys_color(kColorTextNormal));
+          draw_rect(spr->texture, &r);
+          draw_text_small(ed_things[i].sprite, tx, y + THING_SIZE+4, get_sys_color(brTextNormal));
           j++;
         }
       }
       break;
-    case kWindowMessageResize:
+    case evResize:
       invalidate_window(win);
       return true;
-    case kWindowMessageLeftButtonUp:
+    case evLeftButtonUp:
       for (int i = 0, j = 0; i < NUM_THINGS; i++) {
         sprite_t *spr = ed_things[i].sprite ? find_sprite(ed_things[i].sprite) : NULL;
         if (spr && ed_things[i].code1 == ed_thinggroups[win->cursor_pos].code) {
@@ -84,12 +80,10 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
         }
       }
       return true;
-    case kToolBarMessageButtonClick:
+    case tbButtonClick:
       free(win->userdata);
       win->cursor_pos = wparam;
-      for (int i = 0; i < win->num_toolbar_buttons; i++) {
-        win->toolbar_buttons[i].active = wparam == i;
-      }
+      send_message(win, tbSetActiveButton, wparam, NULL);
       invalidate_window(win);
       return true;
   }

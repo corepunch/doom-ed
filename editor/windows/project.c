@@ -21,28 +21,28 @@ void collect_proc(const char *name, void *parm) {
 result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   items_t const *items = win->userdata;
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
 			win->userdata = malloc(sizeof(items_t));
 			find_all_maps(collect_proc, win);
       return true;
-    case kWindowMessagePaint:
+    case evPaint:
       for (int i = 0, y = 0; i < items->num_items; i++, y += BUTTON_HEIGHT) {
         if (win->cursor_pos == i) {
-          fill_rect(get_sys_color(kColorTextNormal), 0, y, win->frame.w, BUTTON_HEIGHT);
-          draw_text_small(items->items[i], 4, y+3, get_sys_color(kColorWindowBg));
+          fill_rect(get_sys_color(brTextNormal), R(0, y, win->frame.w, BUTTON_HEIGHT));
+          draw_text_small(items->items[i], 4, y+3, get_sys_color(brWindowBg));
         } else {
-          draw_text_small(items->items[i], 4, y+3, get_sys_color(kColorTextNormal));
+          draw_text_small(items->items[i], 4, y+3, get_sys_color(brTextNormal));
         }
       }
       return true;
-    case kWindowMessageLeftButtonUp:
+    case evLeftButtonUp:
       win->cursor_pos = HIWORD(wparam)/BUTTON_HEIGHT;
       if (win->cursor_pos < items->num_items) {
         open_map(items->items[win->cursor_pos]);
       }
       invalidate_window(win);
       return true;
-    case kWindowMessageKeyDown:
+    case evKeyDown:
       if (wparam == AX_KEY_UPARROW && win->cursor_pos > 0) {
         win->cursor_pos--;
         invalidate_window(win);
