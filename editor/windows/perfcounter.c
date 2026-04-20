@@ -13,7 +13,7 @@ static struct {
 
 result_t win_perf(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   switch (msg) {
-    case kWindowMessagePaint: {
+    case evPaint: {
       uint32_t ticks = (uint32_t)axGetMilliseconds();
       fps_state.ticks[fps_state.counter++&63] = ticks - fps_state.last_fps_update;
       fps_state.last_fps_update = ticks;

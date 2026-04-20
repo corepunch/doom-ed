@@ -96,12 +96,11 @@ void handle_intermission_input(float delta_time) {
   ui_event_t event;
   while (axPollEvent(&event)) {
     if (event.message == kEventWindowClosed) {
-      extern bool running;
-      running = false;
+      g_ui_runtime.running = false;
     }
     switch (event.message) {
       case kEventMouseMoved:
-      case kEventLeftMouseDragged:
+      case kEventLeftButtonDragged:
         g_mouse_x = event.x;
         g_mouse_y = event.y;
         {
@@ -115,7 +114,7 @@ void handle_intermission_input(float delta_time) {
           }
         }
         break;
-      case kEventLeftMouseUp:
+      case kEventLeftButtonUp:
         if (selected >= 0) {
           char name[64]={0};
           snprintf(name, 64, "E1M%d", selected+1);

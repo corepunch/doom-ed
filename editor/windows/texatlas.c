@@ -210,7 +210,7 @@ void draw_texture_layout(texture_layout_t* layout, mapside_texture_t* textures, 
     mapside_texture_t* tex = &textures[entry->texture_idx];
     
     // Draw the texture according to its position in the layout
-    draw_rect(tex->texture, entry->x, entry->y, tex->width * scale, tex->height * scale);
+    draw_rect(tex->texture, R(entry->x, entry->y, tex->width * scale, tex->height * scale));
   }
 }
 
@@ -235,15 +235,15 @@ void draw_texture_layout_with_selection(texture_layout_t* layout,
     texture_layout_entry_t* entry = &layout->entries[i];
     mapside_texture_t* tex = &textures[entry->texture_idx];
     // Draw the texture
-    draw_rect(tex->texture, entry->x * scale, entry->y * scale, tex->width * scale, tex->height * scale);
-    draw_rect_ex(black_tex, entry->x * scale, entry->y * scale, tex->width * scale, tex->height * scale, true, 1);
+    draw_rect(tex->texture, R(entry->x * scale, entry->y * scale, tex->width * scale, tex->height * scale));
+    draw_rect_ex(black_tex, R(entry->x * scale, entry->y * scale, tex->width * scale, tex->height * scale), true, 1);
   }
   
   for (int i = 0; i < layout->num_entries; i++) {
     texture_layout_entry_t* entry = &layout->entries[i];
     mapside_texture_t* tex = &textures[entry->texture_idx];
     if (!strncmp(tex->name, selected_texture, sizeof(texname_t))) {
-      draw_rect_ex(selection_tex, entry->x * scale, entry->y * scale, tex->width * scale, tex->height * scale, true, 1);
+      draw_rect_ex(selection_tex, R(entry->x * scale, entry->y * scale, tex->width * scale, tex->height * scale), true, 1);
     }
   }
 }
@@ -362,11 +362,11 @@ typedef struct {
 result_t win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   mapside_texture_t *tex = win->userdata;
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
       win->userdata = lparam;
       return true;
-    case kWindowMessagePaint:
-      draw_rect(tex ? tex->texture : 1, win->frame.x, win->frame.y, win->frame.w, win->frame.h);
+    case evPaint:
+      draw_rect(tex ? tex->texture : 1, R(win->frame.x, win->frame.y, win->frame.w, win->frame.h));
       return true;
   }
   return false;
@@ -375,21 +375,21 @@ result_t win_image(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
 result_t win_textures(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   window_udata_t *udata = win->userdata;
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
       udata = malloc(sizeof(window_udata_t));
       udata->cache = lparam;
       udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       win->userdata = udata;
 //      create_window("Image", 0, MAKERECT(10, 10, 30, 30), win, win_image, &udata->cache->textures[0]);
       return true;
-    case kWindowMessageResize:
+    case evResize:
       free(udata->layout);
       udata->layout = layout(udata->cache->num_textures, win->frame.w / SCALE, get_texture_size, udata->cache->textures);
       return true;
-    case kWindowMessagePaint:
+    case evPaint:
       draw_texture_layout_with_selection(udata->layout, udata->cache->textures, udata->cache->selected, SCALE);
       return false;
-    case kWindowMessageLeftButtonUp: {
+    case evLeftButtonUp: {
       int texture_idx =
       get_texture_at_point(udata->layout, LOWORD(wparam) / SCALE, HIWORD(wparam) / SCALE);
       if (texture_idx >= 0) {

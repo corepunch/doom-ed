@@ -83,13 +83,8 @@ mapthing_t *selected_thing(game_t *game) {
 
 result_t win_things(window_t *, uint32_t, uint32_t, void *);
 
-rect_t shrink_rect(rect_t const *rect) {
-  return (rect_t){rect->x+8,rect->y+8,THING_SIZE*3,rect->h-16};
-}
-
 uint16_t select_thing_type(window_t *owner) {
-  rect_t rect = shrink_rect(&owner->frame);
-  return show_dialog("Things", &rect, owner, win_things, NULL);
+  return show_dialog("Things", THING_SIZE*3, owner->frame.h-16, owner, win_things, NULL);
 }
 
 result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
@@ -99,12 +94,12 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
   mapthing_t *thing = selected_thing(g_game);
   uint16_t tmp;
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
       win->userdata = lparam;
       g_inspector = win;
       load_window_children(win, thing_layout);
       return true;
-    case kWindowMessagePaint:
+    case evPaint:
       if (thing) {
         sprite_t *spr = get_thing_sprite_name(thing->type, 0);
         set_window_item_text(win, ID_THING_SPRITE, spr?spr->name:"");
@@ -115,15 +110,15 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
           window_t *checkbox = get_window_item(win, thing_checkboxes[i]);
           uint32_t value = thing->options&(1<<i);
-          send_message(checkbox, kButtonMessageSetCheck, value, NULL);
+          send_message(checkbox, btnSetCheck, value, NULL);
         }
       }
       return false;
-    case kWindowMessageCommand:
+    case evCommand:
       if (thing) {
         for (int i = 0; i < sizeof(thing_checkboxes)/sizeof(*thing_checkboxes); i++) {
-          if (wparam == MAKEDWORD(thing_checkboxes[i], kButtonNotificationClicked)) {
-            if (send_message(lparam, kButtonMessageGetCheck, 0, NULL)) {
+          if (wparam == MAKEDWORD(thing_checkboxes[i], btnClicked)) {
+            if (send_message(lparam, btnGetCheck, 0, NULL)) {
               thing->options |= 1 << i;
             } else {
               thing->options &= ~(1 << i);
@@ -131,19 +126,19 @@ result_t win_thing(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) {
           }
         }
         switch (wparam) {
-          case MAKEDWORD(ID_THING_POS_X, kEditNotificationUpdate):
+          case MAKEDWORD(ID_THING_POS_X, edUpdate):
             thing->x = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_POS_Y, kEditNotificationUpdate):
+          case MAKEDWORD(ID_THING_POS_Y, edUpdate):
             thing->y = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_ANGLE, kEditNotificationUpdate):
+          case MAKEDWORD(ID_THING_ANGLE, edUpdate):
             thing->angle = atoi(((window_t *)lparam)->title);
             invalidate_window(editor->window);
             break;
-          case MAKEDWORD(ID_THING_SPRITE, kButtonNotificationClicked):
+          case MAKEDWORD(ID_THING_SPRITE, btnClicked):
             if ((tmp = select_thing_type(win)) != 0xFFFF) {
               thing->type = tmp;
               invalidate_window(editor->window);

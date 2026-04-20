@@ -110,14 +110,13 @@ void set_selection_mode(editor_state_t *editor, int mode) {
       return;
   }
   clear_window_children(g_inspector);
-  send_message(g_inspector, kWindowMessageCreate, 0, editor);
+  send_message(g_inspector, evCreate, 0, editor);
   invalidate_window(g_inspector);
 }
 
 static void update_inspector(editor_state_t *editor, objtype_t type) {
-  extern window_t *_focused;
   winproc_t proc = NULL;
-  window_t *old_focus = _focused;
+  window_t *old_focus = g_ui_runtime.focused;
   switch (type) {
     case ObjTypeThing: proc = win_thing; break;
     case ObjTypeSector: proc = win_sector; break;
@@ -128,7 +127,7 @@ static void update_inspector(editor_state_t *editor, objtype_t type) {
   if (g_inspector->proc != proc) {
     g_inspector->proc = proc;
     clear_window_children(g_inspector);
-    send_message(g_inspector, kWindowMessageCreate, 0, editor);
+    send_message(g_inspector, evCreate, 0, editor);
     invalidate_window(g_inspector);
     set_focus(old_focus);
   }
@@ -219,17 +218,17 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   editor_state_t *editor = game ? &game->state : NULL;
   int point = -1;
   switch (msg) {
-    case kWindowMessageCreate:
+    case evCreate:
       win->userdata = lparam;
       ((game_t *)lparam)->state.window = win;
       return true;
-    case kWindowMessageDestroy:
+    case evDestroy:
       free_map_data(&game->map);
       return true;
-    case kWindowMessagePaint:
+    case evPaint:
       draw_editor(win, &game->map, editor, &game->player);
       return true;
-    case kWindowMessageMouseMove:
+    case evMouseMove:
       track_mouse(win);
       editor->hover.type = ObjTypeNone;
       editor->hover.index = 0xFFFF;
@@ -279,11 +278,11 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       invalidate_window(win);
       invalidate_window(g_inspector);
       return true;
-      //    case kWindowMessageWheel:
+      //    case evWheel:
       //      editor->scale *= 1.f - (int16_t)HIWORD(wparam)/50.f;
       //      invalidate_window(win);
       //      return true;
-    case kWindowMessageMouseLeave:
+    case evMouseLeave:
 //      editor->hover.point = -1;
 //      editor->hover.sector = -1;
 //      editor->hover.line = -1;
@@ -291,7 +290,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       invalidate_window(win);
       invalidate_window(g_inspector);
       return true;
-    case kWindowMessageWheel: {
+    case evWheel: {
       mat4 mvp;
       vec3 world_before, world_after, delta;
       get_editor_mvp(editor, mvp);
@@ -304,7 +303,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       invalidate_window(win);
       return true;
     }
-    case kWindowMessageLeftButtonUp:
+    case evLeftButtonUp:
       if (editor->move_camera == 2) {
         editor->move_camera = 1;
       } else if (editor->sel_mode == EditModeSelect) {
@@ -314,7 +313,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
 //        editor->move_thing = 0;
       }
       return true;
-    case kWindowMessageLeftButtonDown:
+    case evLeftButtonDown:
       if (editor->move_camera > 0) {
         editor->move_camera = 2;
         return true;
@@ -385,7 +384,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           break;
       }
       return true;
-    case kWindowMessageRightButtonDown:
+    case evRightButtonDown:
       switch (editor->sel_mode) {
         case EditModeVertices:
           if (editor->drawing) {
@@ -403,7 +402,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           break;
       }
       return true;
-    case kWindowMessageRightButtonUp:
+    case evRightButtonUp:
       switch (editor->sel_mode) {
         case EditModeVertices:
           if (editor->dragging && has_selection(editor->hover, ObjTypePoint)) {
@@ -417,10 +416,10 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           return true;
       }
       return true;
-    case kWindowMessageKillFocus:
+    case evKillFocus:
       editor_reset_input(editor);
       return true;
-    case kWindowMessageKeyDown:
+    case evKeyDown:
       switch (wparam) {
         case AX_KEY_W:
         case AX_KEY_UPARROW:
@@ -479,7 +478,7 @@ result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
           return true;
       }
       break;
-    case kWindowMessageKeyUp:
+    case evKeyUp:
       if (wparam == AX_KEY_CTRL) {
         editor->move_camera = 0;
       }

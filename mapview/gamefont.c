@@ -2,6 +2,8 @@
 // Moved from ui/user/text.c to keep game-specific code in mapview
 
 #include <mapview/gl_compat.h>
+#include <ui/user/rect.h>
+#include <ui/user/draw.h>
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -35,7 +37,6 @@ static const char* FONT_LUMPS_PREFIX = "STCFN";
 #endif
 
 // Forward declarations for external functions
-extern void draw_rect(int tex, int x, int y, int w, int h);
 extern GLuint white_tex;
 
 // Forward declarations for WAD file functions
@@ -123,14 +124,14 @@ static void draw_char_gl3(char c, int x, int y, float alpha) {
   if (char_code < 0 || char_code >= 128 || gamefont_state.font[char_code].texture == 0) {
     // Fallback for unsupported characters - draw a solid rectangle
     if (c != ' ') {  // Skip spaces
-      draw_rect(white_tex, x, y, CONSOLE_FONT_WIDTH, CONSOLE_FONT_HEIGHT);
+      draw_rect(white_tex, R(x, y, CONSOLE_FONT_WIDTH, CONSOLE_FONT_HEIGHT));
     }
     return;
   }
   
   font_char_t* ch = &gamefont_state.font[char_code];
   
-  draw_rect(ch->texture, x - gamefont_state.font[char_code].x, y - gamefont_state.font[char_code].y, ch->width, ch->height);
+  draw_rect(ch->texture, R(x - gamefont_state.font[char_code].x, y - gamefont_state.font[char_code].y, ch->width, ch->height));
 }
 
 // Draw text string using GL3 with DOOM/Hexen font
@@ -157,7 +158,7 @@ void draw_text_gl3(const char* text, int x, int y, float alpha) {
     // Advance cursor
     if (c >= 32 && c > 0) {
       // Use character width if available, otherwise use default
-      int char_width = gamefont_state.font[c].width;
+      int char_width = gamefont_state.font[(unsigned char)c].width;
       cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH);
     } else {
       cursor_x += CONSOLE_FONT_WIDTH;  // Default width for unsupported chars
@@ -186,7 +187,7 @@ int get_text_width(const char* text) {
     // Advance cursor
     if (c >= 32 && c > 0) {
       // Use character width if available, otherwise use default
-      int char_width = gamefont_state.font[c].width;
+      int char_width = gamefont_state.font[(unsigned char)c].width;
       cursor_x += (char_width > 0 ? char_width : CONSOLE_FONT_WIDTH);
     } else {
       cursor_x += CONSOLE_FONT_WIDTH;  // Default width for unsupported chars

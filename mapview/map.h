@@ -38,7 +38,6 @@ if ((map)->name) free((map)->name); \
 #define P_RADIUS 12.0f        // Player radius
 #define PALETTE_WIDTH 24
 #define NOTEX_SIZE 64
-#define SCROLL_SENSITIVITY 5
 #define SPRITE_SCALE 2
 #define SCALE_POINT(x) ((x)/2)
 #define HEXEN
@@ -382,8 +381,6 @@ typedef struct {
 
 struct window_s;
 
-typedef struct toolbar_button_s toolbar_button_t;
-
 void clear_window_children(window_t *win);
 void load_window_children(window_t *win, windef_t const *def);
 int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
@@ -402,7 +399,7 @@ void dispatch_message(ui_event_t *evt);
 void repost_messages(void);
 bool is_window(window_t *win);
 void end_dialog(window_t *win, uint32_t code);
-uint32_t show_dialog(char const *, const rect_t*, struct window_s *, winproc_t, void *param);
+uint32_t show_dialog(char const *, int, int, struct window_s *, winproc_t, void *param);
 
 extern window_t *g_inspector;
 extern game_t *g_game;
@@ -436,9 +433,9 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);
 void update_player_position_with_sliding(map_data_t const *map, player_t *player,
                                          float move_x, float move_y);
 
-void fill_rect(uint32_t color, int x, int y, int w, int h);
-void draw_rect(int tex, int x, int y, int w, int h);
-void draw_rect_ex(int tex, int x, int y, int w, int h, int type, float alpha);
+void fill_rect(uint32_t color, rect_t const *r);
+void draw_rect(int tex, rect_t const *r);
+void draw_rect_ex(int tex, rect_t const *r, int type, float alpha);
 void draw_icon8(int icon, int x, int y, uint32_t col);
 void draw_icon16(int icon, int x, int y, uint32_t col);
 void draw_palette(map_data_t const *map);
