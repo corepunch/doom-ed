@@ -27,3 +27,6 @@ build.log
 
 xcuserdata
 *.gch
+
+# CodeQL
+_codeql_detected_source_root/
