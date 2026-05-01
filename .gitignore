@@ -17,9 +17,13 @@ build/libgoldie-ui.dylib
 tests/triangulate_test
 tests/bsp_test
 tests/bbox_test
+tests/collision_test
+tests/wad_test
 triangulate_test
 bsp_test
 bbox_test
+collision_test
+wad_test
 *.o
 
 # Build logs
