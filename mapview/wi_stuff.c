@@ -94,7 +94,7 @@ void goto_intermisson(void) {
 
 void handle_intermission_input(float delta_time) {
   ui_event_t event;
-  while (axPollEvent(&event)) {
+  while (get_message(&event)) {
     if (event.message == kEventWindowClosed) {
       g_ui_runtime.running = false;
     }

@@ -387,8 +387,8 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);
 void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
-int window_title_bar_y(window_t const *win);
 window_t *get_window_item(window_t const *win, uint32_t id);
+
 void track_mouse(window_t *win);
 void set_capture(window_t *win);
 void set_focus(window_t* win);
@@ -433,9 +433,9 @@ void draw_bsp(map_data_t const *map, viewdef_t const *viewdef);
 void update_player_position_with_sliding(map_data_t const *map, player_t *player,
                                          float move_x, float move_y);
 
-void fill_rect(uint32_t color, rect_t const *r);
-void draw_rect(int tex, rect_t const *r);
-void draw_rect_ex(int tex, rect_t const *r, int type, float alpha);
+void fill_rect(uint32_t color, rect_t r);
+void draw_rect(int tex, rect_t r);
+void draw_rect_ex(int tex, rect_t r, int type, float alpha);
 void draw_icon8(int icon, int x, int y, uint32_t col);
 void draw_icon16(int icon, int x, int y, uint32_t col);
 void draw_palette(map_data_t const *map);
