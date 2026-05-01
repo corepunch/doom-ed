@@ -105,7 +105,7 @@ liborion: $(LIBORION)
 
 $(LIBORION):
 	@echo "Building liborion via ui/Makefile..."
-	@$(MAKE) -C $(UI_DIR) all
+	@$(MAKE) -C $(UI_DIR) library
 
 # mapview executable (main executable)
 mapview: $(OBJS) $(LIBORION)
