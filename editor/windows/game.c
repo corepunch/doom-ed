@@ -39,9 +39,9 @@ void init_player(map_data_t const *map, player_t *player) {
 result_t win_editor(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
 
-static rect_t *new_frame(void) {
+static irect16_t *new_frame(void) {
   static uint8_t counter = 0;
-  static rect_t rect = { 0, 0, 400, 400 };
+  static irect16_t rect = { 0, 0, 400, 400 };
   rect.x = counter+32;
   rect.y = counter+32;
   counter += 16;

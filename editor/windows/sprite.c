@@ -15,10 +15,10 @@ extern mapside_texture_t const *get_flat_texture(const char *name);
 extern mapside_texture_t const *get_texture(const char *name);
 
 // Helper function to fit sprite in target rect
-rect_t fit_sprite(sprite_t const *spr, rect_t const *target) {
+irect16_t fit_sprite(sprite_t const *spr, irect16_t const *target) {
   float scale = fminf(1, fminf(((float)target->w) / spr->width,
                                ((float)target->h) / spr->height));
-  return (rect_t) {
+  return (irect16_t) {
     target->x+(target->w-spr->width*scale)/2,
     target->y+(target->h-spr->height*scale)/2,
     spr->width * scale,
@@ -36,7 +36,7 @@ result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
       draw_button(win->frame, 1, 1, true);
       if (!*win->title) return false;
       if ((spr = find_sprite(win->title))) {
-        rect_t r = fit_sprite(spr, &win->frame);
+        irect16_t r = fit_sprite(spr, &win->frame);
         draw_rect(spr->texture, r);
       } else if ((tex = get_flat_texture(win->title))||(tex = get_texture(win->title))) {
         float scale = fminf(1, fminf(((float)win->frame.w) / tex->width,
