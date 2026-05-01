@@ -387,6 +387,7 @@ int send_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void post_message(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 void invalidate_window(window_t *win);
 void set_window_item_text(window_t *win, uint32_t id, const char *fmt, ...);
+window_t *get_window_item(window_t const *win, uint32_t id);
 
 void track_mouse(window_t *win);
 void set_capture(window_t *win);
