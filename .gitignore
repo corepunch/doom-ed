@@ -35,3 +35,6 @@ build.log
 
 xcuserdata
 *.gch
+
+# CodeQL source root marker
+_codeql_detected_source_root

@@ -11,17 +11,17 @@ enum {
 };
 
 windef_t sector_layout[] = {
-  { win_label, "Sector#: ", -1, LABEL_WIDTH },
-  { win_textedit, "", ID_SECTOR_IDENT, 50 },
-  { win_label, "Light lvl:", -1, LABEL_WIDTH },
-  { win_textedit, "", ID_SECTOR_LIGHT_LEVEL, 50 },
-  { win_label, "Floor Hgt:", -1, LABEL_WIDTH },
-  { win_textedit, "", ID_SECTOR_FLOOR_HEIGHT, 50 },
-  { win_label, "Ceiling Hgt:", -1, LABEL_WIDTH },
-  { win_textedit, "", ID_SECTOR_CEILING_HEIGHT, 50 },
-//  { win_combobox, "Stone", ID_TEST_COMBOBOX, 90 }, {win_space},
-  { win_sprite, "", ID_SECTOR_FLOOR_IMAGE, 64, 64 },
-  { win_sprite, "", ID_SECTOR_CEILING_IMAGE, 64, 64 },
+  { "win_label", "Sector#: ", -1, LABEL_WIDTH },
+  { "win_textedit", "", ID_SECTOR_IDENT, 50 },
+  { "win_label", "Light lvl:", -1, LABEL_WIDTH },
+  { "win_textedit", "", ID_SECTOR_LIGHT_LEVEL, 50 },
+  { "win_label", "Floor Hgt:", -1, LABEL_WIDTH },
+  { "win_textedit", "", ID_SECTOR_FLOOR_HEIGHT, 50 },
+  { "win_label", "Ceiling Hgt:", -1, LABEL_WIDTH },
+  { "win_textedit", "", ID_SECTOR_CEILING_HEIGHT, 50 },
+//  { "win_combobox", "Stone", ID_TEST_COMBOBOX, 90 }, {"win_space"},
+  { "win_sprite", "", ID_SECTOR_FLOOR_IMAGE, 64, 64 },
+  { "win_sprite", "", ID_SECTOR_CEILING_IMAGE, 64, 64 },
   { NULL }
 };
 
@@ -52,10 +52,10 @@ mapsector_t *selected_sector(game_t *game) {
 //}
 
 static toolbar_item_t but[] = {
-  { TOOLBAR_ITEM_BUTTON, EditModeSelect,   EdIcon16Select, 0, 0, NULL },
-  { TOOLBAR_ITEM_BUTTON, EditModeVertices, EdIcon16Points, 0, 0, NULL },
-  { TOOLBAR_ITEM_BUTTON, EditModeThings,   EdIcon16Things, 0, 0, NULL },
-  { TOOLBAR_ITEM_BUTTON, EditModeSounds,   EdIcon16Sounds, 0, 0, NULL },
+  { TOOLBAR_ITEM_BUTTON, EditModeSelect,   sysicon_cursor, 0, 0, NULL },
+  { TOOLBAR_ITEM_BUTTON, EditModeVertices, sysicon_node,   0, 0, NULL },
+  { TOOLBAR_ITEM_BUTTON, EditModeThings,   sysicon_entity, 0, 0, NULL },
+  { TOOLBAR_ITEM_BUTTON, EditModeSounds,   sysicon_sound,  0, 0, NULL },
 };
 
 void set_selection_mode(editor_state_t *editor, int mode);
