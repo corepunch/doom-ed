@@ -22,7 +22,23 @@ get_layout_item(struct texture_layout_s* layout,
 
 int get_texture_at_point(struct texture_layout_s* layout, int x, int y);
 
-#define NUM_THINGS (sizeof(ed_things)/sizeof(*ed_things))
+#define NUM_THINGGROUPS (int)(sizeof(ed_thinggroups)/sizeof(*ed_thinggroups))
+#define NUM_THINGS      (int)(sizeof(ed_things)/sizeof(*ed_things))
+
+static const int thinggroup_icons[] = {
+  sysicon_character, // Player
+  sysicon_enemy,     // Monster
+  sysicon_sword,     // Weapon
+  sysicon_ammo,      // Ammunition
+  sysicon_heart,     // Health & Armor
+  sysicon_star,      // Bonus
+  sysicon_key_c,     // Key
+  sysicon_puzzle,    // Puzzle Piece
+  sysicon_tile,      // Decoration
+  sysicon_terrain,   // Natural
+  sysicon_sound,     // Sounds
+  sysicon_tag_id,    // OTHER
+};
 #define THING_LABEL_HEIGHT 16
 
 irect16_t fit_sprite(sprite_t const *spr, irect16_t const *target);
@@ -33,17 +49,16 @@ result_t win_things(window_t *win, uint32_t msg, uint32_t wparam, void *lparam) 
   extern char *sprnames[NUMSPRITES];
 //  editor_state_t *editor = get_editor();
   switch (msg) {
-    case evCreate:
+    case evCreate: {
+      toolbar_item_t but[NUM_THINGGROUPS];
+      for (int i = 0; i < NUM_THINGGROUPS; i++) {
+        but[i] = (toolbar_item_t){ TOOLBAR_ITEM_BUTTON, i, thinggroup_icons[i], 0, 0, NULL };
+      }
       win->flags |= WINDOW_TOOLBAR;
       win->userdata2 = lparam;
-    {
-      toolbar_item_t but[8];
-      for (int i = 0; i < 8; i++) {
-        but[i] = (toolbar_item_t){ TOOLBAR_ITEM_BUTTON, i, 16+i, 0, 0, NULL };
-      }
-      send_message(win, tbSetItems, 8, but);
-    }
+      send_message(win, tbSetItems, NUM_THINGGROUPS, but);
       break;
+    }
     case evPaint:
       for (int i = 0, j = 0; i < NUM_THINGS; i++) {
         sprite_t *spr = ed_things[i].sprite ? find_sprite(ed_things[i].sprite) : NULL;

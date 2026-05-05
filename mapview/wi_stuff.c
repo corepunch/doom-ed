@@ -4,7 +4,7 @@
 #define NUMEPISODES  4
 #define NUMMAPS    9
 
-static point_t lnodes[NUMEPISODES][NUMMAPS] =
+static ipoint16_t lnodes[NUMEPISODES][NUMMAPS] =
 {
   // Episode 0 World Map
   {

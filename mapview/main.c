@@ -22,9 +22,12 @@ result_t win_sector(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_project(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 result_t win_dummy(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
 
+result_t win_sprite(window_t *win, uint32_t msg, uint32_t wparam, void *lparam);
+
 window_t *g_inspector = NULL;
 
 static void init_windows(hinstance_t hinstance) {
+  UI_CLASS(win_sprite);
   show_window(create_window("Things", WINDOW_VSCROLL, MAKERECT(8, 96, THING_SIZE*3, 256), NULL, win_things, hinstance, NULL), true);
   show_window(create_window("Project", WINDOW_VSCROLL, MAKERECT(4, 20, 128, 256), NULL, win_project, hinstance, NULL), true);
   g_inspector = create_window("Inspector", WINDOW_TOOLBAR, MAKERECT(ui_get_system_metrics(kSystemMetricScreenWidth)-200, 40, 150, 300), NULL, win_dummy, hinstance, NULL);

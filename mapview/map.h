@@ -54,16 +54,6 @@ if ((map)->name) free((map)->name); \
 #define sensitivity_x 0.125f // Adjust sensitivity as needed
 #define sensitivity_y 0.175f // Adjust sensitivity as needed
 
-typedef enum {
-  EdIcon16Select,
-  EdIcon16Points,
-  EdIcon16Lines,
-  EdIcon16Sectors,
-  EdIcon16Things,
-  EdIcon16Sounds,
-  EdIcon16Appicon,
-  EdIcon16Count,
-} ed_icon16_t;
 
 enum {
   PIXEL_MID = 0 << 28,
