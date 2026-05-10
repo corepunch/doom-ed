@@ -314,6 +314,9 @@ static void test_collinear_edge_points(void) {
       out_vertices[i + 2].x, out_vertices[i + 2].y);
   }
   assert(float_equals(total_area, polygon_area(vertices, 6), 1.0f));
+  for (int i = 0; i < result; i++) {
+    assert(is_input_vertex(vertices, 6, out_vertices[i].x, out_vertices[i].y));
+  }
 
   printf("PASSED\n");
 }
@@ -357,6 +360,15 @@ static void test_convex_triangle_count_scaling(void) {
   wall_vertex_t out_vertices[120];
   int result = triangulate_sector(vertices, 24, out_vertices);
   assert(result == (24 - 2) * 3);
+
+  float total_area = 0.0f;
+  for (int i = 0; i < result; i += 3) {
+    total_area += triangle_area(
+      out_vertices[i].x, out_vertices[i].y,
+      out_vertices[i + 1].x, out_vertices[i + 1].y,
+      out_vertices[i + 2].x, out_vertices[i + 2].y);
+  }
+  assert(float_equals(total_area, polygon_area(vertices, 24), 2.0f));
 
   printf("PASSED\n");
 }
