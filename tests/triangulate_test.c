@@ -28,7 +28,7 @@ static float polygon_area(mapvertex_t const *vertices, int count) {
 }
 
 // Helper to check that an output vertex comes from the original polygon
-static int is_input_vertex(mapvertex_t const *vertices, int count, int16_t x, int16_t y) {
+static int is_vertex_in_input_set(mapvertex_t const *vertices, int count, int16_t x, int16_t y) {
   for (int i = 0; i < count; i++) {
     if (vertices[i].x == x && vertices[i].y == y) {
       return 1;
@@ -304,7 +304,7 @@ static void test_collinear_edge_points(void) {
 
   wall_vertex_t out_vertices[40];
   int result = triangulate_sector(vertices, 6, out_vertices);
-  assert(result == 12); // (n - 2) * 3
+  assert(result == 12); // (6 - 2) triangles * 3 vertices
 
   float total_area = 0.0f;
   for (int i = 0; i < result; i += 3) {
@@ -315,7 +315,7 @@ static void test_collinear_edge_points(void) {
   }
   assert(float_equals(total_area, polygon_area(vertices, 6), 1.0f));
   for (int i = 0; i < result; i++) {
-    assert(is_input_vertex(vertices, 6, out_vertices[i].x, out_vertices[i].y));
+    assert(is_vertex_in_input_set(vertices, 6, out_vertices[i].x, out_vertices[i].y));
   }
 
   printf("PASSED\n");
@@ -337,10 +337,10 @@ static void test_output_vertices_from_input_set(void) {
 
   wall_vertex_t out_vertices[50];
   int result = triangulate_sector(vertices, 7, out_vertices);
-  assert(result == 15);
+  assert(result == 15); // (7 - 2) triangles * 3 vertices
 
   for (int i = 0; i < result; i++) {
-    assert(is_input_vertex(vertices, 7, out_vertices[i].x, out_vertices[i].y));
+    assert(is_vertex_in_input_set(vertices, 7, out_vertices[i].x, out_vertices[i].y));
   }
 
   printf("PASSED\n");
@@ -350,16 +350,17 @@ static void test_output_vertices_from_input_set(void) {
 static void test_convex_triangle_count_scaling(void) {
   printf("Test 15: Convex triangle count scaling... ");
 
-  mapvertex_t vertices[24];
-  for (int i = 0; i < 24; i++) {
-    float angle = (float)i * 2.0f * M_PI / 24.0f;
+  enum { NUM_VERTICES = 24 };
+  mapvertex_t vertices[NUM_VERTICES];
+  for (int i = 0; i < NUM_VERTICES; i++) {
+    float angle = (float)i * 2.0f * M_PI / (float)NUM_VERTICES;
     vertices[i].x = (int16_t)(200.0f + 150.0f * cosf(angle));
     vertices[i].y = (int16_t)(200.0f + 150.0f * sinf(angle));
   }
 
   wall_vertex_t out_vertices[120];
-  int result = triangulate_sector(vertices, 24, out_vertices);
-  assert(result == (24 - 2) * 3);
+  int result = triangulate_sector(vertices, NUM_VERTICES, out_vertices);
+  assert(result == (NUM_VERTICES - 2) * 3);
 
   float total_area = 0.0f;
   for (int i = 0; i < result; i += 3) {
@@ -368,7 +369,7 @@ static void test_convex_triangle_count_scaling(void) {
       out_vertices[i + 1].x, out_vertices[i + 1].y,
       out_vertices[i + 2].x, out_vertices[i + 2].y);
   }
-  assert(float_equals(total_area, polygon_area(vertices, 24), 2.0f));
+  assert(float_equals(total_area, polygon_area(vertices, NUM_VERTICES), 2.0f));
 
   printf("PASSED\n");
 }
