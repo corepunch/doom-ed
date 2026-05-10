@@ -104,6 +104,10 @@ all: liborion mapview
 liborion: $(LIBORION)
 
 $(LIBORION):
+	@if [ ! -f $(UI_DIR)/Makefile ]; then \
+		echo "Initializing $(UI_DIR) submodule..."; \
+		git submodule update --init --recursive $(UI_DIR); \
+	fi
 	@echo "Building liborion via ui/Makefile..."
 	@$(MAKE) -C $(UI_DIR) library
 

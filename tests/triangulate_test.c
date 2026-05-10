@@ -16,6 +16,27 @@ static float triangle_area(float ax, float ay, float bx, float by, float cx, flo
   return fabs((bx - ax) * (cy - ay) - (by - ay) * (cx - ax)) / 2.0f;
 }
 
+// Helper to calculate polygon area (absolute value)
+static float polygon_area(mapvertex_t const *vertices, int count) {
+  float area2 = 0.0f;
+  for (int i = 0; i < count; i++) {
+    int j = (i + 1) % count;
+    area2 += (float)vertices[i].x * (float)vertices[j].y -
+             (float)vertices[j].x * (float)vertices[i].y;
+  }
+  return fabsf(area2) / 2.0f;
+}
+
+// Helper to check that an output vertex comes from the original polygon
+static int is_vertex_in_input_set(mapvertex_t const *vertices, int count, int16_t x, int16_t y) {
+  for (int i = 0; i < count; i++) {
+    if (vertices[i].x == x && vertices[i].y == y) {
+      return 1;
+    }
+  }
+  return 0;
+}
+
 // Test 1: Simple triangle (should return the same triangle)
 static void test_simple_triangle(void) {
   printf("Test 1: Simple triangle... ");
@@ -249,6 +270,133 @@ static void test_area_preservation(void) {
   printf("PASSED\n");
 }
 
+// Test 12: All-collinear input should not emit triangles
+static void test_all_collinear(void) {
+  printf("Test 12: All-collinear input... ");
+
+  mapvertex_t vertices[5] = {
+    {0, 0},
+    {10, 0},
+    {20, 0},
+    {30, 0},
+    {40, 0}
+  };
+
+  wall_vertex_t out_vertices[30];
+  int result = triangulate_sector(vertices, 5, out_vertices);
+  assert(result == 0);
+
+  printf("PASSED\n");
+}
+
+// Test 13: Polygon with collinear edge points should still triangulate
+static void test_collinear_edge_points(void) {
+  printf("Test 13: Collinear edge points... ");
+
+  mapvertex_t vertices[6] = {
+    {0, 0},
+    {50, 0},
+    {100, 0},
+    {100, 100},
+    {50, 100},
+    {0, 100}
+  };
+
+  wall_vertex_t out_vertices[40];
+  int result = triangulate_sector(vertices, 6, out_vertices);
+  assert(result == 12); // (6 - 2) triangles * 3 vertices
+
+  float total_area = 0.0f;
+  for (int i = 0; i < result; i += 3) {
+    total_area += triangle_area(
+      out_vertices[i].x, out_vertices[i].y,
+      out_vertices[i + 1].x, out_vertices[i + 1].y,
+      out_vertices[i + 2].x, out_vertices[i + 2].y);
+  }
+  assert(float_equals(total_area, polygon_area(vertices, 6), 1.0f));
+  for (int i = 0; i < result; i++) {
+    assert(is_vertex_in_input_set(vertices, 6, out_vertices[i].x, out_vertices[i].y));
+  }
+
+  printf("PASSED\n");
+}
+
+// Test 14: Output vertices should always come from input polygon vertices
+static void test_output_vertices_from_input_set(void) {
+  printf("Test 14: Output vertices are from input set... ");
+
+  mapvertex_t vertices[7] = {
+    {0, 0},
+    {90, 0},
+    {120, 40},
+    {80, 80},
+    {120, 120},
+    {40, 130},
+    {0, 70}
+  };
+
+  wall_vertex_t out_vertices[50];
+  int result = triangulate_sector(vertices, 7, out_vertices);
+  assert(result == 15); // (7 - 2) triangles * 3 vertices
+
+  for (int i = 0; i < result; i++) {
+    assert(is_vertex_in_input_set(vertices, 7, out_vertices[i].x, out_vertices[i].y));
+  }
+
+  printf("PASSED\n");
+}
+
+// Test 15: Triangle count scales for larger convex polygons
+static void test_convex_triangle_count_scaling(void) {
+  printf("Test 15: Convex triangle count scaling... ");
+
+  enum { NUM_VERTICES = 24 };
+  mapvertex_t vertices[NUM_VERTICES];
+  for (int i = 0; i < NUM_VERTICES; i++) {
+    float angle = (float)i * 2.0f * M_PI / (float)NUM_VERTICES;
+    vertices[i].x = (int16_t)(200.0f + 150.0f * cosf(angle));
+    vertices[i].y = (int16_t)(200.0f + 150.0f * sinf(angle));
+  }
+
+  wall_vertex_t out_vertices[120];
+  int result = triangulate_sector(vertices, NUM_VERTICES, out_vertices);
+  assert(result == (NUM_VERTICES - 2) * 3);
+
+  float total_area = 0.0f;
+  for (int i = 0; i < result; i += 3) {
+    total_area += triangle_area(
+      out_vertices[i].x, out_vertices[i].y,
+      out_vertices[i + 1].x, out_vertices[i + 1].y,
+      out_vertices[i + 2].x, out_vertices[i + 2].y);
+  }
+  assert(float_equals(total_area, polygon_area(vertices, NUM_VERTICES), 2.0f));
+
+  printf("PASSED\n");
+}
+
+// Test 16: Degenerate duplicated interior points do not crash triangulation
+static void test_repeated_points(void) {
+  printf("Test 16: Repeated points... ");
+
+  mapvertex_t vertices[8] = {
+    {0, 0},
+    {100, 0},
+    {100, 0},   // repeated point
+    {100, 100},
+    {50, 100},
+    {50, 100},  // repeated point
+    {0, 100},
+    {0, 50}
+  };
+
+  wall_vertex_t out_vertices[80];
+  int result = triangulate_sector(vertices, 8, out_vertices);
+  assert(result >= 0);
+  assert(result <= (8 - 2) * 3);
+
+  printf("PASSED\n");
+}
+
 // Main test runner
 int main(void) {
   printf("\n=== Running Triangulation Tests ===\n\n");
@@ -264,6 +412,11 @@ int main(void) {
   test_invalid_input();
   test_star_shape();
   test_area_preservation();
+  test_all_collinear();
+  test_collinear_edge_points();
+  test_output_vertices_from_input_set();
+  test_convex_triangle_count_scaling();
+  test_repeated_points();
   
   printf("\n=== All Tests Passed! ===\n\n");
   
